@@ -1,7 +1,5 @@
 {
-  "buildCommand": "cd ../.. && pnpm build",
-  "devCommand": "pnpm dev",
-  "installCommand": "cd ../.. && pnpm install",
-  "framework": "sveltekit",
-  "outputDirectory": ".svelte-kit/vercel/output"
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/" }
+  ]
 }
