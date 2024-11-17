@@ -1,12 +1,12 @@
 <script lang="ts">
 
-import Herostart from '../components/hero/start.svelte';
-import Cards from '../components/Cards.svelte';
-import Intro from '../components/Intro.svelte';
-import Testimonials from '../components/Testimonials.svelte';
-import Pricing from '../components/Pricing.svelte';
-import Newsletter from '../components/Newsletter.svelte';
-import Logos from '../components/Logos.svelte';
+import Herostart from '$lib/components/hero/start.svelte';
+import Cards from '$lib/components/Cards.svelte';
+import Intro from '$lib/components/Intro.svelte';
+import Testimonials from '$lib/components/Testimonials.svelte';
+import Pricing from '$lib/components/Pricing.svelte';
+import Newsletter from '$lib/components/Newsletter.svelte';
+import Logos from '$lib/components/Logos.svelte';
 </script>
 
 <section class="relative overflow-hidden">

@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { isPreviewing, VisualEditing } from '@sanity/visual-editing/svelte';
 	import { page } from '$app/stores';
-	import LiveMode from '../components/LiveMode.svelte';
-	import Header from '../components/Header.svelte';
-	import Footer from '../components/Footer.svelte';
+	import LiveMode from '$lib/components/LiveMode.svelte';
+	import Header from '$lib/components/Header.svelte';
+	import Footer from '$lib/components/Footer.svelte';
 	import "../app.pcss";
 </script>
 
