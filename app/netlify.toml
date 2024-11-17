@@ -1,6 +1,6 @@
 [build]
   command = "pnpm run build"
-  publish = ".netlify/functions/server"
+  publish = "build"
   functions = ".netlify/functions"
   base = "app"
 
