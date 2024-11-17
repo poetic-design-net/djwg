@@ -2,7 +2,7 @@
 	import { isPreviewing, VisualEditing } from '@sanity/visual-editing/svelte';
 	import { page } from '$app/stores';
 	import LiveMode from '../components/LiveMode.svelte';
-	import Header from '../components/header.svelte';
+	import Header from '../components/Header.svelte';
 	import Footer from '../components/Footer.svelte';
 	import "../app.pcss";
 </script>
