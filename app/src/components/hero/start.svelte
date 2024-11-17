@@ -17,7 +17,7 @@
     }
 
     onMount(() => {
-        const interval = setInterval(nextImage, 7500); // Change image every 5 seconds
+        const interval = setInterval(nextImage, 7500); 
         return () => clearInterval(interval);
     });
   </script>
@@ -62,6 +62,6 @@
     .image-container {
         width: 100%;
         aspect-ratio: 4 / 3;
-        max-width: 600px; /* Adjust this value as needed */
+        max-width: 600px;
     }
 </style>

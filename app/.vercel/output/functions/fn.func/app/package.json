@@ -4,11 +4,10 @@
 	"private": true,
 	"scripts": {
 		"dev": "vite dev",
-		"build": "NODE_ENV=production vite build",
+		"build": "vite build",
 		"preview": "vite preview",
 		"lint": "prettier --plugin-search-dir . --check . && eslint .",
-		"format": "prettier --plugin-search-dir . --write .",
-		"start": "node build"
+		"format": "prettier --plugin-search-dir . --write ."
 	},
 	"dependencies": {
 		"@sanity/client": "^6.22.4",
