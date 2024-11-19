@@ -1,192 +1,122 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-
-  let toggle = true;
-  onMount(() => {
-    // Any initialization code can go here
-  });
-
-  function toggleBilling() {
-    toggle = !toggle;
+  interface PricingPhase {
+    phase: string;
+    title: string;
+    description: string;
+    features: string[];
+    status: 'completed' | 'current' | 'coming-soon';
   }
+
+  const pricingPhases: PricingPhase[] = [
+    {
+      phase: "Phase 1",
+      title: "2024 Workshop-Teilnehmer Exklusiv",
+      description: "Ein exklusives Angebot nur für die Workshop-Teilnehmer von 2024. Als kleines Dankeschön an euch habt ihr die Möglichkeit, euch ein Ticket zu sichern, bevor es für andere verfügbar ist.",
+      features: [
+        "Frühester Zugang zu Tickets",
+        "Exklusiver Vorzugspreis",
+        "Garantierter Platz",
+        "Vorverkaufsrecht für 2026"
+      ],
+      status: 'completed'
+    },
+    {
+      phase: "Phase 2",
+      title: "Vertrauensticket",
+      description: "Das Vertrauensticket. In dieser Phase erhaltet ihr lediglich das Datum des Events, jedoch noch keinen Ort und keine Informationen zu den Artists. Dieses Ticket ist besonders günstig und zeigt euer Vertrauen in uns und unser Event.",
+      features: [
+        "Günstigster öffentlicher Preis",
+        "Nur Datum bekannt",
+        "Location noch geheim",
+        "Artists noch geheim"
+      ],
+      status: 'current'
+    },
+    {
+      phase: "Phase 3",
+      title: "Early Bird Ticket",
+      description: "Das Early Bird Ticket. Hier sind die Artists und der genaue Veranstaltungsort bereits bekannt. Nutzt die Gelegenheit, euch frühzeitig einen Platz zu sichern!",
+      features: [
+        "Vergünstigter Preis",
+        "Alle Details bekannt",
+        "Garantierter Platz",
+        "Frühzeitige Planungssicherheit"
+      ],
+      status: 'coming-soon'
+    },
+    {
+      phase: "Phase 4",
+      title: "Reguläre Tickets",
+      description: "Die regulären Ticketpreise. Diese Phase bietet die Standardpreise für alle, die sich nach den ersten drei Phasen anmelden.",
+      features: [
+        "Standardpreis",
+        "Alle Details bekannt",
+        "Verfügbarkeit nach Kapazität",
+        "Flexible Buchung"
+      ],
+      status: 'coming-soon'
+    }
+  ];
 </script>
 
-  <div class="container px-4 mx-auto">
+<div class="container px-4 mx-auto">
+  <div class="text-center mb-20">
+    <span class="inline-block mb-4 text-sm text-purple-400 font-medium tracking-tighter">Ticket Phasen</span>
+    <h2 class="font-heading mb-6 text-5xl md:text-6xl text-white tracking-tighter">Sichere dir dein Ticket</h2>
+    <p class="text-lg text-gray-300 md:max-w-md mx-auto">Wähle die passende Phase für dein Event-Ticket</p>
+  </div>
 
-    <div class="container px-4 mx-auto">
-      <div class="mb-20 md:max-w-2xl text-center mx-auto">
-      <span class="inline-block mb-4 text-sm text-green-400 font-medium tracking-tighter">DJ Workshop Germany</span>
-      <h2 class="font-heading mb-8 text-7xl lg:text-8xl text-white tracking-7xl lg:tracking-8xl">Unsere Kursangebote</h2>
-      <p class="mb-12 text-gray-300 max-w-sm mx-auto">DJ Workshop Germany bietet professionelle DJ-Kurse für Anfänger und Fortgeschrittene an</p>
-<div
-        role="region"
-  aria-label="pricing-slider"
-  class="relative p-1 max-w-max mx-auto bg-gradient-radial-dark-light rounded-full"
->
-  <button
-    type="button"
-    on:click={toggleBilling}
-    on:keydown={(e) => e.key === 'Enter' && toggleBilling()}
-    class="w-full h-full absolute top-0 left-0 z-10 opacity-0 cursor-pointer"
-    aria-label="Toggle billing cycle"
-  ></button>
-        <div class="flex flex-wrap items-center">
-            <div class="relative w-full sm:w-auto">
-      <span class="block py-5 px-9 text-center {toggle ? 'bg-white text-black' : 'text-gray-300'} font-medium rounded-full transition-all duration-200">
-        Monatliche Zahlung
-      </span>
+  <div class="flex flex-wrap -mx-4">
+    {#each pricingPhases as phase}
+      <div class="w-full md:w-1/2 lg:w-1/4 px-4 mb-8">
+        <div class="relative h-full flex flex-col {phase.status === 'completed' ? 'bg-black/20 border-gray-900' : phase.status === 'current' ? 'bg-black/40 border-green-500' : 'bg-black/40 border-gray-800'} border rounded-5xl bg-gradient-radial-dark transition duration-200">
+          <!-- Content Container -->
+          <div class="flex-grow p-8">
+            <div class="mb-6">
+              <div class="flex items-center justify-between mb-4">
+                <span class="text-sm text-purple-400">{phase.phase}</span>
+                {#if phase.status === 'completed'}
+                  <span class="text-xs text-gray-500 bg-gray-900/50 px-3 py-1 rounded-full">Abgeschlossen</span>
+                {:else if phase.status === 'current'}
+                  <span class="text-xs text-green-500 bg-green-500/20 px-3 py-1 rounded-full">Aktuell</span>
+                {:else}
+                  <span class="text-xs text-gray-400 bg-gray-800/50 px-3 py-1 rounded-full">Coming Soon</span>
+                {/if}
+              </div>
+              <h3 class="mb-4 text-xl {phase.status === 'completed' ? 'text-gray-500' : 'text-white'}">{phase.title}</h3>
+              <p class="{phase.status === 'completed' ? 'text-gray-600' : phase.status === 'coming-soon' ? 'text-gray-400' : 'text-gray-300'} text-sm">{phase.description}</p>
             </div>
-            <div class="relative flex-1">
-      <span class="flex flex-wrap items-center justify-center py-3.5 px-9 text-center rounded-full transition-all duration-200 {!toggle ? 'bg-white' : ''}">
-                <p class="mr-2.5 {!toggle ? 'text-black' : 'text-gray-300'} font-medium">Jährliche Zahlung</p>
-                <span class="px-3 py-1.5 text-sm font-medium text-center {!toggle ? 'bg-green-500' : ''} uppercase border border-green-400 rounded-full {!toggle ? 'text-black' : 'text-green-400'}">20% sparen</span>
-      </span>
-    </div>
+            <ul class="mb-6">
+              {#each phase.features as feature}
+                <li class="flex items-center mb-4">
+                  <svg class="mr-2" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M7.5 10L9.16667 11.6667L12.5 8.33333" stroke={phase.status === 'completed' ? "#4B5563" : phase.status === 'current' ? "#22C55E" : "#6B7280"} stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5C5.85786 2.5 2.5 5.85786 2.5 10C2.5 14.1421 5.85786 17.5 10 17.5Z" stroke={phase.status === 'completed' ? "#4B5563" : phase.status === 'current' ? "#22C55E" : "#6B7280"} stroke-width="1.5"/>
+                  </svg>
+                  <span class="{phase.status === 'completed' ? 'text-gray-600' : phase.status === 'coming-soon' ? 'text-gray-400' : 'text-gray-300'} text-sm">{feature}</span>
+                </li>
+              {/each}
+            </ul>
+          </div>
+          
+          <!-- Button Container (Always at Bottom) -->
+          <div class="p-8 pt-0 text-center">
+            {#if phase.status === 'completed'}
+              <span class="inline-block w-full py-4 px-6 text-sm font-medium bg-gray-900 text-gray-600 rounded-full cursor-not-allowed">
+                Phase beendet
+              </span>
+            {:else if phase.status === 'current'}
+              <a class="inline-block w-full py-4 px-6 text-sm  text-black font-medium bg-green-500 hover:bg-green-600 rounded-full transition duration-200" href="#tickets">
+                Mehr erfahren
+              </a>
+            {:else}
+              <span class="inline-block w-full py-4 px-6 text-sm font-medium bg-gray-800 text-gray-400 rounded-full cursor-not-allowed">
+                Demnächst verfügbar
+              </span>
+            {/if}
+          </div>
+        </div>
+      </div>
+    {/each}
   </div>
 </div>
-            </div>
-      <div class="flex flex-wrap -m-4">
-        <div class="w-full md:w-1/2 p-4">
-        <div class="px-8 pt-12 pb-12 h-full bg-gradient-radial-dark border-2 border-gray-900 border-opacity-30 overflow-hidden rounded-5xl">
-          <div class="flex flex-wrap items-center -m-2 mb-7">
-            <div class="w-full md:w-1/2 p-2">
-                <p class="mb-2 text-xl text-white font-light">Einsteigerkurs</p>
-              <p class="text-gray-300">Grundlagen des DJing für Anfänger, inklusive Beatmatching und Mixing-Techniken</p>
-            </div>
-            <div class="w-full md:w-1/2 p-2">
-              <div class="max-w-max md:ml-auto">
-                <p class="flex flex-col text-white font-medium text-5xl">
-                    {#if toggle}
-                      <span class="mb-1.5">€50</span>
-                      <span class="text-base font-medium text-gray-300">/ Monat</span>
-                    {:else}
-                      <span class="mb-1.5">€500</span>
-                      <span class="text-base font-medium text-gray-300">/ Jahr</span>
-                    {/if}
-                  </p>
-            </div>
-          </div>
-                </div>
-                <p class="mb-6 text-xs text-gray-300 font-light uppercase">Kursinhalt</p>
-                <ul class="flex flex-wrap mb-10">
-                  <li class="flex items-center w-full sm:w-1/2 mb-4">
-                    <div class="w-auto">
-                      <div class="flex items-center justify-center w-5 h-5 mr-4 border border-green-400 rounded-full">
-                        <img src="nightsable-assets/images/modals/check.svg" alt="">
-                      </div>
-                    </div>
-                    <div class="flex-1">
-                      <p class="text-white">Grundlagen des Beatmatching</p>
-                    </div>
-                  </li>
-                  <li class="flex items-center w-full sm:w-1/2 mb-4">
-                    <div class="w-auto">
-                      <div class="flex items-center justify-center w-5 h-5 mr-4 border border-green-400 rounded-full">
-                        <img src="nightsable-assets/images/modals/check.svg" alt="">
-                      </div>
-                    </div>
-                    <div class="flex-1">
-                      <p class="text-white">Einführung in Mixing-Techniken</p>
-                    </div>
-                  </li>
-                  <li class="flex items-center w-full sm:w-1/2 mb-4 md:mb-0">
-                    <div class="w-auto">
-                      <div class="flex items-center justify-center w-5 h-5 mr-4 border border-green-400 rounded-full">
-                        <img src="nightsable-assets/images/modals/check.svg" alt="">
-                      </div>
-                    </div>
-                    <div class="flex-1">
-                      <p class="text-white">Umgang mit DJ-Equipment</p>
-                    </div>
-                  </li>
-                  <li class="flex items-center w-full sm:w-1/2">
-                    <div class="w-auto">
-                      <div class="flex items-center justify-center w-5 h-5 mr-4 border border-green-400 rounded-full">
-                        <img src="nightsable-assets/images/modals/check.svg" alt="">
-                      </div>
-                    </div>
-                    <div class="flex-1">
-                      <p class="text-white">Musikauswahl und Playlist-Erstellung</p>
-                    </div>
-                  </li>
-                </ul>
-                <a class="relative z-10 block px-14 py-4 text-center font-medium tracking-2xl border-2 border-green-400 bg-green-400 hover:bg-green-500 text-black focus:ring-4 focus:ring-green-500 focus:ring-opacity-40 rounded-full transition duration-300" href="#">Jetzt buchen</a>
-        
-              </div>
-        </div>
-        <div class="w-full md:w-1/2 p-4">
-          <div class="px-8 pt-12 pb-12 h-full bg-gradient-radial-dark border-2 border-gray-900 border-opacity-30 overflow-hidden rounded-5xl">
-            <div class="flex flex-wrap items-center -m-2 mb-7">
-              <div class="w-full md:w-1/2 p-2">
-                <p class="mb-2 text-xl text-white font-light">Fortgeschrittenenkurs</p>
-                <p class="text-gray-300">Erweiterte DJ-Techniken und Produktionselemente für erfahrene DJs</p>
-                </div>
-              <div class="w-full md:w-1/2 p-2">
-                <div class="max-w-max md:ml-auto">
-                  <p class="flex flex-col text-white font-medium text-5xl">
-                    {#if toggle}
-                      <span class="mb-1.5">€100</span>
-                      <span class="text-base font-medium text-gray-300">/ Monat</span>
-                    {:else}
-                      <span class="mb-1.5">€1000</span>
-                      <span class="text-base font-medium text-gray-300">/ Jahr</span>
-                    {/if}
-                  </p>
-                </div>
-              </div>
-              </div>
-              <p class="mb-6 text-xs text-gray-300 font-light uppercase">Kursinhalt</p>
-          <ul class="flex flex-wrap mb-10">
-            <li class="flex items-center w-full sm:w-1/2 mb-4">
-              <div class="w-auto">
-                <div class="flex items-center justify-center w-5 h-5 mr-4 border border-green-400 rounded-full">
-                  <img src="nightsable-assets/images/modals/check.svg" alt="">
-                </div>
-              </div>
-              <div class="flex-1">
-                <p class="text-white">Fortgeschrittene Mixing-Techniken</p>
-              </div>
-            </li>
-            <li class="flex items-center w-full sm:w-1/2 mb-4">
-              <div class="w-auto">
-                <div class="flex items-center justify-center w-5 h-5 mr-4 border border-green-400 rounded-full">
-                  <img src="nightsable-assets/images/modals/check.svg" alt="">
-                </div>
-              </div>
-              <div class="flex-1">
-                <p class="text-white">Musikproduktion für DJs</p>
-              </div>
-            </li>
-            <li class="flex items-center w-full sm:w-1/2 mb-4 md:mb-0">
-              <div class="w-auto">
-                <div class="flex items-center justify-center w-5 h-5 mr-4 border border-green-400 rounded-full">
-                  <img src="nightsable-assets/images/modals/check.svg" alt="">
-                </div>
-              </div>
-              <div class="flex-1">
-                <p class="text-white">Live-Performance-Techniken</p>
-              </div>
-            </li>
-            <li class="flex items-center w-full sm:w-1/2">
-              <div class="w-auto">
-                <div class="flex items-center justify-center w-5 h-5 mr-4 border border-green-400 rounded-full">
-                  <img src="nightsable-assets/images/modals/check.svg" alt="">
-                </div>
-              </div>
-              <div class="flex-1">
-                <p class="text-white">Branding und Marketing für DJs</p>
-              </div>
-            </li>
-          </ul>
-          <a class="relative z-10 block px-14 py-4 text-center font-medium tracking-2xl border-2 border-green-400 bg-green-400 hover:bg-green-500 text-black focus:ring-4 focus:ring-green-500 focus:ring-opacity-40 rounded-full transition duration-300" href="#">Jetzt buchen</a>
-
-                </div>
-              </div>
-              </div>
-        </div>
-
-</div>
-
-<style>
-  /* Add any additional custom styles here if needed */
-</style>

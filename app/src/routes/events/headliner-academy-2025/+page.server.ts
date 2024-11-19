@@ -1,4 +1,4 @@
-import { postsQuery, testimonialsQuery, logosQuery, artistsQuery, type Post, type Testimonial, type Logo, type Artist } from '$lib/sanity/queries';
+import { artistsQuery, type Artist } from '$lib/sanity/queries';
 import type { PageServerLoad } from './$types';
 
 // Placeholder artist data for secret state
@@ -15,9 +15,6 @@ const placeholderArtists = Array(6).fill({
 
 export const load: PageServerLoad = async (event) => {
 	const { loadQuery } = event.locals;
-	const posts = await loadQuery<Post[]>(postsQuery);
-	const testimonials = await loadQuery<Testimonial[]>(testimonialsQuery);
-	const logos = await loadQuery<Logo[]>(logosQuery);
 	const artists = await loadQuery<Artist[]>(artistsQuery);
 
 	// Get the actual artists array from the Sanity response
@@ -33,24 +30,10 @@ export const load: PageServerLoad = async (event) => {
 		: placeholderArtists;
 
 	return {
-		posts: {
-			query: postsQuery,
-			options: { initial: posts }
-		},
-		testimonials: {
-			query: testimonialsQuery,
-			options: { initial: testimonials }
-		},
-		logos: {
-			query: logosQuery,
-			options: { initial: logos }
-		},
 		artists: {
 			query: artistsQuery,
 			data: visibleArtists,
 			options: { initial: artists }
-		},
-		isLineupRevealed,
-		isArtistsSecret: true
+		}
 	};
 };
