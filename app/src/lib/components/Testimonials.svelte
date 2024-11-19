@@ -1,34 +1,19 @@
-<script>
+<script lang="ts">
   import { fade } from 'svelte/transition';
   import { tweened } from 'svelte/motion';
   import { cubicOut } from 'svelte/easing';
+  import type { Testimonial } from '$lib/sanity/queries';
+
+  export let testimonials: { data: Testimonial[] };
 
   let activeSlide = 0;
-  const slides = [
-    {
-      text: '"DJ Workshop Germany bietet erstklassige DJ-Kurse für Anfänger und Fortgeschrittene in Berlin, Hamburg, München und Frankfurt an. Mit modernster Ausrüstung und erfahrenen Trainern ist es der perfekte Ort, um die Kunst des DJings zu erlernen."',
-      author: 'Max Mustermann',
-      title: 'Teilnehmer, DJ-Anfängerkurs'
-    },
-    {
-      text: '"Die Workshops von DJ Workshop Germany haben meine DJ-Fähigkeiten auf ein ganz neues Level gebracht. Die praktischen Übungen und individuellen Tipps waren unglaublich wertvoll für meine Entwicklung als DJ."',
-      author: 'Lisa Schmidt',
-      title: 'Absolventin, Fortgeschrittenen-Workshop'
-    },
-    {
-      text: '"Als professioneller DJ kann ich DJ Workshop Germany nur empfehlen. Die Kurse decken alles ab, von Grundlagen bis zu fortgeschrittenen Techniken, und die Trainer sind echte Experten in ihrem Fach."',
-      author: 'Tom Fischer',
-      title: 'Professioneller DJ & Kursleiter'
-    }
-  ];
-
   const slideWidth = tweened(0, {
     duration: 500,
     easing: cubicOut
   });
 
   function nextSlide() {
-    if (activeSlide < slides.length - 1) {
+    if (activeSlide < testimonials.data.length - 1) {
       activeSlide++;
       slideWidth.set(activeSlide * 100);
     }
@@ -55,11 +40,11 @@
     <div class="w-full lg:w-3/4 p-6">
         <div class="overflow-hidden">
           <div style="transform: translateX(-{$slideWidth}%)" class="flex transition-transform duration-500 ease-in-out">
-            {#each slides as slide, i}
+            {#each testimonials.data as testimonial, i}
               <div class="flex-shrink-0 w-full">
-              <h3 class="mb-10 text-3xl text-white tracking-tighter leading-snug">{slide.text}</h3>
-                <h4 class="text-white font-medium tracking-tighter">{slide.author}</h4>
-                <span class="mb-8 lg:mb-0 inline-block text-sm text-white">{slide.title}</span>
+              <h3 class="mb-10 text-3xl text-white tracking-tighter leading-snug">{testimonial.text}</h3>
+                <h4 class="text-white font-medium tracking-tighter">{testimonial.author}</h4>
+                <span class="mb-8 lg:mb-0 inline-block text-sm text-white">{testimonial.title}</span>
               </div>
             {/each}
           </div>
@@ -90,4 +75,11 @@
     </div>
     <img class="absolute bottom-0 left-1/2 transform -translate-x-1/2" src="nightsable-assets/images/testimonials/blur.png" alt="">
   </div>
+<div class="flex justify-end mt-8">
+  <div class="w-full sm:w-auto">
+    <a class="inline-block w-full py-4 px-6 text-sm text-black font-medium bg-green-500 hover:bg-green-600 rounded-full transition duration-200 text-center" href="/feedback">
+    Zum Feedback der Teilnehmer
+  </a>
+  </div>
+</div>
 </div>

@@ -12,7 +12,7 @@
         <div class="flex items-center justify-between -m-2">
           <div class="w-auto p-2">
             <a class="inline-block" href="/">
-              <img class="" src="assets/logo.svg" alt="">
+              <img class="w-32" src="/assets/logo.svg" alt="DJ Workshop Germany">
             </a>
           </div>
           <div class="w-auto p-2">
@@ -27,13 +27,16 @@
       <div class="flex flex-col justify-center py-16 w-full">
         <ul>
           <li class="mb-8 text-white font-medium hover:text-opacity-90 tracking-tighter"><a href="/">Home</a></li>
-          <li class="mb-8 text-white font-medium hover:text-opacity-90 tracking-tighter"><a href="/">About us</a></li>
-          <li class="mb-8 text-white font-medium hover:text-opacity-90 tracking-tighter"><a href="/">Wallet</a></li>
-          <li class="text-white font-medium hover:text-opacity-90 tracking-tighter"><a href="/">Blog</a></li>
+          <li class="mb-8 text-white font-medium hover:text-opacity-90 tracking-tighter"><a href="/events">Events</a></li>
+          <li class="mb-8 text-white font-medium hover:text-opacity-90 tracking-tighter"><a href="/about">About us</a></li>
+          <li class="mb-8 text-white font-medium hover:text-opacity-90 tracking-tighter"><a href="/join">Mitmachen</a></li>
+          <li class="text-white font-medium hover:text-opacity-90 tracking-tighter"><a href="/feedback">Feedback</a></li>
         </ul>
       </div>
       <div class="flex flex-col justify-end w-full pb-8">
-        <a class="inline-block px-8 py-4 text-center text-white hover:text-black tracking-tighter hover:bg-green-400 border-2 border-white focus:border-green-400 focus:border-opacity-40 hover:border-green-400 focus:ring-4 focus:ring-green-400 focus:ring-opacity-40 rounded-full transition duration-300" href="/">Get in touch</a>
+        <a class="inline-block px-8 py-4 text-center text-white hover:text-black tracking-tighter hover:bg-green-400 border-2 border-white focus:border-green-400 focus:border-opacity-40 hover:border-green-400 focus:ring-4 focus:ring-green-400 focus:ring-opacity-40 rounded-full transition duration-300" href="/tickets">
+          Tickets
+        </a>
       </div>
     </div>
   </nav>
