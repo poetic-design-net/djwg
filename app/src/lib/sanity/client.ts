@@ -5,7 +5,8 @@ export const client = createClient({
 	projectId,
 	dataset,
 	apiVersion,
-	useCdn: true,
+	useCdn: false,
+	token: import.meta.env.SANITY_API_READ_TOKEN,
 	stega: {
 		studioUrl
 	}

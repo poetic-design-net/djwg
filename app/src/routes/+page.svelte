@@ -10,13 +10,17 @@ import Pricing from '$lib/components/Pricing.svelte';
 import Newsletter from '$lib/components/Newsletter.svelte';
 import Logos from '$lib/components/Logos.svelte';
 import ArtistsSlider from '$lib/components/ArtistsSlider.svelte';
+import AboutUsSection from '$lib/components/AboutUsSection.svelte';
+import Faq from '$lib/components/FAQ.svelte';
 
 export let data: PageData;
 const testimonials = useQuery(data.testimonials);
 const logos = useQuery(data.logos);
+const events = useQuery(data.events);
 
 // Get the artists directly from the server data
 const artists = data.artists?.data || [];
+$: eventsArray = $events?.data || [];
 </script>
 
 <section class="relative overflow-hidden">
@@ -28,7 +32,7 @@ const artists = data.artists?.data || [];
 </section>
 
 <section class="pt-48 pb-20">
-	<Cards />
+	<Cards events={eventsArray} />
 </section>
 	
 <section class="pt-48 pb-20">
@@ -49,6 +53,14 @@ const artists = data.artists?.data || [];
 	{#if $testimonials}
 		<Testimonials testimonials={$testimonials} />
 	{/if}
+</section>
+
+<section class="relative pt-36 overflow-hidden">
+	<Faq />
+</section>
+
+<section class="relative pt-36 overflow-hidden">
+	<AboutUsSection />
 </section>
 
 <section class="relative pt-36 overflow-hidden">	
