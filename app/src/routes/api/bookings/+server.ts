@@ -1,13 +1,13 @@
 import { json } from '@sveltejs/kit';
 import { createClient } from '@sanity/client';
 import { apiVersion, projectId, dataset } from '$lib/sanity/api';
-import { SANITY_API_WRITE_TOKEN } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 
 const writeClient = createClient({
   projectId,
   dataset,
   apiVersion,
-  token: SANITY_API_WRITE_TOKEN,
+  token: env.SANITY_API_WRITE_TOKEN,
   useCdn: false
 });
 
