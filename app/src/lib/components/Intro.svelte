@@ -21,7 +21,7 @@
 </script>
 
 <div class="relative container px-4 mx-auto">
-  <div class="relative p-6 sm:p-12 bg-green-500 border-b border-blueGray-900 rounded-5xl">
+  <div class="relative p-6 sm:p-12 bg-green-500 border-b bg-gradient-radial-dark  border-blueGray-900 rounded-5xl">
     <div class="flex flex-wrap lg:items-center -m-8">
       <div class="w-full md:w-1/2 p-8 order-2 md:order-1">
         <img class="relative rounded-xl" src="assets/home_hero.jpg" alt="DJ Workshop">
