@@ -2,9 +2,14 @@
   import { onMount } from 'svelte';
   import { urlFor } from '$lib/sanity/image';
   import type { Logo } from '$lib/sanity/queries';
+  import { page } from '$app/stores';
   
   export let logos: { data: Logo[] } = { data: [] };
+  export let showButton = true;
   let currentHighlight = 0;
+
+  // Hide button on partner page
+  $: showButton = !$page.url.pathname.includes('/partner');
 
   onMount(() => {
     const interval = setInterval(() => {
@@ -23,17 +28,21 @@
   <div class="md:max-w-7xl border border-gray-900 mx-auto mb-12">
     <div class="flex flex-wrap">
       {#each logos.data as logo, i}
-        <div class="flex items-center justify-center w-full md:w-1/2 lg:w-1/5 {i < logos.data.length - 5 ? 'border-b' : 'lg:border-b-0'} {i % 5 !== 4 ? 'lg:border-r' : ''} {i % 2 === 0 ? 'md:border-r' : ''} border-gray-900 logo-container {currentHighlight === i ? 'highlight' : ''}" style="height: 246px;">
-          <img src={urlFor(logo.image).width(200).url()} alt={logo.name}>
-        </div>
+        {#if logo.image}
+          <div class="flex items-center justify-center w-full md:w-1/2 lg:w-1/5 {i < logos.data.length - 5 ? 'border-b' : 'lg:border-b-0'} {i % 5 !== 4 ? 'lg:border-r' : ''} {i % 2 === 0 ? 'md:border-r' : ''} border-gray-900 logo-container {currentHighlight === i ? 'highlight' : ''}" style="height: 246px;">
+            <img src={urlFor(logo.image).width(200).url()} alt={logo.name || 'Partner Logo'}>
+          </div>
+        {/if}
       {/each}
     </div>
   </div>
-  <div class="text-center">
-    <div class="w-auto p-2">
-      <a class="inline-block px-8 py-4 text-white hover:text-black tracking-tighter hover:bg-green-400 border-2 border-white focus:border-green-400 focus:border-opacity-40 hover:border-green-400 focus:ring-4 focus:ring-green-400 focus:ring-opacity-40 rounded-full transition duration-300" href="#">Partner werden</a>
+  {#if showButton}
+    <div class="text-center">
+      <div class="w-auto p-2">
+        <a class="inline-block px-8 py-4 text-white hover:text-black tracking-tighter hover:bg-green-400 border-2 border-white focus:border-green-400 focus:border-opacity-40 hover:border-green-400 focus:ring-4 focus:ring-green-400 focus:ring-opacity-40 rounded-full transition duration-300" href="/partner">Partner werden</a>
+      </div>
     </div>
-  </div>
+  {/if}
 </div>
 
 <style>

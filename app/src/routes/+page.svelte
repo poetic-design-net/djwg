@@ -1,7 +1,7 @@
 <script lang="ts">
 import { useQuery } from '@sanity/svelte-loader';
 import type { PageData } from './$types';
-import type { Artist } from '$lib/sanity/queries';
+import type { Artist, FAQ } from '$lib/sanity/queries';
 import Herostart from '$lib/components/hero/start.svelte';
 import Cards from '$lib/components/Cards.svelte';
 import Intro from '$lib/components/Intro.svelte';
@@ -17,10 +17,14 @@ export let data: PageData;
 const testimonials = useQuery(data.testimonials);
 const logos = useQuery(data.logos);
 const events = useQuery(data.events);
+const faqs = useQuery(data.faqs);
+const featuredKnowledgeBaseItems = useQuery(data.featuredKnowledgeBaseItems);
 
 // Get the artists directly from the server data
 const artists = data.artists?.data || [];
 $: eventsArray = $events?.data || [];
+$: faqsArray = $faqs?.data || [];
+$: knowledgeBaseItems = $featuredKnowledgeBaseItems?.data || [];
 </script>
 
 <section class="relative overflow-hidden">
@@ -28,7 +32,7 @@ $: eventsArray = $events?.data || [];
 </section>
 
 <section class="relative pt-20 overflow-hidden">
-	<Intro />
+	<Intro items={knowledgeBaseItems} />
 </section>
 
 <section class="pt-48 pb-20">
@@ -56,7 +60,7 @@ $: eventsArray = $events?.data || [];
 </section>
 
 <section class="relative pt-36 overflow-hidden">
-	<Faq />
+	<Faq faqs={faqsArray} />
 </section>
 
 <section class="relative pt-36 overflow-hidden">

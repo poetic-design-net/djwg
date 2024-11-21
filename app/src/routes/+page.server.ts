@@ -1,4 +1,4 @@
-import { postsQuery, testimonialsQuery, logosQuery, artistsQuery, eventsQuery, type Post, type Testimonial, type Logo, type Artist, type Event } from '$lib/sanity/queries';
+import { postsQuery, testimonialsQuery, logosQuery, artistsQuery, eventsQuery, faqsQuery, featuredKnowledgeBaseItemsQuery, type Post, type Testimonial, type Logo, type Artist, type Event, type FAQ, type KnowledgeBaseItem } from '$lib/sanity/queries';
 import type { PageServerLoad } from './$types';
 
 // Placeholder artist data for secret state
@@ -20,6 +20,8 @@ export const load: PageServerLoad = async (event) => {
 	const logos = await loadQuery<Logo[]>(logosQuery);
 	const artists = await loadQuery<Artist[]>(artistsQuery);
 	const events = await loadQuery<Event[]>(eventsQuery);
+	const faqs = await loadQuery<FAQ[]>(faqsQuery);
+	const featuredKnowledgeBaseItems = await loadQuery<KnowledgeBaseItem[]>(featuredKnowledgeBaseItemsQuery);
 
 	// Get the actual artists array from the Sanity response
 	const artistsData = artists?.data || [];
@@ -55,6 +57,14 @@ export const load: PageServerLoad = async (event) => {
 			query: eventsQuery,
 			data: events,
 			options: { initial: events }
+		},
+		faqs: {
+			query: faqsQuery,
+			options: { initial: faqs }
+		},
+		featuredKnowledgeBaseItems: {
+			query: featuredKnowledgeBaseItemsQuery,
+			options: { initial: featuredKnowledgeBaseItems }
 		},
 		isLineupRevealed,
 		isArtistsSecret: true

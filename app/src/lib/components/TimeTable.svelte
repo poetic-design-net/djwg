@@ -63,37 +63,37 @@
 
     <div class="relative">
       <!-- Timeline Line -->
-      <div class="absolute left-[28px] md:left-1/2 top-0 w-px h-full bg-gray-800 transform -translate-x-1/2"></div>
+      <div class="absolute left-12 md:left-1/2 top-0 w-px h-full bg-gray-800 transform -translate-x-1/2"></div>
 
       <!-- Schedule Items -->
       <div class="relative space-y-8">
         {#each schedule as item, i}
-          <div class="relative flex flex-col md:flex-row items-center md:justify-between group">
+          <div class="relative flex flex-col md:flex-row items-start md:items-center md:justify-between group">
             <!-- Time -->
-            <div class="flex-1 w-full md:w-auto mb-4 md:mb-0 {i % 2 === 0 ? 'md:text-right md:pr-10' : 'md:order-3 md:text-left md:pl-10'}">
+            <div class="flex-1 w-full md:w-auto order-2 md:order-none mb-4 md:mb-0 pl-20 md:pl-0 {i % 2 === 0 ? 'md:text-right md:pr-10' : 'md:order-3 md:text-left md:pl-10'}">
               <span class="text-xl text-green-400 font-medium">{item.time}</span>
             </div>
 
             <!-- Icon -->
-            <div class="absolute left-0 md:left-1/2 transform -translate-x-1/2 w-14 h-14 bg-black border-4 border-gray-800 rounded-full flex items-center justify-center group-hover:border-green-500 transition-colors duration-300">
+            <div class="absolute left-6 md:left-1/2 top-0 md:top-1/2 transform md:-translate-y-1/2 md:-translate-x-1/2 w-12 h-12 md:w-14 md:h-14 bg-black border-4 border-gray-800 rounded-full flex items-center justify-center group-hover:border-green-500 transition-colors duration-300 z-10">
               <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d={item.icon}></path>
               </svg>
             </div>
 
             <!-- Content -->
-            <div class="flex-1 w-full md:w-auto pl-20 md:pl-0 {i % 2 === 0 ? 'md:order-3 md:pl-10' : 'md:pr-10'}">
-              <div class="p-6 bg-black/40 border border-gray-800 rounded-3xl hover:border-green-500 transition-colors duration-300">
-                <h3 class="mb-2 text-xl text-white">{item.title}</h3>
+            <div class="flex-1 w-full md:w-auto order-3 pl-20 md:pl-0 {i % 2 === 0 ? 'md:order-3 md:pl-10' : 'md:pr-10'}">
+              <div class="p-4 md:p-6 bg-black/40 border border-gray-800 rounded-3xl hover:border-green-500 transition-colors duration-300">
+                <h3 class="mb-2 text-lg md:text-xl text-white">{item.title}</h3>
                 {#if item.description}
-                  <p class="mb-2 text-gray-400">{item.description}</p>
+                  <p class="mb-2 text-sm md:text-base text-gray-400">{item.description}</p>
                 {/if}
                 {#if item.instructor}
                   <div class="flex items-center text-sm text-green-400">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                     </svg>
-                    {item.instructor}
+                    <span class="break-words">{item.instructor}</span>
                   </div>
                 {/if}
               </div>
@@ -104,3 +104,17 @@
     </div>
   </div>
 </div>
+
+<style>
+  /* Ensure smooth transitions */
+  .group {
+    transition: transform 0.3s ease;
+  }
+
+  /* Prevent content overflow on mobile */
+  @media (max-width: 768px) {
+    .break-words {
+      word-break: break-word;
+    }
+  }
+</style>

@@ -13,6 +13,8 @@ export default defineConfig(({ mode }) => {
       extensions: ['.js', '.ts', '.svelte']
     },
     server: {
+      host: true, // Listen on all addresses, including LAN and localhost
+      port: 5173, // Default Vite port
       fs: {
         // Allow serving files from one level up to the project root
         allow: ['..']
