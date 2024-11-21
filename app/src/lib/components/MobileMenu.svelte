@@ -18,18 +18,16 @@
 
 {#if isOpen}
   <div 
-    class="fixed inset-0 bg-black lg:hidden overflow-hidden z-[105]"
+    class="fixed inset-0 bg-black lg:hidden overflow-hidden z-[205]"
     transition:fade={{ duration: 200 }}
   >
     <!-- Scrollable Container -->
     <div class="h-full overflow-y-auto">
       
-      <div class="container mx-auto px-4 py-4">
+      <div class="container mx-auto px-4 py-4 pt-4">
         <!-- Close Button -->
         <div class="flex justify-between mb-6">
-          <a href="/" class="relative z-[110]">
-            <img src="/assets/logo.svg" alt="DJ Workshop Germany" class="h-12">
-          </a>
+          <a href="/" class="relative z-[110] s-OTmmHBhb3fXp"><img src="/assets/logo.svg" alt="DJ Workshop Germany" class="h-12 s-OTmmHBhb3fXp"></a> 
           <button 
             class="text-white/80 hover:text-white"
             on:click={handleClose}
@@ -38,7 +36,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
             </svg>
           </button>
-        </div>
+        </div> 
 
         <!-- Navigation -->
         <nav class="space-y-4">
