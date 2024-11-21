@@ -4,6 +4,7 @@
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
   import type { MenuItems, MenuKey } from '$lib/types/menu';
+  import MobileMenu from './MobileMenu.svelte';
 
   let isScrolled = false;
   let activeMenu: MenuKey | null = null;
@@ -35,7 +36,6 @@
           title: 'Berlin Events',
           items: [
             { label: 'Über das Event', link: '/events/dj-workshop-germany-meets-berlin' },
-
           ]
         },
       ],
@@ -62,7 +62,7 @@
             { label: 'Community (coming soon)', link: '/community' }
           ]
         }
-        ],
+      ],
       quickLinks: [
         { label: 'Kontakt', link: '/kontakt' },
         { label: 'Feedback', link: '/feedback' },
@@ -133,12 +133,12 @@
 </script>
 
 <header 
-  class="fixed top-0 left-0 w-full z-50 transition-all duration-300 {headerBg}"
+  class="fixed top-0 left-0 w-full z-[100] transition-all duration-300 {headerBg}"
 >
   <div class="container mx-auto px-4">
     <div class="flex items-center justify-between h-20">
       <!-- Logo -->
-      <a href="/" class="relative z-50">
+      <a href="/" class="relative z-[110]">
         <img src="/assets/logo.svg" alt="DJ Workshop Germany" class="h-12">
       </a>
 
@@ -166,7 +166,7 @@
 
       <!-- Mobile Menu Button -->
       <button 
-        class="lg:hidden relative z-50 text-white"
+        class="lg:hidden relative z-[110] text-white"
         on:click={() => mobileMenuOpen = !mobileMenuOpen}
       >
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -180,11 +180,21 @@
     </div>
   </div>
 
+  <!-- Page Overlay -->
+  {#if activeMenu}
+    <div 
+      class="fixed inset-0 bg-black/80 transition-opacity duration-300 z-[90]"
+      style="top: 80px;"
+      on:click={closeMenu}
+      transition:fade={{ duration: 200 }}
+    ></div>
+  {/if}
+
   <!-- Mega Menu -->
   {#if activeMenu && menuItems[activeMenu]}
     <div 
       bind:this={megaMenuContainer}
-      class="absolute top-full left-0 w-full bg-black border-t border-b border-gray-900/30"
+      class="absolute top-full left-0 w-full bg-black border-t border-b border-gray-900/30 z-[95]"
       transition:slide={{ duration: 200, easing: quintOut }}
       on:mouseleave={handleMouseLeave}
     >
@@ -267,47 +277,14 @@
   {/if}
 
   <!-- Mobile Menu -->
-  {#if mobileMenuOpen}
-    <div 
-      class="fixed inset-0 bg-black lg:hidden"
-      transition:fade={{ duration: 200 }}
-    >
-      <div class="container mx-auto px-4 py-20">
-        <nav class="space-y-6">
-          {#each Object.entries(menuItems) as [key, menu]}
-            <div>
-              <h3 class="font-heading text-green-500 font-medium mb-4">{menu.title}</h3>
-              <ul class="space-y-4 pl-4">
-                {#each menu.columns as column}
-                  {#each column.items as item}
-                    <li>
-                      <a 
-                        href={item.link} 
-                        class="font-heading text-gray-300 hover:text-white transition duration-200"
-                        on:click={() => mobileMenuOpen = false}
-                      >
-                        {item.label}
-                      </a>
-                    </li>
-                  {/each}
-                {/each}
-              </ul>
-            </div>
-          {/each}
-          <div class="pt-6">
-            <a 
-              href="/events" 
-              class="font-heading block w-full text-center px-6 py-3 text-white border border-green-500 hover:bg-green-500 hover:text-black rounded-full transition duration-200"
-              on:click={() => mobileMenuOpen = false}
-            >
-              Tickets buchen
-            </a>
-          </div>
-        </nav>
-      </div>
-    </div>
-  {/if}
+  <MobileMenu bind:isOpen={mobileMenuOpen} {menuItems} />
 </header>
 
 <!-- Spacer to prevent content from hiding under fixed header -->
 <div class="h-20"></div>
+
+<style>
+  button {
+    text-align: left;
+  }
+</style>

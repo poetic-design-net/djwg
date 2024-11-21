@@ -40,9 +40,9 @@
     </div>
   </div>
 
-  <div class="relative">
+  <div class="relative ">
     {#if !isLineupRevealed}
-      <div class="absolute inset-0 backdrop-blur-xl bg-black/40 z-10 flex items-center justify-center">
+      <div class="absolute inset-0 px-4 sm:px-0 backdrop-blur-xl bg-black/40 z-10 flex items-center justify-center">
         <div class="text-center">
           <span class="text-2xl text-white font-medium">Line-Up wird bald bekannt gegeben</span>
           <p class="text-gray-400 mt-2">Bleib gespannt!</p>

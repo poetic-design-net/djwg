@@ -1,19 +1,27 @@
 import blockContent from './blockContent'
 import post from './post'
-import testimonial from './testimonial'
-import logo from './logo'
 import artist from './artist'
 import event from './event'
-import faq from './faq'
 import timeSlot from './timeSlot'
+import faq from './faq'
+import logo from './logo'
+import testimonial from './testimonial'
+import teamMember from './teamMember'
+import aboutUs from './aboutUs'
+import founder from './founder'
+import knowledgeBaseItem from './knowledgeBaseItem'
 
 export const schemaTypes = [
   post,
-  blockContent,
-  testimonial,
-  logo,
   artist,
   event,
+  timeSlot,
   faq,
-  timeSlot
+  logo,
+  testimonial,
+  teamMember,
+  aboutUs,
+  founder,
+  knowledgeBaseItem,
+  blockContent,
 ]

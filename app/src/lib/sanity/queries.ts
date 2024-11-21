@@ -1,4 +1,5 @@
 import groq from 'groq';
+import type { PortableTextBlock } from '@portabletext/types';
 
 export const postsQuery = groq`*[_type == "post" && defined(slug.current)] | order(_createdAt desc)`;
 
@@ -68,6 +69,63 @@ export const timeSlotsQuery = groq`*[_type == "timeSlot" && event._ref == $event
   }
 }`;
 
+export const teamMembersQuery = groq`*[_type == "teamMember" && isActive == true] | order(order asc) {
+  _id,
+  name,
+  slug,
+  role,
+  image,
+  bio,
+  order,
+  socials {
+    instagram,
+    soundcloud
+  }
+}`;
+
+export const aboutUsQuery = groq`*[_type == "aboutUs"][0] {
+  history {
+    title,
+    content
+  },
+  philosophy {
+    title,
+    items[] {
+      title,
+      description
+    }
+  }
+}`;
+
+export const founderQuery = groq`*[_type == "founder"][0] {
+  name,
+  role,
+  image,
+  description,
+  quote,
+  socials {
+    instagram,
+    soundcloud
+  }
+}`;
+
+export const featuredKnowledgeBaseItemsQuery = groq`*[_type == "knowledgeBaseItem" && featured == true] | order(order asc) {
+  _id,
+  title,
+  description,
+  icon,
+  category
+}`;
+
+export const knowledgeBaseItemsQuery = groq`*[_type == "knowledgeBaseItem"] | order(category asc, title asc) {
+  _id,
+  title,
+  description,
+  icon,
+  category,
+  content
+}`;
+
 export interface Post {
   _type: 'post';
   _createdAt: string;
@@ -128,6 +186,70 @@ export interface Artist {
   };
   isRevealed: boolean;
   order: number;
+}
+
+export interface TeamMember {
+  _id: string;
+  name: string;
+  slug: {
+    current: string;
+  };
+  role: string;
+  image: {
+    asset: {
+      _ref: string;
+      _type: 'reference';
+    };
+    hotspot?: {
+      x: number;
+      y: number;
+      height: number;
+      width: number;
+    };
+  };
+  bio?: string;
+  order: number;
+  socials: {
+    instagram?: string;
+    soundcloud?: string;
+  };
+}
+
+export interface Founder {
+  name: string;
+  role: string;
+  image: {
+    asset: {
+      _ref: string;
+      _type: 'reference';
+    };
+    hotspot?: {
+      x: number;
+      y: number;
+      height: number;
+      width: number;
+    };
+  };
+  description: PortableTextBlock[];
+  quote?: string;
+  socials: {
+    instagram?: string;
+    soundcloud?: string;
+  };
+}
+
+export interface AboutUs {
+  history: {
+    title: string;
+    content: PortableTextBlock[];
+  };
+  philosophy: {
+    title: string;
+    items: Array<{
+      title: string;
+      description: string;
+    }>;
+  };
 }
 
 export interface ScheduleItem {
@@ -227,4 +349,13 @@ export interface TimeSlot {
 export interface TimeSlotBooking {
   name: string;
   email: string;
+}
+
+export interface KnowledgeBaseItem {
+  _id: string;
+  title: string;
+  description: string;
+  icon: string;
+  category: 'equipment' | 'mixing' | 'software' | 'performance' | 'business';
+  content?: PortableTextBlock[];
 }
