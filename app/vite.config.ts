@@ -26,7 +26,9 @@ export default defineConfig(({ mode }) => {
       'process.env.GOOGLE_CLIENT_SECRET': JSON.stringify(env.GOOGLE_CLIENT_SECRET),
       'process.env.AUTH_SECRET': JSON.stringify(env.AUTH_SECRET),
       'import.meta.env.SANITY_API_WRITE_TOKEN': JSON.stringify(env.SANITY_API_WRITE_TOKEN),
-      'import.meta.env.SANITY_API_READ_TOKEN': JSON.stringify(env.SANITY_API_READ_TOKEN)
+      'import.meta.env.SANITY_API_READ_TOKEN': JSON.stringify(env.SANITY_API_READ_TOKEN),
+      'import.meta.env.PUBLIC_SUPABASE_URL': JSON.stringify(env.PUBLIC_SUPABASE_URL),
+      'import.meta.env.PUBLIC_SUPABASE_ANON_KEY': JSON.stringify(env.PUBLIC_SUPABASE_ANON_KEY)
     }
   };
 });
