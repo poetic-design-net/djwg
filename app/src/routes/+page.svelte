@@ -18,21 +18,16 @@ import Seo from '$lib/components/Seo.svelte';
 
 export let data: PageData;
 
-// Type-safe useQuery calls with proper initial data structure
-const testimonials = useQuery<{ data: Testimonial[] }>(data.testimonials.query);
-const logos = useQuery<{ data: Logo[] }>(data.logos.query);
-const events = useQuery<{ data: Event[] }>(data.events.query);
-const faqs = useQuery<{ data: FAQ[] }>(data.faqs.query);
-const featuredKnowledgeBaseItems = useQuery<{ data: KnowledgeBaseItem[] }>(data.featuredKnowledgeBaseItems.query);
-const siteSettings = useQuery<{ data: SiteSettings }>(data.siteSettings.query);
-const homePage = useQuery<{ data: HomePage }>(data.homePage.query);
+// Get the initial data from the server load
+const homeData = data.homePage.options.initial as HomePage;
+const eventsArray = data.events.data as Event[];
+const faqsArray = data.faqs.options.initial as FAQ[];
+const knowledgeBaseItems = data.featuredKnowledgeBaseItems.options.initial as KnowledgeBaseItem[];
+const siteSettingsData = data.siteSettings.options.initial as SiteSettings;
 
-// Get the artists directly from the server data
-const artists = data.artists?.data || [];
-$: eventsArray = ($events?.data || []) as Event[];
-$: faqsArray = ($faqs?.data || []) as FAQ[];
-$: knowledgeBaseItems = ($featuredKnowledgeBaseItems?.data || []) as KnowledgeBaseItem[];
-$: homeData = ($homePage?.data || {}) as HomePage;
+// Format logos and testimonials data to match component expectations
+const logosData = { data: data.logos.options.initial as Logo[] || [] };
+const testimonialsData = { data: data.testimonials.options.initial as Testimonial[] || [] };
 
 // Default PortableText block for title if none exists
 const defaultTitle: PortableTextBlock[] = [{
@@ -44,7 +39,7 @@ const defaultTitle: PortableTextBlock[] = [{
 }];
 
 // Get SEO data from homepage or fallback to siteSettings
-$: seo = homeData?.seo || ($siteSettings?.data && 'seo' in $siteSettings.data ? $siteSettings.data.seo : null) || {
+$: seo = homeData?.seo || siteSettingsData?.seo || {
   metaTitle: 'DJ Workshop Germany | Professionelle DJ Workshops',
   metaDescription: 'Lerne das DJing von erfahrenen Profis. Unsere Workshops bieten praktische Erfahrung, modernste Ausrüstung und individuelle Betreuung.',
   ogImage: '/assets/home_hero.jpg'
@@ -78,7 +73,7 @@ $: seo = homeData?.seo || ($siteSettings?.data && 'seo' in $siteSettings.data ? 
 </section>
 	
 <section class="pt-48 pb-20">
-	<ArtistsSlider artists={artists} isLineupRevealed={!data.isArtistsSecret} />
+	<ArtistsSlider artists={data.artists.data} isLineupRevealed={!data.isArtistsSecret} />
 </section>
 
 <section class="relative pt-36 overflow-hidden">	
@@ -89,14 +84,14 @@ $: seo = homeData?.seo || ($siteSettings?.data && 'seo' in $siteSettings.data ? 
 </section>
 
 <section class="relative pt-36 overflow-hidden">	
-	{#if $logos?.data}
-		<Logos logos={$logos.data} />
+	{#if logosData.data && logosData.data.length > 0}
+		<Logos logos={logosData} />
 	{/if}
 </section>
 
 <section class="relative py-36 overflow-hidden">	
-	{#if $testimonials?.data}
-		<Testimonials testimonials={$testimonials.data} />
+	{#if testimonialsData.data && testimonialsData.data.length > 0}
+		<Testimonials testimonials={testimonialsData} />
 	{/if}
 </section>
 
