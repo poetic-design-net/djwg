@@ -1,7 +1,7 @@
 <script lang="ts">
 import { useQuery } from '@sanity/svelte-loader';
 import type { PageData } from './$types';
-import type { Artist, FAQ } from '$lib/sanity/queries';
+import type { Artist, FAQ, Logo, Testimonial, Event, KnowledgeBaseItem, SiteSettings } from '$lib/sanity/queries';
 import type { HomePage } from '$lib/sanity/queries/homepage';
 import type { PortableTextBlock } from '@portabletext/types';
 import Herostart from '$lib/components/hero/start.svelte';
@@ -17,19 +17,21 @@ import Faq from '$lib/components/FAQ.svelte';
 import Seo from '$lib/components/Seo.svelte';
 
 export let data: PageData;
-const testimonials = useQuery(data.testimonials);
-const logos = useQuery(data.logos);
-const events = useQuery(data.events);
-const faqs = useQuery(data.faqs);
-const featuredKnowledgeBaseItems = useQuery(data.featuredKnowledgeBaseItems);
-const siteSettings = useQuery(data.siteSettings);
-const homePage = useQuery(data.homePage);
+
+// Type-safe useQuery calls with proper initial data structure
+const testimonials = useQuery<{ data: Testimonial[] }>(data.testimonials.query);
+const logos = useQuery<{ data: Logo[] }>(data.logos.query);
+const events = useQuery<{ data: Event[] }>(data.events.query);
+const faqs = useQuery<{ data: FAQ[] }>(data.faqs.query);
+const featuredKnowledgeBaseItems = useQuery<{ data: KnowledgeBaseItem[] }>(data.featuredKnowledgeBaseItems.query);
+const siteSettings = useQuery<{ data: SiteSettings }>(data.siteSettings.query);
+const homePage = useQuery<{ data: HomePage }>(data.homePage.query);
 
 // Get the artists directly from the server data
 const artists = data.artists?.data || [];
-$: eventsArray = $events?.data || [];
-$: faqsArray = $faqs?.data || [];
-$: knowledgeBaseItems = $featuredKnowledgeBaseItems?.data || [];
+$: eventsArray = ($events?.data || []) as Event[];
+$: faqsArray = ($faqs?.data || []) as FAQ[];
+$: knowledgeBaseItems = ($featuredKnowledgeBaseItems?.data || []) as KnowledgeBaseItem[];
 $: homeData = ($homePage?.data || {}) as HomePage;
 
 // Default PortableText block for title if none exists
@@ -42,7 +44,7 @@ const defaultTitle: PortableTextBlock[] = [{
 }];
 
 // Get SEO data from homepage or fallback to siteSettings
-$: seo = homeData?.seo || $siteSettings?.data?.seo || {
+$: seo = homeData?.seo || ($siteSettings?.data && 'seo' in $siteSettings.data ? $siteSettings.data.seo : null) || {
   metaTitle: 'DJ Workshop Germany | Professionelle DJ Workshops',
   metaDescription: 'Lerne das DJing von erfahrenen Profis. Unsere Workshops bieten praktische Erfahrung, modernste Ausrüstung und individuelle Betreuung.',
   ogImage: '/assets/home_hero.jpg'
@@ -87,14 +89,14 @@ $: seo = homeData?.seo || $siteSettings?.data?.seo || {
 </section>
 
 <section class="relative pt-36 overflow-hidden">	
-	{#if $logos}
-		<Logos logos={$logos} />
+	{#if $logos?.data}
+		<Logos logos={$logos.data} />
 	{/if}
 </section>
 
 <section class="relative py-36 overflow-hidden">	
-	{#if $testimonials}
-		<Testimonials testimonials={$testimonials} />
+	{#if $testimonials?.data}
+		<Testimonials testimonials={$testimonials.data} />
 	{/if}
 </section>
 

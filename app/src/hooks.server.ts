@@ -2,7 +2,7 @@ import { createRequestHandler, setServerClient } from '@sanity/svelte-loader';
 import { serverClient } from '$lib/server/sanity/client';
 import { createSupabaseServerClient } from '@supabase/auth-helpers-sveltekit';
 import type { Handle } from '@sveltejs/kit';
-import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '$env/static/public';
 import { sequence } from '@sveltejs/kit/hooks';
 
 // Sets the client to be used by `loadQuery` when fetching data on the server.
@@ -16,8 +16,8 @@ const supabaseHandler: Handle = async ({ event, resolve }) => {
   try {
     // Create Supabase client for each request
     event.locals.supabase = createSupabaseServerClient({
-      supabaseUrl: PUBLIC_SUPABASE_URL,
-      supabaseKey: PUBLIC_SUPABASE_ANON_KEY,
+      supabaseUrl: SUPABASE_URL,
+      supabaseKey: SUPABASE_ANON_KEY,
       event,
     });
 
