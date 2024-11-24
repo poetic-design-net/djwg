@@ -3,7 +3,7 @@
 	import { page } from '$app/stores';
 	import { setContext, onMount } from 'svelte';
 	import { afterNavigate } from '$app/navigation';
-	import { SUPABASE_ANON_KEY, SUPABASE_URL } from '$env/static/public';
+	import { PUBLIC_SUPABASE_ANON_KEY, PUBLIC_SUPABASE_URL } from '$env/static/public';
 	import { createSupabaseLoadClient } from '@supabase/auth-helpers-sveltekit';
 	import { initBento, identifyBentoUser } from '$lib/bento/init';
 	import LiveMode from '$lib/components/LiveMode.svelte';
@@ -16,8 +16,8 @@
 
 	// Create and set Supabase client in context using environment variables
 	const supabase = createSupabaseLoadClient({
-		supabaseUrl: SUPABASE_URL,
-		supabaseKey: SUPABASE_ANON_KEY,
+		supabaseUrl: PUBLIC_SUPABASE_URL,
+		supabaseKey: PUBLIC_SUPABASE_ANON_KEY,
 		event: { fetch },
 		serverSession: data.session
 	});

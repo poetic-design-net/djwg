@@ -1,7 +1,14 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ locals }) => {
+export const load: PageServerLoad = async ({ locals, setHeaders }) => {
+  // Set no-cache headers for dashboard since it's user-specific and requires fresh data
+  setHeaders({
+    'cache-control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+    'pragma': 'no-cache',
+    'expires': '0'
+  });
+
   try {
     // Get session and user
     const session = locals.supabase ? (await locals.supabase.auth.getSession()).data.session : null;
