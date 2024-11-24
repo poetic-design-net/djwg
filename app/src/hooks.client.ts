@@ -1,13 +1,13 @@
 import { createSupabaseLoadClient } from '@supabase/auth-helpers-sveltekit';
-import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '$env/static/public';
 import type { Handle } from '@sveltejs/kit';
 import { invalidate } from '$app/navigation';
 
 export const handle: Handle = async ({ event, resolve }) => {
   try {
     event.locals.supabase = createSupabaseLoadClient({
-      supabaseUrl: PUBLIC_SUPABASE_URL,
-      supabaseKey: PUBLIC_SUPABASE_ANON_KEY,
+      supabaseUrl: SUPABASE_URL,
+      supabaseKey: SUPABASE_ANON_KEY,
       event,
       serverSession: null
     });
