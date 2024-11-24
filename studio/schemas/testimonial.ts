@@ -6,28 +6,37 @@ export default defineType({
   type: 'document',
   fields: [
     defineField({
-      name: 'text',
-      title: 'Text',
+      name: 'name',
+      title: 'Name',
+      type: 'string',
+      validation: (Rule) => Rule.required(),
+    }),
+    defineField({
+      name: 'role',
+      title: 'Role',
+      type: 'string',
+      validation: (Rule) => Rule.required(),
+    }),
+    defineField({
+      name: 'quote',
+      title: 'Quote',
       type: 'text',
       validation: (Rule) => Rule.required(),
     }),
     defineField({
-      name: 'author',
-      title: 'Author',
-      type: 'string',
-      validation: (Rule) => Rule.required(),
-    }),
-    defineField({
-      name: 'title',
-      title: 'Title',
-      type: 'string',
-      validation: (Rule) => Rule.required(),
+      name: 'image',
+      title: 'Image',
+      type: 'image',
+      options: {
+        hotspot: true,
+      },
     }),
   ],
   preview: {
     select: {
-      title: 'author',
-      subtitle: 'title',
+      title: 'name',
+      subtitle: 'role',
+      media: 'image',
     },
   },
 })

@@ -1,12 +1,17 @@
 import type { LoaderLocals } from '@sanity/svelte-loader';
+import type { SupabaseClient, User } from '@supabase/supabase-js';
 
-// See https://kit.svelte.dev/docs/types#app
-// for information about these interfaces
 declare global {
 	namespace App {
+		interface Locals extends LoaderLocals {
+			supabase: SupabaseClient;
+			getUser(): Promise<User | null>;
+		}
+		interface PageData {
+			user: User | null;
+			preview?: boolean;
+		}
 		// interface Error {}
-		interface Locals extends LoaderLocals {}
-		// interface PageData {}
 		// interface Platform {}
 	}
 }

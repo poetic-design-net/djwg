@@ -7,6 +7,8 @@
   import type { Event } from '$lib/sanity/queries';
 
   export let events: Event[] = [];
+  export let title: string = "DJ Workshop Germany";
+  export let description: string = "Sei dabei bei unseren exklusiven DJ Events in 2025";
 
   let currentIndex = 0;
   let sliderContainer: HTMLDivElement;
@@ -74,8 +76,8 @@
 <div class="container px-4 mx-auto">
   <div class="text-center">
     <span class="inline-block mb-4 text-sm text-purple-400 font-medium tracking-tighter">Kommende Events</span>
-    <h2 class="font-heading mb-6 text-5xl md:text-7xl lg:text-8xl text-white tracking-8xl md:max-w-md mx-auto">DJ Workshop Germany</h2>
-    <p class="mb-20 text-gray-300 md:max-w-md mx-auto">Sei dabei bei unseren exklusiven DJ Events in 2025</p>
+    <h2 class="font-heading mb-6 text-5xl md:text-7xl lg:text-8xl text-white tracking-8xl md:max-w-md mx-auto">{title}</h2>
+    <p class="mb-20 text-gray-300 md:max-w-md mx-auto">{description}</p>
   </div>
 
   <div class="relative">

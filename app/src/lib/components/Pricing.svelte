@@ -7,6 +7,9 @@
     status: 'completed' | 'current' | 'coming-soon';
   }
 
+  export let title: string = "Sichere dir dein Ticket";
+  export let description: string = "Wähle die passende Phase für dein Event-Ticket";
+
   const pricingPhases: PricingPhase[] = [
     {
       phase: "Phase 1",
@@ -62,8 +65,8 @@
 <div class="container px-4 mx-auto">
   <div class="text-center mb-20">
     <span class="inline-block mb-4 text-sm text-purple-400 font-medium tracking-tighter">Ticket Phasen</span>
-    <h2 class="font-heading mb-6 text-5xl md:text-6xl text-white tracking-tighter">Sichere dir dein Ticket</h2>
-    <p class="text-lg text-gray-300 md:max-w-md mx-auto">Wähle die passende Phase für dein Event-Ticket</p>
+    <h2 class="font-heading mb-6 text-5xl md:text-6xl text-white tracking-tighter">{title}</h2>
+    <p class="text-lg text-gray-300 md:max-w-md mx-auto">{description}</p>
   </div>
 
   <div class="flex flex-wrap -mx-4">

@@ -1,21 +1,24 @@
 import {visionTool} from '@sanity/vision'
-import {defineConfig} from 'sanity'
+import {defineConfig, type SchemaTypeDefinition} from 'sanity'
 import {structureTool} from 'sanity/structure'
 import {presentationTool} from 'sanity/presentation'
 
 import {schemaTypes} from './schemas'
+import {myStructure} from './structure'
 
 const config = defineConfig({
   basePath: '/',
   projectId: 'kijh3dc6',
   dataset: 'production',
-  name: 'project-name',
-  title: 'Project Name',
+  name: 'DJWG',
+  title: 'DJWG',
   plugins: [
-    structureTool(),
+    structureTool({
+      structure: myStructure
+    }),
     presentationTool({
       previewUrl: {
-        origin: 'https://djwg-app.vercel.app/',
+        origin: 'http://localhost:5173/',
         previewMode: {
           enable: '/preview/enable',
           disable: '/preview/disable',
@@ -25,7 +28,7 @@ const config = defineConfig({
     visionTool(),
   ],
   schema: {
-    types: schemaTypes,
+    types: schemaTypes as SchemaTypeDefinition[],
   },
 })
 

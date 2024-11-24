@@ -2,77 +2,67 @@ import { defineField, defineType } from 'sanity';
 
 export default defineType({
   name: 'knowledgeBaseItem',
-  title: 'Knowledge Base Item',
+  title: 'Knowledge Base',
   type: 'document',
   fields: [
     defineField({
       name: 'title',
-      title: 'Title',
+      title: 'Titel',
       type: 'string',
       validation: Rule => Rule.required()
     }),
     defineField({
       name: 'description',
-      title: 'Description',
+      title: 'Beschreibung',
       type: 'text',
       validation: Rule => Rule.required()
     }),
     defineField({
-      name: 'icon',
-      title: 'Icon',
-      type: 'string',
-      options: {
-        list: [
-          { title: 'Mixer', value: 'mixer' },
-          { title: 'Headphones', value: 'headphones' },
-          { title: 'Vinyl', value: 'vinyl' },
-          { title: 'Laptop', value: 'laptop' },
-          { title: 'Microphone', value: 'microphone' },
-          { title: 'Controller', value: 'controller' }
-        ]
-      },
-      validation: Rule => Rule.required()
-    }),
-    defineField({
       name: 'category',
-      title: 'Category',
-      type: 'string',
-      options: {
-        list: [
-          { title: 'Equipment', value: 'equipment' },
-          { title: 'Mixing', value: 'mixing' },
-          { title: 'Software', value: 'software' },
-          { title: 'Performance', value: 'performance' },
-          { title: 'Business', value: 'business' }
-        ]
-      },
-      validation: Rule => Rule.required()
-    }),
-    defineField({
-      name: 'content',
-      title: 'Content',
-      type: 'array',
-      of: [{ type: 'block' }],
+      title: 'Kategorie',
+      type: 'reference',
+      to: [{ type: 'category' }],
       validation: Rule => Rule.required()
     }),
     defineField({
       name: 'featured',
-      title: 'Featured on Homepage',
+      title: 'Featured',
       type: 'boolean',
-      initialValue: false
+      description: 'Auf der Startseite anzeigen'
     }),
     defineField({
       name: 'order',
-      title: 'Order',
+      title: 'Reihenfolge',
       type: 'number',
-      hidden: ({ document }) => !document?.featured,
-      validation: Rule => Rule.integer()
+      hidden: ({ document }: any) => !document?.featured
+    }),
+    defineField({
+      name: 'content',
+      title: 'Inhalt',
+      type: 'array',
+      of: [{ type: 'block' }]
     })
+  ],
+  orderings: [
+    {
+      title: 'Kategorie, A-Z',
+      name: 'categoryAsc',
+      by: [
+        { field: 'category.title', direction: 'asc' },
+        { field: 'title', direction: 'asc' }
+      ]
+    }
   ],
   preview: {
     select: {
       title: 'title',
-      subtitle: 'category'
+      category: 'category.title'
+    },
+    prepare({ title, category }: any) {
+      return {
+        title,
+        subtitle: category
+      }
     }
   }
 });

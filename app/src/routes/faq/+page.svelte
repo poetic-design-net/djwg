@@ -1,5 +1,6 @@
 <script lang="ts">
   import FAQ from '$lib/components/FAQ.svelte';
+  import Seo from '$lib/components/Seo.svelte';
   import type { PageData } from './$types';
 
   export let data: { faqs: Array<{
@@ -9,7 +10,16 @@
     category: 'workshop' | 'equipment' | 'booking' | 'general';
     order: number;
   }> };
+
+  // Default SEO for FAQ page
+  const seo = {
+    metaTitle: 'Häufig gestellte Fragen | DJ Workshop Germany',
+    metaDescription: 'Finde Antworten auf die wichtigsten Fragen zu unseren DJ Workshops, Equipment, Buchungen und mehr. Alles was du über unsere DJ Kurse wissen musst.',
+    ogImage: '/assets/home_hero.jpg'
+  };
 </script>
+
+<Seo {seo} />
 
 <div class="min-h-screen bg-black">
   <div class="container mx-auto px-4 py-20">
