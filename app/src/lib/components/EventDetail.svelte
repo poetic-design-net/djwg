@@ -8,6 +8,7 @@
   import OpenStage from './OpenStage.svelte';
   import ArtistsSlider from './ArtistsSlider.svelte';
   import Pricing from './Pricing.svelte';
+  import SectionNav from './navigation/SectionNav.svelte';
 
   interface Day {
     date: string;
@@ -36,6 +37,7 @@
     description: string;
     date: string;
     location: string;
+    locationUrl?: string;
     features?: string[];
     image: string;
     highlights: {
@@ -56,6 +58,7 @@
     isArtistsSecret?: boolean;
     hasOpenStage?: boolean;
     isOpenStageSecret?: boolean;
+    enableSectionNav?: boolean;
   };
 
   export let artists: Artist[] = [];
@@ -65,54 +68,72 @@
   $: scheduleDays = event.schedule?.days ?? [];
   $: hasValidSchedule = scheduleDays.length > 0;
 
-  // Debug logging
-  $: {
-    console.log('Event:', event);
-    console.log('Event schedule:', event.schedule);
-    console.log('Schedule days:', scheduleDays);
-    console.log('Has valid schedule:', hasValidSchedule);
-  }
+  // Define sections based on available content
+  $: sections = [
+    { id: 'hero', label: 'Start' },
+    { id: 'about', label: 'About' },
+    ...(hasValidSchedule ? [{ id: 'schedule', label: 'Schedule' }] : []),
+    ...(event.hasOpenStage ? [{ id: 'openstage', label: 'Open Stage' }] : []),
+    { id: 'artists', label: 'Artists' },
+    ...(event.locationDetails ? [{ id: 'location', label: 'Location' }] : []),
+    { id: 'tickets', label: 'Tickets' },
+    ...(event.gallery ? [{ id: 'gallery', label: 'Gallery' }] : [])
+  ];
 </script>
 
-<div class="min-h-screen bg-black">
-  <Hero {event} />
+<div class="min-h-screen bg-black relative">
+  <SectionNav {sections} enabled={event.enableSectionNav ?? true} />
 
-  <About 
-    description={event.description}
-    features={event.features || []}
-    highlights={event.highlights}
-  />
+  <div id="hero">
+    <Hero {event} />
+  </div>
+
+  <div id="about">
+    <About 
+      description={event.description}
+      features={event.features || []}
+      highlights={event.highlights}
+    />
+  </div>
 
   {#if hasValidSchedule}
-    <TimeTable schedule={scheduleDays} />
+    <div id="schedule">
+      <TimeTable schedule={scheduleDays} />
+    </div>
   {/if}
 
   {#if event.hasOpenStage}
-    <OpenStage
-      eventId={event._id}
-      {timeSlots}
-      isAdmin={false}
-      isSecret={event.isOpenStageSecret}
-    />
+    <div id="openstage" class="min-h-screen flex item-center justify-center">
+      <OpenStage
+        eventId={event._id}
+        {timeSlots}
+        isAdmin={false}
+        isSecret={event.isOpenStageSecret}
+      />
+    </div>
   {/if}
 
-  <div class="py-20 bg-black/40">
+  <div id="artists" class="py-20 bg-black/40">
     <ArtistsSlider {artists} isLineupRevealed={!event.isArtistsSecret} />
   </div>
 
   {#if event.locationDetails}
-    <Location 
-      locationDetails={event.locationDetails}
-      isSecret={event.isLocationSecret}
-    />
+    <div id="location">
+      <Location 
+        locationDetails={event.locationDetails}
+        isSecret={event.isLocationSecret}
+      />
+    </div>
   {/if}
 
-  <div class="py-20 bg-black/40">
+  <div id="tickets" class="py-20 bg-black/40">
     <Pricing />
   </div>
 
   {#if event.gallery}
-    <Gallery images={event.gallery} />
+    <div id="gallery">
+      <Gallery images={event.gallery} />
+    </div>
   {/if}
 </div>
 
@@ -124,7 +145,7 @@
   }
 
   /* Prevent content jumping on mobile */
-  global:html {
+  :global(html) {
     height: -webkit-fill-available;
   }
 </style>

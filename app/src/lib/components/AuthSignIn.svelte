@@ -4,6 +4,7 @@
   import { browser } from '$app/environment';
   import { goto } from '$app/navigation';
   import { getContext } from 'svelte';
+  import { toasts } from '$lib/stores/toast';
   import type { AuthPageData } from '../../routes/auth/+page';
   import type { SupabaseClient } from '@supabase/supabase-js';
 
@@ -37,13 +38,15 @@
       errorMsg = '';
 
       if (!email || !password) {
-        errorMsg = 'Please enter both email and password';
+        errorMsg = 'Bitte geben Sie E-Mail und Passwort ein';
+        toasts.error(errorMsg);
         loading = false;
         return;
       }
 
       if (!supabase) {
-        errorMsg = 'Authentication service unavailable. Please try again later.';
+        errorMsg = 'Authentifizierungsdienst nicht verfügbar. Bitte versuchen Sie es später erneut.';
+        toasts.error(errorMsg);
         loading = false;
         return;
       }
@@ -56,6 +59,7 @@
       if (signInError) {
         console.error('Sign in error:', signInError);
         errorMsg = signInError.message;
+        toasts.error('Anmeldung fehlgeschlagen');
         loading = false;
         return;
       }
@@ -65,14 +69,16 @@
 
       if (verifyError) {
         console.error('Verify error:', verifyError);
-        errorMsg = 'Error verifying user';
+        errorMsg = 'Fehler bei der Benutzerüberprüfung';
+        toasts.error(errorMsg);
         loading = false;
         return;
       }
 
       if (!verifiedUser || verifiedUser.aud !== 'authenticated') {
         console.error('User not authenticated after sign in');
-        errorMsg = 'Authentication failed';
+        errorMsg = 'Authentifizierung fehlgeschlagen';
+        toasts.error(errorMsg);
         loading = false;
         return;
       }
@@ -85,7 +91,8 @@
       }
     } catch (error) {
       console.error('Unexpected error during sign in:', error);
-      errorMsg = 'An unexpected error occurred';
+      errorMsg = 'Ein unerwarteter Fehler ist aufgetreten';
+      toasts.error(errorMsg);
       loading = false;
     }
   };
@@ -96,13 +103,15 @@
       errorMsg = '';
 
       if (!email || !password) {
-        errorMsg = 'Please enter both email and password';
+        errorMsg = 'Bitte geben Sie E-Mail und Passwort ein';
+        toasts.error(errorMsg);
         loading = false;
         return;
       }
 
       if (!supabase) {
-        errorMsg = 'Authentication service unavailable. Please try again later.';
+        errorMsg = 'Authentifizierungsdienst nicht verfügbar. Bitte versuchen Sie es später erneut.';
+        toasts.error(errorMsg);
         loading = false;
         return;
       }
@@ -118,15 +127,18 @@
       if (error) {
         console.error('Sign up error:', error);
         errorMsg = error.message;
+        toasts.error('Registrierung fehlgeschlagen');
         loading = false;
         return;
       }
 
       loading = false;
-      errorMsg = 'Check your email for the confirmation link.';
+      errorMsg = 'Überprüfen Sie Ihre E-Mail für den Bestätigungslink.';
+      toasts.success('Registrierung erfolgreich. Bitte überprüfen Sie Ihre E-Mail.');
     } catch (error) {
       console.error('Unexpected error during sign up:', error);
-      errorMsg = 'An unexpected error occurred';
+      errorMsg = 'Ein unerwarteter Fehler ist aufgetreten';
+      toasts.error(errorMsg);
       loading = false;
     }
   };
@@ -134,7 +146,8 @@
   const handleSignInWithGoogle = async () => {
     try {
       if (!supabase) {
-        errorMsg = 'Authentication service unavailable. Please try again later.';
+        errorMsg = 'Authentifizierungsdienst nicht verfügbar. Bitte versuchen Sie es später erneut.';
+        toasts.error(errorMsg);
         return;
       }
 
@@ -148,17 +161,18 @@
       if (error) {
         console.error('Google sign in error:', error);
         errorMsg = error.message;
+        toasts.error('Google-Anmeldung fehlgeschlagen');
       }
     } catch (error) {
       console.error('Unexpected error during Google sign in:', error);
-      errorMsg = 'An unexpected error occurred';
+      errorMsg = 'Ein unerwarteter Fehler ist aufgetreten';
+      toasts.error(errorMsg);
     }
   };
 
   const togglePasswordVisibility = () => {
     showPassword = !showPassword;
   };
-  // Script content remains unchanged
 </script>
 
 {#if !user?.aud || user.aud !== 'authenticated'}
@@ -262,7 +276,7 @@
     </div>
     <div class="w-full md:w-1/2 p-8">
       <div class="p-5 h-full">
-        <img class="h-full mx-auto md:mr-0 object-cover rounded-5xl" src="nightsable-assets/images/sign-in/stock.png" alt="Hintergrund">
+        <img class="h-full mx-auto md:mr-0 object-cover rounded-5xl" src="assets/home_hero_2.jpg" alt="Hintergrund">
       </div>
     </div>
   </div>

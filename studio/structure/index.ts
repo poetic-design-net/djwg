@@ -1,136 +1,105 @@
-import type { StructureResolver } from 'sanity/structure'
+import { settingsSection } from './sections/settings'
+import { contentSection } from './sections/content'
+import { eventsSection } from './sections/events'
+import { homepageSection } from './sections/homepage'
+import { knowledgeBaseSection } from './sections/knowledgeBase'
+import { legalSection } from './sections/legal'
+import { navigationSection } from './sections/navigation'
+import { teamSection } from './sections/team'
 
-export const myStructure: StructureResolver = (S) =>
+export const myStructure = (S: any) =>
   S.list()
     .title('Content')
     .items([
-      // Homepage
-      S.listItem()
-        .title('Homepage')
-        .child(
-          S.document()
-            .schemaType('homePage')
-            .documentId('homePage')
-        ),
-
-      // Content & Pages
+      // Main Content
       S.listItem()
         .title('Content')
         .child(
           S.list()
             .title('Content')
             .items([
-              S.listItem()
-                .title('Über Uns')
-                .schemaType('aboutUs')
-                .child(
-                  S.document()
-                    .schemaType('aboutUs')
-                    .documentId('aboutUs')
-                ),
-              S.listItem()
-                .title('Blog Posts')
-                .schemaType('post')
-                .child(S.documentTypeList('post')),
-              S.listItem()
-                .title('Testimonials')
-                .schemaType('testimonial')
-                .child(S.documentTypeList('testimonial')),
-              S.listItem()
-                .title('FAQs')
-                .schemaType('faq')
-                .child(S.documentTypeList('faq'))
-            ])
-        ),
-
-      // Knowledge Base
-      S.listItem()
-        .title('Knowledge Base')
-        .child(
-          S.list()
-            .title('Knowledge Base')
-            .items([
-              S.listItem()
-                .title('Einträge')
-                .schemaType('knowledgeBaseItem')
-                .child(S.documentTypeList('knowledgeBaseItem')),
-              S.listItem()
-                .title('Kategorien')
-                .schemaType('category')
-                .child(S.documentTypeList('category'))
-            ])
-        ),
-
-      // Events & Termine
-      S.listItem()
-        .title('Events & Termine')
-        .child(
-          S.list()
-            .title('Events & Termine')
-            .items([
+              homepageSection(S),
               S.listItem()
                 .title('Events')
-                .schemaType('event')
-                .child(S.documentTypeList('event')),
-              S.listItem()
-                .title('Event Page Settings')
-                .schemaType('eventPage')
                 .child(
-                  S.document()
-                    .schemaType('eventPage')
-                    .documentId('eventPage')
+                  S.list()
+                    .title('Events')
+                    .items([
+                      S.listItem()
+                        .title('All Events')
+                        .child(
+                          S.documentList()
+                            .title('All Events')
+                            .schemaType('event')
+                            .filter('_type == "event"')
+                        ),
+                      S.divider(),
+                      eventsSection(S)
+                    ])
                 ),
-              S.listItem()
-                .title('Zeitpläne')
-                .schemaType('eventSchedule')
-                .child(S.documentTypeList('eventSchedule')),
-              S.listItem()
-                .title('Zeitslots')
-                .schemaType('timeSlot')
-                .child(S.documentTypeList('timeSlot'))
+              contentSection(S),
+              teamSection(S),
+              knowledgeBaseSection(S)
             ])
         ),
 
-      // Team & Künstler
+      // Navigation & Structure
       S.listItem()
-        .title('Team & Künstler')
+        .title('Navigation & Structure')
         .child(
           S.list()
-            .title('Team & Künstler')
+            .title('Navigation & Structure')
             .items([
-              S.listItem()
-                .title('Team Mitglieder')
-                .schemaType('teamMember')
-                .child(S.documentTypeList('teamMember')),
-              S.listItem()
-                .title('Künstler')
-                .schemaType('artist')
-                .child(S.documentTypeList('artist')),
-              S.listItem()
-                .title('Founder')
-                .schemaType('founder')
-                .child(S.documentTypeList('founder'))
+              navigationSection(S),
+              legalSection(S)
             ])
         ),
 
-      // Settings
+      // Settings & Configuration
       S.listItem()
-        .title('Einstellungen')
+        .title('Settings')
         .child(
           S.list()
-            .title('Einstellungen')
+            .title('Settings')
             .items([
               S.listItem()
-                .title('Allgemeine Einstellungen')
+                .title('Site Settings')
                 .child(
                   S.document()
                     .schemaType('siteSettings')
                     .documentId('siteSettings')
                 ),
               S.listItem()
-                .title('Logos')
-                .schemaType('logo')
-                .child(S.documentTypeList('logo'))
+                .title('Footer Settings')
+                .child(
+                  S.document()
+                    .schemaType('footerSettings')
+                    .documentId('footerSettings')
+                ),
+              S.documentTypeListItem('logo')
+                .title('Logos'),
+              S.documentTypeListItem('testimonial')
+                .title('Testimonials')
             ])
-        )
+        ),
+
+      S.divider(),
+
+      // Hide default content types in main navigation
+      ...S.documentTypeListItems().filter(
+        (listItem: any) =>
+          ![
+            'homePage',
+            'event',
+            'artist',
+            'teamMember',
+            'knowledgeBaseItem',
+            'navigation',
+            'logo',
+            'testimonial',
+            'siteSettings',
+            'footerSettings',
+            'media.tag'
+          ].includes(listItem.getId())
+      )
     ])

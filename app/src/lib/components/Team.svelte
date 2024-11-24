@@ -24,7 +24,7 @@
 <div class="container px-4 mx-auto">
   <div class="mb-20 md:max-w-xl text-center mx-auto">
     <span class="inline-block mb-4 text-sm text-green-400 font-medium tracking-tighter">Unser Team</span>
-    <h2 class="font-heading text-7xl lg:text-8xl text-white tracking-7xl lg:tracking-8xl">Die Trainer</h2>
+    <h2 class="font-heading text-7xl lg:text-8xl text-white tracking-7xl lg:tracking-8xl">Mitwirkende</h2>
   </div>
 
   <div class="flex flex-wrap -m-4 mb-10">

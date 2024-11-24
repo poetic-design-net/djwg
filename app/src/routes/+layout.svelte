@@ -6,9 +6,12 @@
 	import { PUBLIC_SUPABASE_ANON_KEY, PUBLIC_SUPABASE_URL } from '$env/static/public';
 	import { createSupabaseLoadClient } from '@supabase/auth-helpers-sveltekit';
 	import { initBento, identifyBentoUser } from '$lib/bento/init';
+	import { toasts } from '$lib/stores/toast';
+	import { authState } from '$lib/stores/auth';
 	import LiveMode from '$lib/components/LiveMode.svelte';
 	import Header from '$lib/components/Header.svelte';
 	import Footer from '$lib/components/Footer.svelte';
+	import Toast from '$lib/components/Toast.svelte';
 	import "../app.pcss";
 	import type { LayoutData } from './$types';
 
@@ -22,6 +25,22 @@
 		serverSession: data.session
 	});
 	setContext('supabase', supabase);
+
+	// Watch for auth state changes
+	$: if (data.user?.aud === 'authenticated') {
+		authState.updateAuthState(true);
+	} else {
+		authState.updateAuthState(false);
+	}
+
+	// Show toasts based on auth state changes
+	$: if ($authState.previousAuthState !== null && $authState.currentAuthState !== $authState.previousAuthState) {
+		if ($authState.currentAuthState) {
+			toasts.success('Erfolgreich angemeldet');
+		} else {
+			toasts.error('Erfolgreich abgemeldet');
+		}
+	}
 
 	// Custom scroll animation function
 	function smoothScrollTo(targetPosition: number, duration: number = 300) {
@@ -122,6 +141,8 @@
 		</a>
 	</div>
 {/if}
+
+<Toast />
 
 <main>
 	<Header {data} />

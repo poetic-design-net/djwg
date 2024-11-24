@@ -82,9 +82,9 @@
       </div>
       <div class="w-auto p-2">
         <div class="flex flex-wrap items-center -m-2 sm:-m-7">
-          <div class="w-auto p-2 sm:p-7"><a class="inline-block text-sm text-black text-opacity-60 hover:text-opacity-100 font-medium transition duration-300" href="/terms">AGB</a></div>
-          <div class="w-auto p-2 sm:p-7"><a class="inline-block text-sm text-black text-opacity-60 hover:text-opacity-100 font-medium transition duration-300" href="/privacy">Datenschutz</a></div>
-          <div class="w-auto p-2 sm:p-7"><a class="inline-block text-sm text-black text-opacity-60 hover:text-opacity-100 font-medium transition duration-300" href="/imprint">Impressum</a></div>
+          <div class="w-auto p-2 sm:p-7"><a class="inline-block text-sm text-black text-opacity-60 hover:text-opacity-100 font-medium transition duration-300" href="/agb">AGB</a></div>
+          <div class="w-auto p-2 sm:p-7"><a class="inline-block text-sm text-black text-opacity-60 hover:text-opacity-100 font-medium transition duration-300" href="/datenschutz">Datenschutz</a></div>
+          <div class="w-auto p-2 sm:p-7"><a class="inline-block text-sm text-black text-opacity-60 hover:text-opacity-100 font-medium transition duration-300" href="/impressum">Impressum</a></div>
         </div>
       </div>
     </div>

@@ -7,6 +7,7 @@
     subtitle: string;
     date: string;
     location: string;
+    locationUrl?: string;
     image: string;
   };
 
@@ -74,7 +75,18 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
             </svg>
-            <span class="break-words">{event.location}</span>
+            {#if event.locationUrl}
+              <a 
+                href={event.locationUrl} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                class="break-words hover:text-green-400 transition-colors duration-300"
+              >
+                {event.location}
+              </a>
+            {:else}
+              <span class="break-words">{event.location}</span>
+            {/if}
           </div>
 
           <!-- Share Button -->

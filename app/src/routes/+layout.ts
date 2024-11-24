@@ -1,8 +1,14 @@
 import { PUBLIC_SUPABASE_ANON_KEY, PUBLIC_SUPABASE_URL } from '$env/static/public';
 import { createSupabaseLoadClient } from '@supabase/auth-helpers-sveltekit';
-import type { LayoutLoad } from './$types';
+import type { LayoutData } from './$types';
 
-export const load: LayoutLoad = async ({ fetch, data, depends }) => {
+interface LoadParams {
+  fetch: typeof window.fetch;
+  data: LayoutData;
+  depends: (dep: string) => void;
+}
+
+export const load = async ({ fetch, data, depends }: LoadParams) => {
   depends('supabase:auth');
 
   // Initialize Supabase client
@@ -23,7 +29,9 @@ export const load: LayoutLoad = async ({ fetch, data, depends }) => {
         supabase,
         session: null,
         user: null,
-        preview: data.preview
+        preview: data.preview,
+        navigation: data.navigation,
+        footerSettings: data.footerSettings
       };
     }
 
@@ -42,7 +50,9 @@ export const load: LayoutLoad = async ({ fetch, data, depends }) => {
       supabase,
       session,
       user,
-      preview: data.preview
+      preview: data.preview,
+      navigation: data.navigation,
+      footerSettings: data.footerSettings
     };
   } catch (error) {
     console.error('Error in layout load:', error);
@@ -50,7 +60,9 @@ export const load: LayoutLoad = async ({ fetch, data, depends }) => {
       supabase,
       session: null,
       user: null,
-      preview: data.preview
+      preview: data.preview,
+      navigation: data.navigation,
+      footerSettings: data.footerSettings
     };
   }
 };

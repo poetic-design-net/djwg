@@ -150,6 +150,7 @@ export const knowledgeBaseItemsQuery = groq`*[_type == "knowledgeBaseItem"] | or
   description,
   "icon": category->icon,
   "category": category->slug.current,
+  "categoryTitle": category->title,
   content
 }`;
 
@@ -158,7 +159,8 @@ export const featuredKnowledgeBaseItemsQuery = groq`*[_type == "knowledgeBaseIte
   title,
   description,
   "icon": category->icon,
-  "category": category->slug.current
+  "category": category->slug.current,
+  "categoryTitle": category->title
 }`;
 
 export interface KnowledgeBaseItem {
@@ -167,6 +169,7 @@ export interface KnowledgeBaseItem {
   description: string;
   icon: string;
   category: string;
+  categoryTitle: string;
   content?: PortableTextBlock[];
 }
 

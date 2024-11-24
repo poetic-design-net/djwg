@@ -137,13 +137,14 @@
   }
 </script>
 
-<div class="py-20 bg-black/40">
+<div class="py-20 bg-black/40 items-center flex justify-center">
   <div class="container mx-auto px-4">
     <div class="relative">
       {#if isSecret}
         <div class="absolute inset-0 backdrop-blur-xl bg-black/40 z-10 flex items-center justify-center">
           <div class="text-center">
-            <span class="text-2xl text-white font-medium">Open Stage wird bald freigeschaltet</span>
+            <h2 class="mb-4 font-heading text-5xl md:text-6xl text-white tracking-tighter ">Open Stage </h2>
+            <span class=" text-white font-medium"> wird bald freigeschaltet</span>
             <p class="text-gray-400 mt-2">Bleib gespannt!</p>
           </div>
         </div>

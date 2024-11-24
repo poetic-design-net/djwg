@@ -1,0 +1,8 @@
+export { contentSection } from './content'
+export { eventsSection } from './events'
+export { homepageSection } from './homepage'
+export { knowledgeBaseSection } from './knowledgeBase'
+export { legalSection } from './legal'
+export { navigationSection } from './navigation'
+export { settingsSection } from './settings'
+export { teamSection } from './team'

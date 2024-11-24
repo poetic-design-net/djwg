@@ -66,6 +66,15 @@ export default defineType({
       validation: Rule => Rule.required()
     }),
     defineField({
+      name: 'locationUrl',
+      title: 'Location URL',
+      type: 'url',
+      description: 'Link to location (e.g. Google Maps)',
+      validation: Rule => Rule.uri({
+        scheme: ['http', 'https']
+      })
+    }),
+    defineField({
       name: 'image',
       title: 'Main Image',
       type: 'image',
@@ -119,6 +128,14 @@ export default defineType({
       type: 'boolean',
       fieldset: 'features',
       initialValue: false
+    }),
+    defineField({
+      name: 'enableSectionNav',
+      title: 'Enable Section Navigation',
+      description: 'Aktiviere die Seiten-Navigation mit Punkten am rechten Rand',
+      type: 'boolean',
+      fieldset: 'features',
+      initialValue: true
     }),
     defineField({
       name: 'features',

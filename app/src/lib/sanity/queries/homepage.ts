@@ -50,6 +50,7 @@ export interface HomePage {
     metaDescription: string
     ogImage: string
   }
+  enableSectionNav?: boolean
 }
 
 export const homePageQuery = groq`*[_type == "homePage"][0]{
@@ -97,5 +98,6 @@ export const homePageQuery = groq`*[_type == "homePage"][0]{
     metaTitle,
     metaDescription,
     ogImage
-  }
+  },
+  enableSectionNav
 }`

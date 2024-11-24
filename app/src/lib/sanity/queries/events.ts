@@ -26,6 +26,7 @@ export const eventsQuery = groq`*[_type == "event"] | order(order asc) {
   description,
   date,
   location,
+  locationUrl,
   image,
   schedule,
   hasOpenStage,
@@ -37,6 +38,7 @@ export const eventsQuery = groq`*[_type == "event"] | order(order asc) {
   isLocationSecret,
   isArtistsSecret,
   order,
+  enableSectionNav,
   seo {
     metaTitle,
     metaDescription,
@@ -53,6 +55,7 @@ export const eventQuery = groq`*[_type == "event" && slug.current == $slug][0] {
   description,
   date,
   location,
+  locationUrl,
   image {
     asset->,
     hotspot
@@ -100,6 +103,7 @@ export const eventQuery = groq`*[_type == "event" && slug.current == $slug][0] {
   isLocationSecret,
   isArtistsSecret,
   order,
+  enableSectionNav,
   seo {
     metaTitle,
     metaDescription,
@@ -144,6 +148,7 @@ export interface Event {
   description: string;
   date: string;
   location: string;
+  locationUrl?: string;
   image: Image;
   schedule?: EventSchedule;
   hasOpenStage: boolean;
@@ -163,6 +168,7 @@ export interface Event {
   isLocationSecret: boolean;
   isArtistsSecret: boolean;
   order: number;
+  enableSectionNav?: boolean;
   seo?: SEO;
 }
 

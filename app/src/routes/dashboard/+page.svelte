@@ -2,20 +2,35 @@
   import { getContext } from 'svelte';
   import type { SupabaseClient } from '@supabase/supabase-js';
   import { goto } from '$app/navigation';
+  import { invalidate, invalidateAll } from '$app/navigation';
   import NewsletterToggle from '$lib/components/NewsletterToggle.svelte';
 
   export let data;
   const { user } = data;
 
   const supabase = getContext<SupabaseClient>('supabase');
+  let loading = false;
 
   const handleLogout = async () => {
+    if (loading) return;
+    
+    loading = true;
     try {
       const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      if (error) {
+        console.error('Error signing out:', error);
+        return;
+      }
+
+      // Invalidate auth state first
+      await invalidate('supabase:auth');
+      await invalidateAll();
+      
       goto('/auth');
     } catch (error) {
       console.error('Error signing out:', error);
+    } finally {
+      loading = false;
     }
   };
 </script>
@@ -30,9 +45,10 @@
       </div>
       <button 
         on:click={handleLogout}
-        class="px-6 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-full transition duration-300"
+        disabled={loading}
+        class="px-6 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-full transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        Abmelden
+        {loading ? 'Wird abgemeldet...' : 'Abmelden'}
       </button>
     </div>
 
@@ -85,7 +101,13 @@
       <!-- Newsletter Preferences -->
       <div class="relative rounded-3xl p-8 border border-gray-800 overflow-hidden">
         <div class="absolute inset-0 mix-blend-overlay noise-filter"></div>
-        <div class="relative">
+        <!-- Coming Soon Overlay -->
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center">
+          <div class="bg-green-500/20 border border-green-500/40 rounded-full px-4 py-2">
+            <span class="text-green-500 font-medium">Coming Soon</span>
+          </div>
+        </div>
+        <div class="relative opacity-50">
           <h2 class="text-2xl font-medium text-white mb-6">Newsletter Preferences</h2>
           <div class="space-y-6">
             <div class="flex items-center justify-between">
@@ -93,10 +115,9 @@
                 <h3 class="text-white font-medium">DJ Workshop Newsletter</h3>
                 <p class="text-gray-400 text-sm">Receive updates about new workshops and events</p>
               </div>
-              <NewsletterToggle 
-                {user}
-                initialStatus={user.user_metadata?.newsletter_subscribed || false}
-              />
+              <div class="w-12 h-6 bg-gray-700 rounded-full relative">
+                <div class="absolute left-1 top-1 w-4 h-4 bg-gray-400 rounded-full"></div>
+              </div>
             </div>
           </div>
         </div>

@@ -6,6 +6,7 @@ import faq from './faq'
 import founder from './founder'
 import knowledgeBaseItem from './knowledgeBaseItem'
 import logo from './logo'
+import navigation from './navigation'
 import post from './post'
 import teamMember from './teamMember'
 import testimonial from './testimonial'
@@ -18,6 +19,7 @@ import seo from './objects/seo'
 import aboutUsSection from './objects/aboutUsSection'
 import eventPage from './documents/pages/eventPage'
 import homePage from './documents/pages/homePage'
+import page from './documents/page'
 
 export const schemaTypes = [
   // Objects
@@ -28,6 +30,7 @@ export const schemaTypes = [
   aboutUs,
   artist,
   blockContent,
+  category,
   event,
   eventPage,
   eventSchedule,
@@ -37,10 +40,11 @@ export const schemaTypes = [
   homePage,
   knowledgeBaseItem,
   logo,
+  navigation,
+  page,
   post,
   teamMember,
   testimonial,
   timeSlot,
-  category,
   siteSettings
 ]
