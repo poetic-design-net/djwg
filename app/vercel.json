@@ -3,11 +3,5 @@
   "devCommand": "pnpm run dev",
   "installCommand": "pnpm install",
   "framework": "sveltekit",
-  "outputDirectory": ".vercel/output",
-  "version": 2,
-  "functions": {
-    "api/*": {
-      "runtime": "nodejs20.x"
-    }
-  }
+  "outputDirectory": ".vercel/output"
 }
