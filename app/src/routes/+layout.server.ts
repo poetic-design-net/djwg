@@ -1,9 +1,14 @@
 import type { LayoutServerLoad } from './$types';
+import { client } from '$lib/sanity/client';
+import { footerSettingsQuery, type FooterSettings } from '$lib/sanity/queries/content';
 
 export const load: LayoutServerLoad = async ({ locals }) => {
   try {
     // First handle Sanity preview state
     const preview = false; // Default preview state
+
+    // Fetch footer settings
+    const footerSettings = await client.fetch<FooterSettings>(footerSettingsQuery);
 
     // Then handle auth state, but don't block on it
     let user = null;
@@ -28,7 +33,8 @@ export const load: LayoutServerLoad = async ({ locals }) => {
     return {
       user,
       session,
-      preview
+      preview,
+      footerSettings
     };
   } catch (error) {
     console.error('Error in layout.server.ts:', error);
@@ -36,7 +42,8 @@ export const load: LayoutServerLoad = async ({ locals }) => {
     return {
       user: null,
       session: null,
-      preview: false
+      preview: false,
+      footerSettings: null
     };
   }
 };

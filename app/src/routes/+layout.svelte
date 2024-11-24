@@ -10,15 +10,16 @@
 	import Header from '$lib/components/Header.svelte';
 	import Footer from '$lib/components/Footer.svelte';
 	import "../app.pcss";
+	import type { LayoutData } from './$types';
 
-	export let data;
+	export let data: LayoutData;
 
-	// Create and set Supabase client in context
+	// Create and set Supabase client in context using environment variables
 	const supabase = createSupabaseLoadClient({
 		supabaseUrl: PUBLIC_SUPABASE_URL,
 		supabaseKey: PUBLIC_SUPABASE_ANON_KEY,
 		event: { fetch },
-		serverSession: null
+		serverSession: data.session
 	});
 	setContext('supabase', supabase);
 
@@ -138,55 +139,5 @@
 {/if}
 
 <style>
-	:global(html) {
-		scroll-padding-top: 2rem; /* Adjust based on your header height */
-	}
-
-	.preview-toggle-container {
-		position: fixed;
-		bottom: 1rem;
-		right: 1rem;
-		z-index: 50;
-		display: flex;
-		gap: 0.5rem;
-	}
-
-	.preview-toggle {
-		backdrop-filter: blur(12px);
-		border-radius: 0.25rem;
-		box-shadow:
-			0 10px 15px -3px rgba(0, 0, 0, 0.1),
-			0 4px 6px -2px rgba(0, 0, 0, 0.05);
-		color: #1f2937;
-		display: block;
-		font-size: 0.75rem;
-		font-weight: 500;
-		line-height: 1rem;
-		padding: 0.5rem 0.75rem;
-		text-align: center;
-		text-decoration: none;
-	}
-
-	.preview-toggle:hover {
-		background-color: #ef4444;
-		color: #ffffff;
-	}
-
-	.preview-toggle span:first-child {
-		display: block;
-	}
-	.preview-toggle:hover span:first-child {
-		display: none;
-	}
-
-	.preview-toggle span:last-child {
-		display: none;
-	}
-	.preview-toggle:hover span:last-child {
-		display: block;
-	}
-
-	.hidden {
-		display: none;
-	}
+	
 </style>
