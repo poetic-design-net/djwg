@@ -1,13 +1,14 @@
 <script lang="ts">
-
+  export let title: string = "Exklusive DJ-Tipps und Tricks. Wöchentlich in deinem Postfach";
+  export let description: string = "Schließe dich 10.000 DJs an, erhalte frühzeitig Zugang zu neuen Workshop-Terminen und lerne, wie du deine DJ-Skills auf das nächste Level bringst";
 </script>
 
 <div class="container px-4 mx-auto">
   <div class="bg-opacity-30 rounded-6xl">
     <div class="md:max-w-2xl mx-auto text-center px-4">
       <span class="inline-block mb-4 text-sm text-green-400 font-medium tracking-tighter">DJ Workshop Germany</span>
-      <h2 class="font-heading mb-6 text-5xl text-white tracking-5xl">Exklusive DJ-Tipps und Tricks. Wöchentlich in deinem Postfach</h2>
-      <p class="mb-12 text-gray-300 max-w-lg mx-auto">Schließe dich 10.000 DJs an, erhalte frühzeitig Zugang zu neuen Workshop-Terminen und lerne, wie du deine DJ-Skills auf das nächste Level bringst</p>
+      <h2 class="font-heading mb-6 text-5xl text-white tracking-5xl">{title}</h2>
+      <p class="mb-12 text-gray-300 max-w-lg mx-auto">{description}</p>
     </div>
     <div class="px-4">
       <div class="flex flex-wrap md:max-w-xl mx-auto -m-2">

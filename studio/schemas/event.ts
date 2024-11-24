@@ -9,6 +9,11 @@ export default defineType({
       name: 'features',
       title: 'Event Features',
       options: { collapsible: true, collapsed: false }
+    },
+    {
+      name: 'seo',
+      title: 'SEO Settings',
+      options: { collapsible: true, collapsed: true }
     }
   ],
   fields: [
@@ -203,6 +208,12 @@ export default defineType({
       title: 'Display Order',
       type: 'number',
       initialValue: 0
+    }),
+    defineField({
+      name: 'seo',
+      title: 'SEO',
+      type: 'seo',
+      fieldset: 'seo'
     })
   ],
   preview: {

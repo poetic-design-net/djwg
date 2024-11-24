@@ -4,6 +4,13 @@ export default defineType({
   name: 'artist',
   title: 'Artists',
   type: 'document',
+  fieldsets: [
+    {
+      name: 'seo',
+      title: 'SEO Settings',
+      options: { collapsible: true, collapsed: true }
+    }
+  ],
   fields: [
     defineField({
       name: 'name',
@@ -60,6 +67,12 @@ export default defineType({
       title: 'Display Order',
       type: 'number',
       initialValue: 0
+    }),
+    defineField({
+      name: 'seo',
+      title: 'SEO',
+      type: 'seo',
+      fieldset: 'seo'
     })
   ],
   preview: {

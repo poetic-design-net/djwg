@@ -1,41 +1,94 @@
 <script lang="ts">
   import EventDetail from '$lib/components/EventDetail.svelte';
-  import type { PageData } from './$types';
-  import { urlFor } from '$lib/sanity/image';
-  import type { Event } from '$lib/sanity/queries';
+  import Seo from '$lib/components/Seo.svelte';
 
-  export let data: PageData;
+  interface Event {
+    _id: string;
+    title: string;
+    tag: string;
+    subtitle: string;
+    description: string;
+    date: string;
+    location: string;
+    features?: string[];
+    image: string;
+    highlights: Array<{
+      title: string;
+      description: string;
+      icon: string;
+    }>;
+    schedule?: {
+      _id: string;
+      days: Array<{
+        date: string;
+        stages: Array<{
+          name: string;
+          description: string;
+          schedule: Array<{
+            time: string;
+            title: string;
+            description?: string;
+            instructor?: {
+              name: string;
+              role: string;
+              image?: string;
+            };
+            icon?: string;
+          }>;
+        }>;
+      }>;
+    };
+    gallery?: string[];
+    locationDetails?: {
+      name: string;
+      description: string;
+      image: string;
+    };
+    hasOpenStage?: boolean;
+    isOpenStageSecret?: boolean;
+    isLocationSecret?: boolean;
+    isArtistsSecret?: boolean;
+    seo?: {
+      metaTitle?: string;
+      metaDescription?: string;
+      ogImage?: string;
+    };
+  }
 
-  type SanityImage = {
-    asset: {
-      _ref: string;
-      _type: 'reference';
-    };
-    hotspot?: {
-      x: number;
-      y: number;
-      height: number;
-      width: number;
-    };
+  export let data: {
+    event: Event;
   };
 
-  // Transform Sanity image references to URLs
-  $: event = data.event ? {
-    ...data.event,
-    tag: data.event.tag,
-    image: data.event.image ? urlFor(data.event.image).url() : '',
-    gallery: data.event.gallery?.map((img: SanityImage) => urlFor(img).url()) || [],
-    locationDetails: data.event.locationDetails ? {
-      ...data.event.locationDetails,
-      image: urlFor(data.event.locationDetails.image).url()
-    } : undefined
-  } : null;
+  $: ({ event } = data);
 
-  $: console.log('Event data:', data.event); // Debug log
+  // Ensure we always have a valid SEO object
+  $: seo = event?.seo || {};
 </script>
 
-<EventDetail 
-  {event} 
-  artists={data.artists.data} 
-  timeSlots={data.timeSlots}
-/>
+{#if event}
+  <Seo 
+    {seo}
+    fallback={{
+      title: event.title,
+      description: event.description,
+      image: event.image
+    }}
+  />
+{/if}
+
+<div class="min-h-screen bg-black">
+  {#if event}
+    <EventDetail {event} />
+  {:else}
+    <div class="container mx-auto px-4 py-20 text-center">
+      <h1 class="text-4xl text-white mb-4">Event nicht gefunden</h1>
+      <p class="text-gray-400">Das angeforderte Event konnte nicht gefunden werden.</p>
+      {#if import.meta.env.DEV}
+        <pre class="mt-8 text-left text-xs text-gray-500 bg-black/20 p-4 rounded-lg overflow-auto">
+          Debug Info:
+          Event Data: {JSON.stringify(event, null, 2)}
+        </pre>
+      {/if}
+    </div>
+  {/if}
+</div>

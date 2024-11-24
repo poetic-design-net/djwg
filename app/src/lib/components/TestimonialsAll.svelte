@@ -1,6 +1,7 @@
 <script lang="ts">
   import { fade } from 'svelte/transition';
   import type { Testimonial } from '$lib/sanity/queries';
+  import { urlFor } from '$lib/sanity/image';
 
   export let testimonials: { data: Testimonial[] };
 
@@ -21,6 +22,13 @@
   function isInLastThree(index: number): boolean {
     return index >= visibleCount - 3 && index < visibleCount && hasMore;
   }
+
+  function getImageUrl(testimonial: Testimonial): string {
+    if (testimonial.image) {
+      return urlFor(testimonial.image).width(80).height(80).url();
+    }
+    return 'assets/home_hero.jpg';
+  }
 </script>
 
 <div class="container px-4 mx-auto">
@@ -31,7 +39,7 @@
   
   <div class="relative">
     <div class="flex flex-wrap -m-5">
-      {#each visibleTestimonials as testimonial, index (testimonial._createdAt)}
+      {#each visibleTestimonials as testimonial, index (testimonial._id)}
         <div 
           class="w-full md:w-1/2 lg:w-1/3 p-5"
           in:fade={{duration: 300, delay: index % 3 * 100}}
@@ -40,11 +48,20 @@
             {#if isInLastThree(index)}
               <div class="absolute inset-0 bg-gradient-to-b from-transparent via-black/50 to-black rounded-3xl pointer-events-none"></div>
             {/if}
-            <h3 class="mb-6 text-2xl text-white tracking-tighter leading-tight">{testimonial.text}</h3>
-            <div class="flex flex-wrap -m-3">
+            <h3 class="mb-6 text-2xl text-white tracking-tighter leading-tight">{testimonial.quote}</h3>
+            <div class="flex flex-wrap items-center -m-3">
+              {#if testimonial.image}
+                <div class="w-auto p-3">
+                  <img
+                    src={getImageUrl(testimonial)}
+                    alt={testimonial.name}
+                    class="w-12 h-12 object-cover rounded-full"
+                  />
+                </div>
+              {/if}
               <div class="flex-1 p-3">
-                <h4 class="text-white font-medium tracking-tighter">{testimonial.author}</h4>
-                <span class="inline-block text-sm text-white">{testimonial.title}</span>
+                <h4 class="text-white font-medium tracking-tighter">{testimonial.name}</h4>
+                <span class="inline-block text-sm text-white">{testimonial.role}</span>
               </div>
             </div>
           </div>

@@ -3,8 +3,18 @@
   import { quintOut } from 'svelte/easing';
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
+  import { getContext } from 'svelte';
+  import { invalidateAll } from '$app/navigation';
   import type { MenuItems, MenuKey } from '$lib/types/menu';
+  import type { SupabaseClient } from '@supabase/supabase-js';
   import MobileMenu from './MobileMenu.svelte';
+
+  export let data;
+  let { user } = data;
+  $: ({ user } = data);
+
+  // Get Supabase client from context
+  const supabase = getContext<SupabaseClient>('supabase');
 
   let isScrolled = false;
   let activeMenu: MenuKey | null = null;
@@ -105,6 +115,25 @@
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      if (!supabase) {
+        console.error('Supabase client not available');
+        return;
+      }
+
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Error signing out:', error);
+        return;
+      }
+
+      await invalidateAll();
+    } catch (error) {
+      console.error('Unexpected error during logout:', error);
+    }
+  };
+
   onMount(() => {
     const handleScroll = () => {
       isScrolled = window.scrollY > 20;
@@ -130,6 +159,10 @@
   }
 
   $: headerBg = isScrolled || activeMenu !== null || mobileMenuOpen ? 'bg-black' : '';
+
+  // Only show auth UI if Supabase is available
+  $: showAuthUI = !!supabase;
+  $: isAuthenticated = user?.aud === 'authenticated';
 </script>
 
 <header 
@@ -143,40 +176,98 @@
       </a>
 
       <!-- Desktop Navigation -->
-      <nav class="hidden lg:flex items-center space-x-8">
-        {#each Object.entries(menuItems) as [key, menu]}
-          <div class="relative">
-            <button 
-              class="font-heading text-white font-medium hover:text-green-500 transition-colors duration-200 py-8"
-              class:text-green-500={activeMenu === key}
-              on:mouseenter={() => handleMouseEnter(key)}
-              on:click={() => handleClick(key)}
-            >
-              {menu.title}
-            </button>
-          </div>
-        {/each}
-        <a 
-          href="/events" 
-          class="font-heading font-medium px-6 py-3 text-white border border-green-500 hover:bg-green-500 hover:text-black rounded-full transition duration-200"
-        >
-          Tickets buchen
-        </a>
-      </nav>
+      <div class="hidden lg:flex flex-1 items-center justify-between pl-8">
+        <!-- Main Navigation -->
+        <nav class="flex items-center space-x-8">
+          {#each Object.entries(menuItems) as [key, menu]}
+            <div class="relative">
+              <button 
+                class="font-heading text-white font-medium hover:text-green-500 transition-colors duration-200 py-8"
+                class:text-green-500={activeMenu === key}
+                on:mouseenter={() => handleMouseEnter(key)}
+                on:click={() => handleClick(key)}
+              >
+                {menu.title}
+              </button>
+            </div>
+          {/each}
+        </nav>
 
-      <!-- Mobile Menu Button -->
-      <button 
-        class="lg:hidden relative z-[110] text-white"
-        on:click={() => mobileMenuOpen = !mobileMenuOpen}
-      >
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          {#if !mobileMenuOpen}
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-          {:else}
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        <!-- Right Side Items -->
+        <div class="flex items-center space-x-8">
+          <a 
+            href="/events" 
+            class="font-heading font-medium px-6 py-3 text-white border border-green-500 hover:bg-green-500 hover:text-black rounded-full transition duration-200"
+          >
+            Tickets buchen
+          </a>
+
+          {#if showAuthUI}
+            {#if isAuthenticated}
+                <a
+                href="/dashboard"
+                class="text-white hover:text-green-500 transition-colors duration-200"
+                title="Login"
+              >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                </a>
+        
+            {:else}
+              <a
+                href="/auth"
+                class="text-white hover:text-green-500 transition-colors duration-200"
+                title="Login"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                </svg>
+              </a>
+            {/if}
           {/if}
-        </svg>
-      </button>
+        </div>
+      </div>
+
+      <!-- Mobile Menu Button and Auth -->
+      <div class="lg:hidden flex items-center space-x-4">
+        {#if showAuthUI}
+          {#if isAuthenticated}
+         
+            <button
+              on:click={handleLogout}
+              class="text-white hover:text-green-500 transition-colors duration-200"
+              title="User Menu"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            </button>
+          {:else}
+            <a
+              href="/auth"
+              class="text-white hover:text-green-500 transition-colors duration-200"
+              title="Login"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+              </svg>
+            </a>
+          {/if}
+        {/if}
+        <button 
+          class="relative z-[110] text-white"
+          on:click={() => mobileMenuOpen = !mobileMenuOpen}
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            {#if !mobileMenuOpen}
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+            {:else}
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            {/if}
+          </svg>
+        </button>
+      </div>
     </div>
   </div>
 
@@ -276,11 +367,9 @@
     </div>
   {/if}
 
-  <!-- Mobile Menu -->
   <MobileMenu bind:isOpen={mobileMenuOpen} {menuItems} />
 </header>
 
-<!-- Spacer to prevent content from hiding under fixed header -->
 <div class="h-20"></div>
 
 <style>

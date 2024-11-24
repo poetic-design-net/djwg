@@ -1,26 +1,104 @@
-import type { PageServerLoad } from './$types';
-import { eventQuery, artistsQuery, timeSlotsQuery } from '$lib/sanity/queries';
-import { client } from '$lib/sanity/client';
 import { error } from '@sveltejs/kit';
+import type { PageServerLoad } from './$types';
+import { eventQuery } from '$lib/sanity/queries';
+import { urlFor } from '$lib/sanity/image';
+import type { Image } from '@sanity/types';
 
-export const load: PageServerLoad = async ({ params }) => {
-  const event = await client.fetch(eventQuery, { slug: params.slug });
-  
-  if (!event) {
-    throw error(404, 'Event not found');
-  }
-
-  // Fetch artists
-  const artists = await client.fetch(artistsQuery);
-
-  // Fetch time slots for this event
-  const timeSlots = await client.fetch(timeSlotsQuery, { eventId: event._id });
-
-  return {
-    event,
-    artists: {
-      data: artists || []
-    },
-    timeSlots: timeSlots || []
+interface SanityEvent {
+  _id: string;
+  title: string;
+  tag: string;
+  subtitle: string;
+  description: string;
+  date: string;
+  location: string;
+  image: Image;
+  schedule?: {
+    _id: string;
+    days: Array<{
+      date: string;
+      stages: Array<{
+        name: string;
+        description: string;
+        schedule: Array<{
+          time: string;
+          title: string;
+          description?: string;
+          instructor?: {
+            name: string;
+            role: string;
+            image?: Image;
+          };
+          icon?: string;
+        }>;
+      }>;
+    }>;
   };
+  highlights: Array<{
+    title: string;
+    description: string;
+    icon: string;
+  }>;
+  features?: string[];
+  gallery?: Image[];
+  locationDetails?: {
+    name: string;
+    description: string;
+    image: Image;
+  };
+  hasOpenStage?: boolean;
+  isOpenStageSecret?: boolean;
+  isLocationSecret?: boolean;
+  isArtistsSecret?: boolean;
+}
+
+export const load: PageServerLoad = async ({ params, locals: { loadQuery } }) => {
+  try {
+    // Load event data with embedded schedule
+    const event = await loadQuery<SanityEvent>(eventQuery, { slug: params.slug });
+    if (!event?.data) throw error(404, 'Event not found');
+
+    // Transform Sanity image URLs and handle dates
+    const transformedEvent = {
+      ...event.data,
+      image: urlFor(event.data.image).url(),
+      gallery: event.data.gallery?.map(img => urlFor(img).url()),
+      locationDetails: event.data.locationDetails && {
+        ...event.data.locationDetails,
+        image: urlFor(event.data.locationDetails.image).url()
+      },
+      // Transform schedule if it exists
+      schedule: event.data.schedule ? {
+        _id: event.data.schedule._id,
+        days: event.data.schedule.days.map(day => ({
+          // Ensure date is in ISO format
+          date: new Date(day.date).toISOString(),
+          stages: day.stages.map(stage => ({
+            name: stage.name,
+            description: stage.description,
+            schedule: stage.schedule.map(item => ({
+              time: item.time,
+              title: item.title,
+              description: item.description,
+              icon: item.icon,
+              instructor: item.instructor ? {
+                name: item.instructor.name,
+                role: item.instructor.role,
+                image: item.instructor.image ? urlFor(item.instructor.image).url() : undefined
+              } : undefined
+            }))
+          }))
+        })).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()) // Sort days by date
+      } : undefined
+    };
+
+    console.log('Transformed event schedule:', JSON.stringify(transformedEvent.schedule, null, 2));
+
+    return {
+      event: transformedEvent
+    };
+  } catch (err) {
+    console.error('Error loading event:', err);
+    throw error(500, 'Could not load event');
+  }
 };
