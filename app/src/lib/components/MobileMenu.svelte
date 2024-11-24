@@ -1,102 +1,67 @@
 <script lang="ts">
-  import { fade, slide } from 'svelte/transition';
+  import { slide } from 'svelte/transition';
   import type { MenuItems } from '$lib/types/menu';
 
   export let isOpen = false;
   export let menuItems: MenuItems;
 
-  let activeSubmenu: string | null = 'workshops'; // Set workshops as default open menu
-
-  function handleClose() {
+  function handleLinkClick() {
     isOpen = false;
+    document.body.style.overflow = '';
   }
 
-  function toggleSubmenu(key: string) {
-    activeSubmenu = activeSubmenu === key ? null : key;
-  }
+  $: console.log('MobileMenu received menuItems:', menuItems);
 </script>
 
 {#if isOpen}
-  <div 
-    class="fixed inset-0 bg-black lg:hidden overflow-hidden z-[205]"
-    transition:fade={{ duration: 200 }}
+  <div
+    class="fixed inset-0 bg-black/95 z-[100] lg:hidden overflow-y-auto pb-24"
+    transition:slide={{ duration: 300 }}
   >
-    <!-- Scrollable Container -->
-    <div class="h-full overflow-y-auto">
-      
-      <div class="container mx-auto px-4 py-4 pt-4">
-        <!-- Close Button -->
-        <div class="flex justify-between mb-6">
-          <a href="/" class="relative z-[110] s-OTmmHBhb3fXp"><img src="/assets/logo.svg" alt="DJ Workshop Germany" class="h-12 s-OTmmHBhb3fXp"></a> 
-          <button 
-            class="text-white/80 hover:text-white"
-            on:click={handleClose}
-          >
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-            </svg>
-          </button>
-        </div> 
-
-        <!-- Navigation -->
-        <nav class="space-y-4">
-          {#each Object.entries(menuItems) as [key, menu]}
-            <div class="border-b border-gray-800 pb-4">
-              <!-- Main Menu Button -->
-              <button
-                class="w-full flex items-center justify-between text-left mb-2"
-                on:click={() => toggleSubmenu(key)}
-              >
-                <span class="font-heading text-xl text-white font-medium">{menu.title}</span>
-                <svg
-                  class="w-5 h-5 text-gray-400 transform transition-transform duration-200"
-                  class:rotate-180={activeSubmenu === key}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+    <div class="container mx-auto px-4 py-20">
+      <nav class="space-y-8">
+        {#each Object.entries(menuItems) as [key, menu]}
+          {#if menu}
+            <div>
+              <h3 class="text-green-500 font-heading text-lg mb-4">{menu.title}</h3>
+              
+              <!-- Featured Content -->
+              {#if menu.featured}
+                <a 
+                  href={menu.featured.link}
+                  class="block mb-6 group"
+                  on:click={handleLinkClick}
                 >
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                </svg>
-              </button>
-
-              <!-- Submenu Content -->
-              {#if activeSubmenu === key}
-                <div transition:slide={{ duration: 200 }}>
-                  <!-- Featured Content (only for first menu item) -->
-                  {#if key === 'workshops'}
-                    <a 
-                      href={menu.featured.link}
-                      class="block mb-6 group"
-                      on:click={handleClose}
+                  <div class="relative rounded-xl overflow-hidden mb-3 aspect-video">
+                    <img 
+                      src={menu.featured.image} 
+                      alt={menu.featured.title}
+                      class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500"
                     >
-                      <div class="relative rounded-2xl overflow-hidden mb-3 aspect-video">
-                        <img 
-                          src={menu.featured.image} 
-                          alt={menu.featured.title}
-                          class="w-full h-full object-cover"
-                        >
-                        <div class="absolute inset-0 bg-black/40"></div>
-                      </div>
-                      <h4 class="text-white font-medium group-hover:text-green-500 transition-colors duration-200">
-                        {menu.featured.title}
-                      </h4>
-                      <p class="text-sm text-gray-400 mt-1">
-                        {menu.featured.description}
-                      </p>
-                    </a>
-                  {/if}
+                    <div class="absolute inset-0 bg-black/40"></div>
+                  </div>
+                  <h4 class="text-white font-heading text-lg mb-1 group-hover:text-green-500 transition duration-200">
+                    {menu.featured.title}
+                  </h4>
+                  <p class="text-gray-400 text-sm">
+                    {menu.featured.description}
+                  </p>
+                </a>
+              {/if}
 
-                  <!-- Menu Items -->
+              <!-- Menu Items -->
+              {#if menu.columns}
+                <div class="space-y-6">
                   {#each menu.columns as column}
-                    <div class="mb-6">
-                      <h4 class="text-sm text-green-500 font-medium mb-3">{column.title}</h4>
+                    <div>
+                      <h4 class="text-green-500 font-heading text-sm mb-3">{column.title}</h4>
                       <ul class="space-y-3">
                         {#each column.items as item}
                           <li>
                             <a 
-                              href={item.link} 
-                              class="block text-gray-300 hover:text-white transition-colors duration-200"
-                              on:click={handleClose}
+                              href={item.link}
+                              class="text-gray-300 hover:text-white transition duration-200"
+                              on:click={handleLinkClick}
                             >
                               {item.label}
                             </a>
@@ -105,48 +70,58 @@
                       </ul>
                     </div>
                   {/each}
+                </div>
+              {/if}
 
-                  <!-- Quick Links -->
-                  <div class="pt-4">
-                    <h4 class="text-sm text-green-500 font-medium mb-3">Quick Links</h4>
-                    <ul class="space-y-3">
-                      {#each menu.quickLinks as link}
-                        <li>
-                          <a 
-                            href={link.link} 
-                            class="block text-gray-300 hover:text-white transition-colors duration-200"
-                            on:click={handleClose}
-                          >
-                            {link.label}
-                          </a>
-                        </li>
-                      {/each}
-                    </ul>
-                  </div>
+              <!-- Quick Links -->
+              {#if menu.quickLinks?.length > 0}
+                <div class="mt-6">
+                  <h4 class="text-green-500 font-heading text-sm mb-3">Quick Links</h4>
+                  <ul class="space-y-3">
+                    {#each menu.quickLinks as link}
+                      <li>
+                        <a 
+                          href={link.link}
+                          class="text-gray-300 hover:text-white transition duration-200"
+                          on:click={handleLinkClick}
+                        >
+                          {link.label}
+                        </a>
+                      </li>
+                    {/each}
+                  </ul>
                 </div>
               {/if}
             </div>
-          {/each}
-        </nav>
+          {/if}
+        {/each}
+      </nav>
+    </div>
 
-        <!-- Action Button -->
-        <div class="mt-8 sticky bottom-6">
-          <a 
-            href="/events" 
-            class="block w-full text-center px-6 py-3 text-black bg-green-500 hover:bg-green-600 rounded-full transition-colors duration-200"
-            on:click={handleClose}
-          >
-            Tickets buchen
-          </a>
-        </div>
+    <!-- Fixed Tickets Button -->
+    <div class="fixed bottom-0 left-0 right-0 p-4 bg-black/95 border-t border-gray-800 z-[110]">
+      <div class="container mx-auto">
+        <a 
+          href="/events" 
+          class="block w-full text-center font-heading font-medium px-6 py-4 text-black bg-green-500 hover:bg-green-600 rounded-full transition duration-200"
+          on:click={handleLinkClick}
+        >
+          Tickets buchen
+        </a>
       </div>
     </div>
   </div>
 {/if}
 
 <style>
-  /* Ensure proper scrolling on iOS */
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .overflow-y-auto::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hide scrollbar for IE, Edge and Firefox */
   .overflow-y-auto {
-    -webkit-overflow-scrolling: touch;
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
   }
 </style>

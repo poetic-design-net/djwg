@@ -9,23 +9,6 @@
 
   let expandedItem: string | null = null;
 
-  function getCategoryTitle(category: string): string {
-    switch (category) {
-      case 'equipment':
-        return 'Equipment & Technik';
-      case 'mixing':
-        return 'Mixing & Beatmatching';
-      case 'software':
-        return 'Software & Tools';
-      case 'performance':
-        return 'Performance & Showmanship';
-      case 'business':
-        return 'Business & Marketing';
-      default:
-        return category;
-    }
-  }
-
   function getIconSvg(icon: string) {
     switch (icon) {
       case 'mixer':
@@ -65,9 +48,9 @@
   <!-- Main Content -->
   <div class="container px-4 mx-auto py-20">
     <div class="max-w-6xl mx-auto">
-      {#each Object.entries(data.items) as [category, items]}
+      {#each Object.entries(data.items) as [categorySlug, items]}
         <div class="mb-20">
-          <h2 class="text-4xl text-white mb-8">{getCategoryTitle(category)}</h2>
+          <h2 class="text-4xl text-white mb-8">{items[0]?.categoryTitle || categorySlug}</h2>
           <div class="grid grid-cols-1 gap-6">
             {#each items as item}
               <div class="bg-black/40 border border-gray-800 rounded-3xl overflow-hidden transition-all duration-300 hover:border-green-500">

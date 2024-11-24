@@ -1,14 +1,31 @@
-import type { LayoutServerLoad } from './$types';
+import type { LoaderLocals } from '@sanity/svelte-loader';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { client } from '$lib/sanity/client';
 import { footerSettingsQuery, type FooterSettings } from '$lib/sanity/queries/content';
+import { navigationQuery, transformNavigationData } from '$lib/sanity/queries/navigation';
+import { themeSettingsQuery, type ThemeSettings } from '$lib/sanity/queries/theme';
+import type { MenuItems } from '$lib/types/menu';
 
-export const load: LayoutServerLoad = async ({ locals }) => {
+interface Locals extends LoaderLocals {
+  supabase: SupabaseClient;
+  getUser(): Promise<any>;
+}
+
+export const load = async ({ locals }: { locals: Locals }) => {
   try {
     // First handle Sanity preview state
     const preview = false; // Default preview state
 
-    // Fetch footer settings
-    const footerSettings = await client.fetch<FooterSettings>(footerSettingsQuery);
+    // Fetch footer settings, navigation, and theme settings in parallel
+    const [footerSettings, rawNavigation, themeSettings] = await Promise.all([
+      client.fetch<FooterSettings>(footerSettingsQuery),
+      client.fetch(navigationQuery),
+      client.fetch<ThemeSettings>(themeSettingsQuery)
+    ]);
+
+    // Transform navigation data
+    const navigation = transformNavigationData(rawNavigation);
+    console.log('Layout server navigation:', navigation);
 
     // Then handle auth state, but don't block on it
     let user = null;
@@ -34,7 +51,9 @@ export const load: LayoutServerLoad = async ({ locals }) => {
       user,
       session,
       preview,
-      footerSettings
+      footerSettings,
+      navigation,
+      themeSettings
     };
   } catch (error) {
     console.error('Error in layout.server.ts:', error);
@@ -43,7 +62,13 @@ export const load: LayoutServerLoad = async ({ locals }) => {
       user: null,
       session: null,
       preview: false,
-      footerSettings: null
+      footerSettings: null,
+      navigation: {
+        workshops: undefined,
+        join: undefined,
+        about: undefined
+      },
+      themeSettings: null
     };
   }
 };

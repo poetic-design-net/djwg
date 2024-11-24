@@ -2,11 +2,39 @@ export default {
   name: 'homePage',
   title: 'Homepage',
   type: 'document',
+  groups: [
+    {
+      name: 'content',
+      title: 'Content',
+      default: true
+    },
+    {
+      name: 'settings',
+      title: 'Settings'
+    }
+  ],
   fields: [
+    // Settings Fields
+    {
+      name: 'enableSectionNav',
+      title: 'Enable Section Navigation',
+      description: 'Aktiviere die Seiten-Navigation mit Punkten am rechten Rand',
+      type: 'boolean',
+      initialValue: true,
+      group: 'settings'
+    },
+    {
+      name: 'seo',
+      title: 'SEO',
+      type: 'seo',
+      group: 'settings'
+    },
+    // Content Fields
     {
       name: 'hero',
       title: 'Hero Section',
       type: 'object',
+      group: 'content',
       fields: [
         {
           name: 'title',
@@ -32,11 +60,13 @@ export default {
       name: 'aboutSection',
       title: 'About Us Section',
       type: 'aboutUsSection',
+      group: 'content',
     },
     {
       name: 'intro',
       title: 'Intro Section',
       type: 'object',
+      group: 'content',
       fields: [
         {
           name: 'title',
@@ -55,6 +85,7 @@ export default {
       name: 'workshopsSection',
       title: 'Workshops Section',
       type: 'object',
+      group: 'content',
       fields: [
         {
           name: 'title',
@@ -72,6 +103,7 @@ export default {
       name: 'pricingSection',
       title: 'Pricing Section',
       type: 'object',
+      group: 'content',
       fields: [
         {
           name: 'title',
@@ -89,6 +121,7 @@ export default {
       name: 'newsletterSection',
       title: 'Newsletter Section',
       type: 'object',
+      group: 'content',
       fields: [
         {
           name: 'title',
@@ -101,12 +134,7 @@ export default {
           type: 'text',
         },
       ],
-    },
-    {
-      name: 'seo',
-      title: 'SEO',
-      type: 'seo',
-    },
+    }
   ],
   preview: {
     select: {

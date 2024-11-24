@@ -1,7 +1,9 @@
 import { postsQuery, testimonialsQuery, logosQuery, artistsQuery, eventsQuery, faqsQuery, featuredKnowledgeBaseItemsQuery, siteSettingsQuery, type Post, type Testimonial, type Logo, type Artist, type Event, type FAQ, type KnowledgeBaseItem, type SiteSettings, aboutUsQuery } from '$lib/sanity/queries';
 import { homePageQuery, type HomePage } from '$lib/sanity/queries/homepage';
+import { navigationQuery, type NavigationData, isValidNavigationData } from '$lib/sanity/queries/navigation';
 import type { LoaderLocals } from '@sanity/svelte-loader';
 import type { SupabaseClient, User } from '@supabase/supabase-js';
+import type { MenuItems } from '$lib/types/menu';
 
 // Placeholder artist data for secret state
 const placeholderArtists: Partial<Artist>[] = Array(6).fill({
@@ -23,6 +25,85 @@ const placeholderArtists: Partial<Artist>[] = Array(6).fill({
   isRevealed: false,
   order: 0
 });
+
+// Default navigation data for testing
+const defaultNavigationData: MenuItems = {
+  workshops: {
+    _id: 'navigation-workshops',
+    _type: 'navigation',
+    title: 'Workshops',
+    featured: {
+      title: 'Featured Workshop',
+      description: 'Learn the basics of DJing',
+      image: '/assets/home_hero_2.jpg',
+      link: '/workshops',
+      linkType: 'page'
+    },
+    columns: [
+      {
+        title: 'Workshop Categories',
+        items: [
+          { label: 'Beginner', link: '/workshops/beginner', linkType: 'page' },
+          { label: 'Advanced', link: '/workshops/advanced', linkType: 'page' }
+        ]
+      }
+    ],
+    quickLinks: [
+      { label: 'All Workshops', link: '/workshops', linkType: 'page' },
+      { label: 'Schedule', link: '/schedule', linkType: 'page' }
+    ]
+  },
+  join: {
+    _id: 'navigation-join',
+    _type: 'navigation',
+    title: 'Join Us',
+    featured: {
+      title: 'Become a Member',
+      description: 'Join our community',
+      image: '/assets/home_hero.jpg',
+      link: '/join',
+      linkType: 'page'
+    },
+    columns: [
+      {
+        title: 'Membership',
+        items: [
+          { label: 'Benefits', link: '#benefits', linkType: 'anchor' },
+          { label: 'Pricing', link: '#pricing', linkType: 'anchor' }
+        ]
+      }
+    ],
+    quickLinks: [
+      { label: 'Sign Up', link: '/sign-up', linkType: 'page' },
+      { label: 'Contact', link: '/contact', linkType: 'page' }
+    ]
+  },
+  about: {
+    _id: 'navigation-about',
+    _type: 'navigation',
+    title: 'About Us',
+    featured: {
+      title: 'Our Story',
+      description: 'Learn about our mission',
+      image: '/assets/home_hero.jpg',
+      link: '/about',
+      linkType: 'page'
+    },
+    columns: [
+      {
+        title: 'Company',
+        items: [
+          { label: 'Team', link: '#team', linkType: 'anchor' },
+          { label: 'Mission', link: '#mission', linkType: 'anchor' }
+        ]
+      }
+    ],
+    quickLinks: [
+      { label: 'About Us', link: '/about', linkType: 'page' },
+      { label: 'FAQ', link: '/faq', linkType: 'page' }
+    ]
+  }
+};
 
 interface Locals extends LoaderLocals {
   supabase: SupabaseClient;
@@ -56,7 +137,8 @@ export const load = async ({ locals, url, setHeaders }: { locals: Locals; url: U
     featuredKnowledgeBaseItems,
     aboutUs,
     siteSettings,
-    homePage
+    homePage,
+    navigationResult
   ] = await Promise.all([
     locals.getUser(),
     loadQuery<Post[]>(postsQuery),
@@ -68,13 +150,13 @@ export const load = async ({ locals, url, setHeaders }: { locals: Locals; url: U
     loadQuery<KnowledgeBaseItem[]>(featuredKnowledgeBaseItemsQuery),
     loadQuery(aboutUsQuery),
     loadQuery<SiteSettings>(siteSettingsQuery),
-    loadQuery<HomePage>(homePageQuery)
+    loadQuery<HomePage>(homePageQuery),
+    loadQuery<NavigationData>(navigationQuery)
   ]);
 
-  // Debug logging
-  console.log('Homepage Data:', homePage?.data);
-  console.log('Site Settings:', siteSettings?.data);
-  console.log('Events:', events?.data);
+  // Debug logging for navigation
+  console.log('Raw Navigation Result:', navigationResult);
+  console.log('Navigation Data:', navigationResult?.data);
 
   // Get the actual artists array from the Sanity response
   const artistsData = artists?.data || [];
@@ -87,6 +169,16 @@ export const load = async ({ locals, url, setHeaders }: { locals: Locals; url: U
   const visibleArtists = isLineupRevealed 
     ? artistsData.filter((artist: Artist) => artist.isRevealed)
     : placeholderArtists;
+
+  // Get navigation data with fallback to default
+  const navigationData = navigationResult?.data || defaultNavigationData;
+
+  console.log('Navigation Data to be used:', navigationData);
+  
+  if (!isValidNavigationData(navigationData)) {
+    console.warn('Navigation data structure is incomplete. Required keys missing.');
+    console.log('Available keys:', Object.keys(navigationData));
+  }
 
   return {
     user,
@@ -133,6 +225,7 @@ export const load = async ({ locals, url, setHeaders }: { locals: Locals; url: U
       query: homePageQuery,
       options: { initial: homePage?.data || null, perspective: preview ? 'previewDrafts' : 'published' }
     },
+    navigation: navigationData,
     isLineupRevealed,
     isArtistsSecret: !isLineupRevealed
   };
