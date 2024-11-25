@@ -33,7 +33,8 @@
       return;
     }
     
-    if (currentSection !== newSection) {
+    // Always show toast for tickets section
+    if (newSection === 'tickets' || currentSection !== newSection) {
       currentSection = newSection;
       lastSectionChange = now;
       clearTimeout(toastTimeout);
@@ -64,6 +65,13 @@
         const firstSectionEntry = entries.find(entry => entry.target.id === sections[0]?.id);
         if (firstSectionEntry && firstSectionEntry.intersectionRatio > 0.2 && window.scrollY < 300) {
           handleSectionChange(sections[0].id);
+          return;
+        }
+
+        // Special handling for tickets section
+        const ticketsSection = visibleSections.find(entry => entry.target.id === 'tickets');
+        if (ticketsSection && ticketsSection.intersectionRatio > 0.2) {
+          handleSectionChange('tickets');
           return;
         }
 
@@ -130,7 +138,7 @@
   {#if showToast}
     <div
       transition:fade={{ duration: 300 }}
-      class="fixed left-1/2 top-4 transform -translate-x-1/2 z-[300] px-6 py-3 rounded-full bg-black/40 backdrop-blur-sm border border-green-500/20"
+      class="fixed left-1/2 top-2 transform -translate-x-1/2 z-[300] px-6 py-3 rounded-full bg-black/40 backdrop-blur-sm border border-green-500/20 w-auto max-w-[90%] mx-auto"
     >
       <div class="text-gray-300 text-xs mb-1 font-medium text-center">
         <span>

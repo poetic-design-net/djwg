@@ -43,11 +43,23 @@ export const settingsSection: Section = (S) =>
                         .documentId('footerSettings')
                     ),
                   S.listItem()
-                    .title('Theme')
+                    .title('Tailwind')
                     .child(
                       S.document()
+                        .id('themeSettings')
                         .schemaType('themeSettings')
                         .documentId('themeSettings')
+                        .views([
+                          S.view
+                            .form()
+                            .title('Colors'),
+                          S.view
+                            .form()
+                            .title('Screen Breakpoints'),
+                          S.view
+                            .form()
+                            .title('Font Families')
+                        ])
                     )
                 ])
             ),
