@@ -1,10 +1,21 @@
 <script lang="ts">
+  import type { Image } from '@sanity/types';
+  import { generateImageHTML } from '$lib/sanity/image';
+
   export let locationDetails: {
     name: string;
     description: string;
-    image: string;
+    image: Image;
   };
   export let isSecret: boolean = false;
+
+  $: imageHtml = generateImageHTML(
+    locationDetails.image,
+    locationDetails.name,
+    'absolute inset-0 w-full h-full object-cover',
+    800,  // Width for location image
+    600   // Height maintaining 4:3 aspect ratio
+  );
 </script>
 
 <div class="py-20">
@@ -21,11 +32,7 @@
       {/if}
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div class="relative aspect-[4/3] rounded-3xl overflow-hidden">
-          <img
-            src={locationDetails.image}
-            alt={locationDetails.name}
-            class="absolute inset-0 w-full h-full object-cover"
-          />
+          {@html imageHtml}
         </div>
         <div class="flex flex-col justify-center">
           <h3 class="text-3xl text-white mb-4">{locationDetails.name}</h3>

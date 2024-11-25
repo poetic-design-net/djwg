@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { urlFor } from '$lib/sanity/image';
+  import { generateImageHTML } from '$lib/sanity/image';
   import type { Event } from '$lib/sanity/queries';
 
   export let events: Event[] = [];
@@ -18,11 +18,15 @@
           href="/events/{event.slug.current}" 
           class="group relative aspect-[4/3] rounded-3xl overflow-hidden"
         >
-          <img 
-            src={urlFor(event.image).width(800).height(600).url()} 
-            alt={event.title}
-            class="absolute inset-0 w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
-          />
+          <div class="absolute inset-0 w-full h-full transform group-hover:scale-110 transition-transform duration-500">
+            {@html generateImageHTML(
+              event.image,
+              event.title,
+              'absolute inset-0 w-full h-full object-cover',
+              800,
+              600
+            )}
+          </div>
           <div class="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-60"></div>
           <div class="absolute bottom-0 left-0 right-0 p-8">
             <div class="flex flex-col gap-4">

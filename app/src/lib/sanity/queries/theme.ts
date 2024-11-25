@@ -6,27 +6,69 @@ export const themeSettingsQuery = groq`*[_type == "themeSettings"][0] {
     green,
     gray,
     blueGray,
-    tourquis
+    tourquis,
+    custom
   },
-  screens
+  screens,
+  fontFamily
 }`
 
 export interface ThemeSettings {
   colors: {
     red: {
-      [key: string]: string
+      shade50: string
+      shade100: string
+      shade200: string
+      shade300: string
+      shade400: string
+      shade500: string
+      shade600: string
+      shade700: string
+      shade800: string
+      shade900: string
     }
     green: {
-      [key: string]: string
+      shade50: string
+      shade100: string
+      shade200: string
+      shade300: string
+      shade400: string
+      shade500: string
+      shade600: string
+      shade700: string
+      shade800: string
+      shade900: string
     }
     gray: {
-      [key: string]: string
+      shade50: string
+      shade100: string
+      shade200: string
+      shade300: string
+      shade400: string
+      shade500: string
+      shade600: string
+      shade700: string
+      shade800: string
+      shade900: string
     }
     blueGray: {
-      [key: string]: string
+      shade50: string
+      shade100: string
+      shade200: string
+      shade300: string
+      shade400: string
+      shade500: string
+      shade600: string
+      shade700: string
+      shade800: string
+      shade900: string
     }
     tourquis: {
-      [key: string]: string
+      shade500: string
+    }
+    custom: {
+      body: string
+      bodyText: string
     }
   }
   screens: {
@@ -34,6 +76,10 @@ export interface ThemeSettings {
     md: string
     lg: string
     xl: string
-    '2xl': string
+    xxl: string
+  }
+  fontFamily: {
+    body: string[]
+    heading: string[]
   }
 }

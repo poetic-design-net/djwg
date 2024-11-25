@@ -15,6 +15,7 @@ import eventSchedule from './eventSchedule'
 import category from './category'
 import siteSettings from './documents/settings/siteSettings'
 import footerSettings from './documents/settings/footerSettings'
+import themeSettings from './documents/settings/theme'
 import seo from './objects/seo'
 import aboutUsSection from './objects/aboutUsSection'
 import eventPage from './documents/pages/eventPage'
@@ -43,8 +44,9 @@ export const schemaTypes = [
   navigation,
   page,
   post,
+  siteSettings,
   teamMember,
   testimonial,
-  timeSlot,
-  siteSettings
+  themeSettings,
+  timeSlot
 ]

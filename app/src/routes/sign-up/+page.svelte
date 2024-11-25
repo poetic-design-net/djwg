@@ -268,7 +268,7 @@
     </div>
     <div class="w-full md:w-1/2 p-8">
       <div class="p-5 h-full">
-        <img class="h-full mx-auto md:mr-0 object-cover rounded-5xl" src="nightsable-assets/images/sign-in/stock.png" alt="DJ Workshop">
+        <img class="h-full mx-auto md:mr-0 object-cover rounded-5xl" src="assets/home_hero.jpg" alt="DJ Workshop">
       </div>
     </div>
   </div>

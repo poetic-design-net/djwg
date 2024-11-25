@@ -1,5 +1,6 @@
 <script lang="ts">
   import { slide } from 'svelte/transition';
+  import { generateImageHTML } from '$lib/sanity/image';
 
   export let event: {
     title: string;
@@ -8,7 +9,7 @@
     date: string;
     location: string;
     locationUrl?: string;
-    image: string;
+    image: any; // Sanity image type
   };
 
   let showShareMenu = false;
@@ -39,6 +40,13 @@
       showShareMenu = false;
     }
   }
+
+  // Create the picture element HTML
+  $: pictureHtml = event.image ? generateImageHTML(
+    event.image,
+    event.title,
+    'w-full h-full object-cover',
+  ) : '';
 </script>
 
 <svelte:window on:click={handleClickOutside} />
@@ -46,12 +54,7 @@
 <div class="relative h-[100vh] lg:h-[80vh]">
   <!-- Background Image with Gradients -->
   <div class="absolute inset-0 z-0">
-    <img
-      src={event.image}
-      alt={event.title}
-      class="w-full h-full object-cover"
-      style="transform: translate3d(0, 0, 0)"
-    />
+    {@html pictureHtml}
     <!-- Combined gradient overlay to prevent multiple layer repaints -->
     <div
       class="absolute inset-0 bg-gradient-to-b from-black/80 via-black/60 to-black"

@@ -70,6 +70,13 @@ export const myStructure = (S: any) =>
                     .documentId('siteSettings')
                 ),
               S.listItem()
+                .title('Theme Settings')
+                .child(
+                  S.document()
+                    .schemaType('themeSettings')
+                    .documentId('themeSettings')
+                ),
+              S.listItem()
                 .title('Footer Settings')
                 .child(
                   S.document()
@@ -99,6 +106,7 @@ export const myStructure = (S: any) =>
             'testimonial',
             'siteSettings',
             'footerSettings',
+            'themeSettings',
             'media.tag'
           ].includes(listItem.getId())
       )

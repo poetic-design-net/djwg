@@ -8,7 +8,9 @@
 		"preview": "vite preview",
 		"lint": "prettier --plugin-search-dir . --check . && eslint .",
 		"format": "prettier --plugin-search-dir . --write .",
-		"start": "node build"
+		"start": "node build",
+		"generate-tailwind": "tsx scripts/generateTailwindConfig.ts",
+		"create-theme": "tsx scripts/createThemeSettings.ts"
 	},
 	"dependencies": {
 		"@sanity/client": "^6.15.4",
@@ -19,6 +21,7 @@
 		"@supabase/auth-helpers-sveltekit": "^0.13.0",
 		"@supabase/supabase-js": "^2.46.1",
 		"@sveltejs/adapter-vercel": "^5.4.6",
+		"@sveltejs/enhanced-img": "^0.4.1",
 		"@sveltejs/kit": "^2.7.3",
 		"clsx": "^2.1.1",
 		"groq": "^3.33.0",
@@ -39,6 +42,7 @@
 		"@typescript-eslint/eslint-plugin": "^6.21.0",
 		"@typescript-eslint/parser": "^6.21.0",
 		"autoprefixer": "^10.4.20",
+		"dotenv": "^16.4.5",
 		"eslint": "^8.57.0",
 		"eslint-config-prettier": "^9.1.0",
 		"eslint-plugin-svelte": "^2.43.0",
@@ -46,13 +50,14 @@
 		"prettier": "^3.3.3",
 		"prettier-plugin-svelte": "^3.2.6",
 		"tailwindcss": "^3.4.14",
+		"ts-node": "^10.9.2",
 		"tslib": "^2.6.3",
+		"tsx": "^4.19.2",
 		"typescript": "^5.5.3",
 		"vite": "^5.3.5"
 	},
 	"type": "module",
 	"engines": {
-		"node": "20.x",
-		"pnpm": ">=8.0.0"
+		"node": "20.x"
 	}
 }

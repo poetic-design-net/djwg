@@ -2,6 +2,9 @@ import {visionTool} from '@sanity/vision'
 import {defineConfig, type SchemaTypeDefinition} from 'sanity'
 import {structureTool} from 'sanity/structure'
 import {presentationTool} from 'sanity/presentation'
+import {media} from 'sanity-plugin-media'
+import {assist} from '@sanity/assist'
+import generateTailwindPlugin from './documentActions/generateTailwind'
 
 import {schemaTypes} from './schemas'
 import {myStructure} from './structure'
@@ -26,6 +29,9 @@ const config = defineConfig({
       },
     }),
     visionTool(),
+    generateTailwindPlugin,
+    media(),
+    assist(),
   ],
   schema: {
     types: schemaTypes as SchemaTypeDefinition[],
