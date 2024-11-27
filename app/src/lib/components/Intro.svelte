@@ -39,27 +39,61 @@
     return validIcons.includes(icon as IconType) ? icon as IconType : 'mixer';
   }
 
-  $: imageUrls = image?.asset ? enhancedUrlFor(image) : null;
+  $: imageUrls = image?.asset ? (() => {
+    const sizes = [400, 800, 1200];
+    const urls = sizes.map(size => ({
+      ...enhancedUrlFor(image),
+      width: size
+    }));
+
+    return {
+      webp: urls.map(u => `${u.webp}&w=${u.width} ${u.width}w`).join(', '),
+      fallback: urls.map(u => `${u.fallback}&w=${u.width} ${u.width}w`).join(', '),
+      placeholder: `${enhancedUrlFor(image).fallback}&w=400&blur=10`
+    };
+  })() : null;
+
   $: altText = image?.alt || "DJ Workshop";
 </script>
 
 <div class="container px-4 mx-auto">
-    <div class="relative p-6 sm:p-12 bg-green-500 border-b bg-gradient-radial-dark  border-blueGray-900 rounded-5xl">
+    <div class="relative p-6 sm:p-12 bg-green-500 border-b bg-gradient-radial-dark border-blueGray-900 rounded-5xl">
       <div class="flex flex-wrap lg:items-center -m-8">
         <div class="w-full md:w-1/2 p-8 order-2 md:order-1">
           {#if image?.asset && imageUrls}
-            <picture class="relative block w-full aspect-[16/9]">
-              <source srcset={imageUrls.webp} type="image/webp">
+            <picture class="relative block w-full aspect-video">
+              <source 
+                srcset={imageUrls.webp}
+                type="image/webp"
+                sizes="(max-width: 768px) 100vw, 50vw"
+              >
               <img 
-                src={imageUrls.fallback} 
+                srcset={imageUrls.fallback}
+                src={imageUrls.placeholder}
                 alt={altText} 
                 class="relative rounded-xl w-full h-full object-cover"
                 loading="lazy"
                 decoding="async"
+                width="800"
+                height="450"
               >
             </picture>
           {:else}
-            <img class="relative rounded-xl w-full aspect-[16/9] object-cover" src="assets/home_hero.jpg" alt="DJ Workshop">
+            <picture class="relative block w-full aspect-video">
+              <source 
+                srcset="assets/home_hero.webp"
+                type="image/webp"
+              >
+              <img 
+                src="assets/home_hero.jpg" 
+                alt="DJ Workshop"
+                class="relative rounded-xl w-full h-full object-cover"
+                loading="lazy"
+                decoding="async"
+                width="800"
+                height="450"
+              >
+            </picture>
           {/if}
         </div>
         <div class="w-full md:w-1/2 p-8 order-1 md:order-2">
@@ -95,7 +129,6 @@
       {/each}
     </div>
 
-    <!-- Knowledge Base Button -->
     <div class="text-center mt-12">
       <a 
         href="/knowledgebase" 
