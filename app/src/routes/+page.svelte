@@ -82,6 +82,7 @@
     items={knowledgeBaseItems}
     title={homeData?.intro?.title ?? defaultTitle}
     description={homeData?.intro?.description ?? ''}
+    image={homeData?.intro?.image}
   />
 </section>
 

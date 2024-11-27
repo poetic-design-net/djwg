@@ -159,7 +159,7 @@
       transition:fade={{ duration: 300 }}
       class="fixed right-4 top-1/2 transform -translate-y-1/2 z-[300] hidden lg:block"
     >
-      <div class="group flex flex-col items-end gap-4 p-4 rounded-2xl hover:bg-black/20 backdrop-blur-sm transition-all duration-300">
+      <div class="group flex flex-col items-end gap-4 p-4 rounded-2xl hover:bg-black/20 transition-all duration-300">
         {#each sections as section, index}
           <button
             class="flex items-center gap-2 w-full justify-end"

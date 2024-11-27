@@ -5,13 +5,20 @@
   import { PortableText } from '@portabletext/svelte';
   import Icon from './icons/Icon.svelte';
   import type { KnowledgeBaseItem } from '$lib/sanity/queries/content';
+  import { enhancedUrlFor } from '$lib/sanity/image';
+  import type { Image } from '@sanity/types';
 
   type IconType = 'mixer' | 'headphones' | 'vinyl' | 'laptop' | 'microphone' | 'controller';
+
+  interface SanityImage extends Image {
+    alt?: string;
+  }
 
   interface IntroProps {
     items?: KnowledgeBaseItem[];
     title?: PortableTextBlock[];
     description?: string;
+    image?: SanityImage;
   }
 
   export let items: KnowledgeBaseItem[] = [];
@@ -23,6 +30,7 @@
     }]
   }];
   export let description: string = "Entdecke die Kunst des DJings mit professionellen Workshops für Anfänger und Fortgeschrittene. Von Mixing-Techniken bis zur Crowd Control - wir bringen dich auf das nächste Level.";
+  export let image: IntroProps['image'] = undefined;
 
   const components: Partial<PortableTextComponents> = {};
 
@@ -30,17 +38,33 @@
     const validIcons: IconType[] = ['mixer', 'headphones', 'vinyl', 'laptop', 'microphone', 'controller'];
     return validIcons.includes(icon as IconType) ? icon as IconType : 'mixer';
   }
+
+  $: imageUrls = image?.asset ? enhancedUrlFor(image) : null;
+  $: altText = image?.alt || "DJ Workshop";
 </script>
 
 <div class="container px-4 mx-auto">
     <div class="relative p-6 sm:p-12 bg-green-500 border-b bg-gradient-radial-dark  border-blueGray-900 rounded-5xl">
       <div class="flex flex-wrap lg:items-center -m-8">
         <div class="w-full md:w-1/2 p-8 order-2 md:order-1">
-          <img class="relative rounded-xl" src="assets/home_hero.jpg" alt="DJ Workshop">
+          {#if image?.asset && imageUrls}
+            <picture class="relative block w-full aspect-[16/9]">
+              <source srcset={imageUrls.webp} type="image/webp">
+              <img 
+                src={imageUrls.fallback} 
+                alt={altText} 
+                class="relative rounded-xl w-full h-full object-cover"
+                loading="lazy"
+                decoding="async"
+              >
+            </picture>
+          {:else}
+            <img class="relative rounded-xl w-full aspect-[16/9] object-cover" src="assets/home_hero.jpg" alt="DJ Workshop">
+          {/if}
         </div>
         <div class="w-full md:w-1/2 p-8 order-1 md:order-2">
           <div class="md:max-w-md">
-            <h2 class="font-heading mb-4 text-5xl lg:text-7xl text-black tracking-5xl lg:tracking-7xl">
+            <h2 class="font-heading mb-4 text-4xl lg:text-5xl text-black tracking-4xl lg:tracking-5xl">
               <PortableText value={title} {components} />
             </h2>
             <p class="mb-6 text-black text-xl">{description}</p>

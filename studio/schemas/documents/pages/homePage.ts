@@ -79,6 +79,23 @@ export default {
           title: 'Description',
           type: 'text',
         },
+        {
+          name: 'image',
+          title: 'Image',
+          type: 'image',
+          description: 'The image shown in the intro section',
+          options: {
+            hotspot: true,
+          },
+          fields: [
+            {
+              name: 'alt',
+              type: 'string',
+              title: 'Alternative Text',
+              description: 'Important for SEO and accessibility.'
+            }
+          ]
+        }
       ],
     },
     {

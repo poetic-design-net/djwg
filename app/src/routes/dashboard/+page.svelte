@@ -4,12 +4,34 @@
   import { goto } from '$app/navigation';
   import { invalidate, invalidateAll } from '$app/navigation';
   import NewsletterToggle from '$lib/components/NewsletterToggle.svelte';
+  import { onMount } from 'svelte';
 
-  export let data;
+  export let data: {
+    user: {
+      email: string;
+      created_at: string;
+      user_metadata?: {
+        firstname?: string;
+        name?: string;
+      };
+      aud?: string;
+    };
+  };
+  
   const { user } = data;
 
   const supabase = getContext<SupabaseClient>('supabase');
   let loading = false;
+
+  onMount(() => {
+    // Pre-fill form fields if user data exists
+    if (user) {
+      const emailInput = document.getElementById('mce-EMAIL') as HTMLInputElement;
+      const firstNameInput = document.getElementById('mce-FNAME') as HTMLInputElement;
+      if (emailInput) emailInput.value = user.email || '';
+      if (firstNameInput) firstNameInput.value = user.user_metadata?.firstname || user.user_metadata?.name || '';
+    }
+  });
 
   const handleLogout = async () => {
     if (loading) return;
@@ -31,6 +53,15 @@
       console.error('Error signing out:', error);
     } finally {
       loading = false;
+    }
+  };
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      alert('In die Zwischenablage kopiert!');
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
     }
   };
 </script>
@@ -79,7 +110,7 @@
               </div>
               <div>
                 <p class="text-gray-400">Name</p>
-                <p class="text-white font-medium">{user.user_metadata?.firstname || user.user_metadata?.name}</p>
+                <p class="text-white font-medium">{user.user_metadata?.firstname || user.user_metadata?.name || ''}</p>
               </div>
             </div>
 
@@ -98,28 +129,110 @@
         </div>
       </div>
 
-      <!-- Newsletter Preferences -->
+      <!-- Newsletter Subscription -->
       <div class="relative rounded-3xl p-8 border border-gray-800 overflow-hidden">
         <div class="absolute inset-0 mix-blend-overlay noise-filter"></div>
-        <!-- Coming Soon Overlay -->
-        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center">
-          <div class="bg-green-500/20 border border-green-500/40 rounded-full px-4 py-2">
-            <span class="text-green-500 font-medium">Coming Soon</span>
-          </div>
-        </div>
-        <div class="relative opacity-50">
-          <h2 class="text-2xl font-medium text-white mb-6">Newsletter Preferences</h2>
-          <div class="space-y-6">
-            <div class="flex items-center justify-between">
+        <div class="relative">
+          <h2 class="text-2xl font-medium text-white mb-6">Newsletter Anmeldung</h2>
+          <form 
+            action="https://djworkshopgermany.us17.list-manage.com/subscribe/post?u=0a45dba5a58068d990b9b4e12&amp;id=7be52bea2f&amp;f_id=002aa0e2f0" 
+            method="post" 
+            id="mc-embedded-subscribe-form" 
+            name="mc-embedded-subscribe-form" 
+            class="validate space-y-4" 
+            target="_blank"
+          >
+            <div class="space-y-4">
+              <!-- Phone Number Field -->
               <div>
-                <h3 class="text-white font-medium">DJ Workshop Newsletter</h3>
-                <p class="text-gray-400 text-sm">Receive updates about new workshops and events</p>
+                <label for="mce-SMSPHONE" class="block text-sm font-medium text-gray-400 mb-2">
+                  Telefonnummer (optional)
+                </label>
+                <div class="flex items-center border border-gray-800 rounded-xl bg-gray-950 overflow-hidden">
+                  <div class="px-4 py-2 border-e border-gray-800">
+                    <img 
+                      src="https://digitalasset.intuit.com/render/content/dam/intuit/mc-fe/en_us/images/forms-landing-pages/smsphone/flag-germany.svg" 
+                      alt="Country Code" 
+                      width="28" 
+                      height="28"
+                    >
+                  </div>
+                  <input 
+                    type="text" 
+                    name="SMSPHONE" 
+                    id="mce-SMSPHONE"
+                    class="flex-1 px-4 py-2 bg-transparent text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  >
+                </div>
+                <div class="mt-2 flex items-start space-x-2">
+                  <input
+                    type="checkbox"
+                    name="mc-SMSPHONE-ack"
+                    id="mc-SMSPHONE-ack"
+                    value="true"
+                    class="mt-1 h-4 w-4 text-green-500 bg-transparent border-gray-800 rounded focus:ring-green-500"
+                  >
+                  <label for="mc-SMSPHONE-ack" class="text-xs text-gray-400">
+                    Ich möchte Werbe- und Marketingnachrichten von DJWorkshop erhalten. 
+                    <a href="http://eepurl.com/i4jcm2" target="_blank" class="text-green-500 hover:text-green-400">Nutzungsbedingungen</a>
+                  </label>
+                </div>
               </div>
-              <div class="w-12 h-6 bg-gray-700 rounded-full relative">
-                <div class="absolute left-1 top-1 w-4 h-4 bg-gray-400 rounded-full"></div>
+
+              <!-- Email Field -->
+              <div>
+                <label for="mce-EMAIL" class="block text-sm font-medium text-gray-400 mb-2">
+                  E-Mail Adresse <span class="text-red-500">*</span>
+                </label>
+                <input 
+                  type="email" 
+                  name="EMAIL" 
+                  id="mce-EMAIL" 
+                  required
+                  class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500"
+                >
               </div>
+
+              <!-- First Name Field -->
+              <div>
+                <label for="mce-FNAME" class="block text-sm font-medium text-gray-400 mb-2">
+                  Vorname
+                </label>
+                <input 
+                  type="text" 
+                  name="FNAME" 
+                  id="mce-FNAME"
+                  class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500"
+                >
+              </div>
+
+              <!-- Required field notice -->
+              <p class="text-sm text-gray-400">
+                <span class="text-red-500">*</span> Pflichtfeld
+              </p>
+
+              <!-- Submit Button -->
+              <button 
+                type="submit" 
+                name="subscribe" 
+                id="mc-embedded-subscribe"
+                class="w-full px-6 py-3 text-sm font-medium text-black bg-green-500 hover:bg-green-400 rounded-xl transition duration-300"
+              >
+                Newsletter abonnieren
+              </button>
             </div>
-          </div>
+
+            <!-- Hidden Fields -->
+            <div style="position: absolute; left: -5000px;" aria-hidden="true">
+              <input type="text" name="b_0a45dba5a58068d990b9b4e12_7be52bea2f" tabindex="-1" value="">
+            </div>
+
+            <!-- Response Messages -->
+            <div id="mce-responses" class="mt-4">
+              <div id="mce-error-response" class="hidden"></div>
+              <div id="mce-success-response" class="hidden"></div>
+            </div>
+          </form>
         </div>
       </div>
 
@@ -168,6 +281,62 @@
           </div>
         </div>
       </div>
+
+      <!-- Online Talk Access & Support -->
+      <div class="relative rounded-3xl p-8 border border-gray-800 overflow-hidden">
+        <div class="absolute inset-0 mix-blend-overlay noise-filter"></div>
+        <div class="relative">
+          <h2 class="text-2xl font-medium text-white mb-6">Online Talk & Unterstützung</h2>
+          
+          <!-- Online Talk Access -->
+          <div class="mb-8">
+            <h3 class="text-xl font-medium text-white mb-4">Zugang zum Online Talk "Urheberrechtsverletzung & Relaunch"</h3>
+            <div class="space-y-4">
+              <div class="flex items-center space-x-3">
+                <a 
+                  href="https://tinyurl.com/27rk64ue"
+                  target="_blank"
+                  class="flex-1 px-6 py-3 text-sm font-medium text-black bg-green-500 hover:bg-green-400 rounded-xl text-center transition duration-300"
+                >
+                  Zum Online Talk
+                </a>
+              </div>
+              <div class="flex items-center space-x-3">
+                <button 
+                  class="flex-1 px-6 py-3 text-sm font-medium text-white bg-gray-950 hover:bg-gray-900 rounded-xl text-center transition duration-300"
+                  on:click={() => copyToClipboard('ZQ9U')}
+                >
+                  Passwort: ZQ9U (Klicken zum Kopieren)
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Support Options -->
+          <div>
+            <h3 class="text-xl font-medium text-white mb-4">Unterstütze DJ Workshop</h3>
+            <p class="text-gray-400 mb-4">
+              Hilf uns dabei, die DJ Community weiter zu fördern und neue Workshops anzubieten.
+            </p>
+            <div class="space-y-4">
+              <a 
+                href="https://buymeacoffee.com/djworkshopgermany"
+                target="_blank"
+                class="block px-6 py-3 text-sm font-medium text-black bg-yellow-500 hover:bg-yellow-400 rounded-xl text-center transition duration-300"
+              >
+                Buy me a Coffee ☕
+              </a>
+              <a 
+                href="https://gofund.me/b30d051e"
+                target="_blank"
+                class="block px-6 py-3 text-sm font-medium text-white bg-blue-600 hover:bg-blue-500 rounded-xl text-center transition duration-300"
+              >
+                GoFundMe Kampagne 🎵
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -178,5 +347,22 @@
     opacity: 0.4;
     mix-blend-mode: overlay;
     pointer-events: none;
+  }
+
+  /* Override any Mailchimp default styles */
+  :global(#mc_embed_signup) {
+    background: transparent !important;
+    font-family: inherit !important;
+    width: 100% !important;
+  }
+
+  :global(#mc_embed_signup form) {
+    padding: 0 !important;
+  }
+
+  :global(#mc_embed_signup .mc-field-group) {
+    width: 100% !important;
+    padding-bottom: 0 !important;
+    min-height: 0 !important;
   }
 </style>

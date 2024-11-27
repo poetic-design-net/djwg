@@ -6,7 +6,6 @@
   import { getContext } from 'svelte';
   import type { AuthPageData } from './+page';
   import type { SupabaseClient } from '@supabase/supabase-js';
-  import { bentoClient } from '$lib/bento/client';
   
   export let data: AuthPageData;
   let { user } = data;
@@ -18,6 +17,7 @@
   let firstname = '';
   let email = '';
   let password = '';
+  let phoneNumber = '';
   let newsletterEnabled = false;
   let loading = false;
   let errorMsg = '';
@@ -34,15 +34,53 @@
     goto(next);
   }
 
+  async function subscribeToNewsletter() {
+    try {
+      const response = await fetch('/api/newsletter', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          firstName: firstname,
+          phoneNumber,
+          smsConsent: false, // We don't have SMS consent in signup form
+        }),
+      });
+
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.message);
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Newsletter subscription error:', error);
+      // Don't throw, just return false to continue with signup
+      return false;
+    }
+  }
+
   const handleSignUp = async () => {
     try {
       loading = true;
       errorMsg = '';
       
       if (!firstname || !email || !password) {
-        errorMsg = 'Bitte fülle alle Felder aus';
+        errorMsg = 'Bitte fülle alle erforderlichen Felder aus';
         loading = false;
         return;
+      }
+
+      // Only validate phone number if one is provided
+      if (phoneNumber) {
+        const phoneRegex = /^[\d\s+()-]{6,20}$/;
+        if (!phoneRegex.test(phoneNumber)) {
+          errorMsg = 'Bitte gib eine gültige Telefonnummer ein';
+          loading = false;
+          return;
+        }
       }
 
       if (!supabase) {
@@ -51,21 +89,11 @@
         return;
       }
 
-      let bentoSubscribed = false;
+      let newsletterSubscribed = false;
 
-      // If newsletter is enabled, subscribe to Bento first
+      // If newsletter is enabled, subscribe first
       if (newsletterEnabled) {
-        try {
-          await bentoClient.subscribe({
-            email,
-            firstName: firstname
-          });
-          bentoSubscribed = true;
-        } catch (error) {
-          console.error('Newsletter subscription failed:', error);
-          // Show error but continue with signup
-          errorMsg = 'Newsletter-Anmeldung fehlgeschlagen, aber Registrierung wird fortgesetzt.';
-        }
+        newsletterSubscribed = await subscribeToNewsletter();
       }
 
       // Sign up with Supabase
@@ -75,22 +103,14 @@
         options: {
           data: {
             firstname,
-            newsletter_subscribed: bentoSubscribed
+            ...(phoneNumber && { phone_number: phoneNumber }), // Only include if phone number is provided
+            newsletter_subscribed: newsletterSubscribed
           },
           emailRedirectTo: `${browser ? location.origin : ''}/auth/callback?next=${encodeURIComponent(next)}`,
         },
       });
 
       if (error) {
-        // If signup fails and newsletter was subscribed, try to unsubscribe
-        if (bentoSubscribed) {
-          try {
-            await bentoClient.unsubscribe(email);
-          } catch (unsubError) {
-            console.error('Failed to revert newsletter subscription:', unsubError);
-          }
-        }
-
         console.error('Sign up error:', error);
         errorMsg = error.message;
         loading = false;
@@ -174,6 +194,7 @@
               placeholder="Dein Vorname"
               bind:value={firstname}
               disabled={loading}
+              required
             >
           </div>
 
@@ -184,8 +205,20 @@
               placeholder="Deine E-Mail-Adresse"
               bind:value={email}
               disabled={loading}
+              required
             >
           </div>
+
+          <div class="mb-2 border border-gray-900 focus-within:border-white overflow-hidden rounded-3xl">
+            <input 
+              class="pl-6 pr-16 py-4 text-gray-300 w-full placeholder-gray-300 outline-none bg-transparent" 
+              type="tel" 
+              placeholder="Deine Telefonnummer (optional)"
+              bind:value={phoneNumber}
+              disabled={loading}
+            >
+          </div>
+
           <div class="mb-6 relative border border-gray-900 focus-within:border-white overflow-hidden rounded-3xl">
             <button 
               type="button"
@@ -201,6 +234,7 @@
                 placeholder="Wähle ein Passwort"
                 bind:value={password}
                 disabled={loading}
+                required
               >
             {:else}
               <input 
@@ -209,6 +243,7 @@
                 placeholder="Wähle ein Passwort"
                 bind:value={password}
                 disabled={loading}
+                required
               >
             {/if}
           </div>

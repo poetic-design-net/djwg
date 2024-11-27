@@ -1,29 +1,22 @@
 import groq from 'groq'
 import type { PortableTextBlock } from '@portabletext/types'
+import type { Image } from '@sanity/types'
+
+interface SanityImage extends Image {
+  alt?: string;
+}
 
 export interface HomePage {
   hero: {
     title: string
     subtitle: string
-    backgroundImage: {
-      asset: {
-        _ref: string
-        _type: string
-      }
-      _type: string
-    }
+    backgroundImage: SanityImage
   }
   aboutSection: {
     tagline: string
     title: string
     paragraphs: string[]
-    mainImage: {
-      asset: {
-        _ref: string
-        _type: string
-      }
-      alt: string
-    }
+    mainImage: SanityImage
     cta: {
       text: string
       link: string
@@ -32,6 +25,7 @@ export interface HomePage {
   intro: {
     title: PortableTextBlock[]
     description: string
+    image: SanityImage
   }
   workshopsSection: {
     title: string
@@ -58,11 +52,10 @@ export const homePageQuery = groq`*[_type == "homePage"][0]{
     title,
     subtitle,
     backgroundImage {
-      _type,
-      asset->{
-        _ref,
-        _type
-      }
+      asset->,
+      alt,
+      hotspot,
+      crop
     }
   },
   aboutSection {
@@ -71,7 +64,9 @@ export const homePageQuery = groq`*[_type == "homePage"][0]{
     paragraphs,
     mainImage {
       asset->,
-      alt
+      alt,
+      hotspot,
+      crop
     },
     cta {
       text,
@@ -80,7 +75,13 @@ export const homePageQuery = groq`*[_type == "homePage"][0]{
   },
   intro {
     title,
-    description
+    description,
+    image {
+      asset->,
+      alt,
+      hotspot,
+      crop
+    }
   },
   workshopsSection {
     title,
