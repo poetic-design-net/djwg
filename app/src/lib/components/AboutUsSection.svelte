@@ -1,6 +1,6 @@
 <script lang="ts">
   import { fade } from 'svelte/transition';
-  import { urlFor } from '$lib/sanity/image';
+  import { enhancedUrlFor } from '$lib/sanity/image';
   import type { HomePage } from '$lib/sanity/queries/homepage';
 
   export let data: HomePage['aboutSection'];
@@ -31,11 +31,19 @@
           <img class="absolute -right-8 -bottom-8 w-28 md:w-auto" src="/nightsable-assets/images/abouts/star-light.svg" alt="">
           <div class="relative overflow-hidden rounded-3xl">
             {#if data.mainImage?.asset}
-              <img 
-                class="h-96 w-full object-cover transform hover:scale-105 transition duration-500" 
-                src={urlFor(data.mainImage).width(800).height(600).url()} 
-                alt={data.mainImage.alt || ''} 
-              />
+              <picture>
+                <source 
+                  srcset={enhancedUrlFor(data.mainImage).webp} 
+                  type="image/webp"
+                >
+                <img 
+                  class="h-96 w-full object-cover transform hover:scale-105 transition duration-500" 
+                  src={enhancedUrlFor(data.mainImage).fallback}
+                  alt={data.mainImage.alt || ''} 
+                  loading="lazy"
+                  decoding="async"
+                />
+              </picture>
             {:else}
               <img 
                 class="h-96 w-full object-cover transform hover:scale-105 transition duration-500" 

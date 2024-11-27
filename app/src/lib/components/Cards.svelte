@@ -3,7 +3,7 @@
   import { cubicInOut } from 'svelte/easing';
   import { onMount } from 'svelte';
   import { browser } from '$app/environment';
-  import { urlFor } from '$lib/sanity/image';
+  import { enhancedUrlFor } from '$lib/sanity/image';
   import type { Event } from '$lib/sanity/queries';
 
   export let events: Event[] = [];
@@ -125,11 +125,21 @@
             class:opacity-0={showSlider && (index < currentIndex || index >= currentIndex + cardsPerView)}
           >
             <div class="relative overflow-hidden rounded-5xl" in:fade={{duration: 300, easing: cubicInOut}}>
-              <img 
-                class="w-full h-[300px] md:h-[400px] object-cover transform hover:scale-105 transition duration-500" 
-                src={urlFor(event.image).width(800).height(600).url()} 
-                alt={event.title}
-              >
+              {#if event.image}
+                <picture>
+                  <source 
+                    srcset={enhancedUrlFor(event.image).webp} 
+                    type="image/webp"
+                  >
+                  <img 
+                    class="w-full h-[300px] md:h-[400px] object-cover transform hover:scale-105 transition duration-500" 
+                    src={enhancedUrlFor(event.image).fallback} 
+                    alt={event.title}
+                    loading="lazy"
+                    decoding="async"
+                  >
+                </picture>
+              {/if}
               <div class="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/90 via-black/90 to-transparent p-4 md:p-8" style="--tw-gradient-stops: var(--tw-gradient-from) 0%, var(--tw-gradient-from) 33%, var(--tw-gradient-to) 100%;">
                 <span class="inline-block rounded-full bg-green-500 p-2 mb-2 text-xs text-black font-medium tracking-tighter">{event.tag}</span>
                 <a class="group block max-w-sm" href="/events/{event.slug.current}">

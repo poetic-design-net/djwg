@@ -1,7 +1,7 @@
 <script lang="ts">
   import { fade } from 'svelte/transition';
   import type { Testimonial } from '$lib/sanity/queries';
-  import { urlFor } from '$lib/sanity/image';
+  import { enhancedUrlFor } from '$lib/sanity/image';
 
   export let testimonials: { data: Testimonial[] };
 
@@ -23,11 +23,11 @@
     return index >= visibleCount - 3 && index < visibleCount && hasMore;
   }
 
-  function getImageUrl(testimonial: Testimonial): string {
+  function getImageUrls(testimonial: Testimonial) {
     if (testimonial.image) {
-      return urlFor(testimonial.image).width(80).height(80).url();
+      return enhancedUrlFor(testimonial.image);
     }
-    return 'assets/home_hero.jpg';
+    return null;
   }
 </script>
 
@@ -52,11 +52,19 @@
             <div class="flex flex-wrap items-center -m-3">
               {#if testimonial.image}
                 <div class="w-auto p-3">
-                  <img
-                    src={getImageUrl(testimonial)}
-                    alt={testimonial.name}
-                    class="w-12 h-12 object-cover rounded-full"
-                  />
+                  <picture>
+                    <source 
+                      srcset={getImageUrls(testimonial)?.webp} 
+                      type="image/webp"
+                    >
+                    <img
+                      src={getImageUrls(testimonial)?.fallback}
+                      alt={testimonial.name}
+                      class="w-12 h-12 object-cover rounded-full"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </picture>
                 </div>
               {/if}
               <div class="flex-1 p-3">
