@@ -129,6 +129,61 @@
         </div>
       </div>
 
+      <div class="relative rounded-3xl p-8 border border-gray-800 overflow-hidden">
+        <div class="absolute inset-0 mix-blend-overlay noise-filter"></div>
+        <div class="relative">
+          <h2 class="text-2xl font-medium text-white mb-6">Online Talk & Unterstützung</h2>
+          
+          <!-- Online Talk Access -->
+          <div class="mb-8">
+            <h3 class="text-xl font-medium text-white mb-4">Zugang zum Online Talk "Urheberrechtsverletzung & Relaunch"</h3>
+            <div class="space-y-4">
+              <div class="flex items-center space-x-3">
+                <a 
+                  href="https://tinyurl.com/27rk64ue"
+                  target="_blank"
+                  class="flex-1 px-6 py-3 text-sm font-medium text-black bg-green-500 hover:bg-green-400 rounded-xl text-center transition duration-300"
+                >
+                  Zum Online Talk
+                </a>
+              </div>
+              <div class="flex items-center space-x-3">
+                <button 
+                  class="flex-1 px-6 py-3 text-sm font-medium text-white bg-gray-950 hover:bg-gray-900 rounded-xl text-center transition duration-300"
+                  on:click={() => copyToClipboard('ZQ9U')}
+                >
+                  Passwort: ZQ9U (Klicken zum Kopieren)
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Support Options -->
+          <div>
+            <h3 class="text-xl font-medium text-white mb-4">Unterstütze DJ Workshop</h3>
+            <p class="text-gray-400 mb-4">
+              Hilf uns dabei, die DJ Community weiter zu fördern und neue Workshops anzubieten.
+            </p>
+            <div class="space-y-4">
+              <a 
+                href="https://buymeacoffee.com/djworkshopgermany"
+                target="_blank"
+                class="block px-6 py-3 text-sm font-medium text-black bg-yellow-500 hover:bg-yellow-400 rounded-xl text-center transition duration-300"
+              >
+                Buy me a Coffee ☕
+              </a>
+              <a 
+                href="https://gofund.me/b30d051e"
+                target="_blank"
+                class="block px-6 py-3 text-sm font-medium text-white bg-blue-600 hover:bg-blue-500 rounded-xl text-center transition duration-300"
+              >
+                GoFundMe Kampagne 🎵
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Newsletter Subscription -->
       <div class="relative rounded-3xl p-8 border border-gray-800 overflow-hidden">
         <div class="absolute inset-0 mix-blend-overlay noise-filter"></div>
@@ -283,60 +338,7 @@
       </div>
 
       <!-- Online Talk Access & Support -->
-      <div class="relative rounded-3xl p-8 border border-gray-800 overflow-hidden">
-        <div class="absolute inset-0 mix-blend-overlay noise-filter"></div>
-        <div class="relative">
-          <h2 class="text-2xl font-medium text-white mb-6">Online Talk & Unterstützung</h2>
-          
-          <!-- Online Talk Access -->
-          <div class="mb-8">
-            <h3 class="text-xl font-medium text-white mb-4">Zugang zum Online Talk "Urheberrechtsverletzung & Relaunch"</h3>
-            <div class="space-y-4">
-              <div class="flex items-center space-x-3">
-                <a 
-                  href="https://tinyurl.com/27rk64ue"
-                  target="_blank"
-                  class="flex-1 px-6 py-3 text-sm font-medium text-black bg-green-500 hover:bg-green-400 rounded-xl text-center transition duration-300"
-                >
-                  Zum Online Talk
-                </a>
-              </div>
-              <div class="flex items-center space-x-3">
-                <button 
-                  class="flex-1 px-6 py-3 text-sm font-medium text-white bg-gray-950 hover:bg-gray-900 rounded-xl text-center transition duration-300"
-                  on:click={() => copyToClipboard('ZQ9U')}
-                >
-                  Passwort: ZQ9U (Klicken zum Kopieren)
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Support Options -->
-          <div>
-            <h3 class="text-xl font-medium text-white mb-4">Unterstütze DJ Workshop</h3>
-            <p class="text-gray-400 mb-4">
-              Hilf uns dabei, die DJ Community weiter zu fördern und neue Workshops anzubieten.
-            </p>
-            <div class="space-y-4">
-              <a 
-                href="https://buymeacoffee.com/djworkshopgermany"
-                target="_blank"
-                class="block px-6 py-3 text-sm font-medium text-black bg-yellow-500 hover:bg-yellow-400 rounded-xl text-center transition duration-300"
-              >
-                Buy me a Coffee ☕
-              </a>
-              <a 
-                href="https://gofund.me/b30d051e"
-                target="_blank"
-                class="block px-6 py-3 text-sm font-medium text-white bg-blue-600 hover:bg-blue-500 rounded-xl text-center transition duration-300"
-              >
-                GoFundMe Kampagne 🎵
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
+      
     </div>
   </div>
 </div>

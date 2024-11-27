@@ -6,51 +6,6 @@
   let firstName = '';
   let phoneNumber = '';
   let smsConsent = false;
-  let loading = false;
-  let message = '';
-  let isError = false;
-
-  async function handleSubmit(event: Event) {
-    event.preventDefault();
-    loading = true;
-    message = '';
-    isError = false;
-
-    try {
-      const response = await fetch('/api/newsletter', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          firstName,
-          phoneNumber,
-          smsConsent,
-          tags: ['8331965'], // Adding the tag from Mailchimp form
-        }),
-      });
-
-      const result = await response.json();
-      
-      if (result.success) {
-        message = result.message;
-        // Clear form on success
-        email = '';
-        firstName = '';
-        phoneNumber = '';
-        smsConsent = false;
-      } else {
-        throw new Error(result.message);
-      }
-    } catch (error) {
-      console.error('Submission error:', error);
-      message = error instanceof Error ? error.message : 'Ein Fehler ist aufgetreten';
-      isError = true;
-    } finally {
-      loading = false;
-    }
-  }
 </script>
 
 <div class="container px-4 mx-auto" id="mc_embed_shell">
@@ -62,24 +17,14 @@
     </div>
     <div class="px-4" id="mc_embed_signup">
       <form 
-        on:submit={handleSubmit}
+        action="https://djworkshopgermany.us17.list-manage.com/subscribe/post?u=0a45dba5a58068d990b9b4e12&amp;id=7be52bea2f&amp;f_id=002aa0e2f0"
+        method="post"
         id="mc-embedded-subscribe-form"
         name="mc-embedded-subscribe-form"
         class="validate flex flex-col space-y-4 md:max-w-xl mx-auto"
+        target="_blank"
       >
         <div id="mc_embed_signup_scroll">
-          {#if message}
-            <div id="mce-responses" class="clear">
-              <div 
-                class="p-4 rounded-xl text-center {isError ? 'bg-red-500/10 text-red-500' : 'bg-green-500/10 text-green-500'}" 
-                id={isError ? 'mce-error-response' : 'mce-success-response'}
-                style="display: block;"
-              >
-                {message}
-              </div>
-            </div>
-          {/if}
-
           <!-- Required Fields Notice -->
           <div class="indicates-required text-end text-sm text-gray-400">
             <span class="asterisk text-red-500">*</span> Pflichtfeld
@@ -173,11 +118,16 @@
             type="submit"
             name="subscribe"
             id="mc-embedded-subscribe"
-            disabled={loading}
-            class="button w-full text-center block px-14 py-4 font-medium tracking-2xl border-2 border-green-400 bg-green-400 hover:bg-green-500 text-black focus:ring-4 focus:ring-green-500 focus:ring-opacity-40 rounded-full transition duration-300 disabled:opacity-50"
+            class="button w-full text-center block px-14 py-4 font-medium tracking-2xl border-2 border-green-400 bg-green-400 hover:bg-green-500 text-black focus:ring-4 focus:ring-green-500 focus:ring-opacity-40 rounded-full transition duration-300"
           >
-            {loading ? 'Wird angemeldet...' : 'Abonnieren'}
+            Abonnieren
           </button>
+
+          <!-- Response Messages -->
+          <div id="mce-responses" class="clear">
+            <div id="mce-error-response" class="hidden"></div>
+            <div id="mce-success-response" class="hidden"></div>
+          </div>
         </div>
       </form>
     </div>
