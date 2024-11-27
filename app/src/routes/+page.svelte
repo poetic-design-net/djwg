@@ -73,7 +73,8 @@
   <Herostart 
     title={homeData?.hero?.title ?? ''}
     subtitle={homeData?.hero?.subtitle ?? ''}
-    backgroundImage={homeData?.hero?.backgroundImage}
+    backgroundImages={homeData?.hero?.backgroundImages ?? []}
+    transitionInterval={homeData?.hero?.transitionInterval ?? 7.5}
   />
 </section>
 

@@ -10,7 +10,8 @@ export interface HomePage {
   hero: {
     title: string
     subtitle: string
-    backgroundImage: SanityImage
+    backgroundImages: SanityImage[]
+    transitionInterval: number
   }
   aboutSection: {
     tagline: string
@@ -51,12 +52,13 @@ export const homePageQuery = groq`*[_type == "homePage"][0]{
   hero {
     title,
     subtitle,
-    backgroundImage {
+    backgroundImages[] {
       asset->,
       alt,
       hotspot,
       crop
-    }
+    },
+    transitionInterval
   },
   aboutSection {
     tagline,
