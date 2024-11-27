@@ -1,11 +1,12 @@
 <script lang="ts">
     import { onMount } from 'svelte';
-    import { urlFor } from '$lib/sanity/image';
+    import { enhancedUrlFor } from '$lib/sanity/image';
     import type { Image } from '@sanity/types';
 
     export let title: string = "Der ultimative DJ Workshop";
     export let subtitle: string = "DJWORKSHOPGERMANY bietet professionelle DJ-Kurse für Anfänger und Fortgeschrittene in ganz Deutschland an.";
-    export let backgroundImage: Image | null = null;
+    export let backgroundImages: Image[] = [];
+    export let transitionInterval: number = 7.5;
 
     let mobileNavOpen = false;
     let currentImageIndex = 0;
@@ -20,15 +21,25 @@
     }
 
     function nextImage() {
-        currentImageIndex = (currentImageIndex + 1) % defaultImages.length;
+        const maxIndex = backgroundImages.length > 0 
+            ? backgroundImages.length - 1 
+            : defaultImages.length - 1;
+        currentImageIndex = (currentImageIndex + 1) % (maxIndex + 1);
     }
 
     onMount(() => {
-        const interval = setInterval(nextImage, 7500); 
+        const interval = setInterval(nextImage, transitionInterval * 1000); 
         return () => clearInterval(interval);
     });
 
-    $: heroImage = backgroundImage ? urlFor(backgroundImage).url() : defaultImages[currentImageIndex];
+    $: imageUrls = backgroundImages.map(img => {
+        const urls = enhancedUrlFor(img);
+        return {
+            webp: urls.webp || '',
+            fallback: urls.fallback || '',
+            alt: (img as any).alt || 'Hero image'
+        };
+    });
 </script>
 
 <div class="relative pt-14 pb-16">
@@ -56,20 +67,39 @@
       </div>
       <div class="w-full md:w-1/2 p-8">
           <div class="image-container mx-auto md:mr-0 relative overflow-hidden rounded-3xl">
-              {#if backgroundImage}
-                  <img
-                      src={heroImage}
-                      alt="Hero image"
-                      class="w-full h-full absolute top-0 left-0 object-cover"
-                  >
+              {#if backgroundImages.length > 0}
+                  {#each imageUrls as image, index}
+                      <picture>
+                          <source 
+                              srcset={image.webp}
+                              type="image/webp"
+                          >
+                          <img
+                              src={image.fallback}
+                              alt={image.alt}
+                              class="w-full h-full absolute top-0 left-0 transition-opacity duration-1000 ease-in-out object-cover"
+                              style="opacity: {index === currentImageIndex ? '1' : '0'};"
+                              loading={index === 0 ? 'eager' : 'lazy'}
+                              decoding="async"
+                          >
+                      </picture>
+                  {/each}
               {:else}
                   {#each defaultImages as image, index}
-                      <img
-                          src={image}
-                          alt="Gallery image {index + 1}"
-                          class="w-full h-full absolute top-0 left-0 transition-opacity duration-1000 ease-in-out object-cover"
-                          style="opacity: {index === currentImageIndex ? '1' : '0'};"
-                      >
+                      <picture>
+                          <source 
+                              srcset={image.replace('.jpg', '.webp')}
+                              type="image/webp"
+                          >
+                          <img
+                              src={image}
+                              alt="Gallery image {index + 1}"
+                              class="w-full h-full absolute top-0 left-0 transition-opacity duration-1000 ease-in-out object-cover"
+                              style="opacity: {index === currentImageIndex ? '1' : '0'};"
+                              loading={index === 0 ? 'eager' : 'lazy'}
+                              decoding="async"
+                          >
+                      </picture>
                   {/each}
               {/if}
           </div>
