@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { formatDate } from '$lib/utils';
-	import { urlFor } from '$lib/sanity/image';
+	import { enhancedUrlFor } from '$lib/sanity/image';
 	import type { Post } from '$lib/sanity/queries';
 
 	export let post: Post;
@@ -8,11 +8,19 @@
 
 <a class="card" href={`/post/${post.slug.current}`}>
 	{#if post.mainImage}
-		<img
-			class="card__cover"
-			src={urlFor(post.mainImage).width(500).height(300).url()}
-			alt="Cover image for {post.title}"
-		/>
+		<picture>
+			<source 
+				srcset={enhancedUrlFor(post.mainImage).webp} 
+				type="image/webp"
+			>
+			<img
+				class="card__cover"
+				src={enhancedUrlFor(post.mainImage).fallback}
+				alt="Cover image for {post.title}"
+				loading="lazy"
+				decoding="async"
+			/>
+		</picture>
 	{:else}
 		<div class="card__cover--none" />
 	{/if}

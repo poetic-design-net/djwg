@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { urlFor } from '$lib/sanity/image';
+  import { enhancedUrlFor } from '$lib/sanity/image';
   import PortableTextContent from './PortableTextContent.svelte';
   import type { Founder } from '$lib/sanity/queries';
 
@@ -38,11 +38,27 @@
       <div class="w-full lg:w-1/2 px-4 mb-8 lg:mb-0">
         <div class="relative">
           <div class="aspect-[4/3] rounded-3xl overflow-hidden">
-            <img 
-              src={data ? urlFor(founder.image).width(800).height(600).url() : '/assets/home_hero_2.jpg'} 
-              alt={founder.name}
-              class="w-full h-full object-cover"
-            />
+            {#if data && founder.image}
+              <picture>
+                <source 
+                  srcset={enhancedUrlFor(founder.image).webp} 
+                  type="image/webp"
+                >
+                <img 
+                  src={enhancedUrlFor(founder.image).fallback}
+                  alt={founder.name}
+                  class="w-full h-full object-cover"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </picture>
+            {:else}
+              <img 
+                src="/assets/home_hero_2.jpg" 
+                alt={founder.name}
+                class="w-full h-full object-cover"
+              />
+            {/if}
           </div>
           <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent rounded-3xl"></div>
           <!-- Social Links -->
