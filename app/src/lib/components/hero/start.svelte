@@ -33,11 +33,18 @@
     });
 
     $: imageUrls = backgroundImages.map(img => {
-        const urls = enhancedUrlFor(img);
+        const sizes = [400, 800, 1200];
+        const urls = sizes.map(size => ({
+            ...enhancedUrlFor(img),
+            width: size
+        }));
+
         return {
-            webp: urls.webp || '',
-            fallback: urls.fallback || '',
-            alt: (img as any).alt || 'Hero image'
+            webp: urls.map(u => `${u.webp}&w=${u.width} ${u.width}w`).join(', '),
+            fallback: urls.map(u => `${u.fallback}&w=${u.width} ${u.width}w`).join(', '),
+            alt: (img as any).alt || 'Hero image',
+            // Use smallest size as placeholder
+            placeholder: `${enhancedUrlFor(img).fallback}&w=400&blur=10`
         };
     });
 </script>
@@ -66,21 +73,25 @@
         <p class="text-lg text-white md:max-w-xs">{subtitle}</p>
       </div>
       <div class="w-full md:w-1/2 p-8">
-          <div class="image-container mx-auto md:mr-0 relative overflow-hidden rounded-3xl">
+          <div class="w-full aspect-[4/3] max-w-[600px] mx-auto md:mr-0 relative overflow-hidden rounded-3xl bg-gray-900">
               {#if backgroundImages.length > 0}
                   {#each imageUrls as image, index}
                       <picture>
                           <source 
                               srcset={image.webp}
                               type="image/webp"
+                              sizes="(max-width: 768px) 100vw, 50vw"
                           >
                           <img
-                              src={image.fallback}
+                              srcset={image.fallback}
+                              src={image.placeholder}
                               alt={image.alt}
                               class="w-full h-full absolute top-0 left-0 transition-opacity duration-1000 ease-in-out object-cover"
                               style="opacity: {index === currentImageIndex ? '1' : '0'};"
                               loading={index === 0 ? 'eager' : 'lazy'}
                               decoding="async"
+                              width="800"
+                              height="600"
                           >
                       </picture>
                   {/each}
@@ -88,7 +99,7 @@
                   {#each defaultImages as image, index}
                       <picture>
                           <source 
-                              srcset={image.replace('.jpg', '.webp')}
+                              srcset={`${image.replace('.jpg', '.webp')}`}
                               type="image/webp"
                           >
                           <img
@@ -98,6 +109,8 @@
                               style="opacity: {index === currentImageIndex ? '1' : '0'};"
                               loading={index === 0 ? 'eager' : 'lazy'}
                               decoding="async"
+                              width="800"
+                              height="600"
                           >
                       </picture>
                   {/each}
@@ -107,11 +120,3 @@
     </div>
   </div>
 </div>
-
-<style>
-    .image-container {
-        width: 100%;
-        aspect-ratio: 4 / 3;
-        max-width: 600px;
-    }
-</style>
