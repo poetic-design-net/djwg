@@ -15,6 +15,18 @@ export const contentSection: Section = (S) =>
           S.documentTypeListItem('post')
             .title('Blog Posts'),
 
+          // Artists
+          S.listItem()
+            .title('Artists')
+            .child(
+              S.list()
+                .title('Artists')
+                .items([
+                  S.documentTypeListItem('artist')
+                    .title('Artists')
+                ])
+            ),
+
           // Knowledge Base
           S.listItem()
             .title('Knowledge Base')
@@ -45,17 +57,8 @@ export const contentSection: Section = (S) =>
                 .items([
                   S.documentTypeListItem('teamMember')
                     .title('Team Members'),
-                  S.documentTypeListItem('artist')
-                    .title('Artists'),
                   S.documentTypeListItem('founder')
-                    .title('Founders'),
-                  S.listItem()
-                    .title('Team Settings')
-                    .child(
-                      S.document()
-                        .schemaType('aboutUs')
-                        .documentId('aboutUs')
-                    )
+                    .title('Founders')
                 ])
             ),
 
@@ -71,15 +74,21 @@ export const contentSection: Section = (S) =>
                   S.documentTypeListItem('eventSchedule')
                     .title('Schedules'),
                   S.documentTypeListItem('timeSlot')
-                    .title('Time Slots'),
-                  S.listItem()
-                    .title('Event Settings')
-                    .child(
-                      S.document()
-                        .schemaType('eventPage')
-                        .documentId('eventPage')
-                    )
+                    .title('Time Slots')
                 ])
+            ),
+
+          // FAQ
+          S.documentTypeListItem('faq')
+            .title('FAQ'),
+
+          // About Us
+          S.listItem()
+            .title('About Us')
+            .child(
+              S.document()
+                .schemaType('aboutUs')
+                .documentId('aboutUs')
             ),
 
           // Testimonials
