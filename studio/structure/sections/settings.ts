@@ -7,75 +7,80 @@ export const settingsSection: Section = (S) =>
       S.list()
         .title('Settings')
         .items([
-          // General Settings
+          // Site Settings
           S.listItem()
-            .title('General Settings')
+            .title('Site Settings')
             .child(
               S.document()
                 .schemaType('siteSettings')
                 .documentId('siteSettings')
-                .views([
-                  S.view
-                    .form()
-                    .id('main')
-                    .title('Main Settings'),
-                  S.view
-                    .form()
-                    .id('seo')
-                    .title('SEO')
-                ])
             ),
 
-          // Layout & Design
+          // Theme
           S.listItem()
-            .title('Layout & Design')
+            .title('Theme Settings')
+            .child(
+              S.document()
+                .schemaType('themeSettings')
+                .documentId('themeSettings')
+            ),
+
+          // Navigation
+          S.listItem()
+            .title('Navigation')
             .child(
               S.list()
-                .title('Layout & Design')
+                .title('Navigation')
                 .items([
-                  S.documentTypeListItem('logo')
-                    .title('Logos'),
+                  S.documentTypeListItem('navigation')
+                    .title('Menus'),
                   S.listItem()
                     .title('Footer')
                     .child(
                       S.document()
                         .schemaType('footerSettings')
                         .documentId('footerSettings')
-                    ),
-                  S.listItem()
-                    .title('Tailwind')
-                    .child(
-                      S.document()
-                        .id('themeSettings')
-                        .schemaType('themeSettings')
-                        .documentId('themeSettings')
-                        .views([
-                          S.view
-                            .form()
-                            .title('Colors'),
-                          S.view
-                            .form()
-                            .title('Screen Breakpoints'),
-                          S.view
-                            .form()
-                            .title('Font Families')
-                        ])
                     )
                 ])
             ),
 
-          // Content Components
+          // Legal Pages
           S.listItem()
-            .title('Content Components')
+            .title('Legal Pages')
             .child(
               S.list()
-                .title('Content Components')
+                .title('Legal Pages')
                 .items([
-                  S.documentTypeListItem('testimonial')
-                    .title('Testimonials'),
-                  S.documentTypeListItem('navigation')
-                    .title('Navigation Menus')
+                  S.listItem()
+                    .title('AGB')
+                    .child(
+                      S.document()
+                        .schemaType('page')
+                        .documentId('agb')
+                    ),
+                  S.listItem()
+                    .title('Datenschutz')
+                    .child(
+                      S.document()
+                        .schemaType('page')
+                        .documentId('datenschutz')
+                    ),
+                  S.listItem()
+                    .title('Impressum')
+                    .child(
+                      S.document()
+                        .schemaType('page')
+                        .documentId('impressum')
+                    )
                 ])
+            ),
+
+          // Branding
+          S.listItem()
+            .title('Branding')
+            .child(
+              S.documentTypeList('logo')
+                .title('Logos')
             )
         ])
     )

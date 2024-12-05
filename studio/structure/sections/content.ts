@@ -2,58 +2,18 @@ import type { Section } from '../types'
 
 export const contentSection: Section = (S) =>
   S.listItem()
-    .title('Pages')
+    .title('Content')
     .child(
       S.list()
-        .title('Pages')
+        .title('Content')
         .items([
-          // Static Pages
-          S.listItem()
-            .title('Static Pages')
-            .child(
-              S.list()
-                .title('Static Pages')
-                .items([
-                  S.documentTypeListItem('page')
-                    .title('Standard Pages'),
-                  S.listItem()
-                    .title('Legal Pages')
-                    .child(
-                      S.list()
-                        .title('Legal Pages')
-                        .items([
-                          S.documentListItem()
-                            .id('agb')
-                            .title('AGB')
-                            .schemaType('page'),
-                          S.documentListItem()
-                            .id('datenschutz')
-                            .title('Datenschutz')
-                            .schemaType('page'),
-                          S.documentListItem()
-                            .id('impressum')
-                            .title('Impressum')
-                            .schemaType('page')
-                        ])
-                    )
-                ])
-            ),
-
-          // Dynamic Content
-          S.listItem()
-            .title('Dynamic Content')
-            .child(
-              S.list()
-                .title('Dynamic Content')
-                .items([
-                  S.documentTypeListItem('post')
-                    .title('Blog Posts'),
-                  S.documentTypeListItem('artist')
-                    .title('Artists'),
-                  S.documentTypeListItem('teamMember')
-                    .title('Team Members')
-                ])
-            ),
+          // Pages
+          S.documentTypeListItem('page')
+            .title('Pages'),
+          
+          // Blog
+          S.documentTypeListItem('post')
+            .title('Blog Posts'),
 
           // Knowledge Base
           S.listItem()
@@ -65,8 +25,65 @@ export const contentSection: Section = (S) =>
                   S.documentTypeListItem('knowledgeBaseItem')
                     .title('Articles'),
                   S.documentTypeListItem('category')
-                    .title('Categories')
+                    .title('Categories'),
+                  S.listItem()
+                    .title('KB Settings')
+                    .child(
+                      S.document()
+                        .schemaType('knowledgeBaseSettings')
+                        .documentId('knowledgeBaseSettings')
+                    )
                 ])
-            )
+            ),
+
+          // Team
+          S.listItem()
+            .title('Team')
+            .child(
+              S.list()
+                .title('Team')
+                .items([
+                  S.documentTypeListItem('teamMember')
+                    .title('Team Members'),
+                  S.documentTypeListItem('artist')
+                    .title('Artists'),
+                  S.documentTypeListItem('founder')
+                    .title('Founders'),
+                  S.listItem()
+                    .title('Team Settings')
+                    .child(
+                      S.document()
+                        .schemaType('aboutUs')
+                        .documentId('aboutUs')
+                    )
+                ])
+            ),
+
+          // Events
+          S.listItem()
+            .title('Events')
+            .child(
+              S.list()
+                .title('Events')
+                .items([
+                  S.documentTypeListItem('event')
+                    .title('Events'),
+                  S.documentTypeListItem('eventSchedule')
+                    .title('Schedules'),
+                  S.documentTypeListItem('timeSlot')
+                    .title('Time Slots'),
+                  S.listItem()
+                    .title('Event Settings')
+                    .child(
+                      S.document()
+                        .schemaType('eventPage')
+                        .documentId('eventPage')
+                    )
+                ])
+            ),
+
+          // Testimonials
+          S.documentTypeListItem('testimonial')
+            .title('Testimonials')
         ])
     )
