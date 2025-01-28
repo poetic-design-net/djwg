@@ -1,62 +1,10 @@
 <script lang="ts">
   import EventDetail from '$lib/components/EventDetail.svelte';
   import Seo from '$lib/components/Seo.svelte';
-
-  interface Event {
-    _id: string;
-    title: string;
-    tag: string;
-    subtitle: string;
-    description: string;
-    date: string;
-    location: string;
-    features?: string[];
-    image: string;
-    highlights: Array<{
-      title: string;
-      description: string;
-      icon: string;
-    }>;
-    schedule?: {
-      _id: string;
-      days: Array<{
-        date: string;
-        stages: Array<{
-          name: string;
-          description: string;
-          schedule: Array<{
-            time: string;
-            title: string;
-            description?: string;
-            instructor?: {
-              name: string;
-              role: string;
-              image?: string;
-            };
-            icon?: string;
-          }>;
-        }>;
-      }>;
-    };
-    gallery?: string[];
-    locationDetails?: {
-      name: string;
-      description: string;
-      image: string;
-    };
-    hasOpenStage?: boolean;
-    isOpenStageSecret?: boolean;
-    isLocationSecret?: boolean;
-    isArtistsSecret?: boolean;
-    seo?: {
-      metaTitle?: string;
-      metaDescription?: string;
-      ogImage?: string;
-    };
-  }
+  import type { TransformedEvent } from '$lib/sanity/queries/events';
 
   export let data: {
-    event: Event;
+    event: TransformedEvent;
   };
 
   $: ({ event } = data);

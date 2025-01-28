@@ -1,52 +1,71 @@
-import aboutUs from './aboutUs'
-import artist from './artist'
 import blockContent from './blockContent'
+import ticket from './ticket'
+import category from './category'
+import post from './post'
+import artist from './artist'
 import event from './event'
+import eventSchedule from './eventSchedule'
+import timeSlot from './timeSlot'
 import faq from './faq'
 import founder from './founder'
-import knowledgeBaseItem from './knowledgeBaseItem'
-import logo from './logo'
 import navigation from './navigation'
-import post from './post'
-import teamMember from './teamMember'
+import logo from './logo'
 import testimonial from './testimonial'
-import timeSlot from './timeSlot'
-import eventSchedule from './eventSchedule'
-import category from './category'
-import siteSettings from './documents/settings/siteSettings'
-import footerSettings from './documents/settings/footerSettings'
-import themeSettings from './documents/settings/theme'
-import seo from './objects/seo'
-import aboutUsSection from './objects/aboutUsSection'
+import teamMember from './teamMember'
+import knowledgeBaseItem from './knowledgeBaseItem'
+import aboutUs from './aboutUs'
+
+// Document Types
+import page from './documents/page'
 import eventPage from './documents/pages/eventPage'
 import homePage from './documents/pages/homePage'
-import page from './documents/page'
+
+// Object Types
+import seo from './objects/seo'
+import section from './objects/section'
+import aboutUsSection from './objects/aboutUsSection'
+import introSection from './objects/introSection'
+import optimizedImage from './objects/image'
+import faqSection from './objects/faqSection'
+import logosSection from './objects/logosSection'
+import teamSectionConfig from './objects/teamSectionConfig'
+import heroSection from './objects/heroSection'
+import artistsSection from './objects/artistsSection'
+import testimonialsSection from './objects/testimonialsSection'
+import ticketsSection from './objects/ticketsSection'
 
 export const schemaTypes = [
-  // Objects
-  seo,
-  aboutUsSection,
-  
   // Documents
-  aboutUs,
-  artist,
-  blockContent,
-  category,
-  event,
-  eventPage,
-  eventSchedule,
-  faq,
-  footerSettings,
-  founder,
-  homePage,
-  knowledgeBaseItem,
-  logo,
-  navigation,
-  page,
+  ticket,
   post,
-  siteSettings,
-  teamMember,
+  page,
+  homePage,
+  eventPage,
+  artist,
+  event,
+  eventSchedule,
+  timeSlot,
+  faq,
+  founder,
+  navigation,
+  logo,
   testimonial,
-  themeSettings,
-  timeSlot
+  teamMember,
+  knowledgeBaseItem,
+  aboutUs,
+  category,
+  // Objects
+  blockContent,
+  seo,
+  section,
+  aboutUsSection,
+  introSection,
+  optimizedImage,
+  faqSection,
+  logosSection,
+  teamSectionConfig,
+  heroSection,
+  artistsSection,
+  testimonialsSection,
+  ticketsSection
 ]

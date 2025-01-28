@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { urlFor } from '$lib/sanity/image';
-  import type { Logo } from '$lib/sanity/queries';
+  import type { Logo } from '$lib/types/menu';
   import { page } from '$app/stores';
   
   export let logos: { data: Logo[] } = { data: [] };

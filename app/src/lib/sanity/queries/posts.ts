@@ -62,20 +62,32 @@ export interface Testimonial {
   image?: Image;
 }
 
-export const logosQuery = groq`*[_type == "logo"] | order(_createdAt desc) {
+export const logosQuery = groq`*[_type == "logo"] | order(order asc) {
   _id,
   _createdAt,
   name,
   image {
     asset->,
+    alt,
     hotspot
-  }
+  },
+  order
 }`;
 
 export interface Logo {
   _id: string;
   _type: 'logo';
   _createdAt: string;
-  name?: string;
-  image?: Image;
+  name: string;
+  image: {
+    asset: Image;
+    alt: string;
+    hotspot?: {
+      x: number;
+      y: number;
+      height: number;
+      width: number;
+    };
+  };
+  order: number;
 }

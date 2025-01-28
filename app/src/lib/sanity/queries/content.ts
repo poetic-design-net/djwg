@@ -158,7 +158,15 @@ export const featuredKnowledgeBaseItemsQuery = groq`*[_type == "knowledgeBaseIte
   _id,
   title,
   description,
-  "icon": category->icon,
+  "icon": select(
+    category->icon == "mixer" => "mixer",
+    category->icon == "headphones" => "headphones",
+    category->icon == "vinyl" => "vinyl",
+    category->icon == "laptop" => "laptop",
+    category->icon == "microphone" => "microphone",
+    category->icon == "controller" => "controller",
+    "controller"
+  ),
   "category": category->slug.current,
   "categoryTitle": category->title
 }`;
@@ -167,11 +175,12 @@ export interface KnowledgeBaseItem {
   _id: string;
   title: string;
   description: string;
-  icon: string;
+  icon: "mixer" | "headphones" | "vinyl" | "laptop" | "microphone" | "controller";
   category: string;
   categoryTitle: string;
   content?: PortableTextBlock[];
 }
+
 
 export const categoriesQuery = groq`*[_type == "category"] | order(title asc) {
   _id,

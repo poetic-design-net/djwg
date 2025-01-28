@@ -9,22 +9,17 @@ export default defineType({
       name: 'name',
       title: 'Partner Name',
       type: 'string',
-      validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'image',
       title: 'Logo Image',
-      type: 'image',
-      options: {
-        hotspot: true,
-      },
-      validation: (Rule) => Rule.required(),
+      type: 'optimizedImage'
     }),
     defineField({
       name: 'order',
       title: 'Display Order',
       type: 'number',
-      validation: (Rule) => Rule.required(),
+      initialValue: 0
     }),
   ],
   preview: {

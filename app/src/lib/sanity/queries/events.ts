@@ -13,6 +13,17 @@ export const eventPageQuery = groq`*[_type == "eventPage"][0] {
     metaTitle,
     metaDescription,
     "ogImage": ogImage.asset->url
+  },
+  "tickets": *[_type == "ticket" && references(^._id)] | order(phase asc) {
+    _id,
+    phase,
+    title,
+    description,
+    features,
+    status,
+    price,
+    currency,
+    url
   }
 }`;
 
@@ -37,12 +48,36 @@ export const eventsQuery = groq`*[_type == "event"] | order(order asc) {
   locationDetails,
   isLocationSecret,
   isArtistsSecret,
+    artists[]-> {
+      _id,
+      name,
+      role,
+      description,
+      image {
+        asset->,
+        hotspot
+      },
+      socials,
+      isRevealed,
+      order
+  },
   order,
   enableSectionNav,
   seo {
     metaTitle,
     metaDescription,
     "ogImage": ogImage.asset->url
+  },
+  "tickets": *[_type == "ticket" && references(^._id)] | order(phase asc) {
+    _id,
+    phase,
+    title,
+    description,
+    features,
+    status,
+    price,
+    currency,
+    url
   }
 }`;
 
@@ -102,12 +137,36 @@ export const eventQuery = groq`*[_type == "event" && slug.current == $slug][0] {
   },
   isLocationSecret,
   isArtistsSecret,
+  artists[]-> {
+    _id,
+    name,
+    role,
+    description,
+    image {
+      asset->,
+      hotspot
+    },
+    socials,
+    isRevealed,
+    order
+  },
   order,
   enableSectionNav,
   seo {
     metaTitle,
     metaDescription,
     "ogImage": ogImage.asset->url
+  },
+  "tickets": *[_type == "ticket" && references(^._id)] | order(phase asc) {
+    _id,
+    phase,
+    title,
+    description,
+    features,
+    status,
+    price,
+    currency,
+    url
   }
 }`;
 
@@ -137,7 +196,7 @@ export const eventScheduleQuery = groq`*[_type == "eventSchedule" && event._ref 
   }
 }`;
 
-export interface Event {
+export interface SanityEvent {
   _id: string;
   title: string;
   tag: string;
@@ -167,9 +226,112 @@ export interface Event {
   };
   isLocationSecret: boolean;
   isArtistsSecret: boolean;
+  artists?: Array<{
+    _id: string;
+    name: string;
+    role: string;
+    description: string;
+    image: Image;
+    socials: {
+      instagram?: string;
+      soundcloud?: string;
+    };
+    isRevealed: boolean;
+    order: number;
+  }>;
   order: number;
   enableSectionNav?: boolean;
   seo?: SEO;
+  tickets?: Array<{
+    _id: string;
+    phase: string;
+    title: string;
+    description: string;
+    features: string[];
+    status: 'completed' | 'current' | 'coming-soon';
+    price: number;
+    currency: string;
+    url?: string;
+  }>;
+}
+
+export interface TransformedEvent {
+  _id: string;
+  title: string;
+  tag: string;
+  slug: {
+    current: string;
+  };
+  subtitle: string;
+  description: string;
+  date: string;
+  location: string;
+  locationUrl?: string;
+  image: string;
+  schedule?: {
+    _id: string;
+    days: Array<{
+      date: string;
+      stages: Array<{
+        name: string;
+        description: string;
+        schedule: Array<{
+          time: string;
+          title: string;
+          description?: string;
+          instructor?: {
+            name: string;
+            role: string;
+            image?: string;
+          };
+          icon?: string;
+        }>;
+      }>;
+    }>;
+  };
+  hasOpenStage: boolean;
+  isOpenStageSecret: boolean;
+  features: string[];
+  highlights: {
+    title: string;
+    description: string;
+    icon: string;
+  }[];
+  gallery?: string[];
+  locationDetails?: {
+    name: string;
+    description: string;
+    image: string;
+  };
+  isLocationSecret: boolean;
+  isArtistsSecret: boolean;
+  artists?: Array<{
+    _id: string;
+    name: string;
+    role: string;
+    description: string;
+    image: string;
+    socials: {
+      instagram?: string;
+      soundcloud?: string;
+    };
+    isRevealed: boolean;
+    order: number;
+  }>;
+  order: number;
+  enableSectionNav?: boolean;
+  seo?: SEO;
+  tickets?: Array<{
+    _id: string;
+    phase: string;
+    title: string;
+    description: string;
+    features: string[];
+    status: 'completed' | 'current' | 'coming-soon';
+    price: number;
+    currency: string;
+    url?: string;
+  }>;
 }
 
 export interface ScheduleItem {

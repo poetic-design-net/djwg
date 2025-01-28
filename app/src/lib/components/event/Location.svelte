@@ -1,21 +1,18 @@
 <script lang="ts">
-  import type { Image } from '@sanity/types';
-  import { generateImageHTML } from '$lib/sanity/image';
-
-  export let locationDetails: {
+  interface TransformedLocationDetails {
     name: string;
     description: string;
-    image: Image;
-  };
+    image: string;
+  }
+
+  export let locationDetails: TransformedLocationDetails;
   export let isSecret: boolean = false;
 
-  $: imageHtml = generateImageHTML(
-    locationDetails.image,
-    locationDetails.name,
-    'absolute inset-0 w-full h-full object-cover',
-    800,  // Width for location image
-    600   // Height maintaining 4:3 aspect ratio
-  );
+  $: imageHtml = `<img 
+    src="${locationDetails.image}" 
+    alt="${locationDetails.name}"
+    class="absolute inset-0 w-full h-full object-cover"
+  >`;
 </script>
 
 <div class="py-20">

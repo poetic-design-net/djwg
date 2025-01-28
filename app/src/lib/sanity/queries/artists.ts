@@ -73,6 +73,21 @@ export const teamMembersQuery = groq`*[_type == "teamMember" && isActive == true
   }
 }`;
 
+export interface TransformedArtist {
+  _id: string;
+  name: string;
+  role: string;
+  description: string;
+  image: string;
+  socials: {
+    instagram?: string;
+    soundcloud?: string;
+  };
+  isRevealed: boolean;
+  order: number;
+  seo?: SEO;
+}
+
 export interface TeamMember {
   _id: string;
   name: string;

@@ -1,16 +1,16 @@
 <script lang="ts">
   import { slide } from 'svelte/transition';
-  import { generateImageHTML } from '$lib/sanity/image';
-
-  export let event: {
+  interface TransformedEvent {
     title: string;
     tag: string;
     subtitle: string;
     date: string;
     location: string;
     locationUrl?: string;
-    image: any; // Sanity image type
-  };
+    image: string;
+  }
+
+  export let event: TransformedEvent;
 
   let showShareMenu = false;
 
@@ -41,12 +41,12 @@
     }
   }
 
-  // Create the picture element HTML
-  $: pictureHtml = event.image ? generateImageHTML(
-    event.image,
-    event.title,
-    'w-full h-full object-cover',
-  ) : '';
+  // Create the image HTML
+  $: pictureHtml = event.image ? `<img 
+    src="${event.image}" 
+    alt="${event.title}"
+    class="w-full h-full object-cover"
+  >` : '';
 </script>
 
 <svelte:window on:click={handleClickOutside} />

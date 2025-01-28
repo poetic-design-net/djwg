@@ -1,11 +1,11 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { generateImageHTML } from '$lib/sanity/image';
-  import type { Artist } from '$lib/sanity/queries';
+  import type { TransformedArtist } from '$lib/sanity/queries';
   import type { Image } from '@sanity/types';
   import Soundcloud from './icons/Soundcloud.svelte';
   
-  export let artists: Artist[] = [];
+  export let artists: TransformedArtist[] = [];
   export let isLineupRevealed = false;
   
   let currentHighlight = 0;
@@ -33,8 +33,10 @@
       image,
       artistName,
       'absolute inset-0 w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500',
-      800,  // Width for artist images
-      1200  // Height for artist images (3:4 aspect ratio)
+      {
+        maxWidth: 800,
+        sizes: '(max-width: 768px) 85vw, 35vw'
+      }
     );
   }
 
