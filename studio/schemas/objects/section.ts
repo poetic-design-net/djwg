@@ -75,6 +75,12 @@ const section: SchemaTypeDefinition = {
       title: 'Artists Section Content',
       type: 'artistsSection',
       hidden: ({ parent }) => parent?.type !== 'artists'
+    },
+    {
+      name: 'pricingSection',
+      title: 'Pricing Section Content',
+      type: 'pricingSection',
+      hidden: ({ parent }) => parent?.type !== 'pricing'
     }
   ]
 }

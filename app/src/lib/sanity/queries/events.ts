@@ -1,6 +1,14 @@
 import groq from 'groq';
 import type { Image } from '@sanity/types';
 import type { SEO } from './content';
+import type { PortableTextBlock } from '@portabletext/types';
+
+export interface FAQ {
+  _id: string;
+  question: string;
+  answer: PortableTextBlock[];
+  category: string;
+}
 
 export interface EventPage {
   title?: string;
@@ -157,6 +165,17 @@ export const eventQuery = groq`*[_type == "event" && slug.current == $slug][0] {
     metaDescription,
     "ogImage": ogImage.asset->url
   },
+  faqSection {
+    title,
+    description,
+    showCategories,
+    "selectedFaqs": selectedFaqs[]-> {
+      _id,
+      question,
+      answer,
+      category
+    }
+  },
   "tickets": *[_type == "ticket" && references(^._id)] | order(phase asc) {
     _id,
     phase,
@@ -242,6 +261,17 @@ export interface SanityEvent {
   order: number;
   enableSectionNav?: boolean;
   seo?: SEO;
+  faqSection?: {
+    title: any[];
+    description: string;
+    showCategories: boolean;
+    selectedFaqs: Array<{
+      _id: string;
+      question: string;
+      answer: any[];
+      category: string;
+    }>;
+  };
   tickets?: Array<{
     _id: string;
     phase: string;
@@ -321,6 +351,17 @@ export interface TransformedEvent {
   order: number;
   enableSectionNav?: boolean;
   seo?: SEO;
+  faqSection?: {
+    title: any[];
+    description: string;
+    showCategories: boolean;
+    selectedFaqs: Array<{
+      _id: string;
+      question: string;
+      answer: any[];
+      category: string;
+    }>;
+  };
   tickets?: Array<{
     _id: string;
     phase: string;

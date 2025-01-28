@@ -37,6 +37,10 @@ export default defineType({
     {
       name: 'tickets',
       title: 'Tickets'
+    },
+    {
+      name: 'faq',
+      title: 'FAQ'
     }
   ],
   fields: [
@@ -283,6 +287,13 @@ export default defineType({
       }],
       group: 'tickets',
       description: 'Tickets available for this event'
+    }),
+    defineField({
+      name: 'faqSection',
+      title: 'FAQ Section',
+      type: 'faqSection',
+      group: 'faq',
+      description: 'FAQ-Sektion für dieses Event'
     })
   ],
   preview: {

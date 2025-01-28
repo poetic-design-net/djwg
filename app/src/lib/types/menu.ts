@@ -145,6 +145,16 @@ export type TestimonialsSection = {
   }>
 }
 
+export type PricingSection = {
+  title: string
+  description: string
+  showEventSelector?: boolean
+  selectedTickets: Array<{
+    _type: 'reference'
+    _ref: string
+  }>
+}
+
 export type ComponentSection = {
   _type: 'componentSection'
   type: ComponentSectionType
@@ -156,7 +166,8 @@ export type ComponentSection = {
   teamSectionConfig?: TeamSectionConfig
   heroSection?: HeroSection,
   artistsSection?: ArtistsSection,
-  testimonialsSection?: TestimonialsSection
+  testimonialsSection?: TestimonialsSection,
+  pricingSection?: PricingSection
 }
 
 export type ContentSection = {

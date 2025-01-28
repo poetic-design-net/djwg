@@ -8,6 +8,7 @@
   import OpenStage from './OpenStage.svelte';
   import ArtistsSlider from './ArtistsSlider.svelte';
   import Pricing from './Pricing.svelte';
+  import FAQ from './FAQ.svelte';
   import SectionNav from './navigation/SectionNav.svelte';
   import type { Image } from '@sanity/types';
 
@@ -50,7 +51,8 @@
     { id: 'artists', label: 'Artists' },
     ...(event.locationDetails ? [{ id: 'location', label: 'Location' }] : []),
     { id: 'tickets', label: 'Tickets' },
-    ...(event.gallery ? [{ id: 'gallery', label: 'Gallery' }] : [])
+    ...(event.gallery ? [{ id: 'gallery', label: 'Gallery' }] : []),
+    ...(event.faqSection ? [{ id: 'faq', label: 'FAQ' }] : [])
   ];
 </script>
 
@@ -103,11 +105,24 @@
     <Pricing tickets={event.tickets || []} />
   </div>
 
+  {#if event.faqSection}
+  <div id="faq" class="py-20 bg-black/40">
+    <FAQ 
+      title={event.faqSection.title}
+      description={event.faqSection.description}
+      faqs={event.faqSection.selectedFaqs}
+      showCategories={event.faqSection.showCategories}
+    />
+  </div>
+{/if}
+
   {#if event.gallery}
     <div id="gallery">
       <Gallery images={event.gallery} />
     </div>
   {/if}
+
+
 </div>
 
 <style>
