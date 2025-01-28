@@ -30,28 +30,45 @@
   const knowledgeBaseItems = data.featuredKnowledgeBaseItems.options.initial as KnowledgeBaseItem[];
   const siteSettingsData = data.siteSettings.options.initial as SiteSettings;
 
+  console.log('Homepage Data:', {
+    pricingSection: homeData?.pricingSection,
+    showEventSelector: homeData?.pricingSection?.showEventSelector,
+    eventsArray,
+    tickets: homeData?.pricingSection?.tickets
+  });
+
   // Format logos and testimonials data to match component expectations
   const logosData = { data: data.logos.options.initial as Logo[] || [] };
   const testimonialsData = { data: data.testimonials.options.initial as Testimonial[] || [] };
 
   // Event und Ticket Stores initialisieren
   const selectedEventStore = writable(homeData?.pricingSection?.selectedEvent || eventsArray[0]);
-  const eventTicketsStore = writable(
-    homeData?.pricingSection?.tickets ||
-    (eventsArray[0]?.tickets ?? [])
+  const eventTicketsStore = writable(eventsArray[0]?.tickets ?? []);
+  
+  // Event Selector Logik
+  const showEventSelectorStore = writable(
+    homeData?.pricingSection?.showEventSelector ?? (eventsArray.length > 1)
   );
 
-  // Initial die Tickets setzen, falls ein Event ausgewählt ist
+  // Initiale Event-Auswahl
   $: {
-    if (!$selectedEventStore && eventsArray.length > 0) {
-      selectedEventStore.set(eventsArray[0]);
-      eventTicketsStore.set(eventsArray[0].tickets ?? []);
+    if (eventsArray.length > 0) {
+      const initialEvent = homeData?.pricingSection?.selectedEvent || eventsArray[0];
+      selectedEventStore.set(initialEvent);
+      const eventTickets = eventsArray.find(e => e._id === initialEvent._id)?.tickets ?? [];
+      eventTicketsStore.set(eventTickets);
     }
   }
 
   // Event Change Handler
   function handleEventChange(event: CustomEvent<TransformedEvent>) {
     const selectedEvent = event.detail;
+    console.log('Event Change:', { 
+      selectedEvent,
+      allEvents: eventsArray,
+      eventTickets: eventsArray.find(e => e._id === selectedEvent._id)?.tickets
+    });
+    
     selectedEventStore.set(selectedEvent);
     
     // Finde die Tickets für das ausgewählte Event
@@ -61,6 +78,13 @@
     
     eventTicketsStore.set(eventTickets);
   }
+
+  // Debug reaktive Stores
+  $: console.log('Store Updates:', {
+    selectedEvent: $selectedEventStore,
+    tickets: $eventTicketsStore,
+    showSelector: $showEventSelectorStore
+  });
 
   // Transform artists for ArtistSlider
   $: artists = homeData?.artistsSection?.selectedArtists?.map(artist => ({
@@ -148,7 +172,7 @@
     description={homeData?.pricingSection?.description ?? ''}
     tickets={$eventTicketsStore}
     selectedEvent={$selectedEventStore}
-    showEventSelector={homeData?.pricingSection?.showEventSelector ?? false}
+    showEventSelector={$showEventSelectorStore}
     events={eventsArray}
     on:eventChange={handleEventChange}
   />
