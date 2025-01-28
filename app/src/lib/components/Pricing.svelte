@@ -28,31 +28,48 @@
   export let showEventSelector: boolean = false;
   export let events: Event[] = [];
 
-  type EventChangeHandler = (event: { currentTarget: EventTarget & HTMLSelectElement }) => void;
-  
-  const handleEventChange: EventChangeHandler = (event) => {
-    const selectedEventId = event.currentTarget.value;
-    const newEvent = events.find(e => e._id === selectedEventId);
-    if (newEvent) {
-      dispatch('eventChange', newEvent);
+  function selectEvent(event: Event) {
+    if (event._id !== selectedEvent?._id) {
+      dispatch('eventChange', event);
     }
-  };
+  }
+
+  function formatDate(dateStr: string): string {
+    try {
+      const date = new Date(dateStr);
+      return new Intl.DateTimeFormat('de-DE', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }).format(date);
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return dateStr;
+    }
+  }
 </script>
 
 <div class="container px-4 mx-auto">
-  {#if showEventSelector && events.length > 0}
-    <div class="mb-8 text-center">
-      <select
-        value={selectedEvent?._id}
-        on:change={handleEventChange}
-        class="bg-black/40 border border-gray-800 text-white py-2 px-4 rounded-full focus:outline-none focus:border-purple-500"
-      >
-        {#each events as event}
-          <option value={event._id}>{event.title}</option>
-        {/each}
-      </select>
-    </div>
-  {/if}
+   {#if showEventSelector && events.length > 1}
+     <div class="flex flex-wrap justify-center mb-8 gap-4">
+       {#each events as event}
+         <button
+           class="px-6 py-3 rounded-full text-sm font-medium transition-colors duration-200 {selectedEvent?._id === event._id ? 'bg-green-500 text-black' : 'text-white hover:text-green-500'}"
+           on:click={() => selectEvent(event)}
+         >
+           {event.title}
+         </button>
+       {/each}
+     </div>
+   {/if}
+
+   <!-- Selected Event Date -->
+   {#if selectedEvent?.date}
+     <div class="text-center mb-12">
+       <p class="text-gray-400">{formatDate(selectedEvent.date)}</p>
+     </div>
+   {/if}
   <div class="text-center mb-20">
     <span class="inline-block mb-4 text-sm text-tourquis-500 font-medium tracking-tighter">Ticket Phasen</span>
     <h2 class="font-heading mb-6 text-5xl md:text-6xl text-white tracking-tighter">{title}</h2>
@@ -78,7 +95,9 @@
               </div>
               <h3 class="mb-4 text-xl {ticket.status === 'completed' ? 'text-gray-500' : 'text-white'}">{ticket.title}</h3>
               <p class="{ticket.status === 'completed' ? 'text-gray-600' : ticket.status === 'coming-soon' ? 'text-gray-400' : 'text-gray-300'} text-sm">{ticket.description}</p>
-              <p class="mt-2 text-lg font-semibold {ticket.status === 'completed' ? 'text-gray-500' : 'text-tourquis-500'}">{ticket.price} {ticket.currency}</p>
+              {#if ticket.price}
+                <p class="mt-2 text-lg font-semibold {ticket.status === 'completed' ? 'text-gray-500' : 'text-tourquis-500'}">{ticket.price} {ticket.currency}</p>
+              {/if}
             </div>
             <ul class="mb-6">
               {#each ticket.features as feature}
@@ -101,7 +120,7 @@
               </span>
             {:else if ticket.status === 'current'}
               <a class="inline-block w-full py-4 px-6 text-sm  text-black font-medium bg-green-500 hover:bg-green-600 rounded-full transition duration-200" href={ticket.url || '#tickets'}>
-                Mehr erfahren
+                Zum Ticket
               </a>
             {:else}
               <span class="inline-block w-full py-4 px-6 text-sm font-medium bg-gray-800 text-gray-400 rounded-full cursor-not-allowed">

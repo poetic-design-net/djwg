@@ -46,8 +46,7 @@ export default defineType({
     defineField({
       name: 'price',
       title: 'Price',
-      type: 'number',
-      validation: (Rule) => Rule.required().min(0),
+      type: 'number'
     }),
     defineField({
       name: 'currency',
@@ -77,14 +76,15 @@ export default defineType({
   ],
   preview: {
     select: {
-      title: 'name',
-      subtitle: 'price',
+      title: 'title',
+      price: 'price',
+      currency: 'currency',
     },
     prepare(selection) {
-      const { title, subtitle } = selection
+      const { title, price, currency = 'EUR' } = selection
       return {
         title,
-        subtitle: `${subtitle} EUR`,
+        subtitle: `${price} ${currency}`,
       }
     },
   },
