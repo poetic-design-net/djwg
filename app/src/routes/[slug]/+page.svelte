@@ -146,6 +146,17 @@
               };
             }
             break;
+          case 'pricing':
+            if (section.pricingSection) {
+              const { title, description, showEventSelector, selectedTickets } = section.pricingSection;
+              additionalProps = {
+                title,
+                description,
+                showEventSelector,
+                tickets: selectedTickets // Mapping von selectedTickets zu tickets prop
+              };
+            }
+            break;
           case 'testimonials':
             if (section.testimonialsSection) {
               const { title, subtitle, testimonials } = section.testimonialsSection;

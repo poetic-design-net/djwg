@@ -129,6 +129,22 @@ export async function load({ params }) {
           },
           isLineupRevealed
         },
+        pricingSection {
+          title,
+          description,
+          showEventSelector,
+          selectedTickets[]-> {
+            _id,
+            phase,
+            title,
+            description,
+            features,
+            status,
+            price,
+            currency,
+            url
+          }
+        },
         testimonialsSection {
           title,
           subtitle,

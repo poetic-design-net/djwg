@@ -118,6 +118,12 @@ export default defineType({
               title: 'Testimonials Section Settings',
               type: 'testimonialsSection',
               hidden: ({ parent }) => parent?.type !== 'testimonials'
+            }),
+            defineField({
+              name: 'pricingSection',
+              title: 'Pricing Section Settings',
+              type: 'pricingSection',
+              hidden: ({ parent }) => parent?.type !== 'pricing'
             })
           ]
         },

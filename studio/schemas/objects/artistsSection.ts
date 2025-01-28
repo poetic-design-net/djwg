@@ -1,4 +1,4 @@
-import type { SchemaTypeDefinition, Rule } from 'sanity'
+import type { SchemaTypeDefinition } from 'sanity'
 
 const artistsSection: SchemaTypeDefinition = {
   name: 'artistsSection',
@@ -8,8 +8,7 @@ const artistsSection: SchemaTypeDefinition = {
     {
       name: 'title',
       title: 'Titel',
-      type: 'string',
-      validation: (rule: Rule) => rule.required()
+      type: 'string'
     },
     {
       name: 'description',
@@ -26,8 +25,7 @@ const artistsSection: SchemaTypeDefinition = {
           { title: 'Grid', value: 'grid' },
           { title: 'Slider', value: 'slider' }
         ]
-      },
-      validation: (rule: Rule) => rule.required()
+      }
     },
     {
       name: 'selectedArtists',
@@ -40,7 +38,6 @@ const artistsSection: SchemaTypeDefinition = {
           to: [{ type: 'artist' }]
         }
       ],
-      validation: (rule: Rule) => rule.required().min(1),
       options: {
         sortable: true,
         layout: 'grid'

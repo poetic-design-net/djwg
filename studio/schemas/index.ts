@@ -1,5 +1,6 @@
 import blockContent from './blockContent'
 import ticket from './ticket'
+import pricingSection from './objects/pricingSection'
 import category from './category'
 import post from './post'
 import artist from './artist'
@@ -67,5 +68,6 @@ export const schemaTypes = [
   heroSection,
   artistsSection,
   testimonialsSection,
-  ticketsSection
+  ticketsSection,
+  pricingSection
 ]
