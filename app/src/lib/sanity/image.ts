@@ -8,66 +8,92 @@ const builder = imageUrlBuilder(client);
  * Basic image URL builder
  */
 export function urlFor(source: Image) {
-	return builder.image(source);
+  return builder.image(source);
 }
 
 /**
- * Enhanced image URL builder with WebP support
- * Returns an object with URLs for WebP and fallback formats
+ * Enhanced image URL builder with WebP support and responsive sizes
  */
-export function enhancedUrlFor(source: Image) {
-	const baseImage = builder.image(source);
-	
-	return {
-		// WebP version (good compression, wide support)
-		webp: baseImage.format('webp').quality(85).auto('format').url(),
-		// Original format as fallback (maximum compatibility)
-		fallback: baseImage.format('jpg').quality(85).auto('format').url()
-	};
+export function enhancedUrlFor(source: Image, options: {
+  maxWidth?: number;
+  sizes?: number[];
+} = {}) {
+  const baseImage = builder.image(source);
+  const { maxWidth = 1200, sizes = [400, 800, 1200] } = options;
+  
+  // Generiere URLs für verschiedene Bildgrößen
+  const responsiveUrls = sizes.map(size => ({
+    width: size,
+    webp: baseImage
+      .width(Math.min(size, maxWidth))
+      .format('webp')
+      .quality(85)
+      .auto('format')
+      .url(),
+    fallback: baseImage
+      .width(Math.min(size, maxWidth))
+      .format('jpg')
+      .quality(85)
+      .auto('format')
+      .url()
+  }));
+
+  // Erstelle srcset Strings
+  const webpSrcset = responsiveUrls
+    .map(u => `${u.webp} ${u.width}w`)
+    .join(', ');
+  const fallbackSrcset = responsiveUrls
+    .map(u => `${u.fallback} ${u.width}w`)
+    .join(', ');
+
+  // Verwende die kleinste Größe als Fallback
+  const smallestSize = responsiveUrls[0];
+
+  return {
+    webp: webpSrcset,
+    fallback: fallbackSrcset,
+    placeholder: baseImage
+      .width(400)
+      .blur(10)
+      .format('jpg')
+      .quality(60)
+      .url(),
+    // Einzelne URLs für direkte Verwendung
+    urls: responsiveUrls
+  };
 }
 
 /**
  * Helper to generate a picture element with WebP support
- * @param source - Sanity image reference
- * @param alt - Alt text for the image
- * @param className - Optional CSS classes
- * @param width - Optional width constraint
- * @param height - Optional height constraint
  */
 export function generateImageHTML(
-	source: Image, 
-	alt: string, 
-	className?: string,
-	width?: number,
-	height?: number
+  source: Image, 
+  alt: string, 
+  className?: string,
+  options?: {
+    maxWidth?: number;
+    sizes?: string;
+  }
 ) {
-	const baseImage = builder.image(source)
-		.auto('format')
-		.fit('max')
-		.quality(85);
-	
-	if (width) {
-		baseImage.width(width);
-	}
-	if (height) {
-		baseImage.height(height);
-	}
+  const imageUrls = enhancedUrlFor(source, {
+    maxWidth: options?.maxWidth
+  });
 
-	const urls = {
-		webp: baseImage.format('webp').url(),
-		fallback: baseImage.format('jpg').url()
-	};
-
-	return `
-		<picture>
-			<source srcset="${urls.webp}" type="image/webp">
-			<img 
-				src="${urls.fallback}" 
-				alt="${alt}"
-				${className ? `class="${className}"` : ''}
-				loading="lazy"
-				decoding="async"
-			>
-		</picture>
-	`.trim();
+  return `
+    <picture>
+      <source 
+        srcset="${imageUrls.webp}"
+        type="image/webp"
+        sizes="${options?.sizes || '(max-width: 768px) 100vw, 50vw'}"
+      >
+      <img 
+        srcset="${imageUrls.fallback}"
+        src="${imageUrls.placeholder}"
+        alt="${alt}"
+        ${className ? `class="${className}"` : ''}
+        loading="lazy"
+        decoding="async"
+      >
+    </picture>
+  `.trim();
 }

@@ -1,19 +1,14 @@
 <script lang="ts">
   import { fade } from 'svelte/transition';
-  import { generateImageHTML } from '$lib/sanity/image';
-  import type { Image } from '@sanity/types';
-
-  export let images: Image[] = [];
+  export let images: string[] = [];
 
   // Pre-generate image HTML for each image
   $: imageElements = images.map((image, index) => 
-    generateImageHTML(
-      image,
-      `Event impression ${index + 1}`,
-      'absolute inset-0 w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500',
-      800, // Width for gallery images
-      800  // Height for gallery images (1:1 aspect ratio)
-    )
+    `<img 
+      src="${image}" 
+      alt="Event impression ${index + 1}"
+      class="absolute inset-0 w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+    >`
   );
 </script>
 

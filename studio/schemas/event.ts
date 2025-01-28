@@ -4,24 +4,49 @@ export default defineType({
   name: 'event',
   title: 'Events',
   type: 'document',
-  fieldsets: [
+  groups: [
+    {
+      name: 'details',
+      title: 'Event Details',
+      default: true
+    },
+    {
+      name: 'artists',
+      title: 'Artists'
+    },
+    {
+      name: 'schedule',
+      title: 'Schedule'
+    },
     {
       name: 'features',
-      title: 'Event Features',
-      options: { collapsible: true, collapsed: false }
+      title: 'Features'
+    },
+    {
+      name: 'location',
+      title: 'Location'
+    },
+    {
+      name: 'media',
+      title: 'Media'
     },
     {
       name: 'seo',
-      title: 'SEO Settings',
-      options: { collapsible: true, collapsed: true }
+      title: 'SEO'
+    },
+    {
+      name: 'tickets',
+      title: 'Tickets'
     }
   ],
   fields: [
+    // Event Details Tab
     defineField({
       name: 'title',
       title: 'Title',
       type: 'string',
-      validation: Rule => Rule.required()
+      validation: Rule => Rule.required(),
+      group: 'details'
     }),
     defineField({
       name: 'tag',
@@ -29,7 +54,8 @@ export default defineType({
       type: 'string',
       description: 'e.g., "Berlin Event", "Main Event"',
       validation: Rule => Rule.required(),
-      initialValue: 'Berlin Event'
+      initialValue: 'Berlin Event',
+      group: 'details'
     }),
     defineField({
       name: 'slug',
@@ -39,103 +65,74 @@ export default defineType({
         source: 'title',
         maxLength: 96,
       },
-      validation: Rule => Rule.required()
+      validation: Rule => Rule.required(),
+      group: 'details'
     }),
     defineField({
       name: 'subtitle',
       title: 'Subtitle',
       type: 'string',
-      validation: Rule => Rule.required()
+      validation: Rule => Rule.required(),
+      group: 'details'
     }),
     defineField({
       name: 'description',
       title: 'Description',
       type: 'text',
-      validation: Rule => Rule.required()
+      validation: Rule => Rule.required(),
+      group: 'details'
     }),
     defineField({
       name: 'date',
       title: 'Date',
       type: 'string',
-      validation: Rule => Rule.required()
+      validation: Rule => Rule.required(),
+      group: 'details'
     }),
     defineField({
-      name: 'location',
-      title: 'Location',
-      type: 'string',
-      validation: Rule => Rule.required()
+      name: 'order',
+      title: 'Display Order',
+      type: 'number',
+      initialValue: 0,
+      group: 'details'
     }),
-    defineField({
-      name: 'locationUrl',
-      title: 'Location URL',
-      type: 'url',
-      description: 'Link to location (e.g. Google Maps)',
-      validation: Rule => Rule.uri({
-        scheme: ['http', 'https']
-      })
-    }),
-    defineField({
-      name: 'image',
-      title: 'Main Image',
-      type: 'image',
-      options: {
-        hotspot: true,
-      },
-      validation: Rule => Rule.required()
-    }),
+
+    // Schedule Tab
     defineField({
       name: 'schedule',
       title: 'Schedule',
       type: 'array',
       of: [{
-        type: 'object',
-        fields: [
-          {
-            name: 'time',
-            title: 'Time',
-            type: 'string'
-          },
-          {
-            name: 'title',
-            title: 'Title',
-            type: 'string'
-          },
-          {
-            name: 'description',
-            title: 'Description',
-            type: 'text'
-          },
-          {
-            name: 'instructor',
-            title: 'Instructor',
-            type: 'string'
-          }
-        ]
-      }]
+        type: 'reference',
+        to: [{ type: 'timeSlot' }]
+      }],
+      group: 'schedule'
     }),
+
+    // Features Tab
     defineField({
       name: 'hasOpenStage',
       title: 'Enable Open Stage',
       description: 'Aktiviere diese Option, um Open Stage für dieses Event zu ermöglichen',
       type: 'boolean',
-      fieldset: 'features',
-      initialValue: false
+      initialValue: false,
+      group: 'features'
     }),
     defineField({
       name: 'isOpenStageSecret',
       title: 'Open Stage is Secret',
       description: 'Aktiviere diese Option, um die Open Stage temporär zu verbergen',
       type: 'boolean',
-      fieldset: 'features',
-      initialValue: false
+      initialValue: false,
+      group: 'features'
     }),
     defineField({
       name: 'enableSectionNav',
       title: 'Enable Section Navigation',
       description: 'Aktiviere die Seiten-Navigation mit Punkten am rechten Rand',
       type: 'boolean',
-      fieldset: 'features',
-      initialValue: true
+      initialValue: true,
+      group: 'features'
     }),
     defineField({
       name: 'features',
@@ -145,10 +142,10 @@ export default defineType({
       of: [{
         type: 'string'
       }],
-      fieldset: 'features',
       options: {
         layout: 'tags'
-      }
+      },
+      group: 'features'
     }),
     defineField({
       name: 'highlights',
@@ -175,13 +172,27 @@ export default defineType({
           }
         ]
       }],
-      validation: Rule => Rule.required()
+      validation: Rule => Rule.required(),
+      group: 'features'
+    }),
+
+    // Location Tab
+    defineField({
+      name: 'location',
+      title: 'Location',
+      type: 'string',
+      validation: Rule => Rule.required(),
+      group: 'location'
     }),
     defineField({
-      name: 'gallery',
-      title: 'Gallery',
-      type: 'array',
-      of: [{ type: 'image' }]
+      name: 'locationUrl',
+      title: 'Location URL',
+      type: 'url',
+      description: 'Link to location (e.g. Google Maps)',
+      validation: Rule => Rule.uri({
+        scheme: ['http', 'https']
+      }),
+      group: 'location'
     }),
     defineField({
       name: 'locationDetails',
@@ -206,31 +217,72 @@ export default defineType({
             hotspot: true,
           }
         }
-      ]
+      ],
+      group: 'location'
     }),
     defineField({
       name: 'isLocationSecret',
       title: 'Location is Secret',
       type: 'boolean',
-      initialValue: false
+      initialValue: false,
+      group: 'location'
+    }),
+
+    // Media Tab
+    defineField({
+      name: 'image',
+      title: 'Main Image',
+      type: 'image',
+      options: {
+        hotspot: true,
+      },
+      validation: Rule => Rule.required(),
+      group: 'media'
     }),
     defineField({
-      name: 'isArtistsSecret',
-      title: 'Artists are Secret',
-      type: 'boolean',
-      initialValue: true
+      name: 'gallery',
+      title: 'Gallery',
+      type: 'array',
+      of: [{ type: 'image' }],
+      group: 'media'
     }),
-    defineField({
-      name: 'order',
-      title: 'Display Order',
-      type: 'number',
-      initialValue: 0
-    }),
+
+    // SEO Tab
     defineField({
       name: 'seo',
       title: 'SEO',
       type: 'seo',
-      fieldset: 'seo'
+      group: 'seo'
+    }),
+
+    // Additional Settings
+    defineField({
+      name: 'isArtistsSecret',
+      title: 'Artists are Secret',
+      type: 'boolean',
+      initialValue: true,
+      group: 'artists'
+    }),
+    defineField({
+      name: 'artists',
+      title: 'Artists',
+      type: 'array',
+      of: [{
+        type: 'reference',
+        to: [{ type: 'artist' }]
+      }],
+      group: 'artists'
+    }),
+    defineField({
+      name: 'tickets',
+      title: 'Tickets',
+      type: 'array',
+      of: [{
+        type: 'reference',
+        to: [{ type: 'ticket' }]
+      }],
+      group: 'tickets',
+      description: 'Tickets available for this event'
     })
   ],
   preview: {

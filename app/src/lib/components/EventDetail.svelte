@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Artist, TimeSlot, Event } from '$lib/sanity/queries';
+  import type { TransformedArtist, TimeSlot, TransformedEvent } from '$lib/sanity/queries';
   import Hero from './event/Hero.svelte';
   import About from './event/About.svelte';
   import Location from './event/Location.svelte';
@@ -11,6 +11,12 @@
   import SectionNav from './navigation/SectionNav.svelte';
   import type { Image } from '@sanity/types';
 
+  interface TransformedInstructor {
+    name: string;
+    role: string;
+    image?: string;
+  }
+
   interface Day {
     date: string;
     stages: Array<{
@@ -20,19 +26,16 @@
         time: string;
         title: string;
         description?: string;
-        instructor?: {
-          name: string;
-          role: string;
-          image?: Image;
-        };
+        instructor?: TransformedInstructor;
         icon?: string;
       }>;
     }>;
   }
 
-  export let event: Event;
-  export let artists: Artist[] = [];
+  export let event: TransformedEvent;
   export let timeSlots: TimeSlot[] = [];
+
+  $: artists = (event.artists || []) as TransformedArtist[];
 
   // Extract and validate schedule days
   $: scheduleDays = event.schedule?.days ?? [];
@@ -84,7 +87,7 @@
   {/if}
 
   <div id="artists" class="py-20 bg-black/40">
-    <ArtistsSlider {artists} isLineupRevealed={!event.isArtistsSecret} />
+    <ArtistsSlider artists={event.artists || []} isLineupRevealed={!event.isArtistsSecret} />
   </div>
 
   {#if event.locationDetails}
@@ -97,7 +100,7 @@
   {/if}
 
   <div id="tickets" class="py-20 bg-black/40">
-    <Pricing />
+    <Pricing tickets={event.tickets || []} />
   </div>
 
   {#if event.gallery}

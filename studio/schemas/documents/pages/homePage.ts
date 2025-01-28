@@ -6,9 +6,25 @@ export default defineType({
   type: 'document',
   groups: [
     {
-      name: 'content',
-      title: 'Content',
+      name: 'hero',
+      title: 'Hero & Intro',
       default: true
+    },
+    {
+      name: 'main',
+      title: 'Main Content'
+    },
+    {
+      name: 'team',
+      title: 'Team & Artists'
+    },
+    {
+      name: 'testimonials',
+      title: 'Testimonials & Logos'
+    },
+    {
+      name: 'additional',
+      title: 'Additional Sections'
     },
     {
       name: 'settings',
@@ -36,7 +52,7 @@ export default defineType({
       name: 'hero',
       title: 'Hero Section',
       type: 'object',
-      group: 'content',
+      group: 'hero',
       fields: [
         defineField({
           name: 'title',
@@ -87,13 +103,13 @@ export default defineType({
       name: 'aboutSection',
       title: 'About Us Section',
       type: 'aboutUsSection',
-      group: 'content',
+      group: 'main',
     }),
     defineField({
       name: 'intro',
       title: 'Intro Section',
       type: 'object',
-      group: 'content',
+      group: 'hero',
       fields: [
         defineField({
           name: 'title',
@@ -129,7 +145,7 @@ export default defineType({
       name: 'workshopsSection',
       title: 'Workshops Section',
       type: 'object',
-      group: 'content',
+      group: 'additional',
       fields: [
         defineField({
           name: 'title',
@@ -147,7 +163,7 @@ export default defineType({
       name: 'pricingSection',
       title: 'Pricing Section',
       type: 'object',
-      group: 'content',
+      group: 'additional',
       fields: [
         defineField({
           name: 'title',
@@ -162,10 +178,41 @@ export default defineType({
       ],
     }),
     defineField({
+      name: 'artistsSection',
+      title: 'Artists Section',
+      type: 'artistsSection',
+      group: 'team',
+      validation: rule => rule.required(),
+      description: 'Konfigurieren Sie die Artists-Sektion mit Grid oder Slider Ansicht',
+      initialValue: {
+        displayType: 'slider',
+        isLineupRevealed: true
+      }
+    }),
+ 
+    defineField({
+      name: 'testimonialsSection',
+      title: 'Testimonials Section',
+      type: 'testimonialsSection',
+      group: 'testimonials',
+    }),
+    defineField({
+      name: 'logosSection',
+      title: 'Logos Section',
+      type: 'logosSection',
+      group: 'testimonials',
+    }),
+    defineField({
+      name: 'faqSection',
+      title: 'FAQ Section',
+      type: 'faqSection',
+      group: 'additional',
+    }),
+    defineField({
       name: 'newsletterSection',
       title: 'Newsletter Section',
       type: 'object',
-      group: 'content',
+      group: 'additional',
       fields: [
         defineField({
           name: 'title',

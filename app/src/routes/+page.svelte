@@ -1,9 +1,13 @@
 <script lang="ts">
   import { useQuery } from '@sanity/svelte-loader';
+  import { writable } from 'svelte/store';
   import type { PageData } from './$types';
-  import type { Artist, FAQ, Logo, Testimonial, Event, KnowledgeBaseItem, SiteSettings } from '$lib/sanity/queries';
-  import type { HomePage } from '$lib/sanity/queries/homepage';
+  import type { FAQ, Logo, Testimonial, KnowledgeBaseItem, SiteSettings } from '$lib/sanity/queries';
+  import type { TransformedArtist } from '$lib/sanity/queries/artists';
+  import type { TransformedEvent } from '$lib/sanity/queries/events';
   import type { PortableTextBlock } from '@portabletext/types';
+  import type { HomePage } from '$lib/sanity/queries/homepage';
+  import { urlFor } from '$lib/sanity/image';
   import Herostart from '$lib/components/hero/start.svelte';
   import Cards from '$lib/components/Cards.svelte';
   import Intro from '$lib/components/Intro.svelte';
@@ -21,7 +25,7 @@
 
   // Get the initial data from the server load
   const homeData = data.homePage.options.initial as HomePage;
-  const eventsArray = data.events.data as Event[];
+  const eventsArray = data.events.data as TransformedEvent[];
   const faqsArray = data.faqs.options.initial as FAQ[];
   const knowledgeBaseItems = data.featuredKnowledgeBaseItems.options.initial as KnowledgeBaseItem[];
   const siteSettingsData = data.siteSettings.options.initial as SiteSettings;
@@ -29,6 +33,40 @@
   // Format logos and testimonials data to match component expectations
   const logosData = { data: data.logos.options.initial as Logo[] || [] };
   const testimonialsData = { data: data.testimonials.options.initial as Testimonial[] || [] };
+
+  // Event und Ticket Stores initialisieren
+  const selectedEventStore = writable(homeData?.pricingSection?.selectedEvent || eventsArray[0]);
+  const eventTicketsStore = writable(
+    homeData?.pricingSection?.tickets ||
+    (eventsArray[0]?.tickets ?? [])
+  );
+
+  // Initial die Tickets setzen, falls ein Event ausgewählt ist
+  $: {
+    if (!$selectedEventStore && eventsArray.length > 0) {
+      selectedEventStore.set(eventsArray[0]);
+      eventTicketsStore.set(eventsArray[0].tickets ?? []);
+    }
+  }
+
+  // Event Change Handler
+  function handleEventChange(event: CustomEvent<TransformedEvent>) {
+    const selectedEvent = event.detail;
+    selectedEventStore.set(selectedEvent);
+    
+    // Finde die Tickets für das ausgewählte Event
+    const eventTickets = eventsArray
+      .find(e => e._id === selectedEvent._id)
+      ?.tickets ?? [];
+    
+    eventTicketsStore.set(eventTickets);
+  }
+
+  // Transform artists for ArtistSlider
+  $: artists = homeData?.artistsSection?.selectedArtists?.map(artist => ({
+    ...artist,
+    image: artist.image ? urlFor(artist.image).url() : ''
+  })) as TransformedArtist[];
 
   // Default PortableText block for title if none exists
   const defaultTitle: PortableTextBlock[] = [{
@@ -96,13 +134,23 @@
 </section>
   
 <section id="artists" class="pt-48 pb-20">
-  <ArtistsSlider artists={data.artists.data} isLineupRevealed={!data.isArtistsSecret} />
+  {#if homeData?.artistsSection?.selectedArtists && homeData.artistsSection.displayType === 'slider'}
+    <ArtistsSlider 
+      artists={artists} 
+      isLineupRevealed={homeData.artistsSection.isLineupRevealed} 
+    />
+  {/if}
 </section>
 
-<section id="tickets" class="relative pt-36 overflow-hidden">  
-  <Pricing 
+<section id="tickets" class="relative pt-36 overflow-hidden">
+  <Pricing
     title={homeData?.pricingSection?.title ?? ''}
     description={homeData?.pricingSection?.description ?? ''}
+    tickets={$eventTicketsStore}
+    selectedEvent={$selectedEventStore}
+    showEventSelector={homeData?.pricingSection?.showEventSelector ?? false}
+    events={eventsArray}
+    on:eventChange={handleEventChange}
   />
 </section>
 
@@ -123,8 +171,14 @@
 </section>
 
 <section id="about" class="relative pt-36 overflow-hidden">
-  {#if homeData?.aboutSection}
-    <AboutUsSection data={homeData.aboutSection} />
+  {#if homeData?.aboutSection?.title}
+    <AboutUsSection 
+      tagline={homeData.aboutSection?.tagline ?? ''}
+      title={homeData.aboutSection?.title ?? ''}
+      paragraphs={homeData.aboutSection?.paragraphs ?? []}
+      cta={homeData.aboutSection?.cta ?? { text: '', link: '' }}
+      mainImage={homeData.aboutSection?.mainImage}
+    />
   {/if}
 </section>
 

@@ -50,6 +50,19 @@ interface SanityEvent {
   isOpenStageSecret?: boolean;
   isLocationSecret?: boolean;
   isArtistsSecret?: boolean;
+  artists?: Array<{
+    _id: string;
+    name: string;
+    role: string;
+    description: string;
+    image: Image;
+    socials: {
+      instagram?: string;
+      soundcloud?: string;
+    };
+    isRevealed: boolean;
+    order: number;
+  }>;
 }
 
 export const load: PageServerLoad = async ({ params, locals: { loadQuery } }) => {
@@ -68,6 +81,10 @@ export const load: PageServerLoad = async ({ params, locals: { loadQuery } }) =>
         image: urlFor(event.data.locationDetails.image).url()
       },
       // Transform schedule if it exists
+      artists: event.data.artists?.map(artist => ({
+        ...artist,
+        image: urlFor(artist.image).url()
+      })),
       schedule: event.data.schedule ? {
         _id: event.data.schedule._id,
         days: event.data.schedule.days.map(day => ({

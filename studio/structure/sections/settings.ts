@@ -16,26 +16,28 @@ export const settingsSection: Section = (S) =>
                 .documentId('siteSettings')
             ),
 
-          // Theme
+          // Theme Settings
           S.listItem()
-            .title('Theme Settings')
+            .title('Theme')
             .child(
               S.document()
                 .schemaType('themeSettings')
                 .documentId('themeSettings')
             ),
 
-          // Navigation
+          S.divider(),
+
+          // Navigation & Footer
           S.listItem()
-            .title('Navigation')
+            .title('Navigation & Footer')
             .child(
               S.list()
-                .title('Navigation')
+                .title('Navigation & Footer')
                 .items([
                   S.documentTypeListItem('navigation')
-                    .title('Menus'),
+                    .title('Navigation Menus'),
                   S.listItem()
-                    .title('Footer')
+                    .title('Footer Settings')
                     .child(
                       S.document()
                         .schemaType('footerSettings')
@@ -44,40 +46,11 @@ export const settingsSection: Section = (S) =>
                 ])
             ),
 
-          // Legal Pages
-          S.listItem()
-            .title('Legal Pages')
-            .child(
-              S.list()
-                .title('Legal Pages')
-                .items([
-                  S.listItem()
-                    .title('AGB')
-                    .child(
-                      S.document()
-                        .schemaType('page')
-                        .documentId('agb')
-                    ),
-                  S.listItem()
-                    .title('Datenschutz')
-                    .child(
-                      S.document()
-                        .schemaType('page')
-                        .documentId('datenschutz')
-                    ),
-                  S.listItem()
-                    .title('Impressum')
-                    .child(
-                      S.document()
-                        .schemaType('page')
-                        .documentId('impressum')
-                    )
-                ])
-            ),
+          S.divider(),
 
-          // Branding
+          // Branding & Logos
           S.listItem()
-            .title('Branding')
+            .title('Branding & Logos')
             .child(
               S.documentTypeList('logo')
                 .title('Logos')

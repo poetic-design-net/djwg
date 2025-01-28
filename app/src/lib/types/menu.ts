@@ -1,94 +1,218 @@
-export type LinkType = 'anchor' | 'page';
+import type { PortableTextBlock } from '@portabletext/types'
+import type { Image } from '@sanity/types'
 
-export interface MenuLink {
-  label: string;
-  link: string;
-  linkType: LinkType;
+export type MenuKey = 'workshops' | 'join' | 'about'
+
+export type NavigationType = 'megamenu' | 'direct'
+
+export type ComponentSectionType = 
+  | 'aboutUs'
+  | 'artists'
+  | 'events'
+  | 'faq'
+  | 'founder'
+  | 'hero'
+  | 'intro'
+  | 'logos'
+  | 'newsletter'
+  | 'pricing'
+  | 'team'
+  | 'testimonials'
+  | 'welcome'
+
+export type IntroSectionItem = {
+  icon: 'mixer' | 'headphones' | 'vinyl' | 'laptop' | 'microphone' | 'controller'
+  title: string
+  description: string
 }
 
-export interface MenuColumn {
-  title: string;
-  items: MenuLink[];
+export type IntroSection = {
+  title: PortableTextBlock[] | string
+  description: string
+  image?: {
+    asset: Image
+    alt?: string
+  }
+  items?: IntroSectionItem[] | null
 }
 
-export interface FeaturedContent {
-  title: string;
-  description: string;
-  image: string;
-  link: string;
-  linkType: LinkType;
+export type AboutUsSection = {
+  tagline: string
+  title: string
+  paragraphs: string[]
+  cta: {
+    text: string
+    link: string
+  }
+  mainImage?: {
+    asset: Image
+    alt?: string
+  }
 }
 
-export interface MenuItem {
-  _id?: string;
-  _type?: string;
-  title: string;
-  featured: FeaturedContent;
-  columns: MenuColumn[];
-  quickLinks: MenuLink[];
+export type FAQItem = {
+  _id: string
+  question: string
+  answer: string
+  category?: string
+  order?: number
 }
 
-export interface MenuItems {
-  workshops?: MenuItem;
-  join?: MenuItem;
-  about?: MenuItem;
+export type FAQSection = {
+  title: PortableTextBlock[]
+  description?: string
+  selectedFaqs: FAQItem[]
+  showCategories?: boolean
 }
 
-export type MenuKey = keyof MenuItems;
-
-export function isValidMenuItem(item: unknown): item is MenuItem {
-  if (!item || typeof item !== 'object') return false;
-
-  const menuItem = item as MenuItem;
-  return (
-    typeof menuItem.title === 'string' &&
-    isValidFeaturedContent(menuItem.featured) &&
-    Array.isArray(menuItem.columns) &&
-    menuItem.columns.every(isValidMenuColumn) &&
-    Array.isArray(menuItem.quickLinks) &&
-    menuItem.quickLinks.every(isValidMenuLink)
-  );
+export type Logo = {
+  _id: string
+  name: string
+  image: {
+    asset: Image
+    alt: string
+    hotspot?: {
+      x: number
+      y: number
+      height: number
+      width: number
+    }
+    crop?: {
+      top: number
+      bottom: number
+      left: number
+      right: number
+    }
+  }
+  order: number
 }
 
-export function isValidFeaturedContent(featured: unknown): featured is FeaturedContent {
-  if (!featured || typeof featured !== 'object') return false;
-
-  const featuredContent = featured as FeaturedContent;
-  return (
-    typeof featuredContent.title === 'string' &&
-    typeof featuredContent.description === 'string' &&
-    typeof featuredContent.image === 'string' &&
-    typeof featuredContent.link === 'string' &&
-    (featuredContent.linkType === 'anchor' || featuredContent.linkType === 'page')
-  );
+export type LogosSection = {
+  title: PortableTextBlock[]
+  description: string
+  selectedLogos: Logo[]
+  showButton: boolean
 }
 
-export function isValidMenuColumn(column: unknown): column is MenuColumn {
-  if (!column || typeof column !== 'object') return false;
-
-  const menuColumn = column as MenuColumn;
-  return (
-    typeof menuColumn.title === 'string' &&
-    Array.isArray(menuColumn.items) &&
-    menuColumn.items.every(isValidMenuLink)
-  );
+export type TeamMember = {
+  _id: string
+  name: string
+  role: string
+  image: {
+    asset: Image
+    alt?: string
+  }
+  socials?: {
+    instagram?: string
+    soundcloud?: string
+  }
 }
 
-export function isValidMenuLink(link: unknown): link is MenuLink {
-  if (!link || typeof link !== 'object') return false;
-
-  const menuLink = link as MenuLink;
-  return (
-    typeof menuLink.label === 'string' &&
-    typeof menuLink.link === 'string' &&
-    (menuLink.linkType === 'anchor' || menuLink.linkType === 'page')
-  );
+export type TeamSectionConfig = {
+  title: PortableTextBlock[]
+  description?: string
+  selectedMembers: TeamMember[]
+  showLoadMoreButton: boolean
 }
 
-export function createEmptyMenuItems(): MenuItems {
-  return {
-    workshops: undefined,
-    join: undefined,
-    about: undefined
-  };
+export type HeroSection = {
+  title: string
+  subtitle: string
+  backgroundImages?: {
+    asset: Image
+    alt?: string
+  }[]
+  transitionInterval?: number
+}
+
+export type ArtistsSection = {
+  title: string
+  description?: string
+  displayType: 'grid' | 'slider'
+  selectedArtists: Array<{
+    _ref: string
+    _type: 'reference'
+  }>
+  isLineupRevealed: boolean
+}
+
+export type TestimonialsSection = {
+  title: string
+  subtitle?: string
+  testimonials: Array<{
+    _ref: string
+    _type: 'reference'
+  }>
+}
+
+export type ComponentSection = {
+  _type: 'componentSection'
+  type: ComponentSectionType
+  id: string
+  introSection?: IntroSection
+  aboutUsSection?: AboutUsSection
+  faqSection?: FAQSection
+  logosSection?: LogosSection
+  teamSectionConfig?: TeamSectionConfig
+  heroSection?: HeroSection,
+  artistsSection?: ArtistsSection,
+  testimonialsSection?: TestimonialsSection
+}
+
+export type ContentSection = {
+  _type: 'contentSection'
+  id: string
+  title: string
+  content: any[] // Portable Text Block Content
+}
+
+export type Page = {
+  _type: 'page'
+  title: string
+  slug: { current: string }
+  description?: string
+  enableSectionNav: boolean
+  sections: (ComponentSection | ContentSection)[]
+  seo?: any
+}
+
+export type PageReference = {
+  _ref: string
+  _type: 'reference'
+} | {
+  _id: string
+  _type: 'page'
+  slug: { current: string }
+}
+
+export type MenuItem = {
+  type: NavigationType
+  title: string
+  pageLink?: PageReference
+  sectionId?: string
+  directLink?: string
+  featured?: {
+    title: string
+    description: string
+    image: any
+    link: string
+    linkType: 'anchor' | 'page'
+  }
+  columns?: Array<{
+    title: string
+    items: Array<{
+      label: string
+      link: string
+      linkType: 'anchor' | 'page'
+    }>
+  }>
+  quickLinks?: Array<{
+    label: string
+    link: string
+    linkType: 'anchor' | 'page'
+  }>
+}
+
+export type MenuItems = {
+  [key in MenuKey]?: MenuItem
 }

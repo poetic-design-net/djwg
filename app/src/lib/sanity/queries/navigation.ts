@@ -1,43 +1,19 @@
 import groq from 'groq'
 
-// First, get all navigation items
-const navigationItemsQuery = groq`
-  *[_type == "navigation"] {
-    _id,
-    _type,
-    menuKey,
-    title,
-    featured {
-      title,
-      description,
-      "image": coalesce(image.asset->url, ''),
-      link,
-      linkType
-    },
-    columns[] {
-      title,
-      items[] {
-        label,
-        link,
-        linkType
-      }
-    },
-    quickLinks[] {
-      label,
-      link,
-      linkType
-    }
-  }
-`
-
-// Then transform them into a structured object
 export const navigationQuery = groq`
 {
   "workshops": *[_type == "navigation" && menuKey == "workshops"][0] {
     _id,
     _type,
     menuKey,
+    type,
     title,
+    "pageLink": pageLink->{
+      _id,
+      _type,
+      "slug": slug.current
+    },
+    sectionId,
     featured {
       title,
       description,
@@ -63,7 +39,14 @@ export const navigationQuery = groq`
     _id,
     _type,
     menuKey,
+    type,
     title,
+    "pageLink": pageLink->{
+      _id,
+      _type,
+      "slug": slug.current
+    },
+    sectionId,
     featured {
       title,
       description,
@@ -89,7 +72,14 @@ export const navigationQuery = groq`
     _id,
     _type,
     menuKey,
+    type,
     title,
+    "pageLink": pageLink->{
+      _id,
+      _type,
+      "slug": slug.current
+    },
+    sectionId,
     featured {
       title,
       description,
@@ -114,6 +104,7 @@ export const navigationQuery = groq`
 }`
 
 export type LinkType = 'anchor' | 'page';
+export type NavigationType = 'megamenu' | 'direct';
 
 export type MenuLink = {
   label: string
@@ -138,10 +129,17 @@ export type NavigationItem = {
   _id: string
   _type: string
   menuKey: 'workshops' | 'join' | 'about'
+  type: NavigationType
   title: string
-  featured: FeaturedContent
-  columns: MenuColumn[]
-  quickLinks: MenuLink[]
+  pageLink?: {
+    _id: string
+    _type: string
+    slug: string
+  }
+  sectionId?: string
+  featured?: FeaturedContent
+  columns?: MenuColumn[]
+  quickLinks?: MenuLink[]
 }
 
 export type NavigationData = {
@@ -154,6 +152,12 @@ export function transformNavigationData(data: any): NavigationData {
   // If data is already in the correct format, return it
   if (data && typeof data === 'object' && ('workshops' in data || 'join' in data || 'about' in data)) {
     console.log('Navigation data is already structured:', data);
+    // Ensure type is set for each item
+    Object.values(data).forEach((item: any) => {
+      if (item) {
+        item.type = item.type || 'megamenu';
+      }
+    });
     return data as NavigationData;
   }
 
@@ -164,11 +168,14 @@ export function transformNavigationData(data: any): NavigationData {
       if (item && item.menuKey) {
         acc[item.menuKey] = {
           ...item,
-          featured: {
+          type: item.type || 'megamenu',
+          pageLink: item.pageLink,
+          sectionId: item.sectionId,
+          featured: item.featured ? {
             ...item.featured,
-            image: item.featured?.image || '',
-            linkType: item.featured?.linkType || 'page'
-          }
+            image: item.featured.image || '',
+            linkType: item.featured.linkType || 'page'
+          } : undefined
         };
       }
       return acc;
@@ -192,12 +199,6 @@ export function isValidNavigationData(data: unknown): data is NavigationData {
 
   const requiredKeys = ['workshops', 'join', 'about'] as const;
   const dataKeys = Object.keys(data);
-
-  console.log('Checking navigation data:', {
-    required: requiredKeys,
-    available: dataKeys,
-    data: JSON.stringify(data, null, 2)
-  });
 
   // Check if all required keys exist
   const hasAllKeys = requiredKeys.every(key => dataKeys.includes(key));
@@ -225,11 +226,9 @@ export function validateNavigationItem(item: unknown): item is NavigationItem {
     typeof itemObj._type === 'string' &&
     typeof itemObj.menuKey === 'string' &&
     typeof itemObj.title === 'string' &&
-    validateFeaturedContent(itemObj.featured) &&
-    Array.isArray(itemObj.columns) &&
-    itemObj.columns.every(validateMenuColumn) &&
-    Array.isArray(itemObj.quickLinks) &&
-    itemObj.quickLinks.every(validateMenuLink)
+    (!itemObj.featured || validateFeaturedContent(itemObj.featured)) &&
+    (!itemObj.columns || (Array.isArray(itemObj.columns) && itemObj.columns.every(validateMenuColumn))) &&
+    (!itemObj.quickLinks || (Array.isArray(itemObj.quickLinks) && itemObj.quickLinks.every(validateMenuLink)))
   );
 
   if (!isValid) {

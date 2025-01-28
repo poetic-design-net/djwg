@@ -7,14 +7,19 @@
   import type { SupabaseClient } from '@supabase/supabase-js';
   import { toasts } from '$lib/stores/toast';
   import { authState } from '$lib/stores/auth';
+  import { navigateToSection } from '$lib/utils/navigation';
   import MobileMenu from './MobileMenu.svelte';
   import DesktopNav from './navigation/DesktopNav.svelte';
   import HeaderAuth from './auth/HeaderAuth.svelte';
   import MegaMenu from './navigation/MegaMenu.svelte';
 
   export let data;
-  let { user, navigation } = data;
-  $: ({ user, navigation } = data);
+  let { user, navigation, pages } = data || {};
+  $: ({ user, navigation, pages } = data || {});
+  $: if (!pages) {
+    console.warn('Pages data is missing:', data);
+    pages = {};
+  }
 
   const supabase = getContext<SupabaseClient>('supabase');
 
@@ -36,6 +41,9 @@
       join: undefined,
       about: undefined
     };
+    console.log('Header menuItems:', JSON.stringify(menuItems, null, 2));
+    console.log('Header pages:', JSON.stringify(pages, null, 2));
+    console.log('Navigation raw data:', JSON.stringify(navigation, null, 2));
   }
 
   const handleLogout = async () => {
@@ -74,7 +82,17 @@
     return () => window.removeEventListener('scroll', handleScroll);
   });
 
-  function handleClick(menu: MenuKey) {
+  async function handleClick(menu: MenuKey) {
+    const menuItem = menuItems[menu];
+    if (!menuItem) return;
+
+    if (menuItem.type === 'direct') {
+      console.log('Handling direct link click:', { menuItem, pages });
+      await navigateToSection(menuItem, pages);
+      return;
+    }
+    
+    // Toggle mega menu for non-direct links
     activeMenu = activeMenu === menu ? null : menu;
   }
 
@@ -113,6 +131,7 @@
             {menuItems}
             {activeMenu}
             onClick={handleClick}
+            {pages}
           />
         {/if}
 
@@ -159,13 +178,20 @@
   </div>
 
   {#if menuItems && Object.values(menuItems).some(item => item !== undefined)}
-    <MegaMenu
-      {activeMenu}
-      {menuItems}
-      onClose={closeMenu}
-    />
+    <!-- Nur Mega-Menu anzeigen, wenn ein aktives Menu vom Typ 'megamenu' existiert -->
+    {#if activeMenu && menuItems[activeMenu]?.type === 'megamenu'}
+      <MegaMenu
+        {activeMenu}
+        {menuItems}
+        onClose={closeMenu}
+      />
+    {/if}
 
-    <MobileMenu bind:isOpen={mobileMenuOpen} {menuItems} />
+    <MobileMenu 
+      bind:isOpen={mobileMenuOpen} 
+      {menuItems}
+      {pages}
+    />
   {/if}
 </header>
 

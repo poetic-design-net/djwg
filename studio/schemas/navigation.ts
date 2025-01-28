@@ -5,7 +5,8 @@ export default defineType({
   title: 'Navigation',
   type: 'document',
   initialValue: {
-    menuKey: 'workshops' // Default value, will be overridden
+    menuKey: 'workshops', // Default value, will be overridden
+    type: 'megamenu' // Default to megamenu
   },
   fields: [
     defineField({
@@ -21,7 +22,6 @@ export default defineType({
         ]
       },
       readOnly: ({ document }) => {
-        // Lock the menuKey based on the document ID
         if (document?._id) {
           return document._id.includes('navigation-workshops') ||
                  document._id.includes('navigation-join') ||
@@ -30,44 +30,77 @@ export default defineType({
         return false;
       },
       initialValue: ({ document }) => {
-        // Set menuKey based on document ID
         if (document?._id) {
           if (document._id.includes('navigation-workshops')) return 'workshops';
           if (document._id.includes('navigation-join')) return 'join';
           if (document._id.includes('navigation-about')) return 'about';
         }
-        return 'workshops'; // Default value
+        return 'workshops';
+      }
+    }),
+    defineField({
+      name: 'type',
+      title: 'Navigation Type',
+      type: 'string',
+      validation: Rule => Rule.required(),
+      options: {
+        list: [
+          { title: 'Mega Menu', value: 'megamenu' },
+          { title: 'Direct Link', value: 'direct' }
+        ]
       }
     }),
     defineField({
       name: 'title',
       title: 'Title',
-      type: 'string',
-      validation: Rule => Rule.required().error('Title is required')
+      type: 'string'
     }),
+    // Page Reference für direkte Links
+    defineField({
+      name: 'pageLink',
+      title: 'Link to Page',
+      description: 'Select a page to link to',
+      type: 'reference',
+      to: [{ type: 'page' }],
+      hidden: ({ parent }) => parent?.type !== 'direct'
+    }),
+    // Section ID für direkte Links
+    defineField({
+      name: 'sectionId',
+      title: 'Section ID',
+      type: 'string',
+      description: 'Optional: ID der Section die angesteuert werden soll',
+      hidden: ({ parent }) => parent?.type !== 'direct'
+    }),
+    // Legacy directLink field - wird durch pageLink ersetzt
+    defineField({
+      name: 'directLink',
+      title: 'Direct Link',
+      type: 'string',
+      hidden: ({ parent }) => parent?.type !== 'direct',
+      description: 'DEPRECATED: Bitte nutzen Sie stattdessen die Page Reference'
+    }),
+    // Mega Menu Felder
     defineField({
       name: 'featured',
       title: 'Featured Content',
       type: 'object',
-      validation: Rule => Rule.required().error('Featured content is required'),
+      hidden: ({ parent }) => parent?.type !== 'megamenu',
       fields: [
         {
           name: 'title',
           title: 'Title',
-          type: 'string',
-          validation: Rule => Rule.required().error('Featured title is required')
+          type: 'string'
         },
         {
           name: 'description',
           title: 'Description',
-          type: 'text',
-          validation: Rule => Rule.required().error('Featured description is required')
+          type: 'text'
         },
         {
           name: 'image',
           title: 'Image',
           type: 'image',
-          validation: Rule => Rule.required().error('Featured image is required'),
           options: {
             hotspot: true
           }
@@ -75,8 +108,7 @@ export default defineType({
         {
           name: 'link',
           title: 'Link',
-          type: 'string',
-          validation: Rule => Rule.required().error('Featured link is required')
+          type: 'string'
         },
         {
           name: 'linkType',
@@ -87,8 +119,7 @@ export default defineType({
               { title: 'Anchor Link', value: 'anchor' },
               { title: 'Page Link', value: 'page' }
             ]
-          },
-          validation: Rule => Rule.required().error('Link type is required')
+          }
         }
       ]
     }),
@@ -96,7 +127,7 @@ export default defineType({
       name: 'columns',
       title: 'Menu Columns',
       type: 'array',
-      validation: Rule => Rule.required().min(1).error('At least one menu column is required'),
+      hidden: ({ parent }) => parent?.type !== 'megamenu',
       of: [
         {
           type: 'object',
@@ -104,14 +135,12 @@ export default defineType({
             {
               name: 'title',
               title: 'Column Title',
-              type: 'string',
-              validation: Rule => Rule.required().error('Column title is required')
+              type: 'string'
             },
             {
               name: 'items',
               title: 'Menu Items',
               type: 'array',
-              validation: Rule => Rule.required().min(1).error('At least one menu item is required'),
               of: [
                 {
                   type: 'object',
@@ -119,14 +148,12 @@ export default defineType({
                     {
                       name: 'label',
                       title: 'Label',
-                      type: 'string',
-                      validation: Rule => Rule.required().error('Menu item label is required')
+                      type: 'string'
                     },
                     {
                       name: 'link',
                       title: 'Link',
-                      type: 'string',
-                      validation: Rule => Rule.required().error('Menu item link is required')
+                      type: 'string'
                     },
                     {
                       name: 'linkType',
@@ -137,8 +164,7 @@ export default defineType({
                           { title: 'Anchor Link', value: 'anchor' },
                           { title: 'Page Link', value: 'page' }
                         ]
-                      },
-                      validation: Rule => Rule.required().error('Link type is required')
+                      }
                     }
                   ]
                 }
@@ -152,7 +178,7 @@ export default defineType({
       name: 'quickLinks',
       title: 'Quick Links',
       type: 'array',
-      validation: Rule => Rule.required().min(1).error('At least one quick link is required'),
+      hidden: ({ parent }) => parent?.type !== 'megamenu',
       of: [
         {
           type: 'object',
@@ -160,14 +186,12 @@ export default defineType({
             {
               name: 'label',
               title: 'Label',
-              type: 'string',
-              validation: Rule => Rule.required().error('Quick link label is required')
+              type: 'string'
             },
             {
               name: 'link',
               title: 'Link',
-              type: 'string',
-              validation: Rule => Rule.required().error('Quick link URL is required')
+              type: 'string'
             },
             {
               name: 'linkType',
@@ -178,8 +202,7 @@ export default defineType({
                   { title: 'Anchor Link', value: 'anchor' },
                   { title: 'Page Link', value: 'page' }
                 ]
-              },
-              validation: Rule => Rule.required().error('Link type is required')
+              }
             }
           ]
         }

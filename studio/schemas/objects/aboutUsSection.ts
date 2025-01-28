@@ -1,6 +1,6 @@
-import { defineType } from 'sanity';
+import type { SchemaTypeDefinition, Rule } from 'sanity'
 
-export default defineType({
+const aboutUsSection: SchemaTypeDefinition = {
   name: 'aboutUsSection',
   title: 'About Us Section',
   type: 'object',
@@ -9,38 +9,20 @@ export default defineType({
       name: 'tagline',
       title: 'Tagline',
       type: 'string',
-      description: 'Der grüne Text über dem Titel',
-      initialValue: 'Über DJ Workshop Germany'
+      validation: (rule: Rule) => rule.required()
     },
     {
       name: 'title',
       title: 'Titel',
       type: 'string',
-      description: 'Die Hauptüberschrift',
-      initialValue: 'Deine DJ-Karriere beginnt hier'
+      validation: (rule: Rule) => rule.required()
     },
     {
       name: 'paragraphs',
-      title: 'Textabsätze',
+      title: 'Absätze',
       type: 'array',
       of: [{ type: 'text' }],
-      description: 'Die Haupttextabsätze',
-      validation: Rule => Rule.required().min(1)
-    },
-    {
-      name: 'mainImage',
-      title: 'Hauptbild',
-      type: 'image',
-      options: {
-        hotspot: true
-      },
-      fields: [
-        {
-          name: 'alt',
-          title: 'Alt Text',
-          type: 'string'
-        }
-      ]
+      validation: (rule: Rule) => rule.required().min(1)
     },
     {
       name: 'cta',
@@ -51,15 +33,34 @@ export default defineType({
           name: 'text',
           title: 'Button Text',
           type: 'string',
-          initialValue: 'Mehr über uns'
+          validation: (rule: Rule) => rule.required()
         },
         {
           name: 'link',
           title: 'Button Link',
           type: 'string',
-          initialValue: '/uber-uns'
+          validation: (rule: Rule) => rule.required()
         }
       ]
+    },
+    {
+      name: 'mainImage',
+      title: 'Hauptbild',
+      type: 'optimizedImage'
     }
-  ]
-});
+  ],
+  preview: {
+    select: {
+      title: 'title',
+      subtitle: 'tagline'
+    },
+    prepare({ title, subtitle }) {
+      return {
+        title: title || 'About Us Section',
+        subtitle: subtitle || 'Keine Tagline'
+      }
+    }
+  }
+}
+
+export default aboutUsSection

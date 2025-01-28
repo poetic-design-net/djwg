@@ -2,54 +2,29 @@
   import { slide } from 'svelte/transition';
   import { quintOut } from 'svelte/easing';
   import type { FAQ } from '$lib/sanity/queries';
+  import type { PortableTextBlock } from '@portabletext/types';
+  import type { PortableTextComponents } from '@portabletext/svelte';
+  import { PortableText } from '@portabletext/svelte';
 
-  export let faqs: FAQ[] = [
-    {
-      _type: 'faq',
-      question: "Brauche ich Vorkenntnisse für die DJ Workshops?",
-      answer: "Nein, unsere Workshops sind für alle Levels geeignet. Wir bieten sowohl Einsteiger- als auch fortgeschrittene Kurse an. Die Trainer passen sich individuell an dein Niveau an.",
-      category: 'workshop',
-      order: 0
-    },
-    {
-      _type: 'faq',
-      question: "Welches Equipment wird in den Workshops verwendet?",
-      answer: "Wir arbeiten ausschließlich mit professionellem Club-Standard Equipment von Pioneer DJ und Allen & Heath. Du lernst an der gleichen Technik, die auch in Clubs verwendet wird.",
-      category: 'equipment',
-      order: 1
-    },
-    {
-      _type: 'faq',
-      question: "Wie lange dauern die Workshops?",
-      answer: "Die Dauer variiert je nach Workshop-Format. Unsere Basis-Workshops gehen einen Tag, während intensive Masterclasses über mehrere Tage stattfinden können. Alle Details findest du in der jeweiligen Event-Beschreibung.",
-      category: 'workshop',
-      order: 2
-    },
-    {
-      _type: 'faq',
-      question: "Bekomme ich ein Zertifikat?",
-      answer: "Ja, nach erfolgreichem Abschluss des Workshops erhältst du ein offizielles DJ Workshop Germany Zertifikat, das deine Teilnahme und erlernten Skills bestätigt.",
-      category: 'workshop',
-      order: 3
-    },
-    {
-      _type: 'faq',
-      question: "Kann ich das Equipment auch nach dem Workshop nutzen?",
-      answer: "Ja, wir bieten unseren Workshop-Teilnehmern die Möglichkeit, das Equipment für Übungszwecke zu nutzen. Die Details zur Studiobuchung erhältst du während des Workshops.",
-      category: 'equipment',
-      order: 4
-    },
-    {
-      _type: 'faq',
-      question: "Gibt es die Möglichkeit einer individuellen Betreuung?",
-      answer: "Ja, neben den Gruppen-Workshops bieten wir auch 1-on-1 Coaching Sessions an. Diese können flexibel nach deinen Bedürfnissen gestaltet werden.",
-      category: 'booking',
-      order: 5
-    }
-  ];
+  interface FAQSection {
+    title: PortableTextBlock[];
+    description?: string;
+    faqs: FAQ[];
+    showCategories?: boolean;
+  }
+
+  export let title: PortableTextBlock[] = [{
+    _type: 'block',
+    children: [{ _type: 'span', text: 'Häufig gestellte Fragen' }]
+  }];
+  export let description: string | undefined = undefined;
+  export let faqs: FAQ[] = [];
+  export let showCategories: boolean = true;
 
   let activeIndex: number | null = null;
   let selectedCategory: string = 'all';
+
+  const components: Partial<PortableTextComponents> = {};
 
   $: filteredFaqs = selectedCategory === 'all' 
     ? faqs 
@@ -66,29 +41,41 @@
     { value: 'booking', label: 'Booking' },
     { value: 'general', label: 'Allgemein' }
   ];
+
+  // Filter out categories that don't have any FAQs
+  $: availableCategories = categories.filter(category => 
+    category.value === 'all' || faqs.some(faq => faq.category === category.value)
+  );
 </script>
 
 <section class="relative py-20 overflow-hidden">
   <div class="container px-4 mx-auto">
     <div class="mb-20 text-center">
       <span class="inline-block mb-4 text-sm text-green-400 font-medium tracking-tighter">FAQ</span>
-      <h2 class="font-heading text-5xl md:text-6xl text-white tracking-tighter">Häufig gestellte Fragen</h2>
+      <h2 class="font-heading text-5xl md:text-6xl text-white tracking-tighter">
+        <PortableText value={title} {components} />
+      </h2>
+      {#if description}
+        <p class="mt-4 text-xl text-gray-300">{description}</p>
+      {/if}
     </div>
 
     <!-- Category Filter -->
-    <div class="flex flex-wrap justify-center gap-4 mb-12">
-      {#each categories as category}
-        <button
-          class="px-6 py-2 rounded-full text-sm font-medium transition-colors duration-300 {selectedCategory === category.value ? 'bg-green-400 text-black' : 'bg-black/40 text-white border border-gray-800 hover:border-green-500'}"
-          on:click={() => {
-            selectedCategory = category.value;
-            activeIndex = null;
-          }}
-        >
-          {category.label}
-        </button>
-      {/each}
-    </div>
+    {#if showCategories && availableCategories.length > 1}
+      <div class="flex flex-wrap justify-center gap-4 mb-12">
+        {#each availableCategories as category}
+          <button
+            class="px-6 py-2 rounded-full text-sm font-medium transition-colors duration-300 {selectedCategory === category.value ? 'bg-green-400 text-black' : 'bg-black/40 text-white border border-gray-800 hover:border-green-500'}"
+            on:click={() => {
+              selectedCategory = category.value;
+              activeIndex = null;
+            }}
+          >
+            {category.label}
+          </button>
+        {/each}
+      </div>
+    {/if}
 
     <div class="max-w-3xl mx-auto">
       {#each filteredFaqs as faq, index}
