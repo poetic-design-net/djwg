@@ -1,12 +1,11 @@
 <script lang="ts">
   import { fade } from 'svelte/transition';
   import type { TeamMember } from '$lib/sanity/queries';
-  import { enhancedUrlFor } from '$lib/sanity/image';
+  import OptimizedImage from './OptimizedImage.svelte';
 
   export let teamMembers: TeamMember[] = [];
   let showAllTeam = false;
   
-  // Shuffle array and get first 6 members
   function shuffleArray<T>(array: T[]): T[] {
     const shuffled = [...array];
     for (let i = shuffled.length - 1; i > 0; i--) {
@@ -33,20 +32,14 @@
         <div class="h-full py-7 px-12 border border-gray-900 border-opacity-30 rounded-5xl">
           <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div class="flex flex-col md:flex-row items-start md:items-center gap-4">
-              <div class="w-16 h-16 flex-shrink-0">
-                <picture>
-                  <source 
-                    srcset={enhancedUrlFor(member.image).webp} 
-                    type="image/webp"
-                  >
-                  <img 
-                    src={enhancedUrlFor(member.image).fallback}
-                    alt={member.name} 
-                    class="w-full h-full rounded-full object-cover"
-                    loading="lazy"
-                    decoding="async"
-                  >
-                </picture>
+              <div class="w-16 h-16 flex-shrink-0 rounded-full overflow-hidden">
+                <OptimizedImage 
+                  image={member.image}
+                  alt={member.name}
+                  maxWidth={128}
+                  sizes="64px"
+                  className="w-full h-full object-cover"
+                />
               </div>
               <div>
                 <p class="mb-1.5 text-sm text-gray-300">{member.role}</p>

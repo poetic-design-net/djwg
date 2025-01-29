@@ -3,7 +3,7 @@
   import { tweened } from 'svelte/motion';
   import { cubicOut } from 'svelte/easing';
   import type { Testimonial } from '$lib/sanity/queries';
-  import { urlFor } from '$lib/sanity/image';
+  import OptimizedImage from './OptimizedImage.svelte';
 
   export let testimonials: { data?: Testimonial[] } | null = null;
 
@@ -29,31 +29,29 @@
     }
   }
 
-  function getImageUrl(testimonial: Testimonial): string {
-    if (testimonial.image) {
-      return urlFor(testimonial.image).width(400).height(400).url();
-    }
-    return 'assets/home_hero.jpg';
-  }
-
-  $: console.log('Testimonials:', testimonials);
-  $: console.log('Testimonials data:', testimonialsData);
+  $: currentTestimonial = testimonialsData[activeSlide];
 </script>
 
 {#if testimonialsData.length > 0}
   <div class="container px-4 mx-auto">
     <div class="mb-20 md:max-w-3xl text-center mx-auto">
-      <span class="inline-block mb-2.5 text-sm text-green-400 font-medium tracking-tighter">DJ Workshop Germany</span>
+      <span class="inline-block mb-4 text-sm text-green-400 font-medium tracking-tighter">DJ Workshop Germany</span>
       <h2 class="font-heading text-7xl lg:text-8xl text-white tracking-tighter-xl">Was unsere Teilnehmer sagen</h2>
     </div>
     <div class="relative p-3 bg-gradient-radial-dark overflow-hidden border border-gray-900 border-opacity-30 rounded-5xl">
       <div class="relative z-10 flex flex-wrap lg:flex-nowrap">
         <div class="w-full lg:w-1/4 p-4">
-          <img 
-            class="w-full h-full object-cover rounded-3xl" 
-            src={testimonialsData[activeSlide] ? getImageUrl(testimonialsData[activeSlide]) : 'assets/home_hero.jpg'} 
-            alt={testimonialsData[activeSlide]?.name || 'Testimonial'}
-          >
+          {#if currentTestimonial?.image?.asset}
+            <div class="w-full h-full rounded-3xl overflow-hidden">
+              <OptimizedImage 
+                image={currentTestimonial.image}
+                alt={currentTestimonial.name || 'Testimonial'}
+                maxWidth={600}
+                sizes="(max-width: 768px) 100vw, 25vw"
+                className="w-full h-full object-cover"
+              />
+            </div>
+          {/if}
         </div>
         <div class="w-full lg:w-3/4 p-6">
           <div class="overflow-hidden">

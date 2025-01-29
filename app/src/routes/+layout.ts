@@ -1,6 +1,13 @@
 import { PUBLIC_SUPABASE_ANON_KEY, PUBLIC_SUPABASE_URL } from '$env/static/public';
 import { createSupabaseLoadClient } from '@supabase/auth-helpers-sveltekit';
-import type { LayoutData } from './$types';
+interface LayoutData {
+  session: any;
+  user: any;
+  preview: boolean;
+  navigation: any[];
+  pages: Record<string, any>;
+  footerSettings: any;
+}
 
 interface LoadParams {
   fetch: typeof window.fetch;
@@ -10,6 +17,8 @@ interface LoadParams {
 
 export const load = async ({ fetch, data, depends }: LoadParams) => {
   depends('supabase:auth');
+  depends('app:navigation');
+  depends('app:page');
 
   // Initialize Supabase client
   const supabase = createSupabaseLoadClient({
@@ -31,6 +40,7 @@ export const load = async ({ fetch, data, depends }: LoadParams) => {
         user: null,
         preview: data.preview,
         navigation: data.navigation,
+        pages: data.pages,
         footerSettings: data.footerSettings
       };
     }
@@ -52,6 +62,7 @@ export const load = async ({ fetch, data, depends }: LoadParams) => {
       user,
       preview: data.preview,
       navigation: data.navigation,
+      pages: data.pages,
       footerSettings: data.footerSettings
     };
   } catch (error) {

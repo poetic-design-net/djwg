@@ -5,24 +5,129 @@ export const pagesQuery = `
     _id,
     _type,
     title,
-    slug,
+    "slug": slug.current,
     content,
+    // Hole alle benötigten Referenzdaten
+    "events": *[_type == "event"] | order(startDate asc) {
+      _id,
+      title,
+      startDate,
+      endDate,
+      description,
+      location,
+      image {
+        asset->,
+        alt,
+        hotspot,
+        crop
+      }
+    },
+    "founder": *[_type == "founder"][0] {
+      _id,
+      name,
+      role,
+      description,
+      image {
+        asset->,
+        alt,
+        hotspot,
+        crop
+      }
+    },
     sections[] {
+      ...,
+      _key,
       _type == 'componentSection' => {
+        ...,
         _type,
         type,
-        id,
-        introSection {
+        heroSection {
+          eyebrow,
           title,
-          description,
+          subtitle,
+          backgroundImages[] {
+            asset->,
+            alt,
+            hotspot,
+            crop
+          },
+          transitionInterval,
+          primaryButton {
+            text,
+            link
+          },
+          secondaryButton {
+            text,
+            link
+          }
+        },
+        introSection {
+          title[] {
+            ...,
+            children[] {
+              ...
+            }
+          },
+          description[] {
+            ...,
+            children[] {
+              ...
+            }
+          },
           image {
             asset->,
-            alt
+            alt,
+            hotspot,
+            crop
           },
           items[] {
             icon,
             title,
             description
+          },
+          cta {
+            text,
+            link
+          },
+          secondaryCta {
+            text,
+            link
+          }
+        },
+        artistsSection {
+          eyebrow,
+          title,
+          description,
+          displayType,
+          selectedArtists[]-> {
+            _id,
+            name,
+            role,
+            description,
+            image {
+              asset->,
+              alt,
+              hotspot,
+              crop
+            },
+            socials
+          },
+          isLineupRevealed
+        },
+        pricingSection {
+          title,
+          description,
+          showEventSelector,
+          selectedTickets[]-> {
+            _id,
+            phase,
+            title,
+            description,
+            features,
+            status,
+            price,
+            currency,
+            url
           }
         },
         aboutUsSection {
@@ -35,7 +140,28 @@ export const pagesQuery = `
           },
           mainImage {
             asset->,
-            alt
+            alt,
+            hotspot,
+            crop
+          }
+        },
+        merchSection {
+          title,
+          description,
+          products[]-> {
+            _id,
+            title,
+            description,
+            features,
+            price,
+            currency,
+            image {
+              asset->,
+              alt,
+              hotspot,
+              crop
+            },
+            shopUrl
           }
         }
       },
@@ -58,21 +184,24 @@ export function transformPagesData(rawPages: any[]) {
 
   console.log('Transforming pages:', JSON.stringify(rawPages, null, 2));
   
-  const pages: Record<string, { slug: { current: string } }> = {};
+  const pages: Record<string, any> = {};
   
   rawPages.forEach(page => {
     if (page._id && page.slug) {
-      console.log('Processing page:', { id: page._id, slug: page.slug });
+      console.log('Processing page:', {
+        id: page._id,
+        slug: page.slug,
+        sectionsCount: page.sections?.length,
+        sectionTypes: page.sections?.map((s: any) => s.type)
+      });
       
       const id = page._id;
       const withoutDrafts = id.replace('drafts.', '');
       const withDrafts = id.startsWith('drafts.') ? id : `drafts.${id}`;
 
-      // Speichere unter allen möglichen IDs
+      // Speichere die vollständige Seite unter allen möglichen IDs
       [id, withoutDrafts, withDrafts].forEach(possibleId => {
-        pages[possibleId] = {
-          slug: { current: page.slug }
-        };
+        pages[possibleId] = page;
       });
     } else {
       console.warn('Invalid page data:', page);

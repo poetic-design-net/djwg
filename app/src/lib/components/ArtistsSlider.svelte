@@ -1,8 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { generateImageHTML } from '$lib/sanity/image';
-  import type { TransformedArtist } from '$lib/sanity/queries';
-  import type { Image } from '@sanity/types';
+  import type { TransformedArtist } from '$lib/sanity/queries/artists';
+  import OptimizedImage from './OptimizedImage.svelte';
   import Soundcloud from './icons/Soundcloud.svelte';
   
   export let artists: TransformedArtist[] = [];
@@ -10,35 +9,6 @@
   
   let currentHighlight = 0;
   let sliderContainer: HTMLDivElement;
-
-  // Function to handle both Sanity and regular image paths
-  function generateOptimizedImage(image: Image | string | undefined, artistName: string): string {
-    if (!image) {
-      return `<img 
-        src="/assets/home_hero_2.jpg" 
-        alt="${artistName}"
-        class="absolute inset-0 w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
-      >`;
-    }
-
-    if (typeof image === 'string') {
-      return `<img 
-        src="${image}" 
-        alt="${artistName}"
-        class="absolute inset-0 w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
-      >`;
-    }
-
-    return generateImageHTML(
-      image,
-      artistName,
-      'absolute inset-0 w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500',
-      {
-        maxWidth: 800,
-        sizes: '(max-width: 768px) 85vw, 35vw'
-      }
-    );
-  }
 
   onMount(() => {
     if (artists.length > 0) {
@@ -82,7 +52,21 @@
           <div 
             class="relative group rounded-3xl overflow-hidden transition-all duration-300 hover:shadow-xl aspect-[3/4]"
           >
-            {@html generateOptimizedImage(artist.image, artist.name)}
+            {#if artist.image}
+              <OptimizedImage
+                image={artist.image}
+                alt={artist.name}
+                maxWidth={800}
+                sizes="(max-width: 768px) 85vw, 35vw"
+                className="absolute inset-0 w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+              />
+            {:else}
+              <img 
+                src="/assets/home_hero_2.jpg" 
+                alt={artist.name}
+                class="absolute inset-0 w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+              />
+            {/if}
             <div class="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-60"></div>
             <div class="absolute bottom-0 left-0 right-0 p-6">
               <span class="inline-block mb-1.5 text-gray-300">{artist.role}</span>

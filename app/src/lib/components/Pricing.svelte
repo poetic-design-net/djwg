@@ -1,6 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
-
+  export let id: string | undefined = undefined;
   const dispatch = createEventDispatcher();
 
   interface Ticket {
@@ -36,7 +36,27 @@
 
   function formatDate(dateStr: string): string {
     try {
-      const date = new Date(dateStr);
+      if (!dateStr) return '';
+      
+      // Überprüfen, ob es sich um das Format DD.MM.YYYY handelt
+      const germanDateRegex = /^(\d{2})\.(\d{2})\.(\d{4})$/;
+      const match = dateStr.match(germanDateRegex);
+      
+      let date: Date;
+      if (match) {
+        // Wenn es ein deutsches Datum ist, konvertieren wir es
+        const [_, day, month, year] = match;
+        date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+      } else {
+        // Ansonsten versuchen wir es als ISO-Datum zu parsen
+        date = new Date(dateStr);
+      }
+
+      if (isNaN(date.getTime())) {
+        console.error('Invalid date string:', dateStr);
+        return '';
+      }
+
       return new Intl.DateTimeFormat('de-DE', {
         weekday: 'long',
         year: 'numeric',
@@ -45,11 +65,12 @@
       }).format(date);
     } catch (error) {
       console.error('Error formatting date:', error);
-      return dateStr;
+      return '';
     }
   }
 </script>
 
+<section {id} class="relative overflow-hidden pt-36">
 <div class="container px-4 mx-auto">
    {#if showEventSelector && events.length > 1}
      <div class="flex flex-wrap justify-center mb-8 gap-4">
@@ -76,9 +97,9 @@
     <p class="text-lg text-gray-300 md:max-w-md mx-auto">{description}</p>
   </div>
 
-  <div class="flex flex-wrap -mx-4">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-8 auto-cols-fr" style="grid-template-columns: repeat({Math.min(tickets.length, 4)}, minmax(0, 1fr));">
     {#each tickets as ticket}
-      <div class="w-full md:w-1/2 lg:w-1/4 px-4 mb-8">
+      <div class="h-full">
         <div class="relative h-full flex flex-col {ticket.status === 'completed' ? 'bg-black/20 border-gray-900' : ticket.status === 'current' ? 'bg-black/40 border-purple-500' : 'bg-black/40 border-gray-800'} border rounded-5xl bg-gradient-radial-dark transition duration-200">
           <!-- Content Container -->
           <div class="flex-grow p-8">
@@ -133,3 +154,4 @@
     {/each}
   </div>
 </div>
+</section>

@@ -12,7 +12,13 @@ interface Locals extends LoaderLocals {
   getUser(): Promise<any>;
 }
 
-export const load = async ({ locals }: { locals: Locals }) => {
+export const load = async ({ locals, depends, url }: { locals: Locals; depends: (dep: string) => void; url: URL }) => {
+
+  
+  // Deklariere die Abhängigkeiten
+  depends('app:navigation');
+  depends('app:page');
+
   try {
     // First handle Sanity preview state
     const preview = false; // Default preview state
@@ -30,9 +36,20 @@ export const load = async ({ locals }: { locals: Locals }) => {
     const pages = transformPagesData(rawPages);
 
     // Debug-Ausgaben
-    console.log('Raw pages from Sanity:', JSON.stringify(rawPages, null, 2));
-    console.log('Transformed pages:', JSON.stringify(pages, null, 2));
-    console.log('Navigation:', JSON.stringify(navigation, null, 2));
+    console.log('🔄 Layout Server Load:', {
+      url: url.pathname,
+      navigationItems: navigation.length,
+      pagesCount: Object.keys(pages).length,
+      pageIds: Object.keys(pages),
+      pageTypes: Object.values(pages).map(page => ({
+        id: page._id,
+        type: page._type,
+        slug: page.slug,
+        sectionsCount: page.sections?.length,
+        sectionTypes: page.sections?.map((s: any) => s.type)
+      })),
+      preview
+    });
 
     // Then handle auth state, but don't block on it
     let user = null;
@@ -50,7 +67,7 @@ export const load = async ({ locals }: { locals: Locals }) => {
         }
       }
     } catch (error) {
-      console.error('Non-blocking auth error:', error);
+      // Stille Fehlerbehandlung für nicht-blockierende Auth-Fehler
     }
 
     // Return data with auth state as optional
@@ -64,18 +81,13 @@ export const load = async ({ locals }: { locals: Locals }) => {
       themeSettings
     };
   } catch (error) {
-    console.error('Error in layout.server.ts:', error);
     // Return minimal data to keep the app functioning
     return {
       user: null,
       session: null,
       preview: false,
       footerSettings: null,
-      navigation: {
-        workshops: undefined,
-        join: undefined,
-        about: undefined
-      },
+      navigation: [],
       pages: {},
       themeSettings: null
     };

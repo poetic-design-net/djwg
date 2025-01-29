@@ -1,105 +1,46 @@
 import groq from 'groq'
+import type { Image } from '@sanity/types'
 
 export const navigationQuery = groq`
-{
-  "workshops": *[_type == "navigation" && menuKey == "workshops"][0] {
+*[_type == "navigation"] | order(sortOrder asc) {
+  _id,
+  _type,
+  type,
+  title,
+  sortOrder,
+  linkType,
+  directLink,
+  "pageLink": pageLink->{
     _id,
     _type,
-    menuKey,
-    type,
+    "slug": slug.current
+  },
+  sectionId,
+  featured {
     title,
-    "pageLink": pageLink->{
-      _id,
-      _type,
-      "slug": slug.current
+    description,
+    "image": {
+      "_type": "image",
+      "asset": image.asset->,
+      "hotspot": image.hotspot,
+      "crop": image.crop,
+      "alt": image.alt
     },
-    sectionId,
-    featured {
-      title,
-      description,
-      "image": coalesce(image.asset->url, ''),
-      link,
-      linkType
-    },
-    columns[] {
-      title,
-      items[] {
-        label,
-        link,
-        linkType
-      }
-    },
-    quickLinks[] {
+    link,
+    linkType
+  },
+  columns[] {
+    title,
+    items[] {
       label,
       link,
       linkType
     }
   },
-  "join": *[_type == "navigation" && menuKey == "join"][0] {
-    _id,
-    _type,
-    menuKey,
-    type,
-    title,
-    "pageLink": pageLink->{
-      _id,
-      _type,
-      "slug": slug.current
-    },
-    sectionId,
-    featured {
-      title,
-      description,
-      "image": coalesce(image.asset->url, ''),
-      link,
-      linkType
-    },
-    columns[] {
-      title,
-      items[] {
-        label,
-        link,
-        linkType
-      }
-    },
-    quickLinks[] {
-      label,
-      link,
-      linkType
-    }
-  },
-  "about": *[_type == "navigation" && menuKey == "about"][0] {
-    _id,
-    _type,
-    menuKey,
-    type,
-    title,
-    "pageLink": pageLink->{
-      _id,
-      _type,
-      "slug": slug.current
-    },
-    sectionId,
-    featured {
-      title,
-      description,
-      "image": coalesce(image.asset->url, ''),
-      link,
-      linkType
-    },
-    columns[] {
-      title,
-      items[] {
-        label,
-        link,
-        linkType
-      }
-    },
-    quickLinks[] {
-      label,
-      link,
-      linkType
-    }
+  quickLinks[] {
+    label,
+    link,
+    linkType
   }
 }`
 
@@ -120,7 +61,7 @@ export type MenuColumn = {
 export type FeaturedContent = {
   title: string
   description: string
-  image: string
+  image: Image | null
   link: string
   linkType: LinkType
 }
@@ -128,9 +69,11 @@ export type FeaturedContent = {
 export type NavigationItem = {
   _id: string
   _type: string
-  menuKey: 'workshops' | 'join' | 'about'
   type: NavigationType
   title: string
+  sortOrder: number
+  linkType?: 'page' | 'direct'
+  directLink?: string
   pageLink?: {
     _id: string
     _type: string
@@ -142,151 +85,127 @@ export type NavigationItem = {
   quickLinks?: MenuLink[]
 }
 
-export type NavigationData = {
-  [K in NavigationItem['menuKey']]?: NavigationItem
+export type NavigationData = NavigationItem[]
+
+interface RawNavigationItem {
+  _id: string;
+  _type: string;
+  type?: NavigationType;
+  title: string;
+  sortOrder: number;
+  linkType?: 'page' | 'direct';
+  directLink?: string;
+  pageLink?: {
+    _id: string;
+    _type: string;
+    slug: string;
+  };
+  sectionId?: string;
+  featured?: {
+    title: string;
+    description: string;
+    image?: Image;
+    link: string;
+    linkType: LinkType;
+  };
+  columns?: Array<{
+    title: string;
+    items: Array<{
+      label: string;
+      link: string;
+      linkType: LinkType;
+    }>;
+  }>;
+  quickLinks?: Array<{
+    label: string;
+    link: string;
+    linkType: LinkType;
+  }>;
 }
 
-export function transformNavigationData(data: any): NavigationData {
-  console.log('Raw navigation data:', data);
+export function transformNavigationData(data: unknown): NavigationData {
+  console.log('Raw navigation data:', JSON.stringify(data, null, 2));
   
-  // If data is already in the correct format, return it
-  if (data && typeof data === 'object' && ('workshops' in data || 'join' in data || 'about' in data)) {
-    console.log('Navigation data is already structured:', data);
-    // Ensure type is set for each item
-    Object.values(data).forEach((item: any) => {
-      if (item) {
-        item.type = item.type || 'megamenu';
-      }
-    });
-    return data as NavigationData;
+  if (!data || !Array.isArray(data)) {
+    console.log('No valid navigation data, returning empty array');
+    return [];
   }
 
-  // If data is an array, transform it
-  if (Array.isArray(data)) {
-    console.log('Transforming navigation array:', data);
-    return data.reduce((acc, item) => {
-      if (item && item.menuKey) {
-        acc[item.menuKey] = {
-          ...item,
-          type: item.type || 'megamenu',
-          pageLink: item.pageLink,
-          sectionId: item.sectionId,
-          featured: item.featured ? {
-            ...item.featured,
-            image: item.featured.image || '',
-            linkType: item.featured.linkType || 'page'
-          } : undefined
+  try {
+    const result = data
+      .map((item): NavigationItem | null => {
+        const rawItem = item as RawNavigationItem;
+        
+        if (!rawItem._id || !rawItem.title || typeof rawItem.sortOrder !== 'number') {
+          console.log('Missing required fields in navigation item:', rawItem);
+          return null;
+        }
+
+        // Validiere und transformiere pageLink
+        const transformedPageLink = rawItem.pageLink && {
+          _id: rawItem.pageLink._id,
+          _type: rawItem.pageLink._type || 'page',
+          slug: rawItem.pageLink.slug
         };
-      }
-      return acc;
-    }, {} as NavigationData);
-  }
 
-  // If no valid data, return empty structure
-  console.log('No valid navigation data, returning empty structure');
-  return {
-    workshops: undefined,
-    join: undefined,
-    about: undefined
-  };
+        // Validiere und transformiere featured content
+        const transformedFeatured = rawItem.featured && {
+          title: rawItem.featured.title,
+          description: rawItem.featured.description,
+          image: rawItem.featured.image || null,
+          link: rawItem.featured.link,
+          linkType: rawItem.featured.linkType
+        };
+
+        const transformedItem: NavigationItem = {
+          _id: rawItem._id,
+          _type: rawItem._type,
+          type: rawItem.type || 'megamenu',
+          title: rawItem.title,
+          sortOrder: rawItem.sortOrder,
+          ...(rawItem.linkType && { linkType: rawItem.linkType }),
+          ...(rawItem.directLink && { directLink: rawItem.directLink }),
+          ...(transformedPageLink && { pageLink: transformedPageLink }),
+          ...(rawItem.sectionId && { sectionId: rawItem.sectionId }),
+          ...(transformedFeatured && { featured: transformedFeatured }),
+          columns: rawItem.columns?.map(col => ({
+            title: col.title,
+            items: col.items.filter(i => i.label && i.link)
+          })) || [],
+          quickLinks: rawItem.quickLinks?.filter(link => link.label && link.link) || []
+        };
+
+        return transformedItem;
+      })
+      .filter((item): item is NavigationItem => item !== null);
+
+    console.log('Transformed navigation data:', JSON.stringify(result, null, 2));
+    return result;
+  } catch (error) {
+    console.error('Error transforming navigation data:', error);
+    return [];
+  }
 }
 
 export function isValidNavigationData(data: unknown): data is NavigationData {
-  if (!data || typeof data !== 'object') {
-    console.log('Navigation data is not an object:', data);
+  if (!Array.isArray(data)) {
+    console.log('Navigation data is not an array:', data);
     return false;
   }
 
-  const requiredKeys = ['workshops', 'join', 'about'] as const;
-  const dataKeys = Object.keys(data);
+  return data.every((item): item is NavigationItem => {
+    if (!item || typeof item !== 'object') {
+      console.log('Invalid navigation item:', item);
+      return false;
+    }
 
-  // Check if all required keys exist
-  const hasAllKeys = requiredKeys.every(key => dataKeys.includes(key));
-  if (!hasAllKeys) {
-    console.log('Missing required navigation keys');
-    return false;
-  }
-
-  // Check if at least one key has data
-  const hasAnyData = requiredKeys.some(key => (data as NavigationData)[key] !== undefined);
-  if (!hasAnyData) {
-    console.log('No navigation data available');
-    return false;
-  }
-
-  return true;
-}
-
-export function validateNavigationItem(item: unknown): item is NavigationItem {
-  if (!item || typeof item !== 'object') return false;
-
-  const itemObj = item as NavigationItem;
-  const isValid = (
-    typeof itemObj._id === 'string' &&
-    typeof itemObj._type === 'string' &&
-    typeof itemObj.menuKey === 'string' &&
-    typeof itemObj.title === 'string' &&
-    (!itemObj.featured || validateFeaturedContent(itemObj.featured)) &&
-    (!itemObj.columns || (Array.isArray(itemObj.columns) && itemObj.columns.every(validateMenuColumn))) &&
-    (!itemObj.quickLinks || (Array.isArray(itemObj.quickLinks) && itemObj.quickLinks.every(validateMenuLink)))
-  );
-
-  if (!isValid) {
-    console.log('Invalid navigation item:', itemObj);
-  }
-
-  return isValid;
-}
-
-function validateFeaturedContent(featured: unknown): featured is FeaturedContent {
-  if (!featured || typeof featured !== 'object') return false;
-
-  const featuredObj = featured as FeaturedContent;
-  const isValid = (
-    typeof featuredObj.title === 'string' &&
-    typeof featuredObj.description === 'string' &&
-    typeof featuredObj.image === 'string' &&
-    typeof featuredObj.link === 'string' &&
-    (featuredObj.linkType === 'anchor' || featuredObj.linkType === 'page')
-  );
-
-  if (!isValid) {
-    console.log('Invalid featured content:', featuredObj);
-  }
-
-  return isValid;
-}
-
-function validateMenuColumn(column: unknown): column is MenuColumn {
-  if (!column || typeof column !== 'object') return false;
-
-  const columnObj = column as MenuColumn;
-  const isValid = (
-    typeof columnObj.title === 'string' &&
-    Array.isArray(columnObj.items) &&
-    columnObj.items.every(validateMenuLink)
-  );
-
-  if (!isValid) {
-    console.log('Invalid menu column:', columnObj);
-  }
-
-  return isValid;
-}
-
-function validateMenuLink(link: unknown): link is MenuLink {
-  if (!link || typeof link !== 'object') return false;
-
-  const linkObj = link as MenuLink;
-  const isValid = (
-    typeof linkObj.label === 'string' &&
-    typeof linkObj.link === 'string' &&
-    (linkObj.linkType === 'anchor' || linkObj.linkType === 'page')
-  );
-
-  if (!isValid) {
-    console.log('Invalid menu link:', linkObj);
-  }
-
-  return isValid;
+    const navItem = item as NavigationItem;
+    return (
+      typeof navItem._id === 'string' &&
+      typeof navItem._type === 'string' &&
+      typeof navItem.title === 'string' &&
+      typeof navItem.sortOrder === 'number' &&
+      (navItem.type === 'megamenu' || navItem.type === 'direct')
+    );
+  });
 }

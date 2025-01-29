@@ -5,7 +5,7 @@ export const client = createClient({
 	projectId,
 	dataset,
 	apiVersion,
-	useCdn: true,
+	useCdn: import.meta.env.DEV ? false : true, // Disable CDN caching in development
 	token: import.meta.env.SANITY_API_READ_TOKEN,
 	stega: {
 		studioUrl

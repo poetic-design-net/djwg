@@ -3,7 +3,7 @@
   import { getContext } from 'svelte';
   import { invalidate, invalidateAll } from '$app/navigation';
   import { goto } from '$app/navigation';
-  import type { MenuItems, MenuKey } from '$lib/types/menu';
+  import type { MenuItems } from '$lib/types/menu';
   import type { SupabaseClient } from '@supabase/supabase-js';
   import { toasts } from '$lib/stores/toast';
   import { authState } from '$lib/stores/auth';
@@ -16,59 +16,35 @@
   export let data;
   let { user, navigation, pages } = data || {};
   $: ({ user, navigation, pages } = data || {});
-  $: if (!pages) {
-    console.warn('Pages data is missing:', data);
-    pages = {};
-  }
+  $: if (!pages) pages = {};
 
   const supabase = getContext<SupabaseClient>('supabase');
 
   let isScrolled = false;
-  let activeMenu: MenuKey | null = null;
+  let activeMenu: string | null = null;
   let mobileMenuOpen = false;
   let loading = false;
 
-  // Initialize menuItems with an empty object if navigation is undefined
-  let menuItems: MenuItems = {
-    workshops: undefined,
-    join: undefined,
-    about: undefined
-  };
+  // Initialize menuItems with an empty array if navigation is undefined
+  let menuItems: MenuItems = [];
 
-  $: {
-    menuItems = navigation || {
-      workshops: undefined,
-      join: undefined,
-      about: undefined
-    };
-    console.log('Header menuItems:', JSON.stringify(menuItems, null, 2));
-    console.log('Header pages:', JSON.stringify(pages, null, 2));
-    console.log('Navigation raw data:', JSON.stringify(navigation, null, 2));
-  }
+  $: menuItems = navigation || [];
 
   const handleLogout = async () => {
     if (loading) return;
     
     loading = true;
     try {
-      if (!supabase) {
-        console.error('Supabase client not available');
-        return;
-      }
+      if (!supabase) return;
 
       const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error('Error signing out:', error);
-        return;
-      }
+      if (error) return;
 
       // Invalidate auth state first
       await invalidate('supabase:auth');
       await invalidateAll();
       
       goto('/auth');
-    } catch (error) {
-      console.error('Unexpected error during logout:', error);
     } finally {
       loading = false;
     }
@@ -82,18 +58,22 @@
     return () => window.removeEventListener('scroll', handleScroll);
   });
 
-  async function handleClick(menu: MenuKey) {
-    const menuItem = menuItems[menu];
+  async function handleClick(menuId: string) {
+    const menuItem = menuItems.find(item => item._id === menuId);
     if (!menuItem) return;
 
     if (menuItem.type === 'direct') {
-      console.log('Handling direct link click:', { menuItem, pages });
+      // Schließe das Menü bevor wir navigieren
+      activeMenu = null;
+      mobileMenuOpen = false;
+      document.body.style.overflow = '';
+      
       await navigateToSection(menuItem, pages);
       return;
     }
     
     // Toggle mega menu for non-direct links
-    activeMenu = activeMenu === menu ? null : menu;
+    activeMenu = activeMenu === menuId ? null : menuId;
   }
 
   function closeMenu() {
@@ -126,7 +106,7 @@
 
       <!-- Desktop Navigation -->
       <div class="hidden lg:flex flex-1 items-center justify-between pl-8">
-        {#if menuItems && Object.values(menuItems).some(item => item !== undefined)}
+        {#if menuItems && menuItems.length > 0}
           <DesktopNav 
             {menuItems}
             {activeMenu}
@@ -177,14 +157,16 @@
     </div>
   </div>
 
-  {#if menuItems && Object.values(menuItems).some(item => item !== undefined)}
+  {#if menuItems && menuItems.length > 0}
     <!-- Nur Mega-Menu anzeigen, wenn ein aktives Menu vom Typ 'megamenu' existiert -->
-    {#if activeMenu && menuItems[activeMenu]?.type === 'megamenu'}
-      <MegaMenu
-        {activeMenu}
-        {menuItems}
-        onClose={closeMenu}
-      />
+    {#if activeMenu}
+      {#if menuItems.find(item => item._id === activeMenu)?.type === 'megamenu'}
+        <MegaMenu
+          {activeMenu}
+          {menuItems}
+          onClose={closeMenu}
+        />
+      {/if}
     {/if}
 
     <MobileMenu 

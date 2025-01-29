@@ -2,6 +2,9 @@ import imageUrlBuilder from '@sanity/image-url';
 import type { Image } from '@sanity/types';
 import { client } from './client';
 
+export type SanityImage = Image;
+export type SanityImageSource = Image;
+
 const builder = imageUrlBuilder(client);
 
 /**

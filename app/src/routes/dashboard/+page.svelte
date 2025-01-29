@@ -4,6 +4,7 @@
   import { goto } from '$app/navigation';
   import { invalidate, invalidateAll } from '$app/navigation';
   import NewsletterToggle from '$lib/components/NewsletterToggle.svelte';
+  import ProfileEdit from '$lib/components/ProfileEdit.svelte';
   import { onMount } from 'svelte';
 
   export let data: {
@@ -19,12 +20,12 @@
   };
   
   const { user } = data;
+  let showEditProfile = false;
 
   const supabase = getContext<SupabaseClient>('supabase');
   let loading = false;
 
   onMount(() => {
-    // Pre-fill form fields if user data exists
     if (user) {
       const emailInput = document.getElementById('mce-EMAIL') as HTMLInputElement;
       const firstNameInput = document.getElementById('mce-FNAME') as HTMLInputElement;
@@ -44,7 +45,6 @@
         return;
       }
 
-      // Invalidate auth state first
       await invalidate('supabase:auth');
       await invalidateAll();
       
@@ -68,7 +68,6 @@
 
 <div class="min-h-screen bg-black py-12 px-4 sm:px-6 lg:px-8">
   <div class="max-w-7xl mx-auto">
-    <!-- Dashboard Header with Logout -->
     <div class="mb-8 flex justify-between items-center">
       <div>
         <h1 class="text-4xl font-medium text-white mb-2">Dashboard</h1>
@@ -84,11 +83,18 @@
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-      <!-- Profile Information -->
       <div class="relative rounded-3xl p-8 border border-gray-800 overflow-hidden">
         <div class="absolute inset-0 mix-blend-overlay noise-filter"></div>
         <div class="relative">
-          <h2 class="text-2xl font-medium text-white mb-6">Profile Information</h2>
+          <div class="flex justify-between items-start mb-6">
+            <h2 class="text-2xl font-medium text-white">Profile Information</h2>
+            <button
+              on:click={() => showEditProfile = true}
+              class="px-4 py-2 text-sm font-medium text-white bg-gray-800 hover:bg-gray-700 rounded-xl transition duration-300"
+            >
+              Bearbeiten
+            </button>
+          </div>
           <div class="space-y-4">
             <div class="flex items-center space-x-4">
               <div class="bg-gray-950 rounded-full p-4">
@@ -343,28 +349,28 @@
   </div>
 </div>
 
+{#if showEditProfile}
+  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div class="bg-gray-900 rounded-3xl p-8 max-w-md w-full relative border border-gray-800">
+      <button
+        on:click={() => showEditProfile = false}
+        class="absolute top-4 right-4 text-gray-400 hover:text-white"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+      <h2 class="text-2xl font-medium text-white mb-6">Profil bearbeiten</h2>
+      <ProfileEdit {user} />
+    </div>
+  </div>
+{/if}
+
 <style>
   .noise-filter {
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
     opacity: 0.4;
     mix-blend-mode: overlay;
     pointer-events: none;
-  }
-
-  /* Override any Mailchimp default styles */
-  :global(#mc_embed_signup) {
-    background: transparent !important;
-    font-family: inherit !important;
-    width: 100% !important;
-  }
-
-  :global(#mc_embed_signup form) {
-    padding: 0 !important;
-  }
-
-  :global(#mc_embed_signup .mc-field-group) {
-    width: 100% !important;
-    padding-bottom: 0 !important;
-    min-height: 0 !important;
   }
 </style>

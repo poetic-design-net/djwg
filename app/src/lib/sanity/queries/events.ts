@@ -1,7 +1,7 @@
 import groq from 'groq';
-import type { Image } from '@sanity/types';
-import type { SEO } from './content';
 import type { PortableTextBlock } from '@portabletext/types';
+import type { SanityImageSource } from '../image';
+import type { SEO } from './content';
 
 export interface FAQ {
   _id: string;
@@ -35,7 +35,6 @@ export const eventPageQuery = groq`*[_type == "eventPage"][0] {
   }
 }`;
 
-// Rest of the file remains unchanged
 export const eventsQuery = groq`*[_type == "event"] | order(order asc) {
   _id,
   title,
@@ -46,7 +45,10 @@ export const eventsQuery = groq`*[_type == "event"] | order(order asc) {
   date,
   location,
   locationUrl,
-  image,
+  image {
+    asset->,
+    hotspot
+  },
   schedule,
   hasOpenStage,
   isOpenStageSecret,
@@ -227,7 +229,7 @@ export interface SanityEvent {
   date: string;
   location: string;
   locationUrl?: string;
-  image: Image;
+  image: SanityImageSource;
   schedule?: EventSchedule;
   hasOpenStage: boolean;
   isOpenStageSecret: boolean;
@@ -237,11 +239,11 @@ export interface SanityEvent {
     description: string;
     icon: string;
   }[];
-  gallery?: Image[];
+  gallery?: SanityImageSource[];
   locationDetails?: {
     name: string;
     description: string;
-    image: Image;
+    image: SanityImageSource;
   };
   isLocationSecret: boolean;
   isArtistsSecret: boolean;
@@ -250,7 +252,7 @@ export interface SanityEvent {
     name: string;
     role: string;
     description: string;
-    image: Image;
+    image: SanityImageSource;
     socials: {
       instagram?: string;
       soundcloud?: string;
@@ -297,7 +299,7 @@ export interface TransformedEvent {
   date: string;
   location: string;
   locationUrl?: string;
-  image: string;
+  image: SanityImageSource;
   schedule?: {
     _id: string;
     days: Array<{
@@ -312,7 +314,7 @@ export interface TransformedEvent {
           instructor?: {
             name: string;
             role: string;
-            image?: string;
+            image?: SanityImageSource;
           };
           icon?: string;
         }>;
@@ -327,11 +329,11 @@ export interface TransformedEvent {
     description: string;
     icon: string;
   }[];
-  gallery?: string[];
+  gallery?: SanityImageSource[];
   locationDetails?: {
     name: string;
     description: string;
-    image: string;
+    image: SanityImageSource;
   };
   isLocationSecret: boolean;
   isArtistsSecret: boolean;
@@ -340,7 +342,7 @@ export interface TransformedEvent {
     name: string;
     role: string;
     description: string;
-    image: string;
+    image: SanityImageSource;
     socials: {
       instagram?: string;
       soundcloud?: string;
@@ -394,7 +396,7 @@ export interface TimeSlot {
   }>;
   artist?: {
     name: string;
-    image?: Image;
+    image?: SanityImageSource;
   };
 }
 
@@ -413,7 +415,7 @@ export interface EventSchedule {
         instructor?: {
           name: string;
           role: string;
-          image?: Image;
+          image?: SanityImageSource;
         };
       }>;
     }>;
