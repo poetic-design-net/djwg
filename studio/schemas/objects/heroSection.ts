@@ -6,6 +6,13 @@ const heroSection: SchemaTypeDefinition = {
   type: 'object',
   fields: [
     {
+      name: 'eyebrow',
+      title: 'Eyebrow Text',
+      type: 'string',
+      description: 'Text über dem Titel (z.B. "von DJs für DJs")',
+      initialValue: 'von DJs für DJs'
+    },
+    {
       name: 'title',
       title: 'Titel',
       type: 'string'
@@ -20,15 +27,47 @@ const heroSection: SchemaTypeDefinition = {
       name: 'backgroundImages',
       title: 'Hintergrundbilder',
       type: 'array',
-      of: [{ type: 'optimizedImage' }],
-      validation: (rule: Rule) => rule.min(1).max(3)
+      of: [{ type: 'optimizedImage' }]
     },
     {
       name: 'transitionInterval',
       title: 'Übergangsintervall (in Sekunden)',
       type: 'number',
-      initialValue: 7.5,
-      validation: (rule: Rule) => rule.min(3).max(15)
+      initialValue: 5
+    },
+    {
+      name: 'primaryButton',
+      title: 'Primärer Button',
+      type: 'object',
+      fields: [
+        {
+          name: 'text',
+          title: 'Text',
+          type: 'string',
+        },
+        {
+          name: 'link',
+          title: 'Link',
+          type: 'string',
+        }
+      ]
+    },
+    {
+      name: 'secondaryButton',
+      title: 'Sekundärer Button',
+      type: 'object',
+      fields: [
+        {
+          name: 'text',
+          title: 'Text',
+          type: 'string',
+        },
+        {
+          name: 'link',
+          title: 'Link',
+          type: 'string',
+        }
+      ]
     }
   ],
   preview: {

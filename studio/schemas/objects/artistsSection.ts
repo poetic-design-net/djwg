@@ -6,6 +6,13 @@ const artistsSection: SchemaTypeDefinition = {
   type: 'object',
   fields: [
     {
+      name: 'eyebrow',
+      title: 'Eyebrow Text',
+      type: 'string',
+      description: 'Der Text, der über dem Haupttitel erscheint',
+      initialValue: 'Unsere Artists'
+    },
+    {
       name: 'title',
       title: 'Titel',
       type: 'string'

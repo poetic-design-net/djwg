@@ -10,7 +10,7 @@ const featuresSection: SchemaTypeDefinition = {
       title: 'Titel',
       type: 'array',
       of: [{ type: 'block' }],
-      validation: (rule: Rule) => rule.required()
+
     },
     {
       name: 'description',
@@ -39,19 +39,19 @@ const featuresSection: SchemaTypeDefinition = {
                   { title: 'Controller', value: 'controller' }
                 ]
               },
-              validation: (rule: Rule) => rule.required()
+
             },
             {
               name: 'title',
               title: 'Titel',
               type: 'string',
-              validation: (rule: Rule) => rule.required()
+
             },
             {
               name: 'description',
               title: 'Beschreibung',
               type: 'text',
-              validation: (rule: Rule) => rule.required()
+       
             }
           ],
           preview: {
@@ -62,7 +62,7 @@ const featuresSection: SchemaTypeDefinition = {
           }
         }
       ],
-      validation: (rule: Rule) => rule.required().min(1)
+
     },
     {
       name: 'layout',
@@ -74,7 +74,7 @@ const featuresSection: SchemaTypeDefinition = {
           { title: 'Liste (2 Spalten)', value: 'list' }
         ]
       },
-      validation: (rule: Rule) => rule.required()
+
     },
     {
       name: 'backgroundColor',
