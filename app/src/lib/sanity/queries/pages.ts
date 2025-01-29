@@ -148,14 +148,17 @@ export const pagesQuery = `
         merchSection {
           title,
           description,
-          products[]-> {
+          "products": *[_type == "merchProduct" && !(_id in path("drafts.**"))] {
+            ...,
             _id,
+            _type,
             title,
             description,
             features,
             price,
             currency,
             image {
+              ...,
               asset->,
               alt,
               hotspot,
@@ -192,7 +195,11 @@ export function transformPagesData(rawPages: any[]) {
         id: page._id,
         slug: page.slug,
         sectionsCount: page.sections?.length,
-        sectionTypes: page.sections?.map((s: any) => s.type)
+        sectionTypes: page.sections?.map((s: any) => s.type),
+        merchSections: page.sections?.filter((s: any) => s.type === 'merch').map((s: any) => ({
+          products: s.merchSection?.products?.length,
+          productDetails: s.merchSection?.products
+        }))
       });
       
       const id = page._id;

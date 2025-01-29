@@ -5,6 +5,7 @@
   import Location from './event/Location.svelte';
   import Gallery from './event/Gallery.svelte';
   import TimeTable from './event/TimeTable.svelte';
+  import TimeTableOverview from './event/TimeTableOverview.svelte';
   import OpenStage from './OpenStage.svelte';
   import ArtistsSlider from './ArtistsSlider.svelte';
   import Pricing from './Pricing.svelte';
@@ -37,10 +38,14 @@
   export let timeSlots: TimeSlot[] = [];
 
   $: artists = (event.artists || []) as TransformedArtist[];
+  $: console.log('Event artists data:', event.artists);
 
   // Extract and validate schedule days
   $: scheduleDays = event.schedule?.days ?? [];
   $: hasValidSchedule = scheduleDays.length > 0;
+  
+  // Schedule view state
+  let scheduleView: 'timeline' | 'overview' = 'timeline';
 
   // Define sections based on available content
   $: sections = [
@@ -71,9 +76,34 @@
     />
   </div>
 
+  <div id="tickets" class="py-20 bg-black/40">
+    <Pricing tickets={event.tickets || []} />
+  </div>
+
   {#if hasValidSchedule}
     <div id="schedule">
-      <TimeTable schedule={scheduleDays} />
+      <div class="container px-4 mx-auto mb-8">
+        <div class="flex justify-center gap-4">
+          <button
+            class="px-6 py-3 rounded-full text-sm font-medium transition-all duration-300 {scheduleView === 'timeline' ? 'bg-green-500 text-black scale-105' : 'text-white hover:text-green-500 hover:scale-105'}"
+            on:click={() => scheduleView = 'timeline'}
+          >
+            Timeline
+          </button>
+          <button
+            class="px-6 py-3 rounded-full text-sm font-medium transition-all duration-300 {scheduleView === 'overview' ? 'bg-green-500 text-black scale-105' : 'text-white hover:text-green-500 hover:scale-105'}"
+            on:click={() => scheduleView = 'overview'}
+          >
+            Übersicht
+          </button>
+        </div>
+      </div>
+      
+      {#if scheduleView === 'timeline'}
+        <TimeTable schedule={scheduleDays} />
+      {:else}
+        <TimeTableOverview schedule={scheduleDays} />
+      {/if}
     </div>
   {/if}
 
@@ -101,9 +131,7 @@
     </div>
   {/if}
 
-  <div id="tickets" class="py-20 bg-black/40">
-    <Pricing tickets={event.tickets || []} />
-  </div>
+ 
 
   {#if event.faqSection}
   <div id="faq" class="py-20 bg-black/40">

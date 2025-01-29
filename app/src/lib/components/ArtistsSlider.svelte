@@ -7,6 +7,8 @@
   export let artists: TransformedArtist[] = [];
   export let isLineupRevealed = false;
   
+  console.log('Artists data:', artists);
+  
   let currentHighlight = 0;
   let sliderContainer: HTMLDivElement;
 
