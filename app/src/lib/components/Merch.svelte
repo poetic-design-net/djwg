@@ -6,12 +6,20 @@
   export let title: string = "Unser Merch Shop";
   export let description: string = "Entdecke unsere exklusive DJ Workshop Kollektion";
   export let products: MerchProduct[] = [];
-
-  $: validProducts = (products || []).filter((p): p is MerchProduct =>
-    p && typeof p === 'object' && 'title' in p && typeof p.title === 'string'
-  );
+  let validProducts: MerchProduct[] = [];
   $: gridColumns = Math.min(validProducts.length || 1, 4);
 
+  $: {
+    console.log('Merch products:', products);
+    validProducts = (products || []).filter((p): p is MerchProduct => {
+      const isValid = p && typeof p === 'object' && 'title' in p && typeof p.title === 'string';
+      if (!isValid) {
+        console.warn('Invalid product:', p);
+      }
+      return isValid;
+    });
+    console.log('Valid products:', validProducts, 'Count:', validProducts.length);
+  }
   function getImageAlt(product: MerchProduct): string {
     if (product.image?.alt && typeof product.image.alt === 'string') {
       return product.image.alt;
@@ -28,7 +36,7 @@
       <p class="text-lg text-gray-300 md:max-w-md mx-auto">{description}</p>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 auto-cols-fr" style="grid-template-columns: repeat({gridColumns}, minmax(0, 1fr));">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 auto-cols-fr" style="grid-template-columns: repeat({Math.min(validProducts.length, 4)}, minmax(0, 1fr));">
       {#each validProducts as product}
         <div class="h-full">
           <div class="relative h-full flex flex-col bg-black/40 border-gray-800 border rounded-5xl bg-gradient-radial-dark transition duration-200">
@@ -92,5 +100,15 @@
 <style>
   .rounded-5xl {
     border-radius: 2rem;
+  }
+
+  @media (min-width: 1024px) {
+    .merch-grid {
+      grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr));
+    }
+  }
+
+  :global(.merch-grid) {
+    --grid-columns: {gridColumns};
   }
 </style>

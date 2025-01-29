@@ -1,18 +1,33 @@
 <script lang="ts">
   import { enhancedUrlFor } from '$lib/sanity/image';
+  import type { Image } from '@sanity/types';
   import type { SanityImage, SanityImageSource } from '$lib/sanity/image';
 
-  export let image: SanityImage | SanityImageSource;
-  export let alt: string = '';
-  export let className: string = '';
-  export let maxWidth: number = 1200;
-  export let sizes: string = '(max-width: 768px) 100vw, 50vw';
+  export let image: SanityImage | SanityImageSource | string;
+  export let alt = '';
+  export let className = '';
+  export let maxWidth = 1200;
+  export let sizes = '(max-width: 768px) 100vw, 50vw';
 
-  $: imageUrls = image?.asset && enhancedUrlFor(image, { maxWidth });
-  $: altText = alt || (image?.alt ?? '');
+  function isSanityImage(img: any): img is Image {
+    return typeof img === 'object' && img !== null && 'asset' in img;
+  }
+
+  $: isDirectUrl = typeof image === 'string';
+  $: sanityImage = !isDirectUrl && isSanityImage(image) ? image : null;
+  $: imageUrls = sanityImage && enhancedUrlFor(sanityImage, { maxWidth });
+  $: imgSrc = isDirectUrl ? image : undefined;
 </script>
 
-{#if image?.asset && imageUrls}
+{#if isDirectUrl && typeof image === 'string'}
+  <img
+    src={image}
+    {alt}
+    class={className}
+    loading="lazy"
+    decoding="async"
+  />
+{:else if sanityImage && imageUrls}
   <picture>
     <source 
       srcset={imageUrls.webp}

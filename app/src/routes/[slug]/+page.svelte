@@ -115,7 +115,13 @@
         sectionProps = section.aboutUsSection || {};
         break;
       case 'artists':
-        sectionProps = section.artistsSection || {};
+        if (section.artistsSection) {
+          const { selectedArtists, ...rest } = section.artistsSection;
+          sectionProps = {
+            ...rest,
+            artists: selectedArtists || []
+          };
+        }
         break;
       case 'faq':
         sectionProps = section.faqSection || {};
@@ -130,7 +136,14 @@
         sectionProps = section.testimonialsSection || {};
         break;
       case 'merch':
-        sectionProps = section.merchSection || {};
+        if (section.merchSection) {
+          const { products, ...rest } = section.merchSection;
+          console.log('Merch section products:', products);
+          sectionProps = {
+            ...rest,
+            products: products || []
+          };
+        }
         break;
       default:
         sectionProps = {};
