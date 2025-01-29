@@ -11,41 +11,9 @@
     founder: Founder | null;
   };
 
-  const defaultContent = {
-    history: {
-      title: 'Unsere Geschichte',
-      content: [{
-        _type: 'block',
-        children: [{
-          _type: 'span',
-          text: 'DJ Workshop Germany wurde von einer Gruppe leidenschaftlicher DJs und Musikproduzenten gegründet, die ihre jahrelange Erfahrung in der elektronischen Musikszene weitergeben möchten. Was als kleine Workshop-Reihe begann, hat sich zu einer der führenden DJ-Schulen Deutschlands entwickelt.'
-        }]
-      }]
-    },
-    philosophy: {
-      title: 'Unsere Philosophie',
-      items: [
-        {
-          title: 'Praxisorientiert',
-          description: 'Wir glauben an Learning by Doing. In unseren Workshops arbeitest du von Anfang an mit professionellem Club-Equipment und erhältst direktes Feedback von erfahrenen DJs.'
-        },
-        {
-          title: 'Individuell',
-          description: 'Jeder DJ entwickelt seinen eigenen Stil. Wir unterstützen dich dabei, deinen persönlichen Sound zu finden und deine künstlerische Vision umzusetzen.'
-        },
-        {
-          title: 'Vernetzt',
-          description: 'Als Teil unserer Community profitierst du von einem starken Netzwerk in der Club- und Festival-Szene. Wir öffnen dir Türen und schaffen Möglichkeiten.'
-        },
-        {
-          title: 'Professionell',
-          description: 'Unsere Trainer sind aktive DJs mit jahrelanger Erfahrung. Sie teilen nicht nur ihr Wissen, sondern auch wertvolle Einblicke in die Industrie.'
-        }
-      ]
-    }
-  };
+  
 
-  $: content = data?.aboutUs ?? defaultContent;
+  $: content = data?.aboutUs;
 </script>
 
 <div class="min-h-screen bg-black">
