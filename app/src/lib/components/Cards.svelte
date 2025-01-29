@@ -3,10 +3,10 @@
   import { cubicInOut } from 'svelte/easing';
   import { onMount } from 'svelte';
   import { browser } from '$app/environment';
-  import { enhancedUrlFor } from '$lib/sanity/image';
-  import type { Event } from '$lib/sanity/queries';
+  import type { TransformedEvent } from '$lib/sanity/queries/events';
+  import OptimizedImage from './OptimizedImage.svelte';
 
-  export let events: Event[] = [];
+  export let events: TransformedEvent[] = [];
   export let title: string = "DJ Workshop Germany";
   export let description: string = "Sei dabei bei unseren exklusiven DJ Events in 2025";
 
@@ -124,40 +124,36 @@
             class:opacity-100={!showSlider || (index >= currentIndex && index < currentIndex + cardsPerView)}
             class:opacity-0={showSlider && (index < currentIndex || index >= currentIndex + cardsPerView)}
           >
-            <div class="relative overflow-hidden rounded-5xl" in:fade={{duration: 300, easing: cubicInOut}}>
-              {#if event.image}
-                <picture>
-                  <source 
-                    srcset={enhancedUrlFor(event.image).webp} 
-                    type="image/webp"
-                  >
-                  <img 
-                    class="w-full h-[300px] md:h-[400px] object-cover transform hover:scale-105 transition duration-500" 
-                    src={enhancedUrlFor(event.image).fallback} 
-                    alt={event.title}
-                    loading="lazy"
-                    decoding="async"
-                  >
-                </picture>
-              {/if}
+            <a 
+              href="/events/{event.slug.current}" 
+              class="block relative overflow-hidden rounded-5xl group"
+              in:fade={{duration: 300, easing: cubicInOut}}
+            >
+              <div class="w-full h-[300px] md:h-[400px] overflow-hidden">
+                <OptimizedImage 
+                  image={event.image}
+                  alt={event.title}
+                  maxWidth={1200}
+                  sizes="(max-width: 640px) 100vw, 50vw"
+                  className="w-full h-full object-cover transform group-hover:scale-105 transition duration-500"
+                />
+              </div>
               <div class="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/90 via-black/90 to-transparent p-4 md:p-8" style="--tw-gradient-stops: var(--tw-gradient-from) 0%, var(--tw-gradient-from) 33%, var(--tw-gradient-to) 100%;">
                 <span class="inline-block rounded-full bg-green-500 p-2 mb-2 text-xs text-black font-medium tracking-tighter">{event.tag}</span>
-                <a class="group block max-w-sm" href="/events/{event.slug.current}">
-                  <h3 class="mb-2 text-lg md:text-xl text-white tracking-3xl hover:underline">{event.title}</h3>
-                </a>
+                <h3 class="mb-2 text-lg md:text-xl text-white tracking-3xl group-hover:text-green-400 transition duration-300">{event.title}</h3>
                 <div class="mb-4">
                   <p class="text-sm text-green-500 font-medium">{event.date}</p>
                 </div>
                 <p class="mb-4 text-xs md:text-sm text-white/80">{event.subtitle}</p>
-                <a class="group inline-flex items-center" href="/events/{event.slug.current}">
-                  <span class="mr-3.5 text-sm text-white font-medium">Tickets & Info</span>
+                <div class="inline-flex items-center">
+                  <span class="mr-3.5 text-sm text-white font-medium group-hover:text-green-400 transition duration-300">Tickets & Info</span>
                   <svg class="transform group-hover:rotate-90 transition duration-300" width="13" height="12" viewBox="0 0 13 12" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M11.5 0.75L1 11.25" stroke="white" stroke-width="1.43182" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"></path>
                     <path d="M11.5 10.3781V0.75H1.87187" stroke="white" stroke-width="1.43182" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"></path>
                   </svg>
-                </a>
+                </div>
               </div>
-            </div>
+            </a>
           </div>
         {/each}
       </div>

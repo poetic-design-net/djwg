@@ -7,7 +7,6 @@
   import type { TransformedEvent } from '$lib/sanity/queries/events';
   import type { PortableTextBlock } from '@portabletext/types';
   import type { HomePage } from '$lib/sanity/queries/homepage';
-  import { urlFor } from '$lib/sanity/image';
   import Herostart from '$lib/components/hero/start.svelte';
   import Cards from '$lib/components/Cards.svelte';
   import Intro from '$lib/components/Intro.svelte';
@@ -89,7 +88,7 @@
   // Transform artists for ArtistSlider
   $: artists = homeData?.artistsSection?.selectedArtists?.map(artist => ({
     ...artist,
-    image: artist.image ? urlFor(artist.image).url() : ''
+    image: artist.image || null
   })) as TransformedArtist[];
 
   // Default PortableText block for title if none exists
@@ -131,23 +130,29 @@
   pageTitle={seo.metaTitle}
 />
 
-<section id="hero" class="relative overflow-hidden">
-  <Herostart 
-    title={homeData?.hero?.title ?? ''}
-    subtitle={homeData?.hero?.subtitle ?? ''}
-    backgroundImages={homeData?.hero?.backgroundImages ?? []}
-    transitionInterval={homeData?.hero?.transitionInterval ?? 7.5}
-  />
-</section>
+<Herostart
+  id="hero"
+  title={homeData?.hero?.title ?? ''}
+  subtitle={homeData?.hero?.subtitle ?? ''}
+  eyebrow={homeData?.hero?.eyebrow ?? 'von DJs für DJs'}
+  backgroundImages={homeData?.hero?.backgroundImages ?? []}
+  transitionInterval={homeData?.hero?.transitionInterval ?? 7.5}
+  primaryButton={homeData?.hero?.primaryButton}
+  secondaryButton={homeData?.hero?.secondaryButton}
+/>
 
-<section id="intro" class="relative pt-20 overflow-hidden">
-  <Intro 
-    items={knowledgeBaseItems}
-    title={homeData?.intro?.title ?? defaultTitle}
-    description={homeData?.intro?.description ?? ''}
-    image={homeData?.intro?.image}
-  />
-</section>
+<Intro
+  id="intro"
+  items={knowledgeBaseItems}
+  title={homeData?.intro?.title ?? defaultTitle}
+  description={homeData?.intro?.description ?? [{
+    _type: 'block',
+    children: [{ _type: 'span', text: '' }]
+  }]}
+  image={homeData?.intro?.image}
+  cta={homeData?.intro?.cta}
+  secondaryCta={homeData?.intro?.secondaryCta}
+/>
 
 <section id="workshops" class="pt-48 pb-20">
   <Cards 
@@ -166,17 +171,16 @@
   {/if}
 </section>
 
-<section id="tickets" class="relative pt-36 overflow-hidden">
-  <Pricing
-    title={homeData?.pricingSection?.title ?? ''}
-    description={homeData?.pricingSection?.description ?? ''}
-    tickets={$eventTicketsStore}
-    selectedEvent={$selectedEventStore}
-    showEventSelector={$showEventSelectorStore}
-    events={eventsArray}
-    on:eventChange={handleEventChange}
-  />
-</section>
+<Pricing
+  id="tickets"
+  title={homeData?.pricingSection?.title ?? ''}
+  description={homeData?.pricingSection?.description ?? ''}
+  tickets={$eventTicketsStore}
+  selectedEvent={$selectedEventStore}
+  showEventSelector={$showEventSelectorStore}
+  events={eventsArray}
+  on:eventChange={handleEventChange}
+/>
 
 <section id="partners" class="relative pt-36 overflow-hidden">  
   {#if logosData.data && logosData.data.length > 0}

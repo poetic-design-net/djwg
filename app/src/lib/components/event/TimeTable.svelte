@@ -1,5 +1,38 @@
 <script lang="ts">
-  import { fade } from 'svelte/transition';
+  import { fade, slide } from 'svelte/transition';
+  import { onMount } from 'svelte';
+
+  let timelineItems: HTMLElement[] = [];
+  let timelineObserver: IntersectionObserver;
+  let timelineContainer: HTMLElement;
+
+  onMount(() => {
+    // Intersection Observer für Timeline-Punkte
+    timelineObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('timeline-active');
+          } else {
+            entry.target.classList.remove('timeline-active');
+          }
+        });
+      },
+      {
+        rootMargin: '-10% 0px -10% 0px',
+        threshold: 0.5
+      }
+    );
+
+    // Beobachte alle Timeline-Punkte
+    timelineItems.forEach(item => {
+      timelineObserver?.observe(item);
+    });
+
+    return () => {
+      timelineObserver?.disconnect();
+    };
+  });
 
   interface ScheduleItem {
     time: string;
@@ -28,19 +61,39 @@
   
   let selectedDayIndex = 0;
   let selectedStageIndex = 0;
+  let expandedDescriptions: Record<string, boolean> = {};
 
   $: selectedDay = schedule[selectedDayIndex];
   $: selectedStage = selectedDay?.stages?.[selectedStageIndex];
   $: hasStages = selectedDay?.stages?.length > 0;
 
-  // Debug logging
-  $: {
-    console.log('Current schedule:', schedule);
-    console.log('Selected day index:', selectedDayIndex);
-    console.log('Selected stage index:', selectedStageIndex);
-    console.log('Selected day:', selectedDay);
-    console.log('Selected stage:', selectedStage);
-    console.log('Has stages:', hasStages);
+  $: console.log('Current expanded state:', expandedDescriptions);
+
+  function truncateText(text: string, wordCount: number = 15): string {
+    const words = text.split(' ');
+    if (words.length <= wordCount) return text;
+    return words.slice(0, wordCount).join(' ') + '...';
+  }
+
+  function toggleDescription(id: string) {
+    console.log('Toggle description called for:', id);
+    console.log('Current state before:', expandedDescriptions[id]);
+    expandedDescriptions[id] = !expandedDescriptions[id];
+    expandedDescriptions = {...expandedDescriptions};
+    console.log('New state after:', expandedDescriptions[id]);
+    console.log('Full state:', expandedDescriptions);
+  }
+
+  function isDescriptionExpanded(id: string): boolean {
+    const expanded = !!expandedDescriptions[id];
+    console.log('Checking if expanded:', id, expanded);
+    return expanded;
+  }
+
+  function shouldTruncate(text: string): boolean {
+    const should = text.split(' ').length > 15;
+    console.log('Should truncate check:', text.split(' ').length, 'words,', should);
+    return should;
   }
 
   function formatDate(dateStr: string): string {
@@ -60,7 +113,6 @@
 
   function selectDay(index: number) {
     selectedDayIndex = index;
-    // Reset stage index only if the new day has stages
     if (schedule[index]?.stages?.length > 0) {
       selectedStageIndex = 0;
     }
@@ -86,7 +138,7 @@
         <div class="flex flex-wrap justify-center mb-8 gap-4">
           {#each schedule as day, i}
             <button
-              class="px-6 py-3 rounded-full text-sm font-medium transition-colors duration-200 {selectedDayIndex === i ? 'bg-green-500 text-black' : 'text-white hover:text-green-500'}"
+              class="px-6 py-3 rounded-full text-sm font-medium transition-all duration-300 {selectedDayIndex === i ? 'bg-green-500 text-black scale-105' : 'text-white hover:text-green-500 hover:scale-105'}"
               on:click={() => selectDay(i)}
             >
               {formatDate(day.date)}
@@ -101,7 +153,7 @@
           <div class="flex flex-wrap justify-center mb-12 gap-4">
             {#each selectedDay.stages as stage, i}
               <button
-                class="px-6 py-3 rounded-full text-sm font-medium transition-colors duration-200 {selectedStageIndex === i ? 'bg-green-500 text-black' : 'text-white hover:text-green-500'}"
+                class="px-6 py-3 rounded-full text-sm font-medium transition-all duration-300 {selectedStageIndex === i ? 'bg-green-500 text-black scale-105' : 'text-white hover:text-green-500 hover:scale-105'}"
                 on:click={() => selectStage(i)}
               >
                 {stage.name}
@@ -112,10 +164,36 @@
 
         <!-- Stage Description -->
         <div class="text-center mb-12">
-          <p class="text-gray-400">{selectedStage.description}</p>
+          {#if shouldTruncate(selectedStage.description)}
+            <div
+              class="text-gray-400 hover:text-gray-300 transition-all duration-300 cursor-pointer"
+              on:click={() => {
+                console.log('Clicked stage description');
+                expandedDescriptions = {
+                  ...expandedDescriptions,
+                  stage: !expandedDescriptions.stage
+                };
+              }}
+              role="button"
+              tabindex="0"
+            >
+              <div class="overflow-hidden">
+                {#key expandedDescriptions.stage}
+                  <p transition:slide|local={{duration: 300, axis: 'y'}}>
+                    {expandedDescriptions.stage ? selectedStage.description : truncateText(selectedStage.description)}
+                  </p>
+                {/key}
+              </div>
+              <span class="text-green-400 hover:text-green-300 mt-2 text-sm font-medium inline-block">
+                {expandedDescriptions.stage ? 'Weniger anzeigen' : 'Mehr anzeigen'}
+              </span>
+            </div>
+          {:else}
+            <p class="text-gray-400">{selectedStage.description}</p>
+          {/if}
         </div>
 
-        <div class="relative">
+        <div class="relative" bind:this={timelineContainer}>
           <!-- Timeline Line -->
           <div class="absolute left-12 md:left-1/2 top-0 w-px h-full bg-gray-800 transform -translate-x-1/2"></div>
 
@@ -125,7 +203,7 @@
               {#each selectedStage.schedule as item, i}
                 <div 
                   class="relative flex flex-col md:flex-row items-start md:items-center group"
-                  in:fade={{ duration: 200, delay: i * 50 }}
+                  in:fade={{ duration: 300, delay: i * 50 }}
                 >
                   <!-- Left Side (Time) -->
                   <div class="flex-1 w-full md:w-5/12 order-2 md:order-none mb-4 md:mb-0 pl-20 md:pl-0 {i % 2 === 0 ? 'md:text-right md:pr-10' : 'md:hidden'}">
@@ -133,7 +211,10 @@
                   </div>
 
                   <!-- Center (Icon) -->
-                  <div class="absolute left-6 md:left-1/2 top-0 md:top-1/2 transform md:-translate-y-1/2 md:-translate-x-1/2 w-12 h-12 md:w-14 md:h-14 bg-black border-4 border-gray-800 rounded-full flex items-center justify-center group-hover:border-green-500 transition-colors duration-300 z-10">
+                  <div
+                    bind:this={timelineItems[i]}
+                    class="timeline-dot absolute left-6 md:left-1/2 top-0 md:top-1/2 transform md:-translate-y-1/2 md:-translate-x-1/2 w-12 h-12 md:w-14 md:h-14 bg-black border-4 border-gray-800 rounded-full flex items-center justify-center group-hover:border-green-500 transition-all duration-500 ease-out z-10"
+                  >
                     <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d={item.icon}></path>
                     </svg>
@@ -146,10 +227,36 @@
 
                   <!-- Content -->
                   <div class="flex-1 w-full md:w-5/12 order-3 pl-20 md:pl-0 {i % 2 === 0 ? 'md:pl-10' : 'md:pr-10 md:order-first'}">
-                    <div class="p-4 md:p-6 bg-black/40 border border-gray-800 rounded-3xl hover:border-green-500 transition-colors duration-300">
+                    <div class="p-4 md:p-6 bg-black/40 border border-gray-800 rounded-3xl hover:border-green-500 transition-all duration-500 hover:scale-[1.02] transform">
                       <h3 class="mb-2 text-lg md:text-xl text-white">{item.title}</h3>
                       {#if item.description}
-                        <p class="mb-2 text-sm md:text-base text-gray-400">{item.description}</p>
+                        {#if shouldTruncate(item.description)}
+                          <div
+                            class="mb-2 text-sm md:text-base text-gray-400 hover:text-gray-300 transition-all duration-300 cursor-pointer"
+                            on:click={() => {
+                              console.log('Clicked event description', i);
+                              expandedDescriptions = {
+                                ...expandedDescriptions,
+                                [`event-${i}`]: !expandedDescriptions[`event-${i}`]
+                              };
+                            }}
+                            role="button"
+                            tabindex="0"
+                          >
+                            <div class="overflow-hidden">
+                              {#key expandedDescriptions[`event-${i}`]}
+                                <p transition:slide|local={{duration: 300, axis: 'y'}}>
+                                  {expandedDescriptions[`event-${i}`] ? item.description : truncateText(item.description)}
+                                </p>
+                              {/key}
+                            </div>
+                            <span class="text-green-400 hover:text-green-300 mt-1 text-sm font-medium inline-block">
+                              {expandedDescriptions[`event-${i}`] ? 'Weniger anzeigen' : 'Mehr anzeigen'}
+                            </span>
+                          </div>
+                        {:else}
+                          <p class="mb-2 text-sm md:text-base text-gray-400">{item.description}</p>
+                        {/if}
                       {/if}
                       {#if item.instructor}
                         <div class="flex items-center text-sm text-green-400">
@@ -186,9 +293,26 @@
 {/if}
 
 <style>
+  .timeline-dot {
+    will-change: transform, border-color;
+  }
+
+  .timeline-dot.timeline-active {
+    @apply border-green-500 scale-110;
+  }
+
+  .timeline-dot.timeline-active svg {
+    @apply text-green-300;
+  }
+
+  /* Smooth scrolling für den Container */
+  :global(html) {
+    scroll-behavior: smooth;
+  }
+
   /* Ensure smooth transitions */
   .group {
-    transition: transform 0.3s ease;
+    transition: transform 0.3s ease-out;
   }
 
   /* Prevent content overflow on mobile */

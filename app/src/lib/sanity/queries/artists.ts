@@ -1,5 +1,5 @@
 import groq from 'groq';
-import type { Image } from '@sanity/types';
+import type { SanityImage } from '$lib/sanity/image';
 import type { SEO } from './content';
 
 export const artistsQuery = groq`*[_type == "artist"] | order(order asc) {
@@ -8,8 +8,10 @@ export const artistsQuery = groq`*[_type == "artist"] | order(order asc) {
   role,
   description,
   image {
+    _type,
     asset->,
-    hotspot
+    hotspot,
+    alt
   },
   socials,
   isRevealed,
@@ -28,8 +30,10 @@ export const artistQuery = groq`*[_type == "artist" && _id == $id][0] {
   role,
   description,
   image {
+    _type,
     asset->,
-    hotspot
+    hotspot,
+    alt
   },
   socials,
   isRevealed,
@@ -46,7 +50,7 @@ export interface Artist {
   name: string;
   role: string;
   description: string;
-  image: Image;
+  image: SanityImage;
   socials: {
     instagram?: string;
     soundcloud?: string;
@@ -62,8 +66,10 @@ export const teamMembersQuery = groq`*[_type == "teamMember" && isActive == true
   slug,
   role,
   image {
+    _type,
     asset->,
-    hotspot
+    hotspot,
+    alt
   },
   bio,
   order,
@@ -73,19 +79,8 @@ export const teamMembersQuery = groq`*[_type == "teamMember" && isActive == true
   }
 }`;
 
-export interface TransformedArtist {
-  _id: string;
-  name: string;
-  role: string;
-  description: string;
-  image: string;
-  socials: {
-    instagram?: string;
-    soundcloud?: string;
-  };
-  isRevealed: boolean;
-  order: number;
-  seo?: SEO;
+export interface TransformedArtist extends Omit<Artist, 'image'> {
+  image: SanityImage | null;
 }
 
 export interface TeamMember {
@@ -95,7 +90,7 @@ export interface TeamMember {
     current: string;
   };
   role: string;
-  image: Image;
+  image: SanityImage;
   bio?: string;
   order: number;
   socials: {

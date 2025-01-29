@@ -1,11 +1,12 @@
-import { postsQuery, testimonialsQuery, logosQuery, artistsQuery, eventsQuery, faqsQuery, featuredKnowledgeBaseItemsQuery, siteSettingsQuery, type Post, type Testimonial, type Logo, type Artist, type Event, type FAQ, type KnowledgeBaseItem, type SiteSettings, aboutUsQuery } from '$lib/sanity/queries';
+import { postsQuery, testimonialsQuery, logosQuery, artistsQuery, faqsQuery, featuredKnowledgeBaseItemsQuery, siteSettingsQuery, type Post, type Testimonial, type Logo, type Artist, type FAQ, type KnowledgeBaseItem, type SiteSettings, aboutUsQuery } from '$lib/sanity/queries';
+import { eventsQuery, type SanityEvent } from '$lib/sanity/queries/events';
 import { homePageQuery, type HomePage } from '$lib/sanity/queries/homepage';
 import { navigationQuery, type NavigationData, isValidNavigationData } from '$lib/sanity/queries/navigation';
 import type { LoaderLocals } from '@sanity/svelte-loader';
 import type { SupabaseClient, User } from '@supabase/supabase-js';
 import type { MenuItems } from '$lib/types/menu';
 
-// Placeholder artist data for secret state
+// Rest des Codes bleibt gleich, nur Event durch SanityEvent ersetzen
 const placeholderArtists: Partial<Artist>[] = Array(6).fill({
   _id: 'placeholder',
   name: "Coming Soon",
@@ -27,15 +28,24 @@ const placeholderArtists: Partial<Artist>[] = Array(6).fill({
 });
 
 // Default navigation data for testing
-const defaultNavigationData: MenuItems = {
-  workshops: {
+// Default navigation data for testing
+const defaultNavigationData: MenuItems = [
+  {
     _id: 'navigation-workshops',
     _type: 'navigation',
+    type: 'megamenu',
     title: 'Workshops',
+    sortOrder: 10,
     featured: {
       title: 'Featured Workshop',
       description: 'Learn the basics of DJing',
-      image: '/assets/home_hero_2.jpg',
+      image: {
+        _type: 'image',
+        asset: {
+          _type: 'reference',
+          _ref: 'image-home_hero_2-jpg'
+        }
+      },
       link: '/workshops',
       linkType: 'page'
     },
@@ -53,14 +63,22 @@ const defaultNavigationData: MenuItems = {
       { label: 'Schedule', link: '/schedule', linkType: 'page' }
     ]
   },
-  join: {
+  {
     _id: 'navigation-join',
     _type: 'navigation',
+    type: 'megamenu',
     title: 'Join Us',
+    sortOrder: 20,
     featured: {
       title: 'Become a Member',
       description: 'Join our community',
-      image: '/assets/home_hero.jpg',
+      image: {
+        _type: 'image',
+        asset: {
+          _type: 'reference',
+          _ref: 'image-home_hero-jpg'
+        }
+      },
       link: '/join',
       linkType: 'page'
     },
@@ -78,14 +96,22 @@ const defaultNavigationData: MenuItems = {
       { label: 'Contact', link: '/contact', linkType: 'page' }
     ]
   },
-  about: {
+  {
     _id: 'navigation-about',
     _type: 'navigation',
+    type: 'megamenu',
     title: 'About Us',
+    sortOrder: 30,
     featured: {
       title: 'Our Story',
       description: 'Learn about our mission',
-      image: '/assets/home_hero.jpg',
+      image: {
+        _type: 'image',
+        asset: {
+          _type: 'reference',
+          _ref: 'image-home_hero-jpg'
+        }
+      },
       link: '/about',
       linkType: 'page'
     },
@@ -103,8 +129,7 @@ const defaultNavigationData: MenuItems = {
       { label: 'FAQ', link: '/faq', linkType: 'page' }
     ]
   }
-};
-
+];
 interface Locals extends LoaderLocals {
   supabase: SupabaseClient;
   getUser(): Promise<User | null>;
@@ -145,7 +170,7 @@ export const load = async ({ locals, url, setHeaders }: { locals: Locals; url: U
     loadQuery<Testimonial[]>(testimonialsQuery),
     loadQuery<Logo[]>(logosQuery),
     loadQuery<Artist[]>(artistsQuery),
-    loadQuery<Event[]>(eventsQuery),
+    loadQuery<SanityEvent[]>(eventsQuery),
     loadQuery<FAQ[]>(faqsQuery),
     loadQuery<KnowledgeBaseItem[]>(featuredKnowledgeBaseItemsQuery),
     loadQuery(aboutUsQuery),
@@ -171,14 +196,16 @@ export const load = async ({ locals, url, setHeaders }: { locals: Locals; url: U
     : placeholderArtists;
 
   // Get navigation data with fallback to default
-  const navigationData = navigationResult?.data || defaultNavigationData;
+  let navigationData = navigationResult?.data;
 
-  console.log('Navigation Data to be used:', navigationData);
+  console.log('Raw Navigation Data:', navigationData);
   
-  if (!isValidNavigationData(navigationData)) {
-    console.warn('Navigation data structure is incomplete. Required keys missing.');
-    console.log('Available keys:', Object.keys(navigationData));
+  if (!navigationData || !isValidNavigationData(navigationData)) {
+    console.warn('Invalid navigation data, using default');
+    navigationData = defaultNavigationData;
   }
+
+  console.log('Final Navigation Data:', navigationData);
 
   return {
     user,
@@ -210,7 +237,11 @@ export const load = async ({ locals, url, setHeaders }: { locals: Locals; url: U
     },
     events: {
       query: eventsQuery,
-      data: events?.data || null,
+      data: events?.data ? events.data.map((event: SanityEvent) => ({
+        ...event,
+        // Behalte das komplette Image-Objekt bei
+        image: event.image
+      })) : null,
       options: { initial: events?.data || null, perspective: preview ? 'previewDrafts' : 'published' }
     },
     faqs: {

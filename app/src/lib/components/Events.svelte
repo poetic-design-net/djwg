@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { generateImageHTML } from '$lib/sanity/image';
-  import type { Event } from '$lib/sanity/queries';
+  import type { SanityEvent } from '$lib/sanity/queries/events';
+  import OptimizedImage from './OptimizedImage.svelte';
 
-  export let events: Event[] = [];
+  export let events: SanityEvent[] = [];
 </script>
 
 <section class="relative py-20 overflow-hidden">
@@ -16,27 +16,29 @@
       {#each events as event}
         <a 
           href="/events/{event.slug.current}" 
-          class="group relative aspect-[4/3] rounded-3xl overflow-hidden"
+          class="group block relative aspect-[4/3] rounded-3xl overflow-hidden hover:scale-101 transition-all duration-300"
         >
-          <div class="absolute inset-0 w-full h-full transform group-hover:scale-110 transition-transform duration-500">
-            {@html generateImageHTML(
-              event.image,
-              event.title,
-              'absolute inset-0 w-full h-full object-cover',
-              800,
-              600
-            )}
-          </div>
-          <div class="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-60"></div>
-          <div class="absolute bottom-0 left-0 right-0 p-8">
-            <div class="flex flex-col gap-4">
-              <span class="inline-block px-3 py-1 text-sm text-black font-medium tracking-tighter bg-green-400 rounded-full w-fit">
-                {event.tag}
-              </span>
-              <div>
-                <span class="inline-block mb-2 text-sm text-green-400 font-medium tracking-tighter">{event.date}</span>
-                <h3 class="mb-2 text-3xl text-white tracking-3xl">{event.title}</h3>
-                <p class="text-gray-300">{event.location}</p>
+          <div class="relative w-full h-full">
+            <div class="absolute inset-0 w-full h-full transform group-hover:scale-105 transition-transform duration-300">
+              <OptimizedImage
+                image={event.image}
+                alt={event.title}
+                className="absolute inset-0 w-full h-full object-cover"
+                maxWidth={800}
+                sizes="(max-width: 768px) 100vw, 50vw"
+              />
+            </div>
+            <div class="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-60 group-hover:opacity-70 transition-opacity duration-500"></div>
+            <div class="absolute bottom-0 left-0 right-0 p-8">
+              <div class="flex flex-col gap-4">
+                <span class="inline-block px-3 py-1 text-sm text-black font-medium tracking-tighter bg-green-400 rounded-full w-fit">
+                  {event.tag}
+                </span>
+                <div>
+                  <span class="inline-block mb-2 text-sm text-green-400 font-medium tracking-tighter">{event.date}</span>
+                  <h3 class="mb-2 text-3xl text-white tracking-3xl group-hover:text-green-400 transition-colors duration-500">{event.title}</h3>
+                  <p class="text-gray-300">{event.location}</p>
+                </div>
               </div>
             </div>
           </div>

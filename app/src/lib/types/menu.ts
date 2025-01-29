@@ -1,7 +1,8 @@
 import type { PortableTextBlock } from '@portabletext/types'
-import type { Image } from '@sanity/types'
+import type { SanityImage } from '$lib/sanity/image'
+import type { NavigationItem, LinkType } from '$lib/sanity/queries/navigation'
 
-export type MenuKey = 'workshops' | 'join' | 'about'
+export type MenuKey = string
 
 export type NavigationType = 'megamenu' | 'direct'
 
@@ -19,6 +20,7 @@ export type ComponentSectionType =
   | 'team'
   | 'testimonials'
   | 'welcome'
+  | 'merch'
 
 export type IntroSectionItem = {
   icon: 'mixer' | 'headphones' | 'vinyl' | 'laptop' | 'microphone' | 'controller'
@@ -28,12 +30,17 @@ export type IntroSectionItem = {
 
 export type IntroSection = {
   title: PortableTextBlock[] | string
-  description: string
-  image?: {
-    asset: Image
-    alt?: string
-  }
+  description: PortableTextBlock[]
+  image?: SanityImage
   items?: IntroSectionItem[] | null
+  cta?: {
+    text: string
+    link: string
+  }
+  secondaryCta?: {
+    text: string
+    link: string
+  }
 }
 
 export type AboutUsSection = {
@@ -44,10 +51,7 @@ export type AboutUsSection = {
     text: string
     link: string
   }
-  mainImage?: {
-    asset: Image
-    alt?: string
-  }
+  mainImage?: SanityImage
 }
 
 export type FAQItem = {
@@ -68,22 +72,7 @@ export type FAQSection = {
 export type Logo = {
   _id: string
   name: string
-  image: {
-    asset: Image
-    alt: string
-    hotspot?: {
-      x: number
-      y: number
-      height: number
-      width: number
-    }
-    crop?: {
-      top: number
-      bottom: number
-      left: number
-      right: number
-    }
-  }
+  image: SanityImage
   order: number
 }
 
@@ -98,10 +87,7 @@ export type TeamMember = {
   _id: string
   name: string
   role: string
-  image: {
-    asset: Image
-    alt?: string
-  }
+  image: SanityImage
   socials?: {
     instagram?: string
     soundcloud?: string
@@ -118,20 +104,20 @@ export type TeamSectionConfig = {
 export type HeroSection = {
   title: string
   subtitle: string
-  backgroundImages?: {
-    asset: Image
-    alt?: string
-  }[]
+  backgroundImages?: SanityImage[]
   transitionInterval?: number
 }
 
 export type ArtistsSection = {
+  eyebrow?: string
   title: string
   description?: string
   displayType: 'grid' | 'slider'
   selectedArtists: Array<{
-    _ref: string
-    _type: 'reference'
+    _id: string
+    name: string
+    image: SanityImage
+    [key: string]: any
   }>
   isLineupRevealed: boolean
 }
@@ -155,35 +141,48 @@ export type PricingSection = {
   }>
 }
 
-export type ComponentSection = {
-  _type: 'componentSection'
-  type: ComponentSectionType
-  id: string
+export type MerchProduct = {
+  _id: string
+  title: string
+  description: string
+  features: string[]
+  price: number
+  currency: string
+  image?: SanityImage
+  shopUrl: string
+}
+
+export type MerchSection = {
+  title: string
+  description: string
+  products: Array<MerchProduct>
+}
+
+export type Section = {
+  _type: string
+  id?: string
+  type?: ComponentSectionType
+  title?: string
+  content?: any[] // Portable Text Block Content
   introSection?: IntroSection
   aboutUsSection?: AboutUsSection
   faqSection?: FAQSection
   logosSection?: LogosSection
   teamSectionConfig?: TeamSectionConfig
-  heroSection?: HeroSection,
-  artistsSection?: ArtistsSection,
-  testimonialsSection?: TestimonialsSection,
+  heroSection?: HeroSection
+  artistsSection?: ArtistsSection
+  testimonialsSection?: TestimonialsSection
   pricingSection?: PricingSection
-}
-
-export type ContentSection = {
-  _type: 'contentSection'
-  id: string
-  title: string
-  content: any[] // Portable Text Block Content
+  merchSection?: MerchSection
 }
 
 export type Page = {
   _type: 'page'
   title: string
-  slug: { current: string }
+  slug: string
   description?: string
   enableSectionNav: boolean
-  sections: (ComponentSection | ContentSection)[]
+  sections: Section[]
   seo?: any
 }
 
@@ -193,37 +192,11 @@ export type PageReference = {
 } | {
   _id: string
   _type: 'page'
-  slug: { current: string }
+  slug: string
 }
 
-export type MenuItem = {
-  type: NavigationType
-  title: string
-  pageLink?: PageReference
-  sectionId?: string
+export interface MenuItem extends NavigationItem {
   directLink?: string
-  featured?: {
-    title: string
-    description: string
-    image: any
-    link: string
-    linkType: 'anchor' | 'page'
-  }
-  columns?: Array<{
-    title: string
-    items: Array<{
-      label: string
-      link: string
-      linkType: 'anchor' | 'page'
-    }>
-  }>
-  quickLinks?: Array<{
-    label: string
-    link: string
-    linkType: 'anchor' | 'page'
-  }>
 }
 
-export type MenuItems = {
-  [key in MenuKey]?: MenuItem
-}
+export type MenuItems = MenuItem[]

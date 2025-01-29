@@ -1,15 +1,17 @@
 <script lang="ts">
   import { slide, fade } from 'svelte/transition';
   import { quintOut } from 'svelte/easing';
-  import type { MenuItems, MenuKey } from '$lib/types/menu';
+  import type { MenuItems } from '$lib/types/menu';
+  import type { MenuLink } from '$lib/sanity/queries/navigation';
+  import OptimizedImage from '$lib/components/OptimizedImage.svelte';
 
-  export let activeMenu: MenuKey | null;
+  export let activeMenu: string | null;
   export let menuItems: MenuItems;
   export let onClose: () => void;
 
   let megaMenuContainer: HTMLDivElement;
 
-  $: activeMenuItem = activeMenu ? menuItems[activeMenu] : null;
+  $: activeMenuItem = activeMenu ? menuItems.find(item => item._id === activeMenu) : null;
   $: console.log('MegaMenu activeMenuItem:', activeMenuItem);
 </script>
 
@@ -49,11 +51,13 @@
               on:click={onClose}
             >
               <div class="relative rounded-2xl overflow-hidden mb-4 aspect-video">
-                <img 
-                  src={activeMenuItem.featured.image} 
-                  alt={activeMenuItem.featured.title}
-                  class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500"
-                >
+                {#if activeMenuItem.featured.image}
+                  <OptimizedImage 
+                    image={activeMenuItem.featured.image}
+                    maxWidth={400}
+                    className="w-full h-full object-cover transform group-hover:scale-105 transition duration-500"
+                  />
+                {/if}
                 <div class="absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-colors duration-300"></div>
               </div>
               <div class="flex items-center gap-2">
@@ -101,11 +105,11 @@
         {/if}
 
         <!-- Quick Links -->
-        {#if activeMenuItem.quickLinks?.length > 0}
+        {#if activeMenuItem.quickLinks && activeMenuItem.quickLinks.length > 0}
           <div class="col-span-2">
             <h4 class="font-heading text-sm text-green-400 font-medium mb-3">Quick Links</h4>
             <ul class="space-y-2">
-              {#each activeMenuItem.quickLinks as link}
+              {#each activeMenuItem.quickLinks as link (link.label)}
                 <li>
                   <a 
                     href={link.link} 

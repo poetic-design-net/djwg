@@ -1,30 +1,37 @@
-import { goto } from '$app/navigation'
+import { goto, invalidate } from '$app/navigation'
 import type { MenuItem } from '$lib/types/menu'
 
+interface PageReference {
+  _ref?: string;
+  _id?: string;
+  slug?: string;
+}
+
 export const navigateToSection = async (
-  item: MenuItem, 
-  pages?: Record<string, { slug: { current: string } }> | undefined
+  item: MenuItem,
+  pages?: Record<string, { slug: string }> | undefined
 ) => {
   if (!hasValidSection(item)) return
 
   const href = buildNavigationHref(item, pages)
-  if (!href) {
-    console.error('Could not build URL:', { item, pages })
-    return
-  }
+  if (!href) return
 
-  console.log('Navigating to:', href)
-  await goto(href)
-  
-  // Wenn eine Section ID vorhanden ist, scrolle dorthin
-  if (item.sectionId) {
-    // Warte kurz auf das Laden der Seite
-    setTimeout(() => {
+  try {
+    // Einfache Navigation ohne zusätzliche Invalidierungen
+    await goto(href, {
+      replaceState: false,
+      keepFocus: false
+    })
+
+    // Scrolle zur Section wenn nötig
+    if (item.sectionId) {
       const element = document.getElementById(item.sectionId as string)
       if (element) {
         element.scrollIntoView({ behavior: 'smooth', block: 'start' })
       }
-    }, 100)
+    }
+  } catch (error) {
+    console.error('Navigation error:', error)
   }
 }
 
@@ -32,102 +39,95 @@ export const navigateToSection = async (
 export const hasValidSection = (item: MenuItem): boolean => {
   if (item.type !== 'direct') return false;
 
-  // Prüfe auf direkten slug im pageLink
-  if (item.pageLink && 'slug' in item.pageLink) {
-    if (typeof item.pageLink.slug === 'string' || item.pageLink.slug?.current) {
+  if (item.linkType === 'page' && item.pageLink) {
+    const pageLink = item.pageLink as PageReference;
+    if (typeof pageLink.slug === 'string') {
+      return true;
+    }
+    if (pageLink._ref || pageLink._id) {
       return true;
     }
   }
 
-  // Prüfe auf _ref oder _id im pageLink
-  if (item.pageLink && ('_ref' in item.pageLink || '_id' in item.pageLink)) {
+  // Für direkte Links
+  if (item.linkType === 'direct' && item.directLink) {
     return true;
   }
 
-  // Fallback: Prüfe directLink
-  return typeof item.directLink === 'string' && item.directLink.length > 0;
+  return false;
 }
 
 // Helper to build href for navigation items
 export const buildNavigationHref = (
   item: MenuItem,
-  pages?: Record<string, { slug: { current: string } }> | undefined
+  pages?: Record<string, { slug: string }> | undefined
 ): string | null => {
-  console.log('buildNavigationHref called with:', {
-    item: JSON.stringify(item, null, 2),
-    pages: JSON.stringify(pages, null, 2)
-  });
-
   if (item.type !== 'direct') {
-    console.log('Not a direct link, returning null');
     return null;
   }
 
-  // Wenn wir einen pageLink haben
-  if (item.pageLink) {
+  // Wenn linkType "direct" ist, verwende den directLink
+  if (item.linkType === 'direct' && item.directLink) {
+    return item.sectionId
+      ? `${item.directLink}#${item.sectionId}`
+      : item.directLink;
+  }
+
+  // Wenn linkType "page" ist, verwende die Page-Referenz
+  if (item.linkType === 'page' && item.pageLink && typeof item.pageLink === 'object') {
+    const pageLink = item.pageLink as PageReference;
     let slug: string | undefined;
 
-    // Fall 1: Direktes Page-Objekt mit string slug
-    if ('slug' in item.pageLink && typeof item.pageLink.slug === 'string') {
-      slug = item.pageLink.slug;
+    // Fall 1: Direktes Page-Objekt mit slug
+    if (typeof pageLink.slug === 'string') {
+      slug = pageLink.slug;
     }
-    // Fall 2: Direktes Page-Objekt mit slug.current
-    else if ('slug' in item.pageLink && item.pageLink.slug?.current) {
-      slug = item.pageLink.slug.current;
-    }
-    // Fall 3: Reference auf eine Page mit _ref
-    else if ('_ref' in item.pageLink && pages) {
+    // Fall 2: Reference auf eine Page mit _ref
+    else if (pageLink._ref && pages) {
       const possibleRefs = [
-        item.pageLink._ref,
-        item.pageLink._ref.replace('drafts.', ''),
-        `drafts.${item.pageLink._ref}`
+        pageLink._ref,
+        pageLink._ref.replace('drafts.', ''),
+        `drafts.${pageLink._ref}`
       ];
 
       for (const ref of possibleRefs) {
         const page = pages[ref];
-        if (page?.slug?.current) {
-          slug = page.slug.current;
+        if (page?.slug) {
+          slug = page.slug;
           break;
         }
       }
     }
-    // Fall 4: Reference auf eine Page mit _id
-    else if ('_id' in item.pageLink && pages) {
+    // Fall 3: Reference auf eine Page mit _id
+    else if (pageLink._id && pages) {
       const possibleIds = [
-        item.pageLink._id,
-        item.pageLink._id.replace('drafts.', ''),
-        `drafts.${item.pageLink._id}`
+        pageLink._id,
+        pageLink._id.replace('drafts.', ''),
+        `drafts.${pageLink._id}`
       ];
 
       for (const id of possibleIds) {
         const page = pages[id];
-        if (page?.slug?.current) {
-          slug = page.slug.current;
+        if (page?.slug) {
+          slug = page.slug;
           break;
         }
       }
     }
 
     if (slug) {
-      console.log('Found slug:', slug);
-      const href = item.sectionId
+      return item.sectionId
         ? `/${slug}#${item.sectionId}`
         : `/${slug}`;
-      console.log('Built href:', href);
-      return href;
     }
   }
 
-  // Legacy: Fallback auf directLink
-  if (item.directLink) {
-    console.log('Using directLink:', item.directLink);
-    const href = item.sectionId
-      ? `${item.directLink}#${item.sectionId}`
-      : item.directLink;
-    console.log('Built href from directLink:', href);
-    return href;
+  // Fallback: Verwende title als Slug
+  if (item.title) {
+    const slug = item.title.toLowerCase().replace(/\s+/g, '-');
+    return item.sectionId
+      ? `/${slug}#${item.sectionId}`
+      : `/${slug}`;
   }
-
-  console.warn('No valid href source found');
   return null;
 }

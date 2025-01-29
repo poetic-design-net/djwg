@@ -1,12 +1,42 @@
 <script lang="ts">
-  import type { ComponentSection, ContentSection, ComponentSectionType } from '$lib/types/menu';
+  import { onMount } from 'svelte';
+  import { page as pageStore } from '$app/stores';
+  import type { Section, ComponentSectionType } from '$lib/types/menu';
+  import type { Page } from '@sveltejs/kit';
   import AboutUsSection from '$lib/components/AboutUsSection.svelte';
+
+  // Liste der Routen, die einen vollständigen Reload benötigen
+  const FORCE_RELOAD_ROUTES = ['award', 'merch'];
+  
+  let previousPath: string | null = null;
+  
+  onMount(() => {
+    // Speichere den initialen Pfad
+    previousPath = window.location.pathname;
+    
+    // Überwache Änderungen der URL
+    return pageStore.subscribe((currentPage: Page) => {
+      const currentPath = window.location.pathname;
+      const currentSlug = currentPath.split('/').pop();
+      const previousSlug = previousPath?.split('/').pop();
+      
+      // Prüfe ob wir zwischen Routen navigieren, die einen Reload benötigen
+      if (previousSlug && currentSlug &&
+          FORCE_RELOAD_ROUTES.includes(previousSlug) &&
+          FORCE_RELOAD_ROUTES.includes(currentSlug) &&
+          previousSlug !== currentSlug) {
+        window.location.href = currentPath;
+      }
+      
+      previousPath = currentPath;
+    });
+  });
   import ArtistsGrid from '$lib/components/ArtistsGrid.svelte';
-  import Hero from '$lib/components/hero/start.svelte';
   import ArtistsSlider from '$lib/components/ArtistsSlider.svelte';
   import Events from '$lib/components/Events.svelte';
   import FAQ from '$lib/components/FAQ.svelte';
   import Founder from '$lib/components/Founder.svelte';
+  import Hero from '$lib/components/hero/start.svelte';
   import Intro from '$lib/components/Intro.svelte';
   import Newsletter from '$lib/components/Newsletter.svelte';
   import Pricing from '$lib/components/Pricing.svelte';
@@ -14,192 +44,129 @@
   import Testimonials from '$lib/components/Testimonials.svelte';
   import LegalPage from '$lib/components/LegalPage.svelte';
   import Logos from '$lib/components/Logos.svelte';
-  import { PortableText } from '@portabletext/svelte';
+  import Merch from '$lib/components/Merch.svelte';
 
   export let data;
 
   const { page } = data;
 
-  console.log('Page Data:', page);
-  console.log('Page Sections:', page.sections);
-
-  // Komponenten-Map für dynamisches Rendering
-  const componentMap: Partial<Record<ComponentSectionType, any>> = {
+  const componentMap = {
     aboutUs: AboutUsSection,
-    artists: ArtistsGrid, // Default to grid, will be determined by displayType
+    artists: ArtistsGrid,
     hero: Hero,
     events: Events,
     faq: FAQ,
     founder: Founder,
     intro: Intro,
+    welcome: Intro,
     logos: Logos,
     newsletter: Newsletter,
     pricing: Pricing,
     team: Team,
     testimonials: Testimonials,
+    merch: Merch
   };
 
-  function renderSection(section: ComponentSection | ContentSection) {
-    console.log('Rendering section:', section);
-    
-    if (section._type === 'componentSection') {
-      let SectionComponent;
-      
-      // Determine the component to use
-      if (section.type === 'artists' && section.artistsSection?.displayType === 'slider') {
-        SectionComponent = ArtistsSlider;
-      } else {
-        SectionComponent = componentMap[section.type];
-      }
+  function renderSection(section: Section) {
+    if (!section?.type) return null;
 
-      if (SectionComponent) {
-        console.log(`Rendering component section:`, section);
-        // Basis-Props für alle Komponenten
-        const baseProps = { id: section.id };
-        
-        // Spezifische Props basierend auf dem Komponententyp
-        let additionalProps = {};
-        switch (section.type) {
-          case 'hero':
-            if (section.heroSection) {
-              additionalProps = {
-                ...section.heroSection
-              };
-            }
-            break;
-          case 'aboutUs':
-            if (section.aboutUsSection) {
-              const { tagline, title, paragraphs, cta, mainImage } = section.aboutUsSection;
-              additionalProps = {
-                tagline,
-                title,
-                paragraphs,
-                cta,
-                mainImage
-              };
-            }
-            break;
-          case 'artists':
-            if (section.artistsSection) {
-              const { title, description, selectedArtists, isLineupRevealed } = section.artistsSection;
-              additionalProps = {
-                title,
-                description,
-                artists: selectedArtists, // Map to component's expected prop name
-                isLineupRevealed
-              };
-            }
-            break;
-          case 'events':
-            additionalProps = { events: page.events };
-            break;
-          case 'faq':
-            if (section.faqSection) {
-              const { title, description, selectedFaqs, showCategories } = section.faqSection;
-              additionalProps = {
-                title,
-                description,
-                faqs: selectedFaqs || [], // Verwende die ausgewählten FAQs
-                showCategories
-              };
-            }
-            break;
-          case 'founder':
-            additionalProps = { founder: page.founder };
-            break;
-          case 'intro':
-          case 'welcome':
-            if (section.introSection) {
-              console.log('Intro Section Data:', section.introSection);
-              const { title, description, image, items } = section.introSection;
-              additionalProps = {
-                title: Array.isArray(title) ? title : [{
-                  _type: 'block',
-                  children: [{ _type: 'span', text: title || 'Werde zum DJ-Profi' }]
-                }],
-                description: description || '',
-                image: image || undefined,
-                items: items || []
-              };
-              console.log('Intro Props:', additionalProps);
-            } else {
-              console.warn('No introSection data found for section:', section);
-            }
-            break;
-          case 'logos':
-            if (section.logosSection) {
-              const { title, description, selectedLogos, showButton } = section.logosSection;
-              additionalProps = {
-                logos: { data: selectedLogos },
-                showButton
-              };
-            }
-            break;
-          case 'team':
-            if (section.teamSectionConfig) {
-              const { title, description, selectedMembers, showLoadMoreButton } = section.teamSectionConfig;
-              additionalProps = {
-                title,
-                description,
-                teamMembers: selectedMembers,
-                showAllTeam: !showLoadMoreButton
-              };
-            }
-            break;
-          case 'pricing':
-            if (section.pricingSection) {
-              const { title, description, showEventSelector, selectedTickets } = section.pricingSection;
-              additionalProps = {
-                title,
-                description,
-                showEventSelector,
-                tickets: selectedTickets // Mapping von selectedTickets zu tickets prop
-              };
-            }
-            break;
-          case 'testimonials':
-            if (section.testimonialsSection) {
-              const { title, subtitle, testimonials } = section.testimonialsSection;
-              additionalProps = {
-                title,
-                subtitle,
-                testimonials: { data: testimonials }
-              };
-            }
-            break;
-        }
+    const type = section.type as ComponentSectionType;
+    let Component: any = componentMap[type];
 
-        const finalProps = { ...baseProps, ...additionalProps };
-        console.log('Final component props:', finalProps);
-
-        return {
-          component: SectionComponent,
-          props: finalProps
-        };
-      } else {
-        console.warn(`No component found for section type: ${section.type}`);
-      }
-    } else if (section._type === 'contentSection') {
-      console.log('Rendering content section');
-      return {
-        component: LegalPage,
-        props: {
-          title: section.title,
-          content: section.content
-        }
-      };
+    // Spezialfall für Artists Slider
+    if (type === 'artists' && section.artistsSection?.displayType === 'slider') {
+      Component = ArtistsSlider;
     }
-    return null;
+
+    if (!Component) return null;
+
+    // Basis-Props
+    const baseProps = {
+      id: section.id || `section-${Date.now()}`
+    };
+
+    // Section-spezifische Props
+    let sectionProps = {};
+
+    switch (type) {
+      case 'events':
+        sectionProps = { events: page.events || [] };
+        break;
+      case 'founder':
+        sectionProps = { founderData: page.founder };
+        break;
+      case 'pricing':
+        if (section.pricingSection) {
+          const { selectedTickets, ...rest } = section.pricingSection;
+          sectionProps = {
+            ...rest,
+            tickets: selectedTickets || []
+          };
+        }
+        break;
+      case 'hero':
+        sectionProps = section.heroSection || {};
+        break;
+      case 'intro':
+      case 'welcome':
+        sectionProps = section.introSection || {};
+        break;
+      case 'aboutUs':
+        sectionProps = section.aboutUsSection || {};
+        break;
+      case 'artists':
+        sectionProps = section.artistsSection || {};
+        break;
+      case 'faq':
+        sectionProps = section.faqSection || {};
+        break;
+      case 'logos':
+        sectionProps = section.logosSection || {};
+        break;
+      case 'team':
+        sectionProps = section.teamSectionConfig || {};
+        break;
+      case 'testimonials':
+        sectionProps = section.testimonialsSection || {};
+        break;
+      case 'merch':
+        sectionProps = section.merchSection || {};
+        break;
+      default:
+        sectionProps = {};
+    }
+
+    return {
+      component: Component,
+      props: { ...baseProps, ...sectionProps }
+    };
   }
 </script>
 
-{#if page.sections && page.sections.length > 0}
-  {#each page.sections as section (section.id)}
+{#if !page}
+  <div class="container mx-auto px-4 py-16 text-center">
+    <h1 class="text-2xl font-bold mb-4">Seite konnte nicht geladen werden</h1>
+    <p class="mb-8">Bitte versuchen Sie es später erneut.</p>
+    <a href="/" class="text-blue-600 hover:underline">Zurück zur Startseite</a>
+  </div>
+{:else if page.sections?.length}
+  {#each page.sections as section (section._key)}
     {@const rendered = renderSection(section)}
     {#if rendered}
-      <svelte:component this={rendered.component} {...rendered.props} />
+      <svelte:component
+        this={rendered.component}
+        {...rendered.props}
+        events={page.events}
+        founder={page.founder}
+      />
     {/if}
   {/each}
 {:else if page.content}
-  <LegalPage title={page.title} content={page.content} />
+  <LegalPage title={page.title || ''} content={page.content} />
+{:else}
+  <div class="container mx-auto px-4 py-16 text-center">
+    <h1 class="text-2xl font-bold mb-4">Keine Inhalte verfügbar</h1>
+    <p class="mb-8">Diese Seite enthält derzeit keine Inhalte.</p>
+    <a href="/" class="text-blue-600 hover:underline">Zurück zur Startseite</a>
+  </div>
 {/if}

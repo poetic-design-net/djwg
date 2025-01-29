@@ -10,6 +10,7 @@ export interface HomePage {
   hero: {
     title: string
     subtitle: string
+    eyebrow: string
     backgroundImages: {
       asset: {
         _type: 'reference'
@@ -30,6 +31,14 @@ export interface HomePage {
       }
     }[]
     transitionInterval: number
+    primaryButton?: {
+      text: string
+      link: string
+    }
+    secondaryButton?: {
+      text: string
+      link: string
+    }
   }
   aboutSection: {
     tagline: string
@@ -61,7 +70,7 @@ export interface HomePage {
   }
   intro: {
     title: PortableTextBlock[]
-    description: string
+    description: PortableTextBlock[]
     image: {
       asset: {
         _type: 'reference'
@@ -80,6 +89,14 @@ export interface HomePage {
         left: number
         right: number
       }
+    }
+    cta?: {
+      text: string
+      link: string
+    }
+    secondaryCta?: {
+      text: string
+      link: string
     }
   }
   workshopsSection: {
@@ -157,6 +174,7 @@ export const homePageQuery = groq`*[_type == "homePage"][0]{
   hero {
     title,
     subtitle,
+    eyebrow,
     backgroundImages[] {
       "asset": {
         "_type": "reference",
@@ -167,7 +185,15 @@ export const homePageQuery = groq`*[_type == "homePage"][0]{
       hotspot,
       crop
     },
-    transitionInterval
+    transitionInterval,
+    primaryButton {
+      text,
+      link
+    },
+    secondaryButton {
+      text,
+      link
+    }
   },
   aboutSection {
     tagline,
@@ -200,6 +226,14 @@ export const homePageQuery = groq`*[_type == "homePage"][0]{
       alt,
       hotspot,
       crop
+    },
+    cta {
+      text,
+      link
+    },
+    secondaryCta {
+      text,
+      link
     }
   },
   workshopsSection {

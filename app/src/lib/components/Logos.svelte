@@ -1,8 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { urlFor } from '$lib/sanity/image';
   import type { Logo } from '$lib/types/menu';
   import { page } from '$app/stores';
+  import OptimizedImage from './OptimizedImage.svelte';
   
   export let logos: { data: Logo[] } = { data: [] };
   export let showButton = true;
@@ -30,7 +30,13 @@
       {#each logos.data as logo, i}
         {#if logo.image}
           <div class="flex items-center justify-center w-full md:w-1/2 lg:w-1/5 {i < logos.data.length - 5 ? 'border-b' : 'lg:border-b-0'} {i % 5 !== 4 ? 'lg:border-r' : ''} {i % 2 === 0 ? 'md:border-r' : ''} border-gray-900 logo-container {currentHighlight === i ? 'highlight' : ''}" style="height: 246px;">
-            <img src={urlFor(logo.image).width(200).url()} alt={logo.name || 'Partner Logo'}>
+            <OptimizedImage 
+              image={logo.image}
+              alt={logo.name || 'Partner Logo'}
+              maxWidth={400}
+              sizes="(max-width: 768px) 200px, 150px"
+              className="max-w-[200px] max-h-[100px] w-auto h-auto object-contain"
+            />
           </div>
         {/if}
       {/each}
@@ -83,13 +89,5 @@
       transform: scale(1.02);
       opacity: 0;
     }
-  }
-
-  img {
-    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .logo-container.highlight img {
-    transform: scale(1.1);
   }
 </style>
