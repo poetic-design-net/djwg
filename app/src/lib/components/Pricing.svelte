@@ -97,7 +97,7 @@
     <p class="text-lg text-gray-300 md:max-w-md mx-auto">{description}</p>
   </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-8 auto-cols-fr" style="grid-template-columns: repeat({Math.min(tickets.length, 4)}, minmax(0, 1fr));">
+  <div class="grid grid-cols-1 sm:grid-cols-2 {tickets.length <= 3 ? 'lg:grid-cols-' + tickets.length : 'lg:grid-cols-3'} {tickets.length === 4 ? 'xl:grid-cols-4' : ''} gap-8 max-w-7xl mx-auto">
     {#each tickets as ticket}
       <div class="h-full">
         <div class="relative h-full flex flex-col {ticket.status === 'completed' ? 'bg-black/20 border-gray-900' : ticket.status === 'current' ? 'bg-black/40 border-purple-500' : 'bg-black/40 border-gray-800'} border rounded-5xl bg-gradient-radial-dark transition duration-200">
