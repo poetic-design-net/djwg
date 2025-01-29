@@ -71,7 +71,6 @@ export default defineType({
       title: 'Event',
       type: 'reference',
       to: [{ type: 'event' }],
-      validation: (Rule) => Rule.required(),
     }),
   ],
   preview: {
