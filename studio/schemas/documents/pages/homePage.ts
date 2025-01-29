@@ -55,14 +55,23 @@ export default defineType({
       group: 'hero',
       fields: [
         defineField({
+          name: 'eyebrow',
+          title: 'Eyebrow Text',
+          type: 'string',
+          description: 'Kleiner Text über der Hauptüberschrift',
+          initialValue: 'von DJs für DJs'
+        }),
+        defineField({
           name: 'title',
           title: 'Title',
           type: 'string',
+          description: 'Die Hauptüberschrift der Hero-Sektion'
         }),
         defineField({
           name: 'subtitle',
           title: 'Subtitle',
           type: 'text',
+          description: 'Der Untertitel unter den Buttons'
         }),
         defineField({
           name: 'backgroundImages',
@@ -96,6 +105,42 @@ export default defineType({
           type: 'number',
           initialValue: 7.5,
           validation: rule => rule.required().min(1).max(20)
+        }),
+        defineField({
+          name: 'primaryButton',
+          title: 'Primärer Button',
+          type: 'object',
+          description: 'Hauptbutton in der Hero-Sektion',
+          fields: [
+            defineField({
+              name: 'text',
+              title: 'Text',
+              type: 'string'
+            }),
+            defineField({
+              name: 'link',
+              title: 'Link',
+              type: 'string'
+            })
+          ]
+        }),
+        defineField({
+          name: 'secondaryButton',
+          title: 'Sekundärer Button',
+          type: 'object',
+          description: 'Zusätzlicher Button in der Hero-Sektion',
+          fields: [
+            defineField({
+              name: 'text',
+              title: 'Text',
+              type: 'string'
+            }),
+            defineField({
+              name: 'link',
+              title: 'Link',
+              type: 'string'
+            })
+          ]
         })
       ],
     }),
@@ -120,7 +165,8 @@ export default defineType({
         defineField({
           name: 'description',
           title: 'Description',
-          type: 'text',
+          type: 'array',
+          of: [{type: 'block'}],
         }),
         defineField({
           name: 'image',
@@ -136,6 +182,42 @@ export default defineType({
               type: 'string',
               title: 'Alternative Text',
               description: 'Important for SEO and accessibility.'
+            })
+          ]
+        }),
+        defineField({
+          name: 'cta',
+          title: 'Primärer Button',
+          type: 'object',
+          description: 'Hauptbutton für die Intro-Sektion',
+          fields: [
+            defineField({
+              name: 'text',
+              title: 'Text',
+              type: 'string'
+            }),
+            defineField({
+              name: 'link',
+              title: 'Link',
+              type: 'string'
+            })
+          ]
+        }),
+        defineField({
+          name: 'secondaryCta',
+          title: 'Sekundärer Button',
+          type: 'object',
+          description: 'Zusätzlicher Button für die Intro-Sektion',
+          fields: [
+            defineField({
+              name: 'text',
+              title: 'Text',
+              type: 'string'
+            }),
+            defineField({
+              name: 'link',
+              title: 'Link',
+              type: 'string'
             })
           ]
         })
@@ -189,7 +271,6 @@ export default defineType({
         isLineupRevealed: true
       }
     }),
- 
     defineField({
       name: 'testimonialsSection',
       title: 'Testimonials Section',

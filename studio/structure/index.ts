@@ -3,6 +3,7 @@ import { eventsArtistsSection } from './sections/events-artists'
 import { homepageSection } from './sections/homepage'
 import { knowledgeBaseSection } from './sections/knowledge-base'
 import { legalSection } from './sections/legal'
+import { navigationSection } from './sections/navigation'
 import { settingsSection } from './sections/settings'
 import { teamSection } from './sections/team'
 
@@ -14,6 +15,9 @@ export const myStructure = (S: any) =>
       homepageSection(S),
 
       S.divider(),
+
+      // Navigation
+      navigationSection(S),
 
       // Content
       contentSection(S),

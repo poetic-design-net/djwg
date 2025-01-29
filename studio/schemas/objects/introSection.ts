@@ -9,19 +9,52 @@ const introSection: SchemaTypeDefinition = {
       name: 'title',
       title: 'Titel',
       type: 'array',
-      of: [{ type: 'block' }],
-      validation: (rule: Rule) => rule.required()
+      of: [{ type: 'block' }]
     },
     {
       name: 'description',
       title: 'Beschreibung',
-      type: 'text',
-      validation: (rule: Rule) => rule.required()
+      type: 'array',
+      of: [{ type: 'block' }]
     },
     {
       name: 'image',
       title: 'Bild',
       type: 'optimizedImage'
+    },
+    {
+      name: 'cta',
+      title: 'Primärer Button',
+      type: 'object',
+      fields: [
+        {
+          name: 'text',
+          title: 'Text',
+          type: 'string'
+        },
+        {
+          name: 'link',
+          title: 'Link',
+          type: 'string'
+        }
+      ]
+    },
+    {
+      name: 'secondaryCta',
+      title: 'Sekundärer Button',
+      type: 'object',
+      fields: [
+        {
+          name: 'text',
+          title: 'Text',
+          type: 'string'
+        },
+        {
+          name: 'link',
+          title: 'Link',
+          type: 'string'
+        }
+      ]
     },
     {
       name: 'items',

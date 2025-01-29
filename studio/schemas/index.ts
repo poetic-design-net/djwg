@@ -20,6 +20,7 @@ import aboutUs from './aboutUs'
 import page from './documents/page'
 import eventPage from './documents/pages/eventPage'
 import homePage from './documents/pages/homePage'
+import siteSettings from './documents/settings/siteSettings'
 
 // Object Types
 import seo from './objects/seo'
@@ -34,6 +35,9 @@ import heroSection from './objects/heroSection'
 import artistsSection from './objects/artistsSection'
 import testimonialsSection from './objects/testimonialsSection'
 import ticketsSection from './objects/ticketsSection'
+import socialMediaLink from './objects/socialMediaLink'
+import merchProduct from './objects/merchProduct'
+import merchSection from './objects/merchSection'
 
 export const schemaTypes = [
   // Documents
@@ -55,6 +59,8 @@ export const schemaTypes = [
   knowledgeBaseItem,
   aboutUs,
   category,
+  siteSettings,
+  merchProduct,
   // Objects
   blockContent,
   seo,
@@ -69,5 +75,7 @@ export const schemaTypes = [
   artistsSection,
   testimonialsSection,
   ticketsSection,
-  pricingSection
+  pricingSection,
+  socialMediaLink,
+  merchSection
 ]

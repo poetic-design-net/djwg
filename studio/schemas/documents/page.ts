@@ -66,7 +66,8 @@ export default defineType({
                   { title: 'Newsletter', value: 'newsletter' },
                   { title: 'Pricing', value: 'pricing' },
                   { title: 'Team', value: 'team' },
-                  { title: 'Testimonials', value: 'testimonials' }
+                  { title: 'Testimonials', value: 'testimonials' },
+                  { title: 'Merch Shop', value: 'merch' }
                 ]
               }
             }),
@@ -124,6 +125,12 @@ export default defineType({
               title: 'Pricing Section Settings',
               type: 'pricingSection',
               hidden: ({ parent }) => parent?.type !== 'pricing'
+            }),
+            defineField({
+              name: 'merchSection',
+              title: 'Merch Section Settings',
+              type: 'merchSection',
+              hidden: ({ parent }) => parent?.type !== 'merch'
             })
           ]
         },

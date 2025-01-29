@@ -16,16 +16,6 @@ export const settingsSection: Section = (S) =>
                 .documentId('siteSettings')
             ),
 
-          // Theme Settings
-          S.listItem()
-            .title('Theme')
-            .child(
-              S.document()
-                .schemaType('themeSettings')
-                .documentId('themeSettings')
-            ),
-
-          S.divider(),
 
           // Navigation & Footer
           S.listItem()
