@@ -1,10 +1,10 @@
 <script lang="ts">
   import { slide, fade } from 'svelte/transition';
   import { quintOut } from 'svelte/easing';
+  import { goto } from '$app/navigation';
   import type { MenuItems } from '$lib/types/menu';
   import type { MenuLink } from '$lib/sanity/queries/navigation';
   import OptimizedImage from '$lib/components/OptimizedImage.svelte';
-  import { goto } from '$app/navigation';
 
   export let activeMenu: string | null;
   export let menuItems: MenuItems;
@@ -12,14 +12,48 @@
 
   let megaMenuContainer: HTMLDivElement;
 
-  const handleLinkClick = (href: string | undefined) => {
-    if (!href) return;
+  const handleLinkClick = async (link: string | undefined, linkType: string | undefined = 'direct') => {
+    if (!link) return;
     onClose();
-    goto(href);
+
+    // Extrahiere Basis-URL und Anker aus dem Link
+    const [baseUrl, anchor] = link.split('#');
+    const currentPath = window.location.pathname;
+    const isCurrentPage = baseUrl === '' || baseUrl === currentPath;
+
+    // Fall 1: Reiner Anker-Link oder Link auf aktueller Seite mit Anker
+    if (isCurrentPage && anchor) {
+      const element = document.getElementById(anchor);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+        history.pushState(null, '', `#${anchor}`);
+      }
+      return;
+    }
+
+    // Fall 2: Link zu anderer Seite (mit oder ohne Anker)
+    try {
+      // Navigiere zur neuen Seite
+      await goto(baseUrl || '/');
+      
+      // Nach der Navigation zum Anker scrollen (falls vorhanden)
+      if (anchor) {
+        // Längere Verzögerung für das Laden der Seite
+        setTimeout(() => {
+          const element = document.getElementById(anchor);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth' });
+            // URL aktualisieren
+            window.location.hash = anchor;
+          }
+        }, 500); // Längere Verzögerung
+      }
+    } catch (error) {
+      console.error('Navigation error:', error);
+    }
   };
 
   $: activeMenuItem = activeMenu ? menuItems.find(item => item._id === activeMenu) : null;
-  $: console.log('MegaMenu activeMenuItem:', activeMenuItem);
 </script>
 
 {#if activeMenu}
@@ -55,7 +89,8 @@
             <a
               href={activeMenuItem.featured?.link}
               class="block group"
-              on:click|preventDefault={() => handleLinkClick(activeMenuItem.featured?.link)}
+              on:click|preventDefault={() => handleLinkClick(activeMenuItem.featured?.link, activeMenuItem.featured?.linkType)}
+              data-no-scroll
             >
               <div class="relative rounded-2xl overflow-hidden mb-4 aspect-video">
                 {#if activeMenuItem.featured.image}
@@ -92,7 +127,8 @@
                 <a
                   href={column.link}
                   class="group block font-heading text-sm text-green-400 hover:text-white font-medium mb-3"
-                  on:click|preventDefault={() => handleLinkClick(column.link)}
+                  on:click|preventDefault={() => handleLinkClick(column.link, column.linkType)}
+                  data-no-scroll
                 >
                   <div class="flex items-center">
                     {#if column.linkType === 'anchor'}
@@ -112,7 +148,8 @@
                     <a
                       href={item.link}
                       class="group flex items-center font-heading text-gray-300 hover:text-white transition duration-200"
-                      on:click|preventDefault={() => handleLinkClick(item.link)}
+                      on:click|preventDefault={() => handleLinkClick(item.link, item.linkType)}
+                      data-no-scroll
                     >
                       {#if item.linkType === 'anchor'}
                         <span class="text-green-500/0 group-hover:text-green-500 transition-colors duration-200 mr-1">#</span>
@@ -138,7 +175,8 @@
                   <a
                     href={link.link}
                     class="group flex items-center font-heading text-gray-300 hover:text-white transition duration-200"
-                    on:click|preventDefault={() => handleLinkClick(link.link)}
+                    on:click|preventDefault={() => handleLinkClick(link.link, link.linkType)}
+                    data-no-scroll
                   >
                     {#if link.linkType === 'anchor'}
                       <span class="text-green-500/0 group-hover:text-green-500 transition-colors duration-200 mr-1">#</span>

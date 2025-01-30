@@ -79,7 +79,7 @@
 
 	// Function to setup scroll handlers
 	function setupScrollHandlers() {
-		document.querySelectorAll('a[href^="#"]').forEach((anchor: Element) => {
+		document.querySelectorAll('a[href^="#"]:not([data-no-scroll])').forEach((anchor: Element) => {
 			// Remove existing listener if any
 			const oldListener = (anchor as any)._scrollListener;
 			if (oldListener) {
