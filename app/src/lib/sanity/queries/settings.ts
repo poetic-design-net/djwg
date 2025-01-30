@@ -1,22 +1,16 @@
 import groq from 'groq'
 
-export const getSocialMediaLinks = groq`
+export const siteSettingsQuery = groq`
 *[_type == "siteSettings"][0] {
-  "socialMedia": socialMedia[] {
+  title,
+  description,
+  contact {
+    email,
+    phone,
+    address
+  },
+  socialMedia[] {
     platform,
-    url,
-    icon,
-    description
+    url
   }
 }`
-
-export interface SocialMediaLink {
-  platform: 'instagram' | 'facebook' | 'tiktok' | 'youtube' | 'linkedin' | 'twitter'
-  url: string
-  icon: string
-  description?: string
-}
-
-export interface SiteSettings {
-  socialMedia: SocialMediaLink[]
-}

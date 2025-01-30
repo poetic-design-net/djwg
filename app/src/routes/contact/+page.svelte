@@ -1,78 +1,20 @@
 <script lang="ts">
   import { fade } from 'svelte/transition';
+  import type { PageData } from './types';
+  import { enhance } from '$app/forms';
   
-  let name = '';
-  let email = '';
-  let message = '';
+  export let data: PageData;
+  export let form: any;
+  
+  const { settings } = data;
+  const { contact, socialMedia } = settings;
+
   let isSubmitting = false;
-  let submitStatus: 'idle' | 'success' | 'error' = 'idle';
-  let errors = {
-    name: '',
-    email: '',
-    message: ''
-  };
-
-  function validateForm(): boolean {
-    let isValid = true;
-    errors = {
-      name: '',
-      email: '',
-      message: ''
-    };
-
-    if (!name.trim()) {
-      errors.name = 'Name ist erforderlich';
-      isValid = false;
-    }
-
-    if (!email.trim()) {
-      errors.email = 'E-Mail ist erforderlich';
-      isValid = false;
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      errors.email = 'Bitte gib eine gültige E-Mail-Adresse ein';
-      isValid = false;
-    }
-
-    if (!message.trim()) {
-      errors.message = 'Nachricht ist erforderlich';
-      isValid = false;
-    }
-
-    return isValid;
-  }
-
-  async function handleSubmit(event: SubmitEvent) {
-    event.preventDefault();
-    
-    if (!validateForm()) return;
-    
-    isSubmitting = true;
-    submitStatus = 'idle';
-
-    try {
-      // Simulate API call - replace with actual API endpoint
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Add your form submission logic here
-      console.log('Form submitted:', { name, email, message });
-      
-      submitStatus = 'success';
-      // Reset the form fields
-      name = '';
-      email = '';
-      message = '';
-    } catch (error) {
-      submitStatus = 'error';
-      console.error('Form submission error:', error);
-    } finally {
-      isSubmitting = false;
-    }
-  }
 </script>
 
 <svelte:head>
-  <title>Kontakt | DJ Workshop</title>
-  <meta name="description" content="Kontaktiere uns für Fragen zu unseren DJ Workshops oder für eine Anmeldung." />
+  <title>Kontakt | {settings.title || 'DJ Workshop'}</title>
+  <meta name="description" content={settings.description || 'Kontaktiere uns für Fragen zu unseren DJ Workshops oder für eine Anmeldung.'} />
 </svelte:head>
 
 <section class="py-20 overflow-hidden">
@@ -86,38 +28,52 @@
 
       <!-- Contact Information -->
       <div class="grid md:grid-cols-3 gap-8 mb-16 text-center md:text-left">
-        <div class="p-6 rounded-2xl bg-gray-800/50 backdrop-blur">
-          <h3 class="text-xl font-medium text-white mb-2">Adresse</h3>
-          <p class="text-gray-300">Musterstraße 123<br/>12345 Berlin</p>
-        </div>
-        <div class="p-6 rounded-2xl bg-gray-800/50 backdrop-blur">
-          <h3 class="text-xl font-medium text-white mb-2">E-Mail</h3>
-          <a href="mailto:info@djworkshop.de" class="text-green-400 hover:text-green-300 transition-colors">info@djworkshop.de</a>
-        </div>
-        <div class="p-6 rounded-2xl bg-gray-800/50 backdrop-blur">
-          <h3 class="text-xl font-medium text-white mb-2">Telefon</h3>
-          <a href="tel:+49301234567" class="text-green-400 hover:text-green-300 transition-colors">+49 30 123 456 7</a>
-        </div>
+        {#if contact?.address}
+          <div class="p-6 rounded-2xl bg-gray-800/50 backdrop-blur">
+            <h3 class="text-xl font-medium text-white mb-2">Adresse</h3>
+            <p class="text-gray-300 whitespace-pre-line">{contact.address}</p>
+          </div>
+        {/if}
+        {#if contact?.email}
+          <div class="p-6 rounded-2xl bg-gray-800/50 backdrop-blur">
+            <h3 class="text-xl font-medium text-white mb-2">E-Mail</h3>
+            <a href="mailto:{contact.email}" class="text-green-400 hover:text-green-300 transition-colors">{contact.email}</a>
+          </div>
+        {/if}
+        {#if contact?.phone}
+          <div class="p-6 rounded-2xl bg-gray-800/50 backdrop-blur">
+            <h3 class="text-xl font-medium text-white mb-2">Telefon</h3>
+            <a href="tel:{contact.phone}" class="text-green-400 hover:text-green-300 transition-colors">{contact.phone}</a>
+          </div>
+        {/if}
       </div>
 
       <!-- Contact Form -->
-      <form on:submit={handleSubmit} class="space-y-6" novalidate>
+      <form 
+        method="POST"
+        use:enhance={() => {
+          isSubmitting = true;
+          return async ({ update }) => {
+            await update();
+            isSubmitting = false;
+          };
+        }}
+        class="space-y-6" 
+        novalidate
+      >
         <div class="grid md:grid-cols-2 gap-6">
           <div class="space-y-2">
             <label for="name" class="block text-sm font-medium text-gray-300">Name</label>
             <div class="relative">
               <input 
                 id="name"
+                name="name"
                 type="text" 
-                bind:value={name}
+                value={form?.values?.name ?? ''}
                 class="w-full px-6 py-4 text-gray-300 bg-transparent border border-gray-900 rounded-3xl focus:border-white focus:outline-none transition-colors"
-                class:border-red-500={errors.name}
+                class:border-red-500={form?.error}
                 placeholder="Dein Name"
-                aria-invalid={errors.name ? 'true' : 'false'}
               >
-              {#if errors.name}
-                <p class="mt-1 text-sm text-red-500" transition:fade>{errors.name}</p>
-              {/if}
             </div>
           </div>
 
@@ -126,16 +82,13 @@
             <div class="relative">
               <input 
                 id="email"
+                name="email"
                 type="email" 
-                bind:value={email}
+                value={form?.values?.email ?? ''}
                 class="w-full px-6 py-4 text-gray-300 bg-transparent border border-gray-900 rounded-3xl focus:border-white focus:outline-none transition-colors"
-                class:border-red-500={errors.email}
+                class:border-red-500={form?.error}
                 placeholder="Deine E-Mail"
-                aria-invalid={errors.email ? 'true' : 'false'}
               >
-              {#if errors.email}
-                <p class="mt-1 text-sm text-red-500" transition:fade>{errors.email}</p>
-              {/if}
             </div>
           </div>
         </div>
@@ -145,15 +98,12 @@
           <div class="relative">
             <textarea 
               id="message"
-              bind:value={message}
+              name="message"
+              value={form?.values?.message ?? ''}
               class="w-full px-6 py-4 text-gray-300 bg-transparent border border-gray-900 rounded-3xl focus:border-white focus:outline-none transition-colors min-h-[150px]"
-              class:border-red-500={errors.message}
+              class:border-red-500={form?.error}
               placeholder="Deine Nachricht"
-              aria-invalid={errors.message ? 'true' : 'false'}
             ></textarea>
-            {#if errors.message}
-              <p class="mt-1 text-sm text-red-500" transition:fade>{errors.message}</p>
-            {/if}
           </div>
         </div>
 
@@ -170,10 +120,12 @@
             {/if}
           </button>
 
-          {#if submitStatus === 'success'}
+          {#if form?.error}
+            <p class="text-red-500" transition:fade>{form.error}</p>
+          {/if}
+
+          {#if form?.success}
             <p class="text-green-400" transition:fade>Vielen Dank für deine Nachricht! Wir melden uns in Kürze bei dir.</p>
-          {:else if submitStatus === 'error'}
-            <p class="text-red-500" transition:fade>Es ist ein Fehler aufgetreten. Bitte versuche es später erneut.</p>
           {/if}
 
           <p class="text-sm text-gray-300 max-w-xs text-center">
@@ -196,10 +148,10 @@
         </div>
 
         <div class="p-8 rounded-2xl bg-gray-800/50 backdrop-blur text-center md:text-left">
-          <h3 class="text-xl font-medium text-white mb-4">Aussteller werden</h3>
+          <h3 class="text-xl font-medium text-white mb-4">Partner werden</h3>
           <p class="text-gray-300 mb-6">Präsentiere deine Produkte auf unserem Event und erreiche die DJ-Community!</p>
           <a 
-            href="/aussteller-werden"
+            href="/partner"
             class="inline-block px-8 py-3 text-center font-medium tracking-2xl border-2 border-green-400 hover:bg-green-400 hover:text-black text-green-400 focus:ring-4 focus:ring-green-500 focus:ring-opacity-40 rounded-full transition duration-300"
           >
             Jetzt anmelden

@@ -1,56 +1,90 @@
 import { client } from '$lib/sanity/client';
-import { logosQuery } from '$lib/sanity/queries';
-import type { Logo } from '$lib/sanity/queries';
+import { siteSettingsQuery } from '$lib/sanity/queries/settings';
+import type { PageServerLoad, Actions } from './$types';
+import type { SiteSettings } from '../contact/types';
+import { sendEmail } from '$lib/server/email';
 import { fail } from '@sveltejs/kit';
-import type { Actions } from './$types';
 
-export async function load() {
-  const logosData = await client.fetch<Logo[]>(logosQuery);
+export const load: PageServerLoad = async () => {
+  const settings = await client.fetch<SiteSettings>(siteSettingsQuery);
 
   return {
-    logos: {
-      data: logosData
-    }
+    settings
   };
-}
+};
 
 export const actions = {
   default: async ({ request }) => {
     const data = await request.formData();
-    const company = data.get('company');
-    const name = data.get('name');
-    const email = data.get('email');
-    const phone = data.get('phone');
-    const message = data.get('message');
-    const type = data.get('type');
+    const name = data.get('name')?.toString();
+    const email = data.get('email')?.toString();
+    const phone = data.get('phone')?.toString();
+    const website = data.get('website')?.toString();
+    const company = data.get('company')?.toString();
+    const industry = data.get('industry')?.toString();
+    const products = data.get('products')?.toString();
+    const message = data.get('message')?.toString();
 
-    // Validate required fields
-    if (!company || !name || !email || !message || !type) {
+    // Validierung
+    if (!name || !email || !message) {
       return fail(400, {
-        error: 'Bitte füllen Sie alle erforderlichen Felder aus.'
+        error: 'Name, E-Mail und Nachricht sind erforderlich',
+        values: { name, email, phone, website, company, industry, products, message }
+      });
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return fail(400, {
+        error: 'Bitte gib eine gültige E-Mail-Adresse ein',
+        values: { name, email, phone, website, company, industry, products, message }
       });
     }
 
     try {
-      // TODO: Implement email sending or database storage
-      // For now, just log the data
-      console.log({
-        company,
+      // Erstelle eine formatierte Nachricht mit allen Informationen
+      const formattedMessage = `
+Partneranfrage von ${name}
+
+Kontaktinformationen:
+- Name/Firma: ${name}
+- E-Mail: ${email}
+- Telefon: ${phone || 'Nicht angegeben'}
+- Website: ${website || 'Nicht angegeben'}
+
+Unternehmensinformationen:
+- Firma: ${company || 'Nicht angegeben'}
+- Branche: ${industry || 'Nicht angegeben'}
+
+Produkte/Services:
+${products || 'Nicht angegeben'}
+
+Zusätzliche Informationen:
+${message}
+      `.trim();
+
+      const result = await sendEmail({
         name,
         email,
-        phone,
-        message,
-        type
+        message: formattedMessage,
+        formType: 'partner',
+        subject: 'Neue Partner-Anfrage'
       });
 
+      if (!result.success) {
+        return fail(500, {
+          error: 'Es ist ein Fehler beim Senden der E-Mail aufgetreten',
+          values: { name, email, phone, website, company, industry, products, message }
+        });
+      }
+
       return {
-        success: true,
-        message: 'Vielen Dank für Ihre Anfrage. Wir werden uns in Kürze bei Ihnen melden.'
+        success: true
       };
     } catch (error) {
-      console.error('Error submitting partner form:', error);
+      console.error('Error sending email:', error);
       return fail(500, {
-        error: 'Es gab einen Fehler beim Senden Ihrer Anfrage. Bitte versuchen Sie es später erneut.'
+        error: 'Es ist ein Fehler beim Senden der E-Mail aufgetreten',
+        values: { name, email, phone, website, company, industry, products, message }
       });
     }
   }

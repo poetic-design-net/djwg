@@ -30,6 +30,7 @@
   }
 
   $: currentTestimonial = testimonialsData[activeSlide];
+  $: hasImage = !!currentTestimonial?.image?.asset;
 </script>
 
 {#if testimonialsData.length > 0}
@@ -40,8 +41,8 @@
     </div>
     <div class="relative p-3 bg-gradient-radial-dark overflow-hidden border border-gray-900 border-opacity-30 rounded-5xl">
       <div class="relative z-10 flex flex-wrap lg:flex-nowrap">
-        <div class="w-full lg:w-1/4 p-4">
-          {#if currentTestimonial?.image?.asset}
+        {#if hasImage && currentTestimonial?.image}
+          <div class="w-full lg:w-1/4 p-4">
             <div class="w-full h-full rounded-3xl overflow-hidden">
               <OptimizedImage 
                 image={currentTestimonial.image}
@@ -51,9 +52,9 @@
                 className="w-full h-full object-cover"
               />
             </div>
-          {/if}
-        </div>
-        <div class="w-full lg:w-3/4 p-6">
+          </div>
+        {/if}
+        <div class="w-full {hasImage ? 'lg:w-3/4' : 'lg:w-full'} p-6">
           <div class="overflow-hidden">
             <div style="transform: translateX(-{$slideWidth}%)" class="flex transition-transform duration-500 ease-in-out">
               {#each testimonialsData as testimonial, i}
