@@ -2,11 +2,14 @@
   import { fade } from 'svelte/transition';
   import { enhance } from '$app/forms';
 
+  export let data;
   export let form: {
     error?: string;
     success?: boolean;
     message?: string;
   };
+
+  const { settings, artistPage } = data;
 
   let formData = {
     name: '',
@@ -19,14 +22,23 @@
   };
 </script>
 
+<svelte:head>
+  <title>{artistPage?.seo?.title || 'Artist werden'} | {settings.title || 'DJ Workshop'}</title>
+  <meta name="description" content={artistPage?.seo?.description || 'Teile deine Leidenschaft für Musik und inspiriere die nächste Generation von DJs'} />
+</svelte:head>
+
 <div class="min-h-screen bg-black">
   <!-- Hero Section -->
   <div class="relative py-20 overflow-hidden">
     <div class="container px-4 mx-auto">
       <div class="max-w-3xl mx-auto text-center">
         <span class="inline-block mb-4 text-sm text-green-400 font-medium tracking-tighter">Artist werden</span>
-        <h1 class="font-heading mb-6 text-5xl md:text-7xl lg:text-8xl text-white tracking-tighter">Werde Teil unseres Teams</h1>
-        <p class="text-2xl text-white/80 mb-8">Teile deine Leidenschaft für Musik und inspiriere die nächste Generation von DJs</p>
+        <h1 class="font-heading mb-6 text-5xl md:text-7xl lg:text-8xl text-white tracking-tighter">
+          {artistPage?.title || 'Werde Teil unseres Teams'}
+        </h1>
+        <p class="text-2xl text-white/80 mb-8">
+          {artistPage?.description || 'Teile deine Leidenschaft für Musik und inspiriere die nächste Generation von DJs'}
+        </p>
       </div>
     </div>
   </div>
@@ -37,32 +49,43 @@
       <div class="mb-20">
         <h2 class="text-4xl text-white mb-6">Deine Vorteile als Artist</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div class="p-8 bg-black/40 border border-gray-800 rounded-3xl hover:border-green-500 transition-all duration-300">
-            <h3 class="text-2xl text-white mb-4">Wertvolle Erfahrung</h3>
-            <p class="text-gray-300">Entwickle dich als Trainer weiter und sammle wertvolle Erfahrungen in der Vermittlung deines Wissens.</p>
-          </div>
-          <div class="p-8 bg-black/40 border border-gray-800 rounded-3xl hover:border-green-500 transition-all duration-300">
-            <h3 class="text-2xl text-white mb-4">Netzwerk</h3>
-            <p class="text-gray-300">Werde Teil eines starken Netzwerks aus DJs, Produzenten und Veranstaltern. Profitiere von unserem Know-how.</p>
-          </div>
-          <div class="p-8 bg-black/40 border border-gray-800 rounded-3xl hover:border-green-500 transition-all duration-300">
-            <h3 class="text-2xl text-white mb-4">Flexibilität</h3>
-            <p class="text-gray-300">Gestalte deine Workshops nach deinen Vorstellungen und bring deine eigenen Ideen ein.</p>
-          </div>
-          <div class="p-8 bg-black/40 border border-gray-800 rounded-3xl hover:border-green-500 transition-all duration-300">
-            <h3 class="text-2xl text-white mb-4">Vergütung</h3>
-            <p class="text-gray-300">Faire Vergütung für dein Engagement und deine Zeit. Profitiere von verschiedenen Verdienstmöglichkeiten.</p>
-          </div>
+          {#if artistPage?.benefits}
+            {#each artistPage.benefits as benefit}
+              <div class="p-8 bg-black/40 border border-gray-800 rounded-3xl hover:border-green-500 transition-all duration-300">
+                <h3 class="text-2xl text-white mb-4">{benefit.title}</h3>
+                <p class="text-gray-300">{benefit.description}</p>
+              </div>
+            {/each}
+          {:else}
+            <div class="p-8 bg-black/40 border border-gray-800 rounded-3xl hover:border-green-500 transition-all duration-300">
+              <h3 class="text-2xl text-white mb-4">Wertvolle Erfahrung</h3>
+              <p class="text-gray-300">Entwickle dich als Trainer weiter und sammle wertvolle Erfahrungen in der Vermittlung deines Wissens.</p>
+            </div>
+            <div class="p-8 bg-black/40 border border-gray-800 rounded-3xl hover:border-green-500 transition-all duration-300">
+              <h3 class="text-2xl text-white mb-4">Netzwerk</h3>
+              <p class="text-gray-300">Werde Teil eines starken Netzwerks aus DJs, Produzenten und Veranstaltern. Profitiere von unserem Know-how.</p>
+            </div>
+            <div class="p-8 bg-black/40 border border-gray-800 rounded-3xl hover:border-green-500 transition-all duration-300">
+              <h3 class="text-2xl text-white mb-4">Flexibilität</h3>
+              <p class="text-gray-300">Gestalte deine Workshops nach deinen Vorstellungen und bring deine eigenen Ideen ein.</p>
+            </div>
+            <div class="p-8 bg-black/40 border border-gray-800 rounded-3xl hover:border-green-500 transition-all duration-300">
+              <h3 class="text-2xl text-white mb-4">Vergütung</h3>
+              <p class="text-gray-300">Faire Vergütung für dein Engagement und deine Zeit. Profitiere von verschiedenen Verdienstmöglichkeiten.</p>
+            </div>
+          {/if}
         </div>
       </div>
 
       <!-- Contact Form -->
       <div class="mb-20">
-        <h2 class="text-4xl text-white mb-12 text-center">Bewirb dich jetzt</h2>
+        <h2 class="text-4xl text-white mb-12 text-center">
+          {artistPage?.formSettings?.title || 'Bewirb dich jetzt'}
+        </h2>
         
         {#if form?.success}
           <div class="max-w-2xl mx-auto p-6 bg-green-500/10 border border-green-500 rounded-3xl text-center mb-8" transition:fade>
-            <p class="text-white">{form.message}</p>
+            <p class="text-white">{artistPage?.formSettings?.successMessage || form.message}</p>
           </div>
         {/if}
 
@@ -122,10 +145,16 @@
                 class="w-full px-4 py-3 bg-black/40 border border-gray-800 rounded-xl text-white focus:border-green-500 focus:ring-1 focus:ring-green-500"
                 required
               >
-                <option value="beginner">1-2 Jahre</option>
-                <option value="intermediate">3-5 Jahre</option>
-                <option value="advanced">5+ Jahre</option>
-                <option value="professional">Professioneller DJ</option>
+                {#if artistPage?.experienceLevels}
+                  {#each artistPage.experienceLevels as level}
+                    <option value={level.value}>{level.label}</option>
+                  {/each}
+                {:else}
+                  <option value="beginner">1-2 Jahre</option>
+                  <option value="intermediate">3-5 Jahre</option>
+                  <option value="advanced">5+ Jahre</option>
+                  <option value="professional">Professioneller DJ</option>
+                {/if}
               </select>
             </div>
           </div>

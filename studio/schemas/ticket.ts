@@ -76,14 +76,13 @@ export default defineType({
   preview: {
     select: {
       title: 'title',
-      price: 'price',
-      currency: 'currency',
+      eventTitle: 'event.title'
     },
     prepare(selection) {
-      const { title, price, currency = 'EUR' } = selection
+      const { title, eventTitle } = selection
       return {
         title,
-        subtitle: `${price} ${currency}`,
+        subtitle: eventTitle || 'Kein Event zugewiesen'
       }
     },
   },

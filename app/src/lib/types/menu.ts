@@ -141,15 +141,20 @@ export type PricingSection = {
   }>
 }
 
+export type ProductVariant = {
+  name: string
+  price: number
+  currency: string
+  shopUrl: string
+}
+
 export type MerchProduct = {
   _id: string
   title: string
   description: string
   features: string[]
-  price: number
-  currency: string
-  image?: SanityImage
-  shopUrl: string
+  images: SanityImage[]
+  variants: ProductVariant[]
 }
 
 export type MerchSection = {

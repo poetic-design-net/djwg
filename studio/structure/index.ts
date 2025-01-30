@@ -16,9 +16,6 @@ export const myStructure = (S: any) =>
 
       S.divider(),
 
-      // Navigation
-      navigationSection(S),
-
       // Content
       contentSection(S),
 
@@ -60,13 +57,15 @@ export const myStructure = (S: any) =>
             'navigation',
             'logo',
             'testimonial',
-            'faq',
             'aboutUs',
             'siteSettings',
             'footerSettings',
             'themeSettings',
             'knowledgeBaseSettings',
-            'media.tag'
+            'media.tag',
+            'partnerPage',
+            'artistPage',
+            'ticket',
           ].includes(listItem.getId())
       )
     ])

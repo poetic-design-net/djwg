@@ -6,7 +6,7 @@
   export let image: SanityImage | SanityImageSource | string;
   export let alt = '';
   export let className = '';
-  export let maxWidth = 1200;
+  export let maxWidth = 1920;
   export let sizes = '(max-width: 768px) 100vw, 50vw';
 
   function isSanityImage(img: any): img is Image {

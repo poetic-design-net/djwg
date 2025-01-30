@@ -28,22 +28,26 @@
   }
 
   const handleSectionChange = debounce((newSection: string) => {
-    const now = Date.now();
-    if (now - lastSectionChange < SECTION_CHANGE_DELAY) {
-      return;
-    }
+  const now = Date.now();
+  if (now - lastSectionChange < SECTION_CHANGE_DELAY) {
+    return;
+  }
+  
+  // Zeige Toast für Tickets, Schedule oder bei Sektionswechsel
+  if (newSection === 'tickets' || 
+      newSection === 'schedule' || 
+      currentSection !== newSection) {
+    currentSection = newSection;
+    lastSectionChange = now;
     
-    // Always show toast for tickets section
-    if (newSection === 'tickets' || currentSection !== newSection) {
-      currentSection = newSection;
-      lastSectionChange = now;
-      clearTimeout(toastTimeout);
-      showToast = true;
-      toastTimeout = setTimeout(() => {
-        showToast = false;
-      }, 2000);
-    }
-  }, 100);
+    // Toast-Logik
+    clearTimeout(toastTimeout);
+    showToast = true;
+    toastTimeout = setTimeout(() => {
+      showToast = false;
+    }, 2000); // 2 Sekunden anzeigen
+  }
+}, 100);
 
   const checkScrollPosition = debounce(() => {
     isAtTop = window.scrollY === 0;
@@ -59,36 +63,40 @@
     window.addEventListener('scroll', checkScrollPosition);
 
     const sectionObserver = new IntersectionObserver((entries) => {
-      const visibleSections = entries.filter(entry => entry.isIntersecting);
+  const visibleSections = entries.filter(entry => entry.isIntersecting);
 
-      if (visibleSections.length > 0) {
-        const firstSectionEntry = entries.find(entry => entry.target.id === sections[0]?.id);
-        if (firstSectionEntry && firstSectionEntry.intersectionRatio > 0.2 && window.scrollY < 300) {
-          handleSectionChange(sections[0].id);
-          return;
-        }
+  if (visibleSections.length > 0) {
+    // Erste Priorität: Tickets und Schedule Sektionen
+    const prioritySection = visibleSections.find(
+      entry => entry.target.id === 'tickets' || entry.target.id === 'schedule'
+    );
+    if (prioritySection && prioritySection.intersectionRatio > 0.2) {
+      handleSectionChange(prioritySection.target.id);
+      return;
+    }
 
-        // Special handling for tickets section
-        const ticketsSection = visibleSections.find(entry => entry.target.id === 'tickets');
-        if (ticketsSection && ticketsSection.intersectionRatio > 0.2) {
-          handleSectionChange('tickets');
-          return;
-        }
+    // Zweite Priorität: Erste Sektion bei Scroll-Top
+    const firstSectionEntry = entries.find(entry => entry.target.id === sections[0]?.id);
+    if (firstSectionEntry && firstSectionEntry.intersectionRatio > 0.2 && window.scrollY < 300) {
+      handleSectionChange(sections[0].id);
+      return;
+    }
 
-        const significantlyVisible = visibleSections.filter(entry => entry.intersectionRatio > 0.5);
-        if (significantlyVisible.length > 0) {
-          const mostVisible = significantlyVisible.reduce((prev, current) => 
-            current.intersectionRatio > prev.intersectionRatio ? current : prev
-          );
-          handleSectionChange(mostVisible.target.id);
-        }
-      } else if (window.scrollY === 0) {
-        handleSectionChange(sections[0]?.id);
-      }
-    }, {
-      threshold: [0.2, 0.5, 0.8],
-      rootMargin: '-10% 0px -10% 0px'
-    });
+    // Dritte Priorität: Am meisten sichtbare Sektion
+    const significantlyVisible = visibleSections.filter(entry => entry.intersectionRatio > 0.5);
+    if (significantlyVisible.length > 0) {
+      const mostVisible = significantlyVisible.reduce((prev, current) => 
+        current.intersectionRatio > prev.intersectionRatio ? current : prev
+      );
+      handleSectionChange(mostVisible.target.id);
+    }
+  } else if (window.scrollY === 0) {
+    handleSectionChange(sections[0]?.id);
+  }
+}, {
+  threshold: [0.2, 0.5, 0.8],
+  rootMargin: '-10% 0px -10% 0px'
+});
 
     const footerObserver = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
@@ -138,7 +146,7 @@
   {#if showToast}
     <div
       transition:fade={{ duration: 300 }}
-      class="fixed left-1/2 top-2 transform -translate-x-1/2 z-[300] px-6 py-3 rounded-full bg-black/40 backdrop-blur-sm border border-green-500/20 w-auto max-w-[90%] mx-auto"
+      class="fixed left-1/2 top-2 transform -translate-x-1/2 z-[99] px-6 py-3 rounded-full bg-black/40 backdrop-blur-sm border border-green-500/20 w-auto max-w-[90%] mx-auto"
     >
       <div class="text-gray-300 text-xs mb-1 font-medium text-center">
         <span>

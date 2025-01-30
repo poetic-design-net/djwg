@@ -22,7 +22,8 @@ export function enhancedUrlFor(source: Image, options: {
   sizes?: number[];
 } = {}) {
   const baseImage = builder.image(source);
-  const { maxWidth = 1200, sizes = [400, 800, 1200] } = options;
+  const { maxWidth = 1200 } = options;
+  const sizes = [400, 800, 1200, 1600, 1920].filter(size => size <= maxWidth);
   
   // Generiere URLs für verschiedene Bildgrößen
   const responsiveUrls = sizes.map(size => ({

@@ -88,7 +88,7 @@
    <!-- Selected Event Date -->
    {#if selectedEvent?.date}
      <div class="text-center mb-12">
-       <p class="text-gray-400">{formatDate(selectedEvent.date)}</p>
+       <p class="text-white font-medium border border-green-600 rounded-full px-6 py-2 inline-block">{formatDate(selectedEvent.date)}</p>
      </div>
    {/if}
   <div class="text-center mb-20">

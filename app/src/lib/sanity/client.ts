@@ -6,7 +6,7 @@ export const client = createClient({
 	dataset,
 	apiVersion,
 	useCdn: import.meta.env.DEV ? false : true, // Disable CDN caching in development
-	token: import.meta.env.SANITY_API_READ_TOKEN,
+	token: import.meta.env.SANITY_API_WRITE_TOKEN, // Verwende Write-Token für Uploads
 	stega: {
 		studioUrl
 	},

@@ -31,6 +31,8 @@ export const navigationQuery = groq`
   },
   columns[] {
     title,
+    link,
+    linkType,
     items[] {
       label,
       link,
@@ -56,6 +58,8 @@ export type MenuLink = {
 export type MenuColumn = {
   title: string
   items: MenuLink[]
+  link?: string
+  linkType?: LinkType
 }
 
 export type FeaturedContent = {
@@ -110,6 +114,8 @@ interface RawNavigationItem {
   };
   columns?: Array<{
     title: string;
+    link?: string;
+    linkType?: LinkType;
     items: Array<{
       label: string;
       link: string;
@@ -170,6 +176,8 @@ export function transformNavigationData(data: unknown): NavigationData {
           ...(transformedFeatured && { featured: transformedFeatured }),
           columns: rawItem.columns?.map(col => ({
             title: col.title,
+            link: col.link,
+            linkType: col.linkType,
             items: col.items.filter(i => i.label && i.link)
           })) || [],
           quickLinks: rawItem.quickLinks?.filter(link => link.label && link.link) || []

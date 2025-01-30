@@ -8,8 +8,8 @@ const faqSection: SchemaTypeDefinition = {
     {
       name: 'title',
       title: 'Titel',
-      type: 'array',
-      of: [{ type: 'block' }],
+      type: 'text'
+      
     },
     {
       name: 'description',
