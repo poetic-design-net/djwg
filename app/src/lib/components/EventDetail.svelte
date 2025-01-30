@@ -17,6 +17,8 @@
     name: string;
     role: string;
     image?: string;
+    soundcloud?: string;
+    instagram?: string;
   }
 
   interface Day {

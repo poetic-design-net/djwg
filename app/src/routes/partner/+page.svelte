@@ -1,181 +1,241 @@
 <script lang="ts">
   import { fade } from 'svelte/transition';
-  import Logos from '$lib/components/Logos.svelte';
-  import type { Logo } from '$lib/sanity/queries';
+  import type { PageData } from '../contact/types';
   import { enhance } from '$app/forms';
+  
+  export let data: PageData;
+  export let form: any;
+  
+  const { settings } = data;
 
-  export let data: {
-    logos: {
-      data: Logo[];
-    };
-  };
-
-  export let form: {
-    error?: string;
-    success?: boolean;
-    message?: string;
-  };
-
-  let formData = {
-    company: '',
-    name: '',
-    email: '',
-    phone: '',
-    message: '',
-    type: 'exhibitor' // or 'partner'
-  };
+  let isSubmitting = false;
 </script>
 
-<div class="min-h-screen bg-black">
-  <!-- Hero Section -->
-  <div class="relative py-20 overflow-hidden">
-    <div class="container px-4 mx-auto">
-      <div class="max-w-3xl mx-auto text-center">
-        <span class="inline-block mb-4 text-sm text-green-400 font-medium tracking-tighter">Partner werden</span>
-        <h1 class="font-heading mb-6 text-5xl md:text-7xl lg:text-8xl text-white tracking-tighter">Gemeinsam Erfolg haben</h1>
-        <p class="text-2xl text-white/80 mb-8">Werden Sie Teil der DJ Workshop Germany Community und präsentieren Sie Ihre Marke einem engagierten Publikum</p>
-      </div>
-    </div>
-  </div>
+<svelte:head>
+  <title>Partner werden | {settings.title || 'DJ Workshop'}</title>
+  <meta name="description" content="Präsentiere deine Produkte auf unserem Event und erreiche die DJ-Community!" />
+</svelte:head>
 
-  <!-- Main Content -->
-  <div class="container px-4 mx-auto py-20">
-    <div class="max-w-4xl mx-auto">
-      <div class="mb-20">
-        <h2 class="text-4xl text-white mb-6">Ihre Vorteile als Partner</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div class="p-8 bg-black/40 border border-gray-800 rounded-3xl hover:border-green-500 transition-all duration-300">
-            <h3 class="text-2xl text-white mb-4">Direkte Zielgruppe</h3>
-            <p class="text-gray-300">Erreichen Sie DJ-Enthusiasten und Musikproduzenten direkt in ihrem Element. Präsentieren Sie Ihre Produkte genau dort, wo sie zum Einsatz kommen.</p>
-          </div>
-          <div class="p-8 bg-black/40 border border-gray-800 rounded-3xl hover:border-green-500 transition-all duration-300">
-            <h3 class="text-2xl text-white mb-4">Live-Präsentation</h3>
-            <p class="text-gray-300">Demonstrieren Sie Ihre Produkte live vor Ort. Lassen Sie die Teilnehmer Ihre Geräte und Software direkt erleben und testen.</p>
-          </div>
-          <div class="p-8 bg-black/40 border border-gray-800 rounded-3xl hover:border-green-500 transition-all duration-300">
-            <h3 class="text-2xl text-white mb-4">Networking</h3>
-            <p class="text-gray-300">Knüpfen Sie wertvolle Kontakte in der Branche. Treffen Sie andere Hersteller, DJs und Veranstalter.</p>
-          </div>
-          <div class="p-8 bg-black/40 border border-gray-800 rounded-3xl hover:border-green-500 transition-all duration-300">
-            <h3 class="text-2xl text-white mb-4">Markenbildung</h3>
-            <p class="text-gray-300">Stärken Sie Ihre Markenwahrnehmung in der DJ- und Musikszene. Profitieren Sie von unserem starken Netzwerk.</p>
-          </div>
+<section class="py-20 overflow-hidden">
+  <div class="container px-4 mx-auto">
+    <div class="md:max-w-4xl mx-auto">
+      <div class="text-center mb-16">
+        <span class="inline-block mb-4 text-sm text-green-400 font-medium tracking-tighter">DJ Workshop</span>
+        <h1 class="font-heading mb-8 text-5xl md:text-7xl lg:text-8xl text-white tracking-7xl lg:tracking-8xl">Partner werden</h1>
+        <p class="text-lg text-gray-300 max-w-2xl mx-auto">Präsentiere deine Produkte auf unserem Event und erreiche die DJ-Community! Fülle das Formular aus und wir melden uns bei dir.</p>
+      </div>
+
+      <!-- Partner Benefits Section -->
+      <div class="grid md:grid-cols-3 gap-8 mb-16">
+        <div class="p-6 rounded-2xl bg-gray-800/50 backdrop-blur text-center">
+          <h3 class="text-xl font-medium text-white mb-3">Direkte Zielgruppe</h3>
+          <p class="text-gray-300">Erreiche motivierte DJs und Musikbegeisterte direkt vor Ort.</p>
+        </div>
+        <div class="p-6 rounded-2xl bg-gray-800/50 backdrop-blur text-center">
+          <h3 class="text-xl font-medium text-white mb-3">Präsentation</h3>
+          <p class="text-gray-300">Eigener Stand und Präsentationsmöglichkeiten für deine Produkte.</p>
+        </div>
+        <div class="p-6 rounded-2xl bg-gray-800/50 backdrop-blur text-center">
+          <h3 class="text-xl font-medium text-white mb-3">Networking</h3>
+          <p class="text-gray-300">Knüpfe wertvolle Kontakte in der DJ- und Musikbranche.</p>
         </div>
       </div>
 
-      <!-- Contact Form -->
-      <div class="mb-20">
-        <h2 class="text-4xl text-white mb-12 text-center">Werden Sie Partner</h2>
-        
-        {#if form?.success}
-          <div class="max-w-2xl mx-auto p-6 bg-green-500/10 border border-green-500 rounded-3xl text-center mb-8" transition:fade>
-            <p class="text-white">{form.message}</p>
-          </div>
-        {/if}
-
-        {#if form?.error}
-          <div class="max-w-2xl mx-auto p-6 bg-red-500/10 border border-red-500 rounded-3xl text-center mb-8" transition:fade>
-            <p class="text-white">{form.error}</p>
-          </div>
-        {/if}
-
-        <form 
-          method="POST"
-          class="max-w-2xl mx-auto space-y-6"
-          use:enhance
-        >
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label for="company" class="block text-sm font-medium text-gray-300 mb-2">Unternehmen</label>
-              <input
-                type="text"
-                id="company"
-                name="company"
-                bind:value={formData.company}
-                class="w-full px-4 py-3 bg-black/40 border border-gray-800 rounded-xl text-white focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                required
-              >
-            </div>
-            <div>
-              <label for="name" class="block text-sm font-medium text-gray-300 mb-2">Ansprechpartner</label>
-              <input
-                type="text"
+      <!-- Partner Application Form -->
+      <form 
+        method="POST"
+        use:enhance={() => {
+          isSubmitting = true;
+          return async ({ update }) => {
+            await update();
+            isSubmitting = false;
+          };
+        }}
+        class="space-y-6" 
+        novalidate
+      >
+        <!-- Kontaktinformationen -->
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="space-y-2">
+            <label for="name" class="block text-sm font-medium text-gray-300">Name / Firma</label>
+            <div class="relative">
+              <input 
                 id="name"
                 name="name"
-                bind:value={formData.name}
-                class="w-full px-4 py-3 bg-black/40 border border-gray-800 rounded-xl text-white focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                required
+                type="text" 
+                value={form?.values?.name ?? ''}
+                class="w-full px-6 py-4 text-gray-300 bg-transparent border border-gray-900 rounded-3xl focus:border-white focus:outline-none transition-colors"
+                class:border-red-500={form?.error}
+                placeholder="Dein Name oder Firmenname"
               >
             </div>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label for="email" class="block text-sm font-medium text-gray-300 mb-2">E-Mail</label>
-              <input
-                type="email"
+          <div class="space-y-2">
+            <label for="email" class="block text-sm font-medium text-gray-300">E-Mail</label>
+            <div class="relative">
+              <input 
                 id="email"
                 name="email"
-                bind:value={formData.email}
-                class="w-full px-4 py-3 bg-black/40 border border-gray-800 rounded-xl text-white focus:border-green-500 focus:ring-1 focus:ring-green-500"
-                required
+                type="email" 
+                value={form?.values?.email ?? ''}
+                class="w-full px-6 py-4 text-gray-300 bg-transparent border border-gray-900 rounded-3xl focus:border-white focus:outline-none transition-colors"
+                class:border-red-500={form?.error}
+                placeholder="Deine E-Mail"
               >
             </div>
-            <div>
-              <label for="phone" class="block text-sm font-medium text-gray-300 mb-2">Telefon</label>
-              <input
-                type="tel"
+          </div>
+        </div>
+
+        <!-- Zusätzliche Kontaktinformationen -->
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="space-y-2">
+            <label for="phone" class="block text-sm font-medium text-gray-300">Telefon</label>
+            <div class="relative">
+              <input 
                 id="phone"
                 name="phone"
-                bind:value={formData.phone}
-                class="w-full px-4 py-3 bg-black/40 border border-gray-800 rounded-xl text-white focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                type="tel" 
+                value={form?.values?.phone ?? ''}
+                class="w-full px-6 py-4 text-gray-300 bg-transparent border border-gray-900 rounded-3xl focus:border-white focus:outline-none transition-colors"
+                placeholder="Deine Telefonnummer"
               >
             </div>
           </div>
 
-          <div>
-            <label for="type" class="block text-sm font-medium text-gray-300 mb-2">Art der Partnerschaft</label>
-            <select
-              id="type"
-              name="type"
-              bind:value={formData.type}
-              class="w-full px-4 py-3 bg-black/40 border border-gray-800 rounded-xl text-white focus:border-green-500 focus:ring-1 focus:ring-green-500"
-              required
-            >
-              <option value="exhibitor">Aussteller</option>
-              <option value="partner">Partner</option>
-            </select>
+          <div class="space-y-2">
+            <label for="website" class="block text-sm font-medium text-gray-300">Website</label>
+            <div class="relative">
+              <input 
+                id="website"
+                name="website"
+                type="url" 
+                value={form?.values?.website ?? ''}
+                class="w-full px-6 py-4 text-gray-300 bg-transparent border border-gray-900 rounded-3xl focus:border-white focus:outline-none transition-colors"
+                placeholder="https://www.deine-website.de"
+              >
+            </div>
+          </div>
+        </div>
+
+        <!-- Unternehmensinformationen -->
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="space-y-2">
+            <label for="company" class="block text-sm font-medium text-gray-300">Unternehmen</label>
+            <div class="relative">
+              <input 
+                id="company"
+                name="company"
+                type="text" 
+                value={form?.values?.company ?? ''}
+                class="w-full px-6 py-4 text-gray-300 bg-transparent border border-gray-900 rounded-3xl focus:border-white focus:outline-none transition-colors"
+                placeholder="Name deines Unternehmens"
+              >
+            </div>
           </div>
 
-          <div>
-            <label for="message" class="block text-sm font-medium text-gray-300 mb-2">Ihre Nachricht</label>
-            <textarea
-              id="message"
-              name="message"
-              bind:value={formData.message}
-              rows="4"
-              class="w-full px-4 py-3 bg-black/40 border border-gray-800 rounded-xl text-white focus:border-green-500 focus:ring-1 focus:ring-green-500"
-              required
+          <div class="space-y-2">
+            <label for="industry" class="block text-sm font-medium text-gray-300">Branche</label>
+            <div class="relative">
+              <input 
+                id="industry"
+                name="industry"
+                type="text" 
+                value={form?.values?.industry ?? ''}
+                class="w-full px-6 py-4 text-gray-300 bg-transparent border border-gray-900 rounded-3xl focus:border-white focus:outline-none transition-colors"
+                placeholder="z.B. DJ Equipment, Software, etc."
+              >
+            </div>
+          </div>
+        </div>
+
+        <!-- Produkte/Services -->
+        <div class="space-y-2">
+          <label for="products" class="block text-sm font-medium text-gray-300">Produkte/Services</label>
+          <p class="text-sm text-gray-400 mb-2">Welche Produkte oder Services möchtest du präsentieren?</p>
+          <div class="relative">
+            <textarea 
+              id="products"
+              name="products"
+              value={form?.values?.products ?? ''}
+              class="w-full px-6 py-4 text-gray-300 bg-transparent border border-gray-900 rounded-3xl focus:border-white focus:outline-none transition-colors min-h-[100px]"
+              placeholder="Beschreibe deine Produkte oder Services..."
             ></textarea>
           </div>
+        </div>
 
-          <div class="text-center">
-            <button
-              type="submit"
-              class="inline-block px-8 py-4 text-lg text-black font-medium tracking-tighter bg-green-400 hover:bg-green-500 rounded-full transition duration-200"
-            >
-              Anfrage senden
-            </button>
+        <!-- Nachricht -->
+        <div class="space-y-2">
+          <label for="message" class="block text-sm font-medium text-gray-300">Zusätzliche Informationen</label>
+          <p class="text-sm text-gray-400 mb-2">Hast du besondere Anforderungen oder Wünsche für deine Präsentation?</p>
+          <div class="relative">
+            <textarea 
+              id="message"
+              name="message"
+              value={form?.values?.message ?? ''}
+              class="w-full px-6 py-4 text-gray-300 bg-transparent border border-gray-900 rounded-3xl focus:border-white focus:outline-none transition-colors min-h-[150px]"
+              class:border-red-500={form?.error}
+              placeholder="Deine Nachricht..."
+            ></textarea>
           </div>
-        </form>
+        </div>
+
+        <div class="flex flex-col items-center space-y-4">
+          <button 
+            type="submit" 
+            class="px-14 py-4 text-center font-medium tracking-2xl border-2 border-green-400 bg-green-400 hover:bg-green-500 text-black focus:ring-4 focus:ring-green-500 focus:ring-opacity-40 rounded-full transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isSubmitting}
+          >
+            {#if isSubmitting}
+              Wird gesendet...
+            {:else}
+              Anfrage senden
+            {/if}
+          </button>
+
+          {#if form?.error}
+            <p class="text-red-500" transition:fade>{form.error}</p>
+          {/if}
+
+          {#if form?.success}
+            <p class="text-green-400" transition:fade>Vielen Dank für deine Anfrage! Wir melden uns in Kürze bei dir.</p>
+          {/if}
+
+          <p class="text-sm text-gray-300 max-w-xs text-center">
+            Deine Daten werden gemäß unserer Datenschutzrichtlinien verwendet.
+          </p>
+        </div>
+      </form>
+
+      <!-- Additional Info Section -->
+      <div class="mt-20">
+        <div class="text-center mb-12">
+          <h2 class="text-3xl font-medium text-white mb-4">Warum Partner werden?</h2>
+          <p class="text-gray-300">Als Partner des DJ Workshops profitierst du von unserem starken Netzwerk und direktem Zugang zur DJ-Community.</p>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-8">
+          <div class="p-8 rounded-2xl bg-gray-800/50 backdrop-blur">
+            <h3 class="text-xl font-medium text-white mb-4">Ausstellerfläche</h3>
+            <ul class="space-y-3 text-gray-300">
+              <li>• Professionell ausgestattete Standfläche</li>
+              <li>• Technische Ausstattung nach Bedarf</li>
+              <li>• Optimale Präsentationsmöglichkeiten</li>
+              <li>• Flexible Standgrößen verfügbar</li>
+            </ul>
+          </div>
+
+          <div class="p-8 rounded-2xl bg-gray-800/50 backdrop-blur">
+            <h3 class="text-xl font-medium text-white mb-4">Marketing & Promotion</h3>
+            <ul class="space-y-3 text-gray-300">
+              <li>• Präsenz auf unserer Website</li>
+              <li>• Social Media Promotion</li>
+              <li>• Erwähnung in Newsletter</li>
+              <li>• Logo-Präsenz auf Event-Material</li>
+            </ul>
+          </div>
+        </div>
       </div>
     </div>
   </div>
-      <!-- Partners Section -->
-      <div>
-        <h2 class="text-4xl text-white mb-12 text-center">Diese Partner sind schon dabei</h2>
-        <Logos logos={data.logos} />
-      </div>
-    </div>
-  
-
+</section>

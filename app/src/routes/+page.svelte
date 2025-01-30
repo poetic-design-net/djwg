@@ -14,7 +14,6 @@
   import Pricing from '$lib/components/Pricing.svelte';
   import Newsletter from '$lib/components/Newsletter.svelte';
   import Logos from '$lib/components/Logos.svelte';
-  import ArtistsSlider from '$lib/components/ArtistsSlider.svelte';
   import AboutUsSection from '$lib/components/AboutUsSection.svelte';
   import Faq from '$lib/components/FAQ.svelte';
   import Seo from '$lib/components/Seo.svelte';
@@ -162,14 +161,7 @@
   />
 </section>
   
-<section id="artists" class="pt-48 pb-20">
-  {#if homeData?.artistsSection?.selectedArtists && homeData.artistsSection.displayType === 'slider'}
-    <ArtistsSlider 
-      artists={artists} 
-      isLineupRevealed={homeData.artistsSection.isLineupRevealed} 
-    />
-  {/if}
-</section>
+
 
 <Pricing
   id="tickets"
