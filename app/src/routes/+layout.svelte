@@ -2,7 +2,7 @@
 	import { isPreviewing, VisualEditing } from '@sanity/visual-editing/svelte';
 	import { page } from '$app/stores';
 	import { setContext, onMount } from 'svelte';
-	import { afterNavigate } from '$app/navigation';
+	import { afterNavigate, beforeNavigate } from '$app/navigation';
 	import { PUBLIC_SUPABASE_ANON_KEY, PUBLIC_SUPABASE_URL } from '$env/static/public';
 	import { createSupabaseLoadClient } from '@supabase/auth-helpers-sveltekit';
 	import { initBento, identifyBentoUser } from '$lib/bento/init';
@@ -17,6 +17,11 @@
 
 	export let data: LayoutData;
 
+	// Set up navigation scroll behavior
+	beforeNavigate(() => {
+	  smoothScrollTo(0);
+	});
+	
 	// Create and set Supabase client in context using environment variables
 	const supabase = createSupabaseLoadClient({
 		supabaseUrl: PUBLIC_SUPABASE_URL,

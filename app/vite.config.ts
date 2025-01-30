@@ -1,9 +1,17 @@
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig, loadEnv } from 'vite';
+import { fileURLToPath } from 'url';
+import path from 'path';
 
 export default defineConfig(({ mode }) => {
-  // Load env file based on `mode` in the current working directory.
-  const env = loadEnv(mode, process.cwd() + '/app', '');
+  // Get the root directory (one level up from app directory)
+  const rootDir = path.resolve(fileURLToPath(new URL('.', import.meta.url)), '..');
+  
+  // Load env file from root directory
+  const env = loadEnv(mode, rootDir, '');
+  
+  console.log('Loading environment from:', rootDir);
+  console.log('Mode:', mode);
   
   return {
     plugins: [sveltekit()],
