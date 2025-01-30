@@ -20,8 +20,11 @@ export const actions = {
     const email = data.get('email')?.toString();
     const message = data.get('message')?.toString();
 
+    console.log('Processing contact form:', { name, email }); // Debug log
+
     // Validierung
     if (!name || !email || !message) {
+      console.log('Validation failed: Missing fields');
       return fail(400, {
         error: 'Alle Felder müssen ausgefüllt werden',
         values: { name, email, message }
@@ -29,6 +32,7 @@ export const actions = {
     }
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      console.log('Validation failed: Invalid email');
       return fail(400, {
         error: 'Bitte gib eine gültige E-Mail-Adresse ein',
         values: { name, email, message }
@@ -36,12 +40,15 @@ export const actions = {
     }
 
     try {
+      console.log('Attempting to send email...');
       const result = await sendEmail({
         name,
         email,
         message,
         formType: 'contact'
       });
+
+      console.log('Email result:', result);
 
       if (!result.success) {
         return fail(500, {
@@ -54,7 +61,7 @@ export const actions = {
         success: true
       };
     } catch (error) {
-      console.error('Error sending email:', error);
+      console.error('Error in form submission:', error);
       return fail(500, {
         error: 'Es ist ein Fehler beim Senden der E-Mail aufgetreten',
         values: { name, email, message }
