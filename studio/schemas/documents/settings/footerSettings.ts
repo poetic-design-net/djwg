@@ -1,97 +1,106 @@
-import { defineField, defineType } from 'sanity'
-
-export default defineType({
+export default {
   name: 'footerSettings',
-  title: 'Footer Einstellungen',
+  title: 'Footer Settings',
   type: 'document',
+  preview: {
+    select: {
+      title: 'title'
+    },
+    prepare() {
+      return {
+        title: 'Footer Settings'
+      }
+    }
+  },
   fields: [
-    defineField({
-      name: 'description',
-      title: 'Beschreibung',
-      type: 'text',
-      validation: Rule => Rule.required()
-    }),
-    defineField({
-      name: 'eventsNavigation',
-      title: 'Events Navigation',
+    {
+      name: 'columns',
+      title: 'Footer Columns',
       type: 'array',
       of: [
         {
           type: 'object',
+          name: 'column',
           fields: [
-            defineField({
+            {
               name: 'title',
-              title: 'Titel',
-              type: 'string',
-              validation: Rule => Rule.required()
-            }),
-            defineField({
-              name: 'link',
-              title: 'Link',
-              type: 'string',
-              validation: Rule => Rule.required()
-            })
+              title: 'Column Title',
+              type: 'string'
+            },
+            {
+              name: 'links',
+              title: 'Links',
+              type: 'array',
+              of: [
+                {
+                  type: 'object',
+                  fields: [
+                    {
+                      name: 'text',
+                      title: 'Link Text',
+                      type: 'string'
+                    },
+                    {
+                      name: 'url',
+                      title: 'URL',
+                      type: 'string',
+                      validation: (Rule: any) => Rule.required()
+                    }
+                  ]
+                }
+              ]
+            }
           ]
         }
-      ],
-      validation: Rule => Rule.required()
-    }),
-    defineField({
-      name: 'infoNavigation',
-      title: 'Info Navigation',
+      ]
+    },
+    {
+      name: 'socialLinks',
+      title: 'Social Media Links',
       type: 'array',
       of: [
         {
           type: 'object',
           fields: [
-            defineField({
-              name: 'title',
-              title: 'Titel',
-              type: 'string',
-              validation: Rule => Rule.required()
-            }),
-            defineField({
-              name: 'link',
-              title: 'Link',
-              type: 'string',
-              validation: Rule => Rule.required()
-            })
-          ]
-        }
-      ],
-      validation: Rule => Rule.required()
-    }),
-    defineField({
-      name: 'socialMedia',
-      title: 'Social Media',
-      type: 'array',
-      of: [
-        {
-          type: 'object',
-          fields: [
-            defineField({
+            {
               name: 'platform',
               title: 'Plattform',
               type: 'string',
               options: {
                 list: [
-                  { title: 'Instagram', value: 'instagram' },
-                  { title: 'Facebook', value: 'facebook' },
-                  { title: 'TikTok', value: 'tiktok' }
+                  {title: 'Facebook', value: 'facebook'},
+                  {title: 'Instagram', value: 'instagram'},
+                  {title: 'Twitter', value: 'twitter'},
+                  {title: 'LinkedIn', value: 'linkedin'},
+                  {title: 'YouTube', value: 'youtube'},
+                  {title: 'TikTok', value: 'tiktok'}
                 ]
-              },
-              validation: Rule => Rule.required()
-            }),
-            defineField({
+              }
+            },
+            {
               name: 'url',
               title: 'URL',
               type: 'url',
-              validation: Rule => Rule.required()
-            })
+              validation: (Rule: any) => Rule.required()
+            }
           ]
         }
-      ],
-      validation: Rule => Rule.required()
-    })
+      ]
+    },
+    {
+      name: 'bottomText',
+      title: 'Footer Text (bottom)',
+      type: 'text',
+      rows: 2,
+      description: 'Text der ganz unten im Footer erscheint (z.B. Copyright)'
+    },
+    {
+      name: 'logo',
+      title: 'Footer Logo',
+      type: 'image',
+      options: {
+        hotspot: true
+      }
+    }
   ]
-})
+}

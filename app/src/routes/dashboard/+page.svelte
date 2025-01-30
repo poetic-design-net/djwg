@@ -9,6 +9,7 @@
 
   export let data: {
     user: {
+      id: string;
       email: string;
       created_at: string;
       user_metadata?: {
@@ -350,8 +351,8 @@
 </div>
 
 {#if showEditProfile}
-  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-    <div class="bg-gray-900 rounded-3xl p-8 max-w-md w-full relative border border-gray-800">
+  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[9999] overflow-y-auto">
+    <div class="my-8 bg-gray-900 rounded-3xl p-8 max-w-5xl w-full relative border border-gray-800 max-h-[90vh] overflow-y-auto">
       <button
         on:click={() => showEditProfile = false}
         class="absolute top-4 right-4 text-gray-400 hover:text-white"

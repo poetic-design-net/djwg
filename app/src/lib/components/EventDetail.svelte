@@ -1,5 +1,8 @@
 <script lang="ts">
-  import type { TransformedArtist, TimeSlot, TransformedEvent } from '$lib/sanity/queries';
+  import type { TransformedArtist, TimeSlot } from '$lib/sanity/queries';
+  import type { SanityImageSource } from '$lib/sanity/image';
+  
+  import type { TransformedEvent } from '$lib/sanity/queries/events';
   import Hero from './event/Hero.svelte';
   import About from './event/About.svelte';
   import Location from './event/Location.svelte';
@@ -16,7 +19,7 @@
   interface TransformedInstructor {
     name: string;
     role: string;
-    image?: string;
+    image?: SanityImageSource;
     soundcloud?: string;
     instagram?: string;
   }
@@ -50,17 +53,18 @@
   let scheduleView: 'timeline' | 'overview' = 'timeline';
 
   // Define sections based on available content
-  $: sections = [
-    { id: 'hero', label: 'Start' },
-    { id: 'about', label: 'About' },
-    ...(hasValidSchedule ? [{ id: 'schedule', label: 'Schedule' }] : []),
-    ...(event.hasOpenStage ? [{ id: 'openstage', label: 'Open Stage' }] : []),
-    { id: 'artists', label: 'Artists' },
-    ...(event.locationDetails ? [{ id: 'location', label: 'Location' }] : []),
-    { id: 'tickets', label: 'Tickets' },
-    ...(event.gallery ? [{ id: 'gallery', label: 'Gallery' }] : []),
-    ...(event.faqSection ? [{ id: 'faq', label: 'FAQ' }] : [])
-  ];
+// Define sections based on available content
+$: sections = [
+  { id: 'hero', label: 'Start' },
+  { id: 'about', label: 'About' },
+  { id: 'tickets', label: 'Tickets' },  // Moved up to match template order
+  ...(hasValidSchedule ? [{ id: 'schedule', label: 'Schedule' }] : []),
+  ...(event.hasOpenStage ? [{ id: 'openstage', label: 'Open Stage' }] : []),
+  ...(event.artists && event.artists.length > 0 ? [{ id: 'artists', label: 'Artists' }] : []),
+  ...(event.locationDetails ? [{ id: 'location', label: 'Location' }] : []),
+  ...(event.gallery ? [{ id: 'gallery', label: 'Gallery' }] : []),
+  ...((event.faqSection?.selectedFaqs ?? []).length > 0 ? [{ id: 'faq', label: 'FAQ' }] : [])
+];
 </script>
 
 <div class="min-h-screen bg-black relative">
@@ -71,20 +75,22 @@
   </div>
 
   <div id="about">
-    <About 
-      description={event.description}
+    <About
+      description={event.description ?? ''}
       features={event.features || []}
-      highlights={event.highlights}
+      highlights={event.highlights || []}
     />
   </div>
 
-  <div id="tickets" class="py-20 bg-black/40">
-    <Pricing tickets={event.tickets || []} />
-  </div>
+  {#if event.tickets}
+    <div id="tickets" class="py-20 pb-48 bg-black/40">
+      <Pricing tickets={event.tickets} />
+    </div>
+  {/if}
 
   {#if hasValidSchedule}
     <div id="schedule">
-      <div class="container px-4 mx-auto mb-8">
+      <div class="container px-4 mx-auto">
         <div class="flex justify-center gap-4">
           <button
             class="px-6 py-3 rounded-full text-sm font-medium transition-all duration-300 {scheduleView === 'timeline' ? 'bg-green-500 text-black scale-105' : 'text-white hover:text-green-500 hover:scale-105'}"
@@ -120,14 +126,17 @@
     </div>
   {/if}
 
-  <div id="artists" class="py-20 bg-black/40">
-    <ArtistsSlider artists={event.artists || []} isLineupRevealed={!event.isArtistsSecret} />
-  </div>
+  {#if event.artists && event.artists.length > 0}
+    <div id="artists" class="py-20 bg-black/40">
+      <ArtistsSlider artists={event.artists} isLineupRevealed={!event.isArtistsSecret} />
+    </div>
+  {/if}
 
   {#if event.locationDetails}
     <div id="location">
-      <Location 
+      <Location
         locationDetails={event.locationDetails}
+        locationUrl={event.locationUrl}
         isSecret={event.isLocationSecret}
       />
     </div>
@@ -136,15 +145,19 @@
  
 
   {#if event.faqSection}
-  <div id="faq" class="py-20 bg-black/40">
-    <FAQ 
-      title={event.faqSection.title}
-      description={event.faqSection.description}
-      faqs={event.faqSection.selectedFaqs}
-      showCategories={event.faqSection.showCategories}
-    />
-  </div>
-{/if}
+    {@const faqSection = event.faqSection}
+    {@const hasFaqs = faqSection.selectedFaqs && faqSection.selectedFaqs.length > 0}
+    {#if hasFaqs}
+      <div id="faq" class="py-20 bg-black/40">
+        <FAQ
+          title={faqSection.title || 'Häufig gestellte Fragen'}
+          description={faqSection.description}
+          faqs={faqSection.selectedFaqs}
+          showCategories={faqSection.showCategories ?? false}
+        />
+      </div>
+    {/if}
+  {/if}
 
   {#if event.gallery}
     <div id="gallery">

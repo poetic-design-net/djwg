@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { MerchProduct } from '$lib/types/menu';
   import OptimizedImage from './OptimizedImage.svelte';
+  import { onMount } from 'svelte';
 
   export let id: string | undefined = undefined;
   export let title: string = "Unser Merch Shop";
@@ -8,6 +9,10 @@
   export let products: MerchProduct[] = [];
   let validProducts: MerchProduct[] = [];
   $: gridColumns = Math.min(validProducts.length || 1, 4);
+
+  // Aktive Bilder und Varianten für jedes Produkt
+  let activeImageIndices: { [key: string]: number } = {};
+  let selectedVariants: { [key: string]: number } = {};
 
   $: {
     console.log('Merch products:', products);
@@ -19,12 +24,36 @@
       return isValid;
     });
     console.log('Valid products:', validProducts, 'Count:', validProducts.length);
+
+    // Initialisiere Indizes für neue Produkte
+    validProducts.forEach(product => {
+      if (!(product._id in activeImageIndices)) {
+        activeImageIndices[product._id] = 0;
+      }
+      if (!(product._id in selectedVariants)) {
+        selectedVariants[product._id] = 0;
+      }
+    });
   }
-  function getImageAlt(product: MerchProduct): string {
-    if (product.image?.alt && typeof product.image.alt === 'string') {
-      return product.image.alt;
+
+  function getImageAlt(product: MerchProduct, imageIndex: number): string {
+    const image = product.images[imageIndex];
+    if (image?.alt && typeof image.alt === 'string') {
+      return image.alt;
     }
-    return product.title || 'Produkt Bild';
+    return `${product.title} - Bild ${imageIndex + 1}`;
+  }
+
+  function nextImage(productId: string, totalImages: number) {
+    activeImageIndices[productId] = (activeImageIndices[productId] + 1) % totalImages;
+  }
+
+  function previousImage(productId: string, totalImages: number) {
+    activeImageIndices[productId] = (activeImageIndices[productId] - 1 + totalImages) % totalImages;
+  }
+
+  function selectVariant(productId: string, variantIndex: number) {
+    selectedVariants[productId] = variantIndex;
   }
 </script>
 
@@ -43,23 +72,58 @@
             <!-- Content Container -->
             <div class="flex-grow p-8">
               <div class="mb-6">
-                {#if product.image?.asset}
-                  <div class="mb-6 aspect-square overflow-hidden rounded-xl">
+                {#if product.images && product.images.length > 0}
+                  <div class="relative mb-6 aspect-square overflow-hidden rounded-xl group">
+                    <!-- Bilder-Slider -->
                     <OptimizedImage
-                      image={product.image}
-                      alt={getImageAlt(product)}
+                      image={product.images[activeImageIndices[product._id]]}
+                      alt={getImageAlt(product, activeImageIndices[product._id])}
                       maxWidth={600}
                       sizes="(max-width: 768px) 100vw, 50vw"
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover transition-opacity duration-300"
                     />
+                    
+                    <!-- Navigation Buttons -->
+                    {#if product.images.length > 1}
+                      <button
+                        class="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                        on:click={() => previousImage(product._id, product.images.length)}
+                      >
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                      </button>
+                      <button
+                        class="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                        on:click={() => nextImage(product._id, product.images.length)}
+                      >
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+
+                      <!-- Bildpunkte -->
+                      <div class="absolute bottom-2 left-1/2 -translate-x-1/2 flex space-x-2">
+                        {#each product.images as _, index}
+                          <button
+                            class="w-2 h-2 rounded-full transition-colors duration-200 {index === activeImageIndices[product._id] ? 'bg-white' : 'bg-white/50 hover:bg-white/70'}"
+                            on:click={() => activeImageIndices[product._id] = index}
+                          />
+                        {/each}
+                      </div>
+                    {/if}
                   </div>
                 {/if}
                 <h3 class="mb-4 text-xl text-white">{product.title}</h3>
                 <p class="text-gray-300 text-sm">{product.description || ''}</p>
-                {#if typeof product.price === 'number' && product.currency}
-                  <p class="mt-2 text-lg font-semibold text-tourquis-500">{product.price} {product.currency}</p>
+                {#if product.variants && product.variants.length > 0}
+                  <p class="mt-2 text-lg font-semibold text-tourquis-500">
+                    {product.variants[selectedVariants[product._id]].price} 
+                    {product.variants[selectedVariants[product._id]].currency}
+                  </p>
                 {/if}
               </div>
+
               {#if Array.isArray(product.features) && product.features.length > 0}
                 <ul class="mb-6">
                   {#each product.features as feature}
@@ -75,14 +139,31 @@
                   {/each}
                 </ul>
               {/if}
+
+              <!-- Größenauswahl -->
+              {#if product.variants && product.variants.length > 0}
+                <div class="mb-6">
+                  <label class="block text-sm font-medium text-gray-300 mb-2">Größe auswählen</label>
+                  <div class="flex flex-wrap gap-2">
+                    {#each product.variants as variant, index}
+                      <button
+                        class="px-4 py-2 rounded-lg border {selectedVariants[product._id] === index ? 'border-tourquis-500 bg-tourquis-500/10 text-white' : 'border-gray-700 text-gray-300 hover:border-gray-500'}"
+                        on:click={() => selectVariant(product._id, index)}
+                      >
+                        {variant.name}
+                      </button>
+                    {/each}
+                  </div>
+                </div>
+              {/if}
             </div>
             
             <!-- Button Container (Always at Bottom) -->
-            {#if product.shopUrl}
+            {#if product.variants && product.variants.length > 0}
               <div class="p-8 pt-0 text-center">
                 <a
                   class="inline-block w-full py-4 px-6 text-sm text-black font-medium bg-green-500 hover:bg-green-600 rounded-full transition duration-200"
-                  href={product.shopUrl}
+                  href={product.variants[selectedVariants[product._id]].shopUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                 >

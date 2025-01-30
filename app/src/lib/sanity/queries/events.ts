@@ -264,13 +264,13 @@ export interface SanityEvent {
   enableSectionNav?: boolean;
   seo?: SEO;
   faqSection?: {
-    title: any[];
-    description: string;
-    showCategories: boolean;
-    selectedFaqs: Array<{
+    title?: string;
+    description?: string;
+    showCategories?: boolean;
+    selectedFaqs?: Array<{
       _id: string;
       question: string;
-      answer: any[];
+      answer: string;
       category: string;
     }>;
   };
@@ -354,7 +354,7 @@ export interface TransformedEvent {
   enableSectionNav?: boolean;
   seo?: SEO;
   faqSection?: {
-    title: any[];
+    title?: string;
     description: string;
     showCategories: boolean;
     selectedFaqs: Array<{

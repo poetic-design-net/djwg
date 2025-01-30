@@ -120,6 +120,21 @@ export default defineType({
           title: 'Column Title',
           type: 'string'
         }, {
+          name: 'link',
+          title: 'Column Title Link',
+          type: 'string',
+          description: 'Optional: Link für den Column Title'
+        }, {
+          name: 'linkType',
+          title: 'Column Title Link Type',
+          type: 'string',
+          options: {
+            list: [
+              { title: 'Anchor Link', value: 'anchor' },
+              { title: 'Page Link', value: 'page' }
+            ]
+          }
+        }, {
           name: 'items',
           title: 'Menu Items',
           type: 'array',

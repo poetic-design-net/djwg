@@ -4,12 +4,19 @@
   import type { MenuItems } from '$lib/types/menu';
   import type { MenuLink } from '$lib/sanity/queries/navigation';
   import OptimizedImage from '$lib/components/OptimizedImage.svelte';
+  import { goto } from '$app/navigation';
 
   export let activeMenu: string | null;
   export let menuItems: MenuItems;
   export let onClose: () => void;
 
   let megaMenuContainer: HTMLDivElement;
+
+  const handleLinkClick = (href: string | undefined) => {
+    if (!href) return;
+    onClose();
+    goto(href);
+  };
 
   $: activeMenuItem = activeMenu ? menuItems.find(item => item._id === activeMenu) : null;
   $: console.log('MegaMenu activeMenuItem:', activeMenuItem);
@@ -45,32 +52,32 @@
         <!-- Featured Content -->
         {#if activeMenuItem.featured}
           <div class="col-span-4">
-            <a 
-              href={activeMenuItem.featured.link} 
+            <a
+              href={activeMenuItem.featured?.link}
               class="block group"
-              on:click={onClose}
+              on:click|preventDefault={() => handleLinkClick(activeMenuItem.featured?.link)}
             >
               <div class="relative rounded-2xl overflow-hidden mb-4 aspect-video">
                 {#if activeMenuItem.featured.image}
                   <OptimizedImage 
                     image={activeMenuItem.featured.image}
                     maxWidth={400}
-                    className="w-full h-full object-cover transform group-hover:scale-105 transition duration-500"
+                    className="w-full h-full object-cover transform scale-105 transition duration-500"
                   />
                 {/if}
-                <div class="absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-colors duration-300"></div>
+                <div class="absolute inset-0 bg-black/30 transition-colors duration-300"></div>
               </div>
               <div class="flex items-center gap-2">
                 {#if activeMenuItem.featured.linkType === 'anchor'}
-                  <span class="text-green-500/0 group-hover:text-green-500 transition-colors duration-200">#</span>
+                  <span class="text-green-500 transition-colors duration-200">#</span>
                 {:else}
-                  <span class="text-green-500/0 group-hover:text-green-500 transition-colors duration-200">→</span>
+                  <span class="text-green-500 transition-colors duration-200">→</span>
                 {/if}
-                <h3 class="font-heading text-xl text-white group-hover:text-green-400 transition duration-200">
+                <h3 class="font-heading text-xl text-green-400 transition duration-200">
                   {activeMenuItem.featured.title}
                 </h3>
               </div>
-              <p class="text-gray-400 group-hover:text-gray-300 transition duration-200 mt-2">
+              <p class="text-gray-300 transition duration-200 mt-2">
                 {activeMenuItem.featured.description}
               </p>
             </a>
@@ -81,14 +88,31 @@
         {#if activeMenuItem.columns}
           {#each activeMenuItem.columns as column}
             <div class="col-span-2">
-              <h4 class="font-heading text-sm text-green-400 font-medium mb-3">{column.title}</h4>
+              {#if column.link && column.linkType}
+                <a
+                  href={column.link}
+                  class="group block font-heading text-sm text-green-400 hover:text-white font-medium mb-3"
+                  on:click|preventDefault={() => handleLinkClick(column.link)}
+                >
+                  <div class="flex items-center">
+                    {#if column.linkType === 'anchor'}
+                      <span class="text-green-500/0 group-hover:text-green-500 transition-colors duration-200 mr-1">#</span>
+                    {:else}
+                      <span class="text-green-500/0 group-hover:text-green-500 transition-colors duration-200 mr-1">→</span>
+                    {/if}
+                    {column.title}
+                  </div>
+                </a>
+              {:else}
+                <h4 class="font-heading text-sm text-green-400 font-medium mb-3">{column.title}</h4>
+              {/if}
               <ul class="space-y-2">
                 {#each column.items as item}
                   <li>
-                    <a 
-                      href={item.link} 
+                    <a
+                      href={item.link}
                       class="group flex items-center font-heading text-gray-300 hover:text-white transition duration-200"
-                      on:click={onClose}
+                      on:click|preventDefault={() => handleLinkClick(item.link)}
                     >
                       {#if item.linkType === 'anchor'}
                         <span class="text-green-500/0 group-hover:text-green-500 transition-colors duration-200 mr-1">#</span>
@@ -111,10 +135,10 @@
             <ul class="space-y-2">
               {#each activeMenuItem.quickLinks as link (link.label)}
                 <li>
-                  <a 
-                    href={link.link} 
+                  <a
+                    href={link.link}
                     class="group flex items-center font-heading text-gray-300 hover:text-white transition duration-200"
-                    on:click={onClose}
+                    on:click|preventDefault={() => handleLinkClick(link.link)}
                   >
                     {#if link.linkType === 'anchor'}
                       <span class="text-green-500/0 group-hover:text-green-500 transition-colors duration-200 mr-1">#</span>

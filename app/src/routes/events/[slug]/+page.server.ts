@@ -4,6 +4,8 @@ import { eventQuery } from '$lib/sanity/queries';
 import { urlFor } from '$lib/sanity/image';
 import type { Image } from '@sanity/types';
 
+import type { PortableTextBlock } from '@portabletext/types';
+
 interface SanityEvent {
   _id: string;
   title: string;
@@ -63,6 +65,17 @@ interface SanityEvent {
     isRevealed: boolean;
     order: number;
   }>;
+  faqSection?: {
+    title: PortableTextBlock[];
+    description?: string;
+    showCategories?: boolean;
+    selectedFaqs?: Array<{
+      _id: string;
+      question: string;
+      answer: PortableTextBlock[];
+      category: string;
+    }>;
+  };
 }
 
 export const load: PageServerLoad = async ({ params, locals: { loadQuery } }) => {
@@ -74,17 +87,25 @@ export const load: PageServerLoad = async ({ params, locals: { loadQuery } }) =>
     // Transform Sanity image URLs and handle dates
     const transformedEvent = {
       ...event.data,
-      image: urlFor(event.data.image).url(),
-      gallery: event.data.gallery?.map(img => urlFor(img).url()),
+      image: event.data.image,
+      gallery: event.data.gallery,
       locationDetails: event.data.locationDetails && {
         ...event.data.locationDetails,
-        image: urlFor(event.data.locationDetails.image).url()
+        image: event.data.locationDetails.image
       },
       // Transform schedule if it exists
       artists: event.data.artists?.map(artist => ({
         ...artist,
-        image: urlFor(artist.image).url()
+        image: artist.image
       })),
+      // Ensure FAQ section is properly structured with string values
+      faqSection: event.data.faqSection ? {
+        ...event.data.faqSection,
+        title: event.data.faqSection.title || 'Häufig gestellte Fragen',
+        description: event.data.faqSection.description || '',
+        showCategories: event.data.faqSection.showCategories ?? true,
+        selectedFaqs: event.data.faqSection.selectedFaqs || []
+      } : undefined,
       schedule: event.data.schedule ? {
         _id: event.data.schedule._id,
         days: event.data.schedule.days.map(day => ({

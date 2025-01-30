@@ -22,31 +22,51 @@ const merchProduct: SchemaTypeDefinition = {
       of: [{ type: 'string' }]
     },
     {
-      name: 'price',
-      title: 'Preis',
-      type: 'number'
+      name: 'images',
+      title: 'Produktbilder',
+      type: 'array',
+      of: [{ type: 'optimizedImage' }],
+      validation: (Rule: Rule) => Rule.min(1).error('Mindestens ein Bild ist erforderlich')
     },
     {
-      name: 'currency',
-      title: 'Währung',
-      type: 'string',
-      initialValue: 'EUR',
-      options: {
-        list: [
-          { title: 'EUR', value: 'EUR' },
-          { title: 'USD', value: 'USD' }
+      name: 'variants',
+      title: 'Produktvarianten',
+      type: 'array',
+      of: [{
+        type: 'object',
+        fields: [
+          {
+            name: 'name',
+            title: 'Name',
+            type: 'string',
+            description: 'z.B. "S", "M", "L", "XL"'
+          },
+          {
+            name: 'price',
+            title: 'Preis',
+            type: 'number'
+          },
+          {
+            name: 'currency',
+            title: 'Währung',
+            type: 'string',
+            initialValue: 'EUR',
+            options: {
+              list: [
+                { title: 'EUR', value: 'EUR' },
+                { title: 'USD', value: 'USD' }
+              ]
+            }
+          },
+          {
+            name: 'shopUrl',
+            title: 'Shop URL',
+            type: 'url',
+            description: 'Spezifische URL für diese Variante'
+          }
         ]
-      }
-    },
-    {
-      name: 'image',
-      title: 'Produktbild',
-      type: 'optimizedImage'
-    },
-    {
-      name: 'shopUrl',
-      title: 'Shop URL',
-      type: 'url'
+      }],
+      validation: (Rule: Rule) => Rule.min(1).error('Mindestens eine Variante ist erforderlich')
     }
   ]
 }

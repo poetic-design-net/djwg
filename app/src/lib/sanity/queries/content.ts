@@ -42,34 +42,36 @@ export const siteSettingsQuery = groq`*[_type == "siteSettings"][0] {
 
 // Footer Settings interface and query
 export interface FooterSettings {
-  description: string;
-  eventsNavigation: Array<{
+  columns?: Array<{
     title: string;
-    link: string;
+    links: Array<{
+      text: string;
+      url: string;
+    }>;
   }>;
-  infoNavigation: Array<{
-    title: string;
-    link: string;
-  }>;
-  socialMedia: Array<{
-    platform: 'instagram' | 'facebook' | 'tiktok';
+  socialLinks?: Array<{
+    platform: 'facebook' | 'instagram' | 'twitter' | 'linkedin' | 'youtube' | 'tiktok';
     url: string;
   }>;
+  bottomText?: string;
+  logo?: Image;
 }
 
 export const footerSettingsQuery = groq`*[_type == "footerSettings"][0] {
-  description,
-  eventsNavigation[] {
+  columns[] {
     title,
-    link
+    links[] {
+      text,
+      url
+    }
   },
-  infoNavigation[] {
-    title,
-    link
-  },
-  socialMedia[] | order(platform asc) {
+  socialLinks[] {
     platform,
     url
+  },
+  bottomText,
+  logo {
+    asset->
   }
 }`;
 
@@ -180,7 +182,6 @@ export interface KnowledgeBaseItem {
   categoryTitle: string;
   content?: PortableTextBlock[];
 }
-
 
 export const categoriesQuery = groq`*[_type == "category"] | order(title asc) {
   _id,

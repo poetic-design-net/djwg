@@ -17,6 +17,12 @@
 
 	export let data: LayoutData;
 
+	const defaultFooterSettings = {
+		columns: [],
+		socialLinks: [],
+		bottomText: '© 2025 djworkshopgermany.de'
+	};
+
 	// Set up navigation scroll behavior
 	beforeNavigate(() => {
 	  smoothScrollTo(0);
@@ -155,7 +161,7 @@
 </main>
 <footer>
 	<section class="bg-gray-50 overflow-hidden">
-		<Footer />
+		<Footer data={data.footerSettings || defaultFooterSettings} />
 	</section>
 </footer>
 

@@ -36,7 +36,19 @@
   });
 
   // Format logos and testimonials data to match component expectations
-  const logosData = { data: data.logos.options.initial as Logo[] || [] };
+  const logosData = { 
+    data: (data.logos.options.initial as Logo[] || []).map(logo => ({
+      ...logo,
+      image: {
+        ...logo.image,
+        asset: {
+          _type: 'reference',
+          _ref: String(logo.image.asset._id) || '',
+          _id: logo.image.asset._id || ''
+        }
+      }
+    }))
+  };
   const testimonialsData = { data: data.testimonials.options.initial as Testimonial[] || [] };
 
   // Event und Ticket Stores initialisieren
@@ -111,7 +123,6 @@
     { id: 'hero', label: 'Start' },
     { id: 'intro', label: 'Intro' },
     { id: 'workshops', label: 'Workshops' },
-    { id: 'artists', label: 'Artists' },
     { id: 'tickets', label: 'Tickets' },
     ...(logosData.data?.length > 0 ? [{ id: 'partners', label: 'Partner' }] : []),
     ...(testimonialsData.data?.length > 0 ? [{ id: 'testimonials', label: 'Testimonials' }] : []),

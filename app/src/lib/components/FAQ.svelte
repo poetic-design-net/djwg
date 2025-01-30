@@ -2,37 +2,21 @@
   import { slide } from 'svelte/transition';
   import { quintOut } from 'svelte/easing';
   import type { FAQ } from '$lib/sanity/queries';
-  import type { PortableTextBlock } from '@portabletext/types';
-  import type { PortableTextComponents } from '@portabletext/svelte';
-  import { PortableText } from '@portabletext/svelte';
 
   interface FAQSection {
-    title: PortableTextBlock[];
+    title?: string;
     description?: string;
     faqs: FAQ[];
     showCategories?: boolean;
   }
 
-  export let title: PortableTextBlock[] = [{
-    _type: 'block',
-    children: [{ _type: 'span', text: 'Häufig gestellte Fragen' }]
-  }];
+  export let title: string = 'Häufig gestellte Fragen';
   export let description: string | undefined = undefined;
   export let faqs: FAQ[] = [];
   export let showCategories: boolean = true;
 
   let activeIndex: number | null = null;
   let selectedCategory: string = 'all';
-
-  const components: Partial<PortableTextComponents> = {};
-
-  $: filteredFaqs = selectedCategory === 'all' 
-    ? faqs 
-    : faqs.filter(faq => faq.category === selectedCategory);
-
-  function toggleQuestion(index: number) {
-    activeIndex = activeIndex === index ? null : index;
-  }
 
   const categories = [
     { value: 'all', label: 'Alle' },
@@ -46,6 +30,14 @@
   $: availableCategories = categories.filter(category => 
     category.value === 'all' || faqs.some(faq => faq.category === category.value)
   );
+
+  $: filteredFaqs = selectedCategory === 'all' 
+    ? faqs 
+    : faqs.filter(faq => faq.category === selectedCategory);
+
+  function toggleQuestion(index: number) {
+    activeIndex = activeIndex === index ? null : index;
+  }
 </script>
 
 <section class="relative py-20 overflow-hidden">
@@ -53,7 +45,7 @@
     <div class="mb-20 text-center">
       <span class="inline-block mb-4 text-sm text-green-400 font-medium tracking-tighter">FAQ</span>
       <h2 class="font-heading text-5xl md:text-6xl text-white tracking-tighter">
-        <PortableText value={title} {components} />
+        {title}
       </h2>
       {#if description}
         <p class="mt-4 text-xl text-gray-300">{description}</p>
@@ -102,7 +94,7 @@
               class="p-6 bg-black/20 border-x border-b border-gray-800 rounded-b-3xl"
               transition:slide={{ duration: 300, easing: quintOut }}
             >
-              <p class="text-gray-300">{faq.answer}</p>
+              <div class="text-gray-300 whitespace-pre-wrap">{faq.answer}</div>
             </div>
           {/if}
         </div>

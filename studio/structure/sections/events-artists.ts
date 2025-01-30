@@ -39,9 +39,43 @@ export const eventsArtistsSection: Section = (S) =>
 
                   S.divider(),
 
-                  // Tickets
-                  S.documentTypeListItem('ticket')
+                  // Tickets by Event
+                  S.listItem()
                     .title('Tickets')
+                    .child(
+                      S.list()
+                        .title('Tickets by Event')
+                        .items([
+                          // All Tickets
+                          S.listItem()
+                            .title('All Tickets')
+                            .child(
+                              S.documentList()
+                                .title('All Tickets')
+                                .filter('_type == "ticket"')
+                                .defaultOrdering([
+                                  {field: 'event.title', direction: 'asc'},
+                                  {field: 'title', direction: 'asc'}
+                                ])
+                            ),
+                          S.divider(),
+                          // Tickets by Event
+                          S.listItem()
+                            .title('By Event')
+                            .child(
+                              S.documentList()
+                                .title('Select Event')
+                                .filter('_type == "event"')
+                                .defaultOrdering([{field: 'title', direction: 'asc'}])
+                                .child(eventId =>
+                                  S.documentList()
+                                    .title('Tickets')
+                                    .filter('_type == "ticket" && event._ref == $eventId')
+                                    .params({ eventId })
+                                )
+                            )
+                        ])
+                    )
                 ])
             ),
           

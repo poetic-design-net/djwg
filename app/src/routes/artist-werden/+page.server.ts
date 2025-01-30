@@ -1,88 +1,63 @@
-import { client } from '$lib/sanity/client';
-import { siteSettingsQuery } from '$lib/sanity/queries/settings';
-import type { PageServerLoad, Actions } from './$types';
-import type { SiteSettings } from '../contact/types';
-import { sendEmail } from '$lib/server/email';
-import { fail } from '@sveltejs/kit';
+import { client } from '$lib/sanity/client'
+import { artistPageQuery } from '$lib/sanity/queries/artist-partner'
+import type { PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async () => {
-  const settings = await client.fetch<SiteSettings>(siteSettingsQuery);
+  const [artistPage, settings] = await Promise.all([
+    client.fetch(artistPageQuery),
+    client.fetch(`*[_type == "siteSettings"][0]`)
+  ])
 
   return {
+    artistPage,
     settings
-  };
-};
+  }
+}
 
 export const actions = {
   default: async ({ request }) => {
-    const data = await request.formData();
-    const name = data.get('name')?.toString();
-    const email = data.get('email')?.toString();
-    const phone = data.get('phone')?.toString();
-    const instagram = data.get('instagram')?.toString();
-    const soundcloud = data.get('soundcloud')?.toString();
-    const experience = data.get('experience')?.toString();
-    const message = data.get('message')?.toString();
-
-    // Validierung
-    if (!name || !email || !message) {
-      return fail(400, {
-        error: 'Name, E-Mail und Nachricht sind erforderlich',
-        values: { name, email, phone, instagram, soundcloud, experience, message }
-      });
-    }
-
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return fail(400, {
-        error: 'Bitte gib eine gültige E-Mail-Adresse ein',
-        values: { name, email, phone, instagram, soundcloud, experience, message }
-      });
-    }
-
     try {
-      // Erstelle eine formatierte Nachricht mit allen Informationen
-      const formattedMessage = `
-Artist-Bewerbung von ${name}
+      const data = await request.formData()
+      const name = data.get('name')
+      const email = data.get('email')
+      const phone = data.get('phone')
+      const experience = data.get('experience')
+      const instagram = data.get('instagram')
+      const soundcloud = data.get('soundcloud')
+      const message = data.get('message')
 
-Kontaktinformationen:
-- Name: ${name}
-- E-Mail: ${email}
-- Telefon: ${phone || 'Nicht angegeben'}
-
-DJ-Profil:
-- Erfahrung: ${experience}
-- Instagram: ${instagram ? `@${instagram}` : 'Nicht angegeben'}
-- SoundCloud: ${soundcloud || 'Nicht angegeben'}
-
-Nachricht:
-${message}
-      `.trim();
-
-      const result = await sendEmail({
-        name,
-        email,
-        message: formattedMessage,
-        formType: 'artist',
-        subject: 'Neue Artist-Bewerbung'
-      });
-
-      if (!result.success) {
-        return fail(500, {
-          error: 'Es ist ein Fehler beim Senden der E-Mail aufgetreten',
-          values: { name, email, phone, instagram, soundcloud, experience, message }
-        });
+      if (!name || !email || !experience || !message) {
+        return {
+          error: 'Bitte fülle alle erforderlichen Felder aus.',
+          values: Object.fromEntries(data)
+        }
       }
+
+      // Hier können Sie die E-Mail-Versand-Logik implementieren
+      // Beispiel:
+      // await sendEmail({
+      //   to: 'artists@example.com',
+      //   subject: 'Neue Artist-Bewerbung',
+      //   body: `
+      //     Name: ${name}
+      //     Email: ${email}
+      //     Telefon: ${phone}
+      //     Erfahrung: ${experience}
+      //     Instagram: ${instagram}
+      //     SoundCloud: ${soundcloud}
+      //     Nachricht: ${message}
+      //   `
+      // })
 
       return {
         success: true,
         message: 'Vielen Dank für deine Bewerbung! Wir melden uns in Kürze bei dir.'
-      };
+      }
     } catch (error) {
-      console.error('Error sending email:', error);
-      return fail(500, {
-        error: 'Es ist ein Fehler beim Senden der E-Mail aufgetreten',
-        values: { name, email, phone, instagram, soundcloud, experience, message }
-      });
+      console.error('Artist application form error:', error)
+      return {
+        error: 'Es ist ein Fehler aufgetreten. Bitte versuche es später erneut.'
+      }
     }
   }
-} satisfies Actions;
+}

@@ -7,31 +7,27 @@ export const contentSection: Section = (S) =>
       S.list()
         .title('Content')
         .items([
-          // Pages
-          S.documentTypeListItem('page')
-            .title('Pages'),
-          
-          // Blog
-          S.documentTypeListItem('post')
-            .title('Blog Posts'),
-
-          S.divider(),
-
-          // FAQ
-          S.documentTypeListItem('faq')
-            .title('FAQ'),
-          
-          // Testimonials
-          S.documentTypeListItem('testimonial')
-            .title('Testimonials'),
-
-          // About Us
           S.listItem()
-            .title('About Us')
-            .child(
-              S.document()
-                .schemaType('aboutUs')
-                .documentId('aboutUs')
-            )
+            .title('Homepage')
+            .child(S.document().schemaType('homePage').documentId('homePage')),
+          S.listItem()
+            .title('Partner Page')
+            .child(S.document().schemaType('partnerPage').documentId('partnerPage')),
+          S.listItem()
+            .title('Artist Page')
+            .child(S.document().schemaType('artistPage').documentId('artistPage')),
+          S.listItem()
+            .title('Events')
+            .child(S.documentTypeList('event')),
+          S.listItem()
+            .title('Artists')
+            .child(S.documentTypeList('artist')),
+          S.listItem()
+            .title('Blog Posts')
+            .child(S.documentTypeList('post')),
+          S.divider(),
+          S.listItem()
+            .title('Pages')
+            .child(S.documentTypeList('page')),
         ])
     )

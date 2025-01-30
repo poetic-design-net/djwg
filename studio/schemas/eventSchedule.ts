@@ -1,6 +1,7 @@
 interface PreviewProps {
   title?: string;
   days?: Array<any>;
+  date?: string;
 }
 
 export default {
@@ -91,15 +92,47 @@ export default {
                               type: 'string',
                               description: 'SVG path for the icon'
                             }
-                          ]
+                          ],
+                          preview: {
+                            select: {
+                              title: 'title',
+                              time: 'time'
+                            },
+                            prepare({ title, time }) {
+                              return {
+                                title: `${time} - ${title}`
+                              }
+                            }
+                          }
                         }
                       ]
                     }
-                  ]
+                  ],
+                  preview: {
+                    select: {
+                      name: 'name'
+                    },
+                    prepare({ name }) {
+                      return {
+                        title: name || 'Unnamed Stage'
+                      }
+                    }
+                  }
                 }
               ]
             }
-          ]
+          ],
+          preview: {
+            select: {
+              date: 'date',
+              stages: 'stages'
+            },
+            prepare({ date, stages }) {
+              return {
+                title: date ? new Date(date).toLocaleDateString('de-DE') : 'Kein Datum'
+              }
+            }
+          }
         }
       ]
     }
@@ -112,7 +145,7 @@ export default {
     prepare({ title, days }: PreviewProps) {
       return {
         title: title || 'Untitled Event Schedule',
-        subtitle: days?.length ? `${days.length} days` : 'No days set'
+        subtitle: days?.length ? `${days.length} ${days.length === 1 ? 'Tag' : 'Tage'}` : 'Keine Tage gesetzt'
       }
     }
   }

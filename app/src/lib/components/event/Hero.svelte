@@ -1,5 +1,9 @@
 <script lang="ts">
   import { slide } from 'svelte/transition';
+  import OptimizedImage from '$lib/components/OptimizedImage.svelte';
+  
+  import type { SanityImageSource } from '$lib/sanity/image';
+  
   interface TransformedEvent {
     title: string;
     tag: string;
@@ -7,7 +11,7 @@
     date: string;
     location: string;
     locationUrl?: string;
-    image: string;
+    image: SanityImageSource;
   }
 
   export let event: TransformedEvent;
@@ -40,13 +44,6 @@
       showShareMenu = false;
     }
   }
-
-  // Create the image HTML
-  $: pictureHtml = event.image ? `<img 
-    src="${event.image}" 
-    alt="${event.title}"
-    class="w-full h-full object-cover"
-  >` : '';
 </script>
 
 <svelte:window on:click={handleClickOutside} />
@@ -54,7 +51,13 @@
 <div class="relative h-[100vh] lg:h-[80vh]">
   <!-- Background Image with Gradients -->
   <div class="absolute inset-0 z-0">
-    {@html pictureHtml}
+    <OptimizedImage
+      image={event.image}
+      alt={event.title}
+      className="w-full h-full object-cover"
+      sizes="100vw"
+      maxWidth={1920}
+    />
     <!-- Combined gradient overlay to prevent multiple layer repaints -->
     <div
       class="absolute inset-0 bg-gradient-to-b from-black/80 via-black/60 to-black"

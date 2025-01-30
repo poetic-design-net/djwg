@@ -1,44 +1,56 @@
 <script lang="ts">
   import { fade } from 'svelte/transition';
-  import type { PageData } from '../contact/types';
   import { enhance } from '$app/forms';
   
-  export let data: PageData;
+  export let data;
   export let form: any;
   
-  const { settings } = data;
-
+  const { settings, partnerPage } = data;
+  
   let isSubmitting = false;
 </script>
 
 <svelte:head>
-  <title>Partner werden | {settings.title || 'DJ Workshop'}</title>
-  <meta name="description" content="Präsentiere deine Produkte auf unserem Event und erreiche die DJ-Community!" />
+  <title>{partnerPage?.seo?.title || 'Partner werden'} | {settings.title || 'DJ Workshop'}</title>
+  <meta name="description" content={partnerPage?.seo?.description || 'Präsentiere deine Produkte auf unserem Event und erreiche die DJ-Community!'} />
 </svelte:head>
 
 <section class="py-20 overflow-hidden">
   <div class="container px-4 mx-auto">
     <div class="md:max-w-4xl mx-auto">
       <div class="text-center mb-16">
-        <span class="inline-block mb-4 text-sm text-green-400 font-medium tracking-tighter">DJ Workshop</span>
-        <h1 class="font-heading mb-8 text-5xl md:text-7xl lg:text-8xl text-white tracking-7xl lg:tracking-8xl">Partner werden</h1>
-        <p class="text-lg text-gray-300 max-w-2xl mx-auto">Präsentiere deine Produkte auf unserem Event und erreiche die DJ-Community! Fülle das Formular aus und wir melden uns bei dir.</p>
+        <span class="inline-block mb-4 text-sm text-green-400 font-medium tracking-tighter">Partner & Aussteller</span>
+        <h1 class="font-heading mb-8 text-5xl md:text-7xl lg:text-8xl text-white tracking-7xl lg:tracking-8xl">
+          {partnerPage?.title || 'Partner werden'}
+        </h1>
+        <p class="text-lg text-gray-300 max-w-2xl mx-auto">
+          {partnerPage?.description || 'Präsentiere deine Produkte auf unserem Event und erreiche die DJ-Community! Fülle das Formular aus und wir melden uns bei dir.'}
+        </p>
       </div>
 
       <!-- Partner Benefits Section -->
       <div class="grid md:grid-cols-3 gap-8 mb-16">
-        <div class="p-6 rounded-2xl bg-gray-800/50 backdrop-blur text-center">
-          <h3 class="text-xl font-medium text-white mb-3">Direkte Zielgruppe</h3>
-          <p class="text-gray-300">Erreiche motivierte DJs und Musikbegeisterte direkt vor Ort.</p>
-        </div>
-        <div class="p-6 rounded-2xl bg-gray-800/50 backdrop-blur text-center">
-          <h3 class="text-xl font-medium text-white mb-3">Präsentation</h3>
-          <p class="text-gray-300">Eigener Stand und Präsentationsmöglichkeiten für deine Produkte.</p>
-        </div>
-        <div class="p-6 rounded-2xl bg-gray-800/50 backdrop-blur text-center">
-          <h3 class="text-xl font-medium text-white mb-3">Networking</h3>
-          <p class="text-gray-300">Knüpfe wertvolle Kontakte in der DJ- und Musikbranche.</p>
-        </div>
+        {#if partnerPage?.benefits}
+          {#each partnerPage.benefits as benefit}
+            <div class="p-6 rounded-2xl bg-gray-800/50 backdrop-blur text-center">
+              <h3 class="text-xl font-medium text-white mb-3">{benefit.title}</h3>
+              <p class="text-gray-300">{benefit.description}</p>
+            </div>
+          {/each}
+        {:else}
+          <div class="p-6 rounded-2xl bg-gray-800/50 backdrop-blur text-center">
+            <h3 class="text-xl font-medium text-white mb-3">Direkte Zielgruppe</h3>
+            <p class="text-gray-300">Erreiche motivierte DJs und Musikbegeisterte direkt vor Ort.</p>
+          </div>
+          <div class="p-6 rounded-2xl bg-gray-800/50 backdrop-blur text-center">
+            <h3 class="text-xl font-medium text-white mb-3">Präsentation</h3>
+            <p class="text-gray-300">Eigener Stand und Präsentationsmöglichkeiten für deine Produkte.</p>
+          </div>
+          <div class="p-6 rounded-2xl bg-gray-800/50 backdrop-blur text-center">
+            <h3 class="text-xl font-medium text-white mb-3">Networking</h3>
+            <p class="text-gray-300">Knüpfe wertvolle Kontakte in der DJ- und Musikbranche.</p>
+          </div>
+        {/if}
       </div>
 
       <!-- Partner Application Form -->
@@ -210,30 +222,56 @@
       <!-- Additional Info Section -->
       <div class="mt-20">
         <div class="text-center mb-12">
-          <h2 class="text-3xl font-medium text-white mb-4">Warum Partner werden?</h2>
-          <p class="text-gray-300">Als Partner des DJ Workshops profitierst du von unserem starken Netzwerk und direktem Zugang zur DJ-Community.</p>
+          <h2 class="text-3xl font-medium text-white mb-4">
+            {partnerPage?.whyPartnerSection?.title || 'Warum Partner werden?'}
+          </h2>
+          <p class="text-gray-300">
+            {partnerPage?.whyPartnerSection?.description || 'Als Partner des DJ Workshops profitierst du von unserem starken Netzwerk und direktem Zugang zur DJ-Community.'}
+          </p>
         </div>
 
         <div class="grid md:grid-cols-2 gap-8">
-          <div class="p-8 rounded-2xl bg-gray-800/50 backdrop-blur">
-            <h3 class="text-xl font-medium text-white mb-4">Ausstellerfläche</h3>
-            <ul class="space-y-3 text-gray-300">
-              <li>• Professionell ausgestattete Standfläche</li>
-              <li>• Technische Ausstattung nach Bedarf</li>
-              <li>• Optimale Präsentationsmöglichkeiten</li>
-              <li>• Flexible Standgrößen verfügbar</li>
-            </ul>
-          </div>
+          {#if partnerPage?.exhibitorInfo}
+            <div class="p-8 rounded-2xl bg-gray-800/50 backdrop-blur">
+              <h3 class="text-xl font-medium text-white mb-4">{partnerPage.exhibitorInfo.title}</h3>
+              <ul class="space-y-3 text-gray-300">
+                {#each partnerPage.exhibitorInfo.items as item}
+                  <li>• {item}</li>
+                {/each}
+              </ul>
+            </div>
+          {:else}
+            <div class="p-8 rounded-2xl bg-gray-800/50 backdrop-blur">
+              <h3 class="text-xl font-medium text-white mb-4">Ausstellerfläche</h3>
+              <ul class="space-y-3 text-gray-300">
+                <li>• Professionell ausgestattete Standfläche</li>
+                <li>• Technische Ausstattung nach Bedarf</li>
+                <li>• Optimale Präsentationsmöglichkeiten</li>
+                <li>• Flexible Standgrößen verfügbar</li>
+              </ul>
+            </div>
+          {/if}
 
-          <div class="p-8 rounded-2xl bg-gray-800/50 backdrop-blur">
-            <h3 class="text-xl font-medium text-white mb-4">Marketing & Promotion</h3>
-            <ul class="space-y-3 text-gray-300">
-              <li>• Präsenz auf unserer Website</li>
-              <li>• Social Media Promotion</li>
-              <li>• Erwähnung in Newsletter</li>
-              <li>• Logo-Präsenz auf Event-Material</li>
-            </ul>
-          </div>
+          {#if partnerPage?.marketingInfo}
+            <div class="p-8 rounded-2xl bg-gray-800/50 backdrop-blur">
+              <h3 class="text-xl font-medium text-white mb-4">{partnerPage.marketingInfo.title}</h3>
+              <ul class="space-y-3 text-gray-300">
+                {#each partnerPage.marketingInfo.items as item}
+                  <li>• {item}</li>
+                {/each}
+              </ul>
+            </div>
+          {:else}
+            <div class="p-8 rounded-2xl bg-gray-800/50 backdrop-blur">
+              <h3 class="text-xl font-medium text-white mb-4">Marketing & Promotion</h3>
+              <ul class="space-y-3 text-gray-300">
+                <li>• Präsenz auf unserer Website</li>
+                <li>• Social Media Promotion</li>
+                <li>• Erwähnung in Newsletter</li>
+                <li>• Logo-Präsenz auf Event-Material</li>
+              </ul>
+            </div>
+          {/if}
         </div>
       </div>
     </div>
