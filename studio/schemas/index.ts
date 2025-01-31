@@ -16,6 +16,8 @@ import testimonial from './testimonial'
 import teamMember from './teamMember'
 import knowledgeBaseItem from './knowledgeBaseItem'
 import aboutUs from './aboutUs'
+import onlineTalk from './onlineTalk'
+import badge from './badge'
 
 // Document Types
 import page from './documents/page'
@@ -69,6 +71,8 @@ export const schemaTypes = [
   siteSettings,
   footerSettings,
   merchProduct,
+  onlineTalk,
+  badge, // Neues Badge-Schema hinzugefügt
   // Objects
   blockContent,
   seo,

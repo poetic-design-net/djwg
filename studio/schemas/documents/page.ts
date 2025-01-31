@@ -165,6 +165,16 @@ export default defineType({
       name: 'seo',
       title: 'SEO',
       type: 'seo'
+    }),
+    defineField({
+      name: 'requiredBadges',
+      title: 'Required Badges',
+      description: 'Badges die ein User benötigt um diese Seite zu sehen',
+      type: 'array',
+      of: [{
+        type: 'reference',
+        to: [{ type: 'badge' }]
+      }]
     })
   ],
   preview: {

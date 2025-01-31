@@ -34,8 +34,13 @@
     id: string;
     email: string;
     user_metadata?: {
-      firstname?: string;
+      first_name?: string;
+      last_name?: string;
       name?: string;
+    };
+    raw_user_meta_data?: {
+      first_name?: string;
+      last_name?: string;
     };
   };
 
@@ -45,7 +50,8 @@
   let error = '';
   
   // Basis-Felder
-  let firstname = user.user_metadata?.firstname || user.user_metadata?.name || '';
+  let firstName = user.raw_user_meta_data?.first_name || user.user_metadata?.first_name || '';
+  let lastName = user.raw_user_meta_data?.last_name || user.user_metadata?.last_name || '';
   let email = user.email;
   
   // Profil-Daten
@@ -92,149 +98,150 @@
       console.error('Fehler beim Laden des Profils:', e);
     }
   };
-// Avatar-Upload Handler
-async function handleAvatarUpload(event: Event) {
-  const input = event.target as HTMLInputElement;
-  if (!input.files?.length || !user) return;
-  
-  const file = input.files[0];
-  if (!file.type.startsWith('image/')) {
-    error = 'Bitte nur Bilder hochladen';
-    return;
+
+  // Avatar-Upload Handler
+  async function handleAvatarUpload(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (!input.files?.length) return;
+    
+    const file = input.files[0];
+    if (!file.type.startsWith('image/')) {
+      error = 'Bitte nur Bilder hochladen';
+      return;
+    }
+
+    loading = true;
+    error = '';
+    success = false;
+
+    try {
+      const { data: uploadData, error: dbError } = await supabase
+        .from('media_uploads')
+        .insert({
+          user_id: user.id,
+          original_filename: file.name,
+          file_type: file.type,
+          file_size: file.size,
+          status: 'pending',
+          metadata: {
+            mime_type: file.type,
+            last_modified: file.lastModified,
+            storage_provider: 'sanity',
+            usage: 'avatar'
+          }
+        })
+        .select()
+        .single();
+
+      if (dbError) throw dbError;
+      if (!uploadData) throw new Error('Keine Daten vom Upload erhalten');
+
+      const sanityResult = await uploadToSanity(
+        file,
+        user.id,
+        uploadData.id,
+        firstName || lastName || user.email?.split('@')[0] || 'Unbekannter Benutzer',
+        user.email
+      );
+
+      // Aktualisiere den Eintrag mit den Sanity-Referenzen
+      const { error: updateError } = await supabase
+        .from('media_uploads')
+        .update({
+          sanity_id: sanityResult.sanityId,
+          sanity_asset_id: sanityResult.sanityAssetId,
+          metadata: {
+            ...uploadData.metadata,
+            sanity_url: sanityResult.url
+          }
+        })
+        .eq('id', uploadData.id);
+
+      if (updateError) throw updateError;
+
+      // Aktualisiere das Profil mit der neuen Avatar-URL
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          avatar_url: sanityResult.url
+        })
+        .eq('id', user.id);
+
+      if (profileError) throw profileError;
+
+      profile.avatar_url = sanityResult.url;
+      success = true;
+    } catch (err: any) {
+      error = err?.message || 'Fehler beim Upload';
+      console.error('Upload Fehler:', err);
+    } finally {
+      loading = false;
+    }
   }
 
-  loading = true;
-  error = '';
-  success = false;
+  // Allgemeiner Datei-Upload Handler
+  async function handleFileUpload(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (!input.files?.length) return;
+    
+    selectedFile = input.files[0];
+    loading = true;
+    error = '';
+    success = false;
 
-  try {
-    const { data: uploadData, error: dbError } = await supabase
-      .from('media_uploads')
-      .insert({
-        user_id: user.id,
-        original_filename: file.name,
-        file_type: file.type,
-        file_size: file.size,
-        status: 'pending',
-        metadata: {
-          mime_type: file.type,
-          last_modified: file.lastModified,
-          storage_provider: 'sanity',
-          usage: 'avatar'
-        }
-      })
-      .select()
-      .single();
+    try {
+      const { data: uploadData, error: dbError } = await supabase
+        .from('media_uploads')
+        .insert({
+          user_id: user.id,
+          original_filename: selectedFile.name,
+          file_type: selectedFile.type,
+          file_size: selectedFile.size,
+          status: 'pending',
+          metadata: {
+            mime_type: selectedFile.type,
+            last_modified: selectedFile.lastModified,
+            storage_provider: 'sanity'
+          }
+        })
+        .select()
+        .single();
 
-    if (dbError) throw dbError;
-    if (!uploadData) throw new Error('Keine Daten vom Upload erhalten');
+      if (dbError) throw dbError;
+      if (!uploadData) throw new Error('Keine Daten vom Upload erhalten');
 
-    const sanityResult = await uploadToSanity(
-      file,
-      user.id,
-      uploadData.id,
-      user.user_metadata?.firstname || user.user_metadata?.name || user.email?.split('@')[0] || 'Unbekannter Benutzer',
-      user.email
-    );
+      const sanityResult = await uploadToSanity(
+        selectedFile,
+        user.id,
+        uploadData.id,
+        firstName || lastName || user.email?.split('@')[0] || 'Unbekannter Benutzer',
+        user.email
+      );
 
-    // Aktualisiere den Eintrag mit den Sanity-Referenzen
-    const { error: updateError } = await supabase
-      .from('media_uploads')
-      .update({
-        sanity_id: sanityResult.sanityId,
-        sanity_asset_id: sanityResult.sanityAssetId,
-        metadata: {
-          ...uploadData.metadata,
-          sanity_url: sanityResult.url
-        }
-      })
-      .eq('id', uploadData.id);
+      // Aktualisiere den Eintrag mit den Sanity-Referenzen
+      const { error: updateError } = await supabase
+        .from('media_uploads')
+        .update({
+          sanity_id: sanityResult.sanityId,
+          sanity_asset_id: sanityResult.sanityAssetId,
+          metadata: {
+            ...uploadData.metadata,
+            sanity_url: sanityResult.url
+          }
+        })
+        .eq('id', uploadData.id);
 
-    if (updateError) throw updateError;
-
-    // Aktualisiere das Profil mit der neuen Avatar-URL
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .update({
-        avatar_url: sanityResult.url
-      })
-      .eq('id', user.id);
-
-    if (profileError) throw profileError;
-
-    profile.avatar_url = sanityResult.url;
-    success = true;
-  } catch (err: any) {
-    error = err?.message || 'Fehler beim Upload';
-    console.error('Upload Fehler:', err);
-  } finally {
-    loading = false;
+      if (updateError) throw updateError;
+      success = true;
+    } catch (err: any) {
+      error = err?.message || 'Fehler beim Upload';
+      console.error('Upload Fehler:', err);
+    } finally {
+      loading = false;
+    }
   }
-}
 
-// Allgemeiner Datei-Upload Handler
-async function handleFileUpload(event: Event) {
-  const input = event.target as HTMLInputElement;
-  if (!input.files?.length || !user) return;
-  
-  selectedFile = input.files[0];
-  loading = true;
-  error = '';
-  success = false;
-
-  try {
-    const { data: uploadData, error: dbError } = await supabase
-      .from('media_uploads')
-      .insert({
-        user_id: user.id,
-        original_filename: selectedFile.name,
-        file_type: selectedFile.type,
-        file_size: selectedFile.size,
-        status: 'pending',
-        metadata: {
-          mime_type: selectedFile.type,
-          last_modified: selectedFile.lastModified,
-          storage_provider: 'sanity'
-        }
-      })
-      .select()
-      .single();
-
-    if (dbError) throw dbError;
-    if (!uploadData) throw new Error('Keine Daten vom Upload erhalten');
-
-    const sanityResult = await uploadToSanity(
-      selectedFile,
-      user.id,
-      uploadData.id,
-      user.user_metadata?.firstname || user.user_metadata?.name || user.email?.split('@')[0] || 'Unbekannter Benutzer',
-      user.email
-    );
-
-    // Aktualisiere den Eintrag mit den Sanity-Referenzen
-    const { error: updateError } = await supabase
-      .from('media_uploads')
-      .update({
-        sanity_id: sanityResult.sanityId,
-        sanity_asset_id: sanityResult.sanityAssetId,
-        metadata: {
-          ...uploadData.metadata,
-          sanity_url: sanityResult.url
-        }
-      })
-      .eq('id', uploadData.id);
-
-    if (updateError) throw updateError;
-    success = true;
-  } catch (err: any) {
-    error = err?.message || 'Fehler beim Upload';
-    console.error('Upload Fehler:', err);
-  } finally {
-    loading = false;
-  }
-}
-
-const handleSubmit = async () => {
+  const handleSubmit = async () => {
     loading = true;
     error = '';
     success = false;
@@ -242,7 +249,10 @@ const handleSubmit = async () => {
     try {
       const { data: authData, error: authError } = await supabase.auth.updateUser({
         email: email,
-        data: { firstname }
+        data: { 
+          first_name: firstName,
+          last_name: lastName
+        }
       });
 
       if (authError) throw authError;
@@ -251,7 +261,7 @@ const handleSubmit = async () => {
         .from('profiles')
         .upsert({
           id: user.id,
-          full_name: firstname,
+          full_name: `${firstName} ${lastName}`.trim(),
           ...profile,
           social_links: {
             instagram,
@@ -264,7 +274,9 @@ const handleSubmit = async () => {
       if (profileError) throw profileError;
 
       success = true;
-      user.user_metadata = authData.user.user_metadata;
+      if (authData.user.user_metadata) {
+        user.user_metadata = authData.user.user_metadata;
+      }
       if (authData.user.email) {
         user.email = authData.user.email;
       }
@@ -300,13 +312,25 @@ const handleSubmit = async () => {
       </div>
 
       <div>
-        <label for="firstname" class="block text-sm font-medium text-gray-400 mb-2">
-          Name
+        <label for="firstName" class="block text-sm font-medium text-gray-400 mb-2">
+          Vorname
         </label>
         <input
           type="text"
-          id="firstname"
-          bind:value={firstname}
+          id="firstName"
+          bind:value={firstName}
+          class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500"
+        />
+      </div>
+
+      <div>
+        <label for="lastName" class="block text-sm font-medium text-gray-400 mb-2">
+          Nachname
+        </label>
+        <input
+          type="text"
+          id="lastName"
+          bind:value={lastName}
           class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500"
         />
       </div>

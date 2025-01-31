@@ -1,4 +1,6 @@
-import { client } from '$lib/sanity/client'
+import { client } from '$lib/sanity/client';
+import type { UserBadge } from '$lib/utils/badge-utils';
+import { filterPagesByUserBadges } from '$lib/utils/badge-utils';
 
 export const pagesQuery = `
   *[_type == "page"] {
@@ -7,6 +9,13 @@ export const pagesQuery = `
     title,
     "slug": slug.current,
     content,
+    "requiredBadges": requiredBadges[]-> {
+      _id,
+      name,
+      slug,
+      supabaseId,
+      permissions
+    },
     // Hole alle benötigten Referenzdaten
     "events": *[_type == "event"] | order(startDate asc) {
       _id,
@@ -179,7 +188,7 @@ export const pagesQuery = `
   }
 `;
 
-export function transformPagesData(rawPages: any[]) {
+export function transformPagesData(rawPages: any[], userBadges?: UserBadge[]) {
   if (!Array.isArray(rawPages)) {
     console.error('Expected pages data to be an array:', rawPages);
     return {};
@@ -187,8 +196,9 @@ export function transformPagesData(rawPages: any[]) {
 
   console.log('Transforming pages:', JSON.stringify(rawPages, null, 2));
   
-  const pages: Record<string, any> = {};
+  let pages: Record<string, any> = {};
   
+  // Erst alle Pages transformieren
   rawPages.forEach(page => {
     if (page._id && page.slug) {
       console.log('Processing page:', {
@@ -196,10 +206,7 @@ export function transformPagesData(rawPages: any[]) {
         slug: page.slug,
         sectionsCount: page.sections?.length,
         sectionTypes: page.sections?.map((s: any) => s.type),
-        merchSections: page.sections?.filter((s: any) => s.type === 'merch').map((s: any) => ({
-          products: s.merchSection?.products?.length,
-          productDetails: s.merchSection?.products
-        }))
+        requiredBadges: page.requiredBadges?.map((b: any) => b.supabaseId)
       });
       
       const id = page._id;
@@ -214,6 +221,11 @@ export function transformPagesData(rawPages: any[]) {
       console.warn('Invalid page data:', page);
     }
   });
+
+  // Dann die Pages nach Badges filtern
+  if (userBadges) {
+    pages = filterPagesByUserBadges(pages, userBadges);
+  }
 
   console.log('Transformed pages:', JSON.stringify(pages, null, 2));
   return pages;

@@ -17,9 +17,12 @@
 
   let email = '';
   let password = '';
+  let firstName = '';
+  let lastName = '';
   let loading = false;
   let errorMsg = '';
   let showPassword = false;
+  let isRegistering = false;
 
   // Get the 'next' parameter from URL if it exists, safely
   let next = '/';
@@ -102,8 +105,8 @@
       loading = true;
       errorMsg = '';
 
-      if (!email || !password) {
-        errorMsg = 'Bitte geben Sie E-Mail und Passwort ein';
+      if (!email || !password || !firstName || !lastName) {
+        errorMsg = 'Bitte füllen Sie alle Felder aus';
         toasts.error(errorMsg);
         loading = false;
         return;
@@ -120,6 +123,10 @@
         email,
         password,
         options: {
+          data: { 
+            first_name: firstName,
+            last_name: lastName
+          },
           emailRedirectTo: `${browser ? location.origin : ''}/auth/callback?next=${encodeURIComponent(next)}`,
         },
       });
@@ -173,6 +180,11 @@
   const togglePasswordVisibility = () => {
     showPassword = !showPassword;
   };
+
+  const toggleAuthMode = () => {
+    isRegistering = !isRegistering;
+    errorMsg = '';
+  };
 </script>
 
 {#if !user?.aud || user.aud !== 'authenticated'}
@@ -182,23 +194,48 @@
         <div class="flex flex-wrap items-center justify-between mb-36 -m-2">
           <div class="w-auto p-2">
             <p class="text-sm text-gray-300">
-              <span>Noch kein Konto?</span>
-              <a href=/sign-up/ 
-                class="underline ml-1" 
-               
+              <span>{isRegistering ? 'Schon ein Konto?' : 'Noch kein Konto?'}</span>
+              <button 
+                class="underline ml-1"
+                on:click={toggleAuthMode}
               >
-                Registrieren
-            </a>
+                {isRegistering ? 'Anmelden' : 'Registrieren'}
+              </button>
             </p>
           </div>
         </div>
         <div class="text-center mx-auto">
-          <h3 class="mb-4 text-5xl text-white tracking-5xl">Melden Sie sich in Ihrem Konto an</h3>
-          <p class="mb-10 text-gray-300">Schön, Sie wiederzusehen!</p>
+          <h3 class="mb-4 text-5xl text-white tracking-5xl">
+            {isRegistering ? 'Registrieren Sie sich' : 'Melden Sie sich in Ihrem Konto an'}
+          </h3>
+          <p class="mb-10 text-gray-300">
+            {isRegistering ? 'Erstellen Sie Ihr Konto' : 'Schön, Sie wiederzusehen!'}
+          </p>
           
           {#if errorMsg}
             <div class="mb-4 p-4 bg-red-500 bg-opacity-10 text-red-500 rounded-3xl">
               {errorMsg}
+            </div>
+          {/if}
+
+          {#if isRegistering}
+            <div class="mb-2 border border-gray-900 focus-within:border-white overflow-hidden rounded-3xl">
+              <input 
+                class="pl-6 pr-16 py-4 text-gray-300 w-full placeholder-gray-300 outline-none bg-transparent" 
+                type="text" 
+                placeholder="Vorname"
+                bind:value={firstName}
+                disabled={loading}
+              >
+            </div>
+            <div class="mb-2 border border-gray-900 focus-within:border-white overflow-hidden rounded-3xl">
+              <input 
+                class="pl-6 pr-16 py-4 text-gray-300 w-full placeholder-gray-300 outline-none bg-transparent" 
+                type="text" 
+                placeholder="Nachname"
+                bind:value={lastName}
+                disabled={loading}
+              >
             </div>
           {/if}
 
@@ -239,19 +276,21 @@
           </div>
           <button 
             class="block w-full mb-6 px-14 py-4 text-center font-medium tracking-2xl border-2 border-green-400 bg-green-400 hover:bg-green-500 text-black focus:ring-4 focus:ring-green-500 focus:ring-opacity-40 rounded-full transition duration-300 disabled:opacity-50" 
-            on:click={handleSignIn}
+            on:click={isRegistering ? handleSignUp : handleSignIn}
             disabled={loading}
           >
-            {loading ? 'Laden...' : 'Anmelden'}
+            {loading ? 'Laden...' : (isRegistering ? 'Registrieren' : 'Anmelden')}
           </button>
           
-          <button class="mb-10 inline-block text-sm text-gray-300 underline">Passwort vergessen?</button>
+          {#if !isRegistering}
+            <button class="mb-10 inline-block text-sm text-gray-300 underline">Passwort vergessen?</button>
+          {/if}
           
           <div class="flex flex-wrap items-center mb-8">
             <div class="flex-1 bg-gray-900">
               <div class="h-px"></div>
             </div>
-            <div class="px-5 text-xs text-gray-300 font-medium">oder anmelden mit</div>
+            <div class="px-5 text-xs text-gray-300 font-medium">oder {isRegistering ? 'registrieren' : 'anmelden'} mit</div>
             <div class="flex-1 bg-gray-900">
               <div class="h-px"></div>
             </div>
@@ -267,7 +306,7 @@
                 <div class="mr-4 inline-block">
                   <img src="nightsable-assets/images/sign-in/google.svg" alt="Google">
                 </div>
-                <span class="text-sm text-white font-medium">Mit Google anmelden</span>
+                <span class="text-sm text-white font-medium">Mit Google {isRegistering ? 'registrieren' : 'anmelden'}</span>
               </button>
             </div>
           </div>
