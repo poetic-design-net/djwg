@@ -56,6 +56,7 @@ export const myStructure = (S: any) =>
             'category',
             'navigation',
             'logo',
+            'headerSettings',
             'testimonial',
             'aboutUs',
             'siteSettings',

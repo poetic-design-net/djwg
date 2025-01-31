@@ -213,10 +213,10 @@
           </p>
           
           {#if errorMsg}
-            <div class="mb-4 p-4 bg-red-500 bg-opacity-10 text-red-500 rounded-3xl">
-              {errorMsg}
-            </div>
-          {/if}
+          <div class="mb-4 p-4 {errorMsg === 'Überprüfen Sie Ihre E-Mail für den Bestätigungslink.' ? 'bg-green-500 bg-opacity-10 text-green-500' : 'bg-red-500 bg-opacity-10 text-red-500'} rounded-3xl">
+            {errorMsg}
+          </div>
+        {/if}
 
           {#if isRegistering}
             <div class="mb-2 border border-gray-900 focus-within:border-white overflow-hidden rounded-3xl">

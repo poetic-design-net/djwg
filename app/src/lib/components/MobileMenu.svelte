@@ -35,10 +35,11 @@
 
 {#if isOpen}
   <div
-    class="fixed inset-0 bg-black/95 z-[100] lg:hidden overflow-y-auto pb-24"
+    class="fixed inset-0 z-[100] lg:hidden overflow-y-auto pb-24"
     transition:slide={{ duration: 300 }}
   >
-    <div class="container mx-auto px-4 py-20">
+    <div class="fixed inset-0 bg-black/95" />
+    <div class="container relative mx-auto px-4 pt-28">
       <nav class="space-y-4">
         {#each menuItems as menu, index}
           <div class="border-b border-gray-800 pb-4">

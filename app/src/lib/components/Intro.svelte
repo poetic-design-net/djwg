@@ -31,7 +31,7 @@
     children: [{ _type: 'span', text: title }]
   }] : title;
 
-  $: altText = image?.alt || "DJ Workshop";
+  $: altText = (image?.alt ?? "DJ Workshop").toString();
 </script>
 
 <section {id} class="relative overflow-hidden pt-20">
@@ -103,7 +103,11 @@
             <div class="p-8 bg-black/40 border border-gray-800 rounded-3xl hover:border-green-500 transition-all duration-300">
               <div class="flex items-center mb-4">
                 <div class="w-12 h-12 flex items-center justify-center rounded-xl mr-4">
-                  <Icon name={validateIcon(item.icon)} size={24} class_name="text-green-400" />
+                  <Icon
+                    name={validateIcon(item.icon)}
+                    size={24}
+                    class_name="text-green-400"
+                  />
                 </div>
                 <h3 class="text-xl text-white">{item.title}</h3>
               </div>
