@@ -22,22 +22,40 @@
 
 <div class="container px-4 mx-auto">
   <div class="mb-20 md:max-w-4xl text-center mx-auto">
-    <span class="inline-block mb-4 text-sm text-green-400 font-medium tracking-tighter">Unsere Partner</span>
+    <span class="inline-block mb-4 text-sm text-green-400 font-medium tracking-tighter">Unsere Aussteller</span>
     <h2 class="font-heading text-5xl lg:text-6xl text-white tracking-7xl lg:tracking-8xl">Unterstützt von führenden Marken der DJ-Industrie</h2>
   </div>
   <div class="md:max-w-7xl border border-gray-900 mx-auto mb-12">
     <div class="flex flex-wrap">
       {#each logos.data as logo, i}
         {#if logo.image}
-          <div class="flex items-center justify-center w-full md:w-1/2 lg:w-1/5 {i < logos.data.length - 5 ? 'border-b' : 'lg:border-b-0'} {i % 5 !== 4 ? 'lg:border-r' : ''} {i % 2 === 0 ? 'md:border-r' : ''} border-gray-900 logo-container {currentHighlight === i ? 'highlight' : ''}" style="height: 246px;">
-            <OptimizedImage 
-              image={logo.image}
-              alt={logo.name || 'Partner Logo'}
-              maxWidth={400}
-              sizes="(max-width: 768px) 200px, 150px"
-              className="max-w-[200px] max-h-[100px] w-auto h-auto object-contain"
-            />
-          </div>
+          {#if logo.url}
+            <a
+              href={logo.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="flex items-center justify-center w-full md:w-1/2 lg:w-1/5 {i < logos.data.length - 5 ? 'border-b' : 'lg:border-b-0'} {i % 5 !== 4 ? 'lg:border-r' : ''} {i % 2 === 0 ? 'md:border-r' : ''} border-gray-900 logo-container {currentHighlight === i ? 'highlight' : ''} hover:opacity-80 transition-opacity duration-300"
+              style="height: 246px;"
+            >
+              <OptimizedImage
+                image={logo.image}
+                alt={logo.name || 'Partner Logo'}
+                maxWidth={400}
+                sizes="(max-width: 768px) 200px, 150px"
+                className="max-w-[200px] max-h-[100px] w-auto h-auto object-contain"
+              />
+            </a>
+          {:else}
+            <div class="flex items-center justify-center w-full md:w-1/2 lg:w-1/5 {i < logos.data.length - 5 ? 'border-b' : 'lg:border-b-0'} {i % 5 !== 4 ? 'lg:border-r' : ''} {i % 2 === 0 ? 'md:border-r' : ''} border-gray-900 logo-container {currentHighlight === i ? 'highlight' : ''}" style="height: 246px;">
+              <OptimizedImage
+                image={logo.image}
+                alt={logo.name || 'Partner Logo'}
+                maxWidth={400}
+                sizes="(max-width: 768px) 200px, 150px"
+                className="max-w-[200px] max-h-[100px] w-auto h-auto object-contain"
+              />
+            </div>
+          {/if}
         {/if}
       {/each}
     </div>
@@ -45,7 +63,7 @@
   {#if showButton}
     <div class="text-center">
       <div class="w-auto p-2">
-        <a class="inline-block px-8 py-4 text-white hover:text-black tracking-tighter hover:bg-green-400 border-2 border-white focus:border-green-400 focus:border-opacity-40 hover:border-green-400 focus:ring-4 focus:ring-green-400 focus:ring-opacity-40 rounded-full transition duration-300" href="/partner">Partner werden</a>
+        <a class="inline-block px-8 py-4 text-white hover:text-black tracking-tighter hover:bg-green-400 border-2 border-white focus:border-green-400 focus:border-opacity-40 hover:border-green-400 focus:ring-4 focus:ring-green-400 focus:ring-opacity-40 rounded-full transition duration-300" href="/aussteller">Aussteller werden</a>
       </div>
     </div>
   {/if}

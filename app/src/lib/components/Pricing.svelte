@@ -70,13 +70,13 @@
   }
 </script>
 
-<section {id} class="relative overflow-hidden pt-36">
+<section {id} class="relative overflow-hidden py-24 md:py-36 ">
 <div class="container px-4 mx-auto">
    {#if showEventSelector && events.length > 1}
      <div class="flex flex-wrap justify-center mb-8 gap-4">
        {#each events as event}
          <button
-           class="px-6 py-3 rounded-full text-sm font-medium transition-colors duration-200 {selectedEvent?._id === event._id ? 'bg-green-500 text-black' : 'text-white hover:text-green-500'}"
+           class="px-6 py-3 rounded-full text-sm font-medium transition-colors duration-200 {selectedEvent?._id === event._id ? 'bg-green-500 text-black' : 'text-white hover:text-green-500 border border-gray-600 hover:border-green-500'}"
            on:click={() => selectEvent(event)}
          >
            {event.title}
@@ -86,7 +86,7 @@
    {/if}
 
    <!-- Selected Event Date -->
-   {#if selectedEvent?.date}
+   {#if selectedEvent?.date && formatDate(selectedEvent.date)}
      <div class="text-center mb-12">
        <p class="text-white font-medium border border-green-600 rounded-full px-6 py-2 inline-block">{formatDate(selectedEvent.date)}</p>
      </div>
@@ -100,7 +100,7 @@
   <div class="grid grid-cols-1 sm:grid-cols-2 {tickets.length <= 3 ? 'lg:grid-cols-' + tickets.length : 'lg:grid-cols-3'} {tickets.length === 4 ? 'xl:grid-cols-4' : ''} gap-8 max-w-7xl mx-auto">
     {#each tickets as ticket}
       <div class="h-full">
-        <div class="relative h-full flex flex-col {ticket.status === 'completed' ? 'bg-black/20 border-gray-900' : ticket.status === 'current' ? 'bg-black/40 border-purple-500' : 'bg-black/40 border-gray-800'} border rounded-5xl bg-gradient-radial-dark transition duration-200">
+        <div class="relative h-full flex flex-col {ticket.status === 'completed' ? 'bg-black/20 border-gray-900' : ticket.status === 'current' ? 'bg-black/40 border-purple-500 hover:border-green-500 cursor-pointer' : 'bg-black/40 border-gray-800'} border-2 rounded-5xl bg-gradient-radial-dark transition duration-200">
           <!-- Content Container -->
           <div class="flex-grow p-8">
             <div class="mb-6">

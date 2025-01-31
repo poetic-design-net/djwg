@@ -7,6 +7,7 @@
   import About from './event/About.svelte';
   import Location from './event/Location.svelte';
   import Gallery from './event/Gallery.svelte';
+  import Logos from './Logos.svelte';
   import TimeTable from './event/TimeTable.svelte';
   import TimeTableOverview from './event/TimeTableOverview.svelte';
   import OpenStage from './OpenStage.svelte';
@@ -62,6 +63,7 @@ $: sections = [
   ...(event.hasOpenStage ? [{ id: 'openstage', label: 'Open Stage' }] : []),
   ...(event.artists && event.artists.length > 0 ? [{ id: 'artists', label: 'Artists' }] : []),
   ...(event.locationDetails ? [{ id: 'location', label: 'Location' }] : []),
+  ...(event.logos && event.logos.length > 0 ? [{ id: 'logos', label: 'Partner' }] : []),
   ...(event.gallery ? [{ id: 'gallery', label: 'Gallery' }] : []),
   ...((event.faqSection?.selectedFaqs ?? []).length > 0 ? [{ id: 'faq', label: 'FAQ' }] : [])
 ];
@@ -141,6 +143,13 @@ $: sections = [
       />
     </div>
   {/if}
+
+  {#if event.logos && event.logos.length > 0}
+    <div id="logos" class="py-20 bg-black/40">
+      <Logos logos={{ data: event.logos }} />
+    </div>
+  {/if}
+
 
  
 

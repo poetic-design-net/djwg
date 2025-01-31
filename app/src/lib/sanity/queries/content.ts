@@ -75,7 +75,19 @@ export const footerSettingsQuery = groq`*[_type == "footerSettings"][0] {
   }
 }`;
 
-export const aboutUsQuery = groq`*[_type == "aboutUs"][0] {
+export const aboutUsQuery = groq`*[_type == "aboutUs"] | order(_createdAt desc)[0] {
+  _type,
+  _id,
+  _createdAt,
+  _updatedAt,
+  coverImage {
+    _type,
+    "asset": asset->{
+      _id,
+      url,
+      metadata
+    }
+  },
   history {
     title,
     content
@@ -95,6 +107,9 @@ export const aboutUsQuery = groq`*[_type == "aboutUs"][0] {
 }`;
 
 export interface AboutUs {
+  coverImage: Image & {
+    alt?: string;
+  };
   history: {
     title: string;
     content: PortableTextBlock[];

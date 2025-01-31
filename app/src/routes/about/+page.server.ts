@@ -9,6 +9,9 @@ export async function load() {
     client.fetch<Founder>(founderQuery)
   ]);
 
+  console.log('About Us Data:', JSON.stringify({ aboutUs, teamMembers, founder }, null, 2));
+  console.log('Cover Image:', aboutUs?.coverImage);
+
   return {
     teamMembers,
     aboutUs,

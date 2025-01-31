@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { createEventDispatcher } from 'svelte';
+  const dispatch = createEventDispatcher();
   import { getContext } from 'svelte';
   import type { SupabaseClient } from '@supabase/supabase-js';
   import { uploadToSanity } from '$lib/sanity/uploadMedia';
@@ -22,7 +24,7 @@
     social_links?: {
       instagram?: string;
       facebook?: string;
-      twitter?: string;
+      soundcloud?: string;
       linkedin?: string;
     };
     is_public: boolean;
@@ -55,7 +57,7 @@
   // Social Media Links
   let instagram = '';
   let facebook = '';
-  let twitter = '';
+  let soundcloud = '';
   let linkedin = '';
   
   // Toggle Funktionen
@@ -67,7 +69,7 @@
     if (data?.social_links) {
       instagram = data.social_links.instagram || '';
       facebook = data.social_links.facebook || '';
-      twitter = data.social_links.twitter || '';
+      soundcloud = data.social_links.soundcloud || '';
       linkedin = data.social_links.linkedin || '';
     }
   };
@@ -90,9 +92,88 @@
       console.error('Fehler beim Laden des Profils:', e);
     }
   };
+// Avatar-Upload Handler
+async function handleAvatarUpload(event: Event) {
+  const input = event.target as HTMLInputElement;
+  if (!input.files?.length || !user) return;
+  
+  const file = input.files[0];
+  if (!file.type.startsWith('image/')) {
+    error = 'Bitte nur Bilder hochladen';
+    return;
+  }
 
-  // Datei-Upload Handler
-  async function handleFileUpload(event: Event) {
+  loading = true;
+  error = '';
+  success = false;
+
+  try {
+    const { data: uploadData, error: dbError } = await supabase
+      .from('media_uploads')
+      .insert({
+        user_id: user.id,
+        original_filename: file.name,
+        file_type: file.type,
+        file_size: file.size,
+        status: 'pending',
+        metadata: {
+          mime_type: file.type,
+          last_modified: file.lastModified,
+          storage_provider: 'sanity',
+          usage: 'avatar'
+        }
+      })
+      .select()
+      .single();
+
+    if (dbError) throw dbError;
+    if (!uploadData) throw new Error('Keine Daten vom Upload erhalten');
+
+    const sanityResult = await uploadToSanity(
+      file,
+      user.id,
+      uploadData.id,
+      user.user_metadata?.firstname || user.user_metadata?.name || user.email?.split('@')[0] || 'Unbekannter Benutzer',
+      user.email
+    );
+
+    // Aktualisiere den Eintrag mit den Sanity-Referenzen
+    const { error: updateError } = await supabase
+      .from('media_uploads')
+      .update({
+        sanity_id: sanityResult.sanityId,
+        sanity_asset_id: sanityResult.sanityAssetId,
+        metadata: {
+          ...uploadData.metadata,
+          sanity_url: sanityResult.url
+        }
+      })
+      .eq('id', uploadData.id);
+
+    if (updateError) throw updateError;
+
+    // Aktualisiere das Profil mit der neuen Avatar-URL
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update({
+        avatar_url: sanityResult.url
+      })
+      .eq('id', user.id);
+
+    if (profileError) throw profileError;
+
+    profile.avatar_url = sanityResult.url;
+    success = true;
+  } catch (err: any) {
+    error = err?.message || 'Fehler beim Upload';
+    console.error('Upload Fehler:', err);
+  } finally {
+    loading = false;
+  }
+}
+
+// Allgemeiner Datei-Upload Handler
+async function handleFileUpload(event: Event) {
   const input = event.target as HTMLInputElement;
   if (!input.files?.length || !user) return;
   
@@ -122,7 +203,6 @@
     if (dbError) throw dbError;
     if (!uploadData) throw new Error('Keine Daten vom Upload erhalten');
 
-    // Hier fügen wir die korrekten User-Daten hinzu
     const sanityResult = await uploadToSanity(
       selectedFile,
       user.id,
@@ -154,7 +234,7 @@
   }
 }
 
-  const handleSubmit = async () => {
+const handleSubmit = async () => {
     loading = true;
     error = '';
     success = false;
@@ -176,7 +256,7 @@
           social_links: {
             instagram,
             facebook,
-            twitter,
+            soundcloud,
             linkedin
           }
         });
@@ -188,6 +268,7 @@
       if (authData.user.email) {
         user.email = authData.user.email;
       }
+      dispatch('close');
     } catch (e: any) {
       error = e?.message || 'Ein Fehler ist aufgetreten';
     } finally {
@@ -229,6 +310,59 @@
           class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500"
         />
       </div>
+    </div>
+  </div>
+
+  <!-- Profilbild -->
+  <div class="space-y-4">
+    <h3 class="text-lg font-medium text-white">Profilbild</h3>
+    <div class="space-y-4">
+      {#if profile.avatar_url}
+        <div class="flex items-center space-x-4">
+          <img
+            src={profile.avatar_url}
+            alt="Aktuelles Profilbild"
+            class="w-20 h-20 rounded-full object-cover border-2 border-green-500"
+          />
+        </div>
+      {/if}
+      
+      <label
+        for="avatar-upload"
+        class="relative cursor-pointer rounded-xl bg-gray-950 px-4 py-4 border border-gray-800 hover:border-green-500 transition-colors duration-200 flex items-center justify-center"
+      >
+        <input
+          id="avatar-upload"
+          name="avatar-upload"
+          type="file"
+          class="sr-only"
+          on:change={handleAvatarUpload}
+          accept="image/*"
+        />
+        <div class="space-y-1 text-center">
+          <svg
+            class="mx-auto h-12 w-12 text-gray-400"
+            stroke="currentColor"
+            fill="none"
+            viewBox="0 0 48 48"
+            aria-hidden="true"
+          >
+            <path
+              d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+          <div class="text-sm text-gray-400">
+            <span>Profilbild hochladen</span>
+            <span class="text-green-500 hover:text-green-400"> (max. 5MB)</span>
+          </div>
+          <p class="text-xs text-gray-500">
+            PNG, JPG, GIF
+          </p>
+        </div>
+      </label>
     </div>
   </div>
 
@@ -386,13 +520,13 @@
           />
         </div>
         <div>
-          <label for="twitter" class="block text-sm font-medium text-gray-400 mb-2">Twitter</label>
+          <label for="soundcloud" class="block text-sm font-medium text-gray-400 mb-2">Soundcloud</label>
           <input
             type="text"
-            id="twitter"
-            bind:value={twitter}
+            id="soundcloud"
+            bind:value={soundcloud}
             class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500"
-            placeholder="@username"
+            placeholder="soundcloud.com/username"
           />
         </div>
       </div>

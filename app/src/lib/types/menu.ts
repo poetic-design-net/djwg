@@ -73,6 +73,7 @@ export type Logo = {
   _id: string
   name: string
   image: SanityImage
+  url?: string
   order: number
 }
 

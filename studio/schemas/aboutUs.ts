@@ -6,6 +6,25 @@ export default defineType({
   type: 'document',
   fields: [
     defineField({
+      name: 'coverImage',
+      title: 'Cover Bild',
+      type: 'image',
+      description: 'Das Titelbild für die About Us Seite',
+      options: {
+        hotspot: true,
+        metadata: ['blurhash', 'lqip', 'palette'],
+      },
+      fields: [
+        {
+          name: 'alt',
+          title: 'Alt Text',
+          type: 'string',
+          description: 'Beschreibender Text für Screenreader und SEO'
+        }
+      ],
+      validation: Rule => Rule.required()
+    }),
+    defineField({
       name: 'history',
       title: 'Geschichte',
       type: 'object',
@@ -14,7 +33,7 @@ export default defineType({
           name: 'title',
           title: 'Title',
           type: 'string', // Einfacher String
-          initialValue: 'Unsere Geschichte', // Optionaler Standardwert
+         
         },
         {
           name: 'content',
