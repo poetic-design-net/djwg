@@ -12,10 +12,22 @@
   import DesktopNav from './navigation/DesktopNav.svelte';
   import HeaderAuth from './auth/HeaderAuth.svelte';
   import MegaMenu from './navigation/MegaMenu.svelte';
+  import OptimizedImage from './OptimizedImage.svelte';
 
   export let data;
-  let { user, navigation, pages } = data || {};
-  $: ({ user, navigation, pages } = data || {});
+  let { user, navigation, pages, headerSettings } = data;
+  $: {
+    ({ user, navigation, pages, headerSettings } = data);
+    console.log('Header Component Data:', {
+      data,
+      headerSettings,
+      hasType: headerSettings?._type === 'headerSettings',
+      hasLogo: !!headerSettings?.logo,
+      hasAsset: !!headerSettings?.logo?.asset,
+      hasUrl: !!headerSettings?.logo?.asset?.url,
+      fullLogo: headerSettings?.logo
+    });
+  }
   $: if (!pages) pages = {};
 
   const supabase = getContext<SupabaseClient>('supabase');
@@ -99,11 +111,22 @@
       <div class="flex items-center justify-between h-20">
         <!-- Logo -->
         <a href="/" class="relative z-[110] mt-2">
-          <img src="/assets/logo.svg" alt="DJ Workshop Germany" class="h-20 w-auto" width="100%" height="64">
+          {#if headerSettings?._type === 'headerSettings' && headerSettings?.logo?.asset?.url}
+            {console.log('Logo data:', JSON.stringify(headerSettings?.logo, null, 2))}
+            <img
+              src={headerSettings.logo.asset.url}
+              alt="DJ Workshop Germany"
+              class="h-20 w-auto"
+              width={100}
+              height={64}
+            />
+          {:else}
+            <img src="/assets/logo.svg" alt="DJ Workshop Germany" class="h-20 w-auto" width={100} height={64}>
+          {/if}
         </a>
 
         <!-- Desktop Navigation -->
-        <div class="hidden lg:flex flex-1 items-center justify-between pl-8">
+        <div class="hidden lg:flex flex-1 items-center justify-between">
           {#if menuItems && menuItems.length > 0}
             <DesktopNav 
               {menuItems}

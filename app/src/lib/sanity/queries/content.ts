@@ -40,6 +40,40 @@ export const siteSettingsQuery = groq`*[_type == "siteSettings"][0] {
   contact
 }`;
 
+// Header Settings interface and query
+export interface HeaderSettings {
+  _type: string;
+  _id: string;
+  logo?: {
+    _type: string;
+    asset?: {
+      _id: string;
+      url: string;
+      _type: string;
+    };
+  };
+}
+
+export const headerSettingsQuery = groq`coalesce(
+  *[_type == "headerSettings" && _id == "headerSettings"][0] {
+    _type,
+    _id,
+    logo {
+      _type,
+      asset-> {
+        _id,
+        url,
+        _type
+      }
+    }
+  },
+  {
+    "_type": "headerSettings",
+    "_id": "headerSettings",
+    "logo": null
+  }
+)`;
+
 // Footer Settings interface and query
 export interface FooterSettings {
   columns?: Array<{

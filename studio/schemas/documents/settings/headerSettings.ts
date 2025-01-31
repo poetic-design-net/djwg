@@ -3,9 +3,6 @@ export default {
   title: 'Header Settings',
   type: 'document',
   preview: {
-    select: {
-      title: 'title'
-    },
     prepare() {
       return {
         title: 'Header Settings'
