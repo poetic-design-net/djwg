@@ -164,7 +164,7 @@
   secondaryCta={homeData?.intro?.secondaryCta}
 />
 
-<section id="workshops" class="pt-48 pb-20">
+<section id="workshops" class="py-24">
   <Cards 
     events={eventsArray}
     title={homeData?.workshopsSection?.title ?? ''}
@@ -185,23 +185,23 @@
   on:eventChange={handleEventChange}
 />
 
-<section id="partners" class="relative pt-36 overflow-hidden">  
+<section id="partners" class="relative py-36 overflow-hidden">  
   {#if logosData.data && logosData.data.length > 0}
     <Logos logos={logosData} />
   {/if}
 </section>
 
-<section id="testimonials" class="relative py-36 overflow-hidden">  
+<section id="testimonials" class="relative py-24 overflow-hidden">  
   {#if testimonialsData.data && testimonialsData.data.length > 0}
     <Testimonials testimonials={testimonialsData} />
   {/if}
 </section>
 
-<section id="faq" class="relative pt-36 overflow-hidden">
+<section id="faq" class="relative pt-24 overflow-hidden">
   <Faq faqs={faqsArray} />
 </section>
 
-<section id="about" class="relative pt-36 overflow-hidden">
+<section id="about" class="relative pt-24 overflow-hidden">
   {#if homeData?.aboutSection?.title}
     <AboutUsSection 
       tagline={homeData.aboutSection?.tagline ?? ''}

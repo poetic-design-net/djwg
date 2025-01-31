@@ -41,6 +41,10 @@ export default defineType({
     {
       name: 'faq',
       title: 'FAQ'
+    },
+    {
+      name: 'logos',
+      title: 'Partner Logos'
     }
   ],
   fields: [
@@ -220,6 +224,30 @@ export default defineType({
           options: {
             hotspot: true,
           }
+        },
+        {
+          name: 'website',
+          title: 'Website',
+          type: 'url',
+          description: 'Website der Location'
+        },
+        {
+          name: 'instagram',
+          title: 'Instagram',
+          type: 'url',
+          description: 'Instagram-Profil der Location'
+        },
+        {
+          name: 'facebook',
+          title: 'Facebook',
+          type: 'url',
+          description: 'Facebook-Seite der Location'
+        },
+        {
+          name: 'whatsapp',
+          title: 'WhatsApp',
+          type: 'url',
+          description: 'WhatsApp Link der Location'
         }
       ],
       group: 'location'
@@ -294,6 +322,17 @@ export default defineType({
       type: 'faqSection',
       group: 'faq',
       description: 'FAQ-Sektion für dieses Event'
+    }),
+    defineField({
+      name: 'logos',
+      title: 'Partner Logos',
+      type: 'array',
+      of: [{
+        type: 'reference',
+        to: [{ type: 'logo' }]
+      }],
+      group: 'logos',
+      description: 'Wähle Partner Logos für dieses Event aus'
     })
   ],
   preview: {

@@ -2,6 +2,7 @@ import groq from 'groq';
 import type { PortableTextBlock } from '@portabletext/types';
 import type { SanityImageSource } from '../image';
 import type { SEO } from './content';
+import type { Logo } from '$lib/types/menu';
 
 export interface FAQ {
   _id: string;
@@ -137,13 +138,26 @@ export const eventQuery = groq`*[_type == "event" && slug.current == $slug][0] {
     asset->,
     hotspot
   },
+  logos[]-> {
+    _id,
+    name,
+    image {
+      asset->,
+      hotspot
+    },
+    order
+  },
   locationDetails {
     name,
     description,
     image {
       asset->,
       hotspot
-    }
+    },
+    website,
+    instagram,
+    facebook,
+    whatsapp
   },
   isLocationSecret,
   isArtistsSecret,
@@ -244,6 +258,10 @@ export interface SanityEvent {
     name: string;
     description: string;
     image: SanityImageSource;
+    website?: string;
+    instagram?: string;
+    facebook?: string;
+    whatsapp?: string;
   };
   isLocationSecret: boolean;
   isArtistsSecret: boolean;
@@ -330,6 +348,7 @@ export interface TransformedEvent {
     icon: string;
   }[];
   gallery?: SanityImageSource[];
+  logos?: Logo[];
   locationDetails?: {
     name: string;
     description: string;

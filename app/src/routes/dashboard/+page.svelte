@@ -22,11 +22,29 @@
   
   const { user } = data;
   let showEditProfile = false;
+  let profile: any = null;
 
   const supabase = getContext<SupabaseClient>('supabase');
   let loading = false;
 
+  // Lade das Profil
+  const loadProfile = async () => {
+    try {
+      const { data: profileData, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+      
+      if (error) throw error;
+      profile = profileData;
+    } catch (error) {
+      console.error('Error loading profile:', error);
+    }
+  };
+
   onMount(() => {
+    loadProfile();
     if (user) {
       const emailInput = document.getElementById('mce-EMAIL') as HTMLInputElement;
       const firstNameInput = document.getElementById('mce-FNAME') as HTMLInputElement;
@@ -97,10 +115,20 @@
             </button>
           </div>
           <div class="space-y-4">
+            {#if profile?.avatar_url}
+              <div class="flex items-center space-x-4">
+                <img
+                  src={profile.avatar_url}
+                  alt="Profilbild"
+                  class="w-20 h-20 rounded-full object-cover border-2 border-green-500"
+                />
+              </div>
+            {/if}
+
             <div class="flex items-center space-x-4">
               <div class="bg-gray-950 rounded-full p-4">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
               </div>
               <div>
@@ -108,6 +136,47 @@
                 <p class="text-white font-medium">{user.email}</p>
               </div>
             </div>
+
+            {#if profile?.bio}
+              <div class="flex items-center space-x-4">
+                <div class="bg-gray-950 rounded-full p-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-gray-400">Bio</p>
+                  <p class="text-white font-medium">{profile.bio}</p>
+                </div>
+              </div>
+            {/if}
+
+            {#if profile?.social_links}
+              <div class="flex items-center space-x-4">
+                <div class="bg-gray-950 rounded-full p-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                  </svg>
+                </div>
+                <div class="flex-1">
+                  <p class="text-gray-400 mb-2">Social Media</p>
+                  <div class="space-y-2">
+                    {#if profile.social_links.instagram}
+                      <a href={profile.social_links.instagram} target="_blank" class="block text-green-500 hover:text-green-400">Instagram</a>
+                    {/if}
+                    {#if profile.social_links.facebook}
+                      <a href={profile.social_links.facebook} target="_blank" class="block text-green-500 hover:text-green-400">Facebook</a>
+                    {/if}
+                    {#if profile.social_links.soundcloud}
+                      <a href={profile.social_links.soundcloud} target="_blank" class="block text-green-500 hover:text-green-400">Soundcloud</a>
+                    {/if}
+                    {#if profile.social_links.linkedin}
+                      <a href={profile.social_links.linkedin} target="_blank" class="block text-green-500 hover:text-green-400">LinkedIn</a>
+                    {/if}
+                  </div>
+                </div>
+              </div>
+            {/if}
 
             <div class="flex items-center space-x-4">
               <div class="bg-gray-950 rounded-full p-4">
@@ -120,6 +189,20 @@
                 <p class="text-white font-medium">{user.user_metadata?.firstname || user.user_metadata?.name || ''}</p>
               </div>
             </div>
+
+            {#if profile?.website}
+              <div class="flex items-center space-x-4">
+                <div class="bg-gray-950 rounded-full p-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-gray-400">Website</p>
+                  <a href={profile.website} target="_blank" class="text-green-500 hover:text-green-400 font-medium">{profile.website}</a>
+                </div>
+              </div>
+            {/if}
 
             <div class="flex items-center space-x-4">
               <div class="bg-gray-950 rounded-full p-4">
@@ -362,7 +445,13 @@
         </svg>
       </button>
       <h2 class="text-2xl font-medium text-white mb-6">Profil bearbeiten</h2>
-      <ProfileEdit {user} />
+      <ProfileEdit
+        {user}
+        on:close={() => {
+          showEditProfile = false;
+          loadProfile();
+        }}
+      />
     </div>
   </div>
 {/if}

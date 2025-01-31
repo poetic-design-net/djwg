@@ -16,6 +16,12 @@ export default defineType({
       type: 'optimizedImage'
     }),
     defineField({
+      name: 'url',
+      title: 'Website URL',
+      type: 'url',
+      description: 'Die Website-URL des Partners'
+    }),
+    defineField({
       name: 'order',
       title: 'Display Order',
       type: 'number',
