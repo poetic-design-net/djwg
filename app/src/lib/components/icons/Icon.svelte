@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { 
+  import {
     MusicalNoteIcon,
     SpeakerWaveIcon,
     PlayCircleIcon,
@@ -22,6 +22,9 @@
   };
 
   $: IconComponent = icons[name];
+  $: style = `width: ${size}px; height: ${size}px;`;
 </script>
 
-<svelte:component this={IconComponent} {size} class={class_name} />
+<span class="inline-block" {style}>
+  <svelte:component this={IconComponent} class={class_name} width={size} height={size} aria-hidden="true" />
+</span>

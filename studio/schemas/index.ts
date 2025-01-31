@@ -25,6 +25,7 @@ import eventPage from './documents/pages/eventPage'
 import homePage from './documents/pages/homePage'
 import siteSettings from './documents/settings/siteSettings'
 import footerSettings from './documents/settings/footerSettings'
+import headerSettings from './documents/settings/headerSettings'
 import partnerPage from './documents/pages/partnerPage'
 import artistPage from './documents/pages/artistPage'
 
@@ -70,6 +71,7 @@ export const schemaTypes = [
   category,
   siteSettings,
   footerSettings,
+  headerSettings, // headerSettings hinzugefügt
   merchProduct,
   onlineTalk,
   badge, // Neues Badge-Schema hinzugefügt

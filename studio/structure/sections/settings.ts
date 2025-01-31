@@ -38,6 +38,17 @@ export const settingsSection: Section = (S) =>
 
           S.divider(),
 
+          // Header Settings
+          S.listItem()
+            .title('Header Settings')
+            .child(
+              S.document()
+                .schemaType('headerSettings')
+                .documentId('headerSettings')
+            ),
+
+          S.divider(),
+
           // Branding & Logos
           S.listItem()
             .title('Branding & Logos')

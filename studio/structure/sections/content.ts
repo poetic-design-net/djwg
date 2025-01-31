@@ -32,5 +32,8 @@ export const contentSection: Section = (S) =>
           S.listItem()
             .title('Pages')
             .child(S.documentTypeList('page')),
+          S.listItem()
+            .title('Testimonials')
+            .child(S.documentTypeList('testimonial')),
         ])
     )
