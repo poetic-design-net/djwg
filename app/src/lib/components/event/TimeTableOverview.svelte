@@ -89,46 +89,47 @@
         <div class="mb-16">
           <h3 class="text-2xl text-white mb-6">{formatDate(day.date)}</h3>
           
-          <div class="schedule-container">
-            <div class="schedule-header">
-              <div class="header-cell">Zeit</div>
-              {#each day.stages as stage}
-                <div class="header-cell">{stage.name}</div>
-              {/each}
-            </div>
-
-            <div class="schedule-body">
-              <div class="time-column">
-                {#each timeSlots as timeSlot}
-                  <div class="time-cell">{timeSlot}</div>
+          <div class="schedule-wrapper">
+            <div class="schedule-container">
+              <div class="schedule-header">
+                <div class="header-cell time-header">Zeit</div>
+                {#each day.stages as stage}
+                  <div class="header-cell stage-header">{stage.name}</div>
                 {/each}
               </div>
 
-              {#each day.stages as stage}
-                <div class="stage-column">
-                  {#each stage.schedule as event}
-                    {@const styles = getEventStyles(event, timeSlots)}
-                    <div 
-                      class="event-card"
-                      style="top: {styles.top}; height: {styles.height};"
-                    >
-                      <p class="text-white font-medium">{event.title}</p>
-                      {#if event.instructor}
-                        <div class="flex items-center gap-2 mt-1">
-                          <p class="text-[#33cc99] text-sm">{event.instructor.name}</p>
-                          {#if event.instructor.soundcloud}
-                            <a 
-                              href={event.instructor.soundcloud} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              class="text-[#33cc99] hover:text-[#33cc99]/80"
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M2.048 13.164l.343 1.632-.343 1.607c-.007.037-.037.064-.074.064s-.067-.027-.074-.064l-.301-1.607.301-1.632c.007-.033.037-.06.074-.06.037 0 .067.027.074.06zm1.005-1.105l.462 2.737-.462 2.7c-.007.037-.037.067-.078.067s-.071-.03-.074-.067l-.404-2.7.404-2.737c.004-.034.033-.06.074-.06s.071.026.078.06zm1.004-.273l.43 3.01-.43 2.935c-.004.044-.037.078-.082.078-.041 0-.075-.034-.082-.078l-.372-2.935.372-3.01c.007-.041.041-.071.082-.071s.078.03.082.071zm1.008.152l.398 2.858-.398 2.86c-.004.049-.041.086-.09.086-.045 0-.082-.037-.086-.086l-.344-2.86.344-2.858c.004-.045.041-.082.086-.082s.086.034.09.082zm1.015-.073l.367 2.931-.367 2.842c-.004.052-.045.09-.093.09-.053 0-.09-.037-.093-.09l-.315-2.842.315-2.931c.004-.049.041-.086.093-.086s.089.037.093.086zm1.023-.349l.334 3.28-.334 2.799c-.004.056-.045.097-.101.097s-.093-.041-.097-.097l-.286-2.799.286-3.28c.004-.052.041-.09.097-.09.056 0 .097.037.101.09zm1.026-.224l.304 3.504-.304 2.812c-.004.06-.048.104-.108.104s-.101-.044-.104-.104l-.274-2.812.274-3.504c.003-.056.045-.097.104-.097s.104.041.108.097zm1.03-.224l.274 3.728-.274 2.771c0 .067-.052.116-.112.116-.064 0-.112-.049-.115-.116l-.244-2.771.244-3.728c.003-.063.052-.108.115-.108.06 0 .112.045.112.108zm1.036-.134l.244 3.862-.244 2.753c0 .071-.056.123-.12.123-.064 0-.116-.052-.12-.123l-.215-2.753.215-3.862c.004-.067.056-.115.12-.115s.12.048.12.115zm1.04-.112l.215 3.974-.215 2.734c0 .075-.056.13-.127.13s-.124-.055-.127-.13l-.19-2.734.19-3.974c.004-.071.056-.123.127-.123s.127.052.127.123zm1.045-.127l.189 4.101-.189 2.72c0 .082-.06.141-.134.141-.075 0-.135-.06-.135-.142l-.165-2.718.165-4.101c0-.075.06-.13.135-.13.074 0 .134.055.134.13zm1.052-.089l.16 4.19-.16 2.697c0 .086-.063.149-.142.149s-.142-.063-.142-.149l-.138-2.697.138-4.19c0-.082.063-.141.142-.141s.142.06.142.141zm1.056-.067l.134 4.257-.134 2.686c0 .093-.067.156-.15.156-.082 0-.149-.064-.149-.156l-.112-2.686.112-4.257c0-.086.067-.149.149-.149.082 0 .15.063.15.149zm1.063-.06l.104 4.317-.104 2.686c0 .097-.07.167-.157.167-.086 0-.157-.07-.157-.167l-.082-2.686.082-4.317c0-.093.071-.16.157-.16.086 0 .157.067.157.16zm1.176.06l.075 4.257-.075 2.671c0 .108-.075.179-.168.179s-.171-.071-.171-.179l-.052-2.667.052-4.261c0-.097.078-.171.171-.171.093 0 .168.075.168.171zm1.003-.374l.045 4.631-.045 2.671c0 .112-.082.19-.179.19s-.179-.078-.179-.19v-2.671l.001-4.631c0-.104.078-.186.178-.186s.179.082.179.186zm2.55-2.194c.712 0 1.3.537 1.374 1.226l.116 3.399-.116 2.682c0 .749-.615 1.359-1.374 1.359-.755 0-1.37-.61-1.37-1.359l-.097-2.682.097-3.399c0-.749.615-1.359 1.37-1.359z"/>
-                              </svg>
-                            </a>
-                          {/if}
-                          {#if event.instructor.instagram}
+              <div class="schedule-body">
+                <div class="time-column">
+                  {#each timeSlots as timeSlot}
+                    <div class="time-cell">{timeSlot}</div>
+                  {/each}
+                </div>
+
+                {#each day.stages as stage}
+                  <div class="stage-column">
+                    {#each stage.schedule as event}
+                      {@const styles = getEventStyles(event, timeSlots)}
+                      <div 
+                        class="event-card"
+                        style="top: {styles.top}; height: {styles.height};"
+                      >
+                        <p class="text-white font-medium">{event.title}</p>
+                        {#if event.instructor}
+                          <div class="flex items-center gap-2 mt-1">
+                            <p class="text-[#33cc99] text-sm">{event.instructor.name}</p>
+                            {#if event.instructor.soundcloud}
+                              <a 
+                                href={event.instructor.soundcloud} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                class="text-[#33cc99] hover:text-[#33cc99]/80"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                                  <path d="M2.048 13.164l.343 1.632-.343 1.607c-.007.037-.037.064-.074.064s-.067-.027-.074-.064l-.301-1.607.301-1.632c.007-.033.037-.06.074-.06.037 0 .067.027.074.06zm1.005-1.105l.462 2.737-.462 2.7c-.007.037-.037.067-.078.067s-.071-.03-.074-.067l-.404-2.7.404-2.737c.004-.034.033-.06.074-.06s.071.026.078.06zm1.004-.273l.43 3.01-.43 2.935c-.004.044-.037.078-.082.078-.041 0-.075-.034-.082-.078l-.372-2.935.372-3.01c.007-.041.041-.071.082-.071s.078.03.082.071zm1.008.152l.398 2.858-.398 2.86c-.004.049-.041.086-.09.086-.045 0-.082-.037-.086-.086l-.344-2.86.344-2.858c.004-.045.041-.082.086-.082s.086.034.09.082zm1.015-.073l.367 2.931-.367 2.842c-.004.052-.045.09-.093.09-.053 0-.09-.037-.093-.09l-.315-2.842.315-2.931c.004-.049.041-.086.093-.086s.089.037.093.086zm1.023-.349l.334 3.28-.334 2.799c-.004.056-.045.097-.101.097s-.093-.041-.097-.097l-.286-2.799.286-3.28c.004-.052.041-.09.097-.09.056 0 .097.037.101.09zm1.026-.224l.304 3.504-.304 2.812c-.004.06-.048.104-.108.104s-.101-.044-.104-.104l-.274-2.812.274-3.504c.003-.056.045-.097.104-.097s.104.041.108.097zm1.03-.224l.274 3.728-.274 2.771c0 .067-.052.116-.112.116-.064 0-.112-.049-.115-.116l-.244-2.771.244-3.728c.003-.063.052-.108.115-.108.06 0 .112.045.112.108zm1.036-.134l.244 3.862-.244 2.753c0 .071-.056.123-.12.123-.064 0-.116-.052-.12-.123l-.215-2.753.215-3.862c.004-.067.056-.115.12-.115s.12.048.12.115zm1.04-.112l.215 3.974-.215 2.734c0 .075-.056.13-.127.13s-.124-.055-.127-.13l-.19-2.734.19-3.974c.004-.071.056-.123.127-.123s.127.052.127.123zm1.045-.127l.189 4.101-.189 2.72c0 .082-.06.141-.134.141-.075 0-.135-.06-.135-.142l-.165-2.718.165-4.101c0-.075.06-.13.135-.13.074 0 .134.055.134.13zm1.052-.089l.16 4.19-.16 2.697c0 .086-.063.149-.142.149s-.142-.063-.142-.149l-.138-2.697.138-4.19c0-.082.063-.141.142-.141s.142.06.142.141zm1.056-.067l.134 4.257-.134 2.686c0 .093-.067.156-.15.156-.082 0-.149-.064-.149-.156l-.112-2.686.112-4.257c0-.086.067-.149.149-.149.082 0 .15.063.15.149zm1.063-.06l.104 4.317-.104 2.686c0 .097-.07.167-.157.167-.086 0-.157-.07-.157-.167l-.082-2.686.082-4.317c0-.093.071-.16.157-.16.086 0 .157.067.157.16zm1.176.06l.075 4.257-.075 2.671c0 .108-.075.179-.168.179s-.171-.071-.171-.179l-.052-2.667.052-4.261c0-.097.078-.171.171-.171.093 0 .168.075.168.171zm1.003-.374l.045 4.631-.045 2.671c0 .112-.082.19-.179.19s-.179-.078-.179-.19v-2.671l.001-4.631c0-.104.078-.186.178-.186s.179.082.179.186zm2.55-2.194c.712 0 1.3.537 1.374 1.226l.116 3.399-.116 2.682c0 .749-.615 1.359-1.374 1.359-.755 0-1.37-.61-1.37-1.359l-.097-2.682.097-3.399c0-.749.615-1.359 1.37-1.359z"/>
+                                </svg>
+                              </a>
+                            {/if}
+                            {#if event.instructor.instagram}
                               <a 
                                 href={event.instructor.instagram} 
                                 target="_blank" 
@@ -140,12 +141,13 @@
                                 </svg>
                               </a>
                             {/if}
-                        </div>
-                      {/if}
-                    </div>
-                  {/each}
-                </div>
-              {/each}
+                          </div>
+                        {/if}
+                      </div>
+                    {/each}
+                  </div>
+                {/each}
+              </div>
             </div>
           </div>
         </div>
@@ -161,41 +163,59 @@
 {/if}
 
 <style>
-  .schedule-container {
+  .schedule-wrapper {
     width: 100%;
     overflow-x: auto;
-    scrollbar-width: thin;
-    scrollbar-color: #33cc99 #1f2937;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .schedule-container {
+    min-width: 800px;
+    width: 100%;
+    display: table;
+    table-layout: fixed;
   }
 
   .schedule-header {
-    display: grid;
-    grid-template-columns: 100px repeat(auto-fit, minmax(180px, 1fr));
-    border-bottom: 1px solid #374151;
-    background-color: rgba(0, 0, 0, 0.2);
+    display: table-header-group;
+    background-color: rgba(0, 0, 0);
     position: sticky;
     top: 0;
     z-index: 10;
   }
 
   .header-cell {
+    display: table-cell;
     padding: 0.75rem;
     color: #33cc99;
     font-weight: 500;
     text-align: left;
+    min-width: 180px;
+  }
+
+  .time-header {
+    width: 100px;
+    min-width: 100px;
+  }
+
+  .stage-header {
+    width: auto;
   }
 
   .schedule-body {
-    display: grid;
-    grid-template-columns: 100px repeat(auto-fit, minmax(180px, 1fr));
+    display: table-row-group;
     position: relative;
   }
 
   .time-column {
+    display: table-cell;
     position: sticky;
     left: 0;
-    background-color: rgba(0, 0, 0, 0.2);
+    background-color: rgb(0, 0, 0);
     z-index: 5;
+    width: 100px;
+    min-width: 100px;
+    vertical-align: top;
   }
 
   .time-cell {
@@ -206,9 +226,13 @@
   }
 
   .stage-column {
+    display: table-cell;
     position: relative;
     min-height: calc(65px * var(--total-slots, 1));
     border-left: 1px solid #374151;
+    width: auto;
+    min-width: 180px;
+    vertical-align: top;
   }
 
   .event-card {
@@ -230,16 +254,16 @@
     z-index: 1;
   }
 
-  .schedule-container::-webkit-scrollbar {
+  .schedule-wrapper::-webkit-scrollbar {
     height: 8px;
   }
 
-  .schedule-container::-webkit-scrollbar-track {
+  .schedule-wrapper::-webkit-scrollbar-track {
     background: #1f2937;
     border-radius: 4px;
   }
 
-  .schedule-container::-webkit-scrollbar-thumb {
+  .schedule-wrapper::-webkit-scrollbar-thumb {
     background-color: #33cc99;
     border-radius: 4px;
   }

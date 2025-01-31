@@ -1,5 +1,5 @@
 import type { SupabaseClient, Session, User } from '@supabase/supabase-js';
-import type { FooterSettings } from '$lib/sanity/queries/content';
+import type { FooterSettings, HeaderSettings } from '$lib/sanity/queries/content';
 import type { Post, Testimonial, Logo, Artist, Event, FAQ, KnowledgeBaseItem, SiteSettings } from '$lib/sanity/queries';
 import type { HomePage } from '$lib/sanity/queries/homepage';
 import type { MenuItems } from '$lib/types/menu';
@@ -10,6 +10,7 @@ export interface LayoutData {
     user: User | null;
     preview: boolean;
     footerSettings: FooterSettings | null;
+    headerSettings: HeaderSettings | null;
     navigation?: MenuItems;
 }
 

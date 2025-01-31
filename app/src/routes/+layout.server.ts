@@ -1,7 +1,7 @@
 import type { LoaderLocals } from '@sanity/svelte-loader';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { client } from '$lib/sanity/client';
-import { footerSettingsQuery, type FooterSettings } from '$lib/sanity/queries/content';
+import { footerSettingsQuery, type FooterSettings, headerSettingsQuery, type HeaderSettings } from '$lib/sanity/queries/content';
 import { navigationQuery, transformNavigationData } from '$lib/sanity/queries/navigation';
 import { themeSettingsQuery, type ThemeSettings } from '$lib/sanity/queries/theme';
 import { pagesQuery, transformPagesData } from '$lib/sanity/queries/pages';
@@ -22,13 +22,52 @@ export const load = async ({ locals, depends, url }: { locals: Locals; depends: 
     // First handle Sanity preview state
     const preview = false; // Default preview state
 
+    // Debug: Log all queries
+    console.log('Executing headerSettings query:', headerSettingsQuery);
+
+    // Test direct query
+    // Test if headerSettings document exists
+    const headerSettingsCount = await client.fetch('count(*[_type == "headerSettings"])');
+    console.log('Number of headerSettings documents:', headerSettingsCount);
+
+    if (headerSettingsCount === 0) {
+      console.warn('No headerSettings document found in Sanity. Please create one in the Studio.');
+    }
+
+    // Test direct query with more detailed error handling
+    try {
+      const testHeaderSettings = await client.fetch(`*[_type == "headerSettings"][0] {
+        _type,
+        _id,
+        logo {
+          _type,
+          asset-> {
+            _id,
+            url,
+            _type
+          }
+        }
+      }`);
+      
+      console.log('Test headerSettings query result:', JSON.stringify(testHeaderSettings, null, 2));
+    } catch (error) {
+      console.error('Error fetching headerSettings:', error);
+    }
     // Fetch footer settings, navigation, theme settings, and pages in parallel
-    const [footerSettings, rawNavigation, themeSettings, rawPages] = await Promise.all([
+    const [footerSettings, headerSettings, rawNavigation, themeSettings, rawPages] = await Promise.all([
       client.fetch<FooterSettings>(footerSettingsQuery),
+      client.fetch<HeaderSettings>(headerSettingsQuery),
       client.fetch(navigationQuery),
       client.fetch<ThemeSettings>(themeSettingsQuery),
       client.fetch(pagesQuery)
     ]);
+
+    console.log('Raw headerSettings from Sanity:', JSON.stringify(headerSettings, null, 2));
+    console.log('Sanity Client Config:', {
+      projectId: client.config().projectId,
+      dataset: client.config().dataset,
+      apiVersion: client.config().apiVersion
+    });
 
     // Transform navigation data
     const navigation = transformNavigationData(rawNavigation);
@@ -73,6 +112,7 @@ export const load = async ({ locals, depends, url }: { locals: Locals; depends: 
     const pages = transformPagesData(rawPages, authData.userBadges);
 
     // Debug-Ausgaben
+    // Debug-Ausgaben
     console.log('🔄 Layout Server Load:', {
       url: url.pathname,
       navigationItems: navigation.length,
@@ -86,15 +126,23 @@ export const load = async ({ locals, depends, url }: { locals: Locals; depends: 
         sectionTypes: page.sections?.map((s: any) => s.type)
       })),
       preview,
-      userBadges: authData.userBadges
+      userBadges: authData.userBadges,
+      headerSettings // Debug headerSettings
     });
+    // Prepare headerSettings with fallback
+    const finalHeaderSettings = headerSettings || {
+      _type: 'headerSettings',
+      _id: 'default',
+      logo: null
+    };
 
-    // Return data
+    // Return data with fallback
     return {
       user: authData.user,
       session: authData.session,
       preview,
       footerSettings,
+      headerSettings: finalHeaderSettings,
       navigation,
       pages,
       themeSettings
@@ -107,6 +155,7 @@ export const load = async ({ locals, depends, url }: { locals: Locals; depends: 
       session: null,
       preview: false,
       footerSettings: null,
+      headerSettings: null,
       navigation: [],
       pages: {},
       themeSettings: null
