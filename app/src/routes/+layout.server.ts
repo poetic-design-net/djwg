@@ -142,6 +142,8 @@ export const load = async ({ locals, depends, url }: { locals: Locals; depends: 
 
           if (badges) {
             authData.userBadges = badges;
+            // Füge die Badges auch zur User-Session hinzu
+            authData.user.badges = badges;
           }
         }
       }

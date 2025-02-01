@@ -11,6 +11,9 @@ export const contentSection: Section = (S) =>
             .title('Homepage')
             .child(S.document().schemaType('homePage').documentId('homePage')),
           S.listItem()
+            .title('NextLevel DJs')
+            .child(S.document().schemaType('nextLevelDjs').documentId('nextLevelDjs')),
+          S.listItem()
             .title('Partner Page')
             .child(S.document().schemaType('partnerPage').documentId('partnerPage')),
           S.listItem()

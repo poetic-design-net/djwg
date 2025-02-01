@@ -13,11 +13,38 @@
       onClick(menu._id);
     }
   }
+
+  let openTimeout: NodeJS.Timeout;
+  let closeTimeout: NodeJS.Timeout;
+
+  function handleMouseEnter(menu: any) {
+    if (menu.type !== 'direct') {
+      if (closeTimeout) {
+        clearTimeout(closeTimeout);
+      }
+      openTimeout = setTimeout(() => {
+        onClick(menu._id);
+      }, 100);
+    }
+  }
+
+  function handleMouseLeave() {
+    if (openTimeout) {
+      clearTimeout(openTimeout);
+    }
+    closeTimeout = setTimeout(() => {
+      onClick('');
+    }, 300);
+  }
 </script>
 
 <nav class="flex items-center space-x-8">
   {#each menuItems as menu}
-    <div class="relative group">
+    <div
+      class="relative group"
+      on:mouseenter={() => handleMouseEnter(menu)}
+      on:mouseleave={handleMouseLeave}
+    >
       {#if menu.type === 'direct'}
         {@const href = buildNavigationHref(menu, pages)}
         <a

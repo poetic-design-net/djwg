@@ -67,6 +67,7 @@ export const myStructure = (S: any) =>
             'partnerPage',
             'artistPage',
             'ticket',
+            'nextLevelDjs',
           ].includes(listItem.getId())
       )
     ])

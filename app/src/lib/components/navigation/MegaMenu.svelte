@@ -11,6 +11,27 @@
   export let onClose: () => void;
 
   let megaMenuContainer: HTMLDivElement;
+  let closeTimeout: NodeJS.Timeout;
+
+  function handleMouseEnter() {
+    if (closeTimeout) {
+      clearTimeout(closeTimeout);
+    }
+  }
+
+  function handleMouseLeave() {
+    closeTimeout = setTimeout(() => {
+      onClose();
+    }, 300);
+  }
+
+  // Cleanup beim Zerstören der Komponente
+  import { onDestroy } from 'svelte';
+  onDestroy(() => {
+    if (closeTimeout) {
+      clearTimeout(closeTimeout);
+    }
+  });
 
   const handleLinkClick = async (link: string | undefined, linkType: string | undefined = 'direct') => {
     if (!link) return;
@@ -57,19 +78,29 @@
 </script>
 
 {#if activeMenu}
-  <div 
+  <div
     class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 z-[90]"
     style="top: 80px;"
     on:click={onClose}
+    on:mouseenter={handleMouseEnter}
+    on:mouseleave={handleMouseLeave}
     transition:fade={{ duration: 200 }}
   ></div>
 {/if}
 
 {#if activeMenuItem}
-  <div 
+  <!-- Sicherer Bereich für die Maus -->
+  <div
+    class="absolute top-[calc(100%-8px)] left-0 w-full h-8 z-[94]"
+    on:mouseenter={handleMouseEnter}
+  />
+  
+  <div
     bind:this={megaMenuContainer}
     class="absolute top-full left-0 w-full bg-black/95 border-t border-b border-gray-800/50 backdrop-blur-sm z-[95]"
     transition:slide={{ duration: 200, easing: quintOut }}
+    on:mouseenter={handleMouseEnter}
+    on:mouseleave={handleMouseLeave}
   >
     <!-- Close Button -->
     <button 

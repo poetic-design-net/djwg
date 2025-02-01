@@ -1,11 +1,16 @@
 import type { LoaderLocals } from '@sanity/svelte-loader';
 import type { SupabaseClient, User } from '@supabase/supabase-js';
+import type { UserBadge } from '$lib/utils/badge-utils';
 
 declare global {
 	namespace App {
 		interface Locals extends LoaderLocals {
 			supabase: SupabaseClient;
 			getUser(): Promise<User | null>;
+			user?: {
+				id: string;
+				badges: UserBadge[];
+			};
 		}
 		interface PageData {
 			user: User | null;
