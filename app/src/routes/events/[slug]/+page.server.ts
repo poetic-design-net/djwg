@@ -107,21 +107,20 @@ export const load: PageServerLoad = async ({ params, locals: { loadQuery } }) =>
         selectedFaqs: event.data.faqSection.selectedFaqs || []
       } : undefined,
       schedule: event.data.schedule ? {
-        _id: event.data.schedule._id,
-        days: event.data.schedule.days.map(day => ({
+        days: (event.data.schedule.days || []).map(day => ({
           // Ensure date is in ISO format
-          date: new Date(day.date).toISOString(),
-          stages: day.stages.map(stage => ({
-            name: stage.name,
-            description: stage.description,
-            schedule: stage.schedule.map(item => ({
-              time: item.time,
-              title: item.title,
-              description: item.description,
-              icon: item.icon,
+          date: new Date(day.date || new Date()).toISOString(),
+          stages: (day.stages || []).map(stage => ({
+            name: stage.name || '',
+            description: stage.description || '',
+            schedule: (stage.schedule || []).map(item => ({
+              time: item.time || '',
+              title: item.title || '',
+              description: item.description || '',
+              icon: item.icon || '',
               instructor: item.instructor ? {
-                name: item.instructor.name,
-                role: item.instructor.role,
+                name: item.instructor.name || '',
+                role: item.instructor.role || '',
                 image: item.instructor.image ? urlFor(item.instructor.image).url() : undefined
               } : undefined
             }))
@@ -132,6 +131,9 @@ export const load: PageServerLoad = async ({ params, locals: { loadQuery } }) =>
 
     console.log('Transformed event schedule:', JSON.stringify(transformedEvent.schedule, null, 2));
 
+    console.log('Event data:', JSON.stringify(event.data, null, 2));
+    console.log('Transformed event:', JSON.stringify(transformedEvent, null, 2));
+    
     return {
       event: transformedEvent
     };
