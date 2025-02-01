@@ -23,8 +23,13 @@
   let error = '';
 
   // Basis-Felder
-  let firstName = user.raw_user_meta_data?.first_name || user.user_metadata?.first_name || '';
-  let lastName = user.raw_user_meta_data?.last_name || user.user_metadata?.last_name || '';
+  let firstName = user.user_metadata?.first_name ||
+                 (user.user_metadata?.name?.split(' ')[0]) ||
+                 (user.user_metadata?.full_name?.split(' ')[0]) || '';
+                 
+  let lastName = user.user_metadata?.last_name ||
+                (user.user_metadata?.name ? user.user_metadata.name.split(' ').slice(1).join(' ') : '') ||
+                (user.user_metadata?.full_name ? user.user_metadata.full_name.split(' ').slice(1).join(' ') : '') || '';
   let email = user.email;
   
   // Profil-Daten

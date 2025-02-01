@@ -7,20 +7,17 @@
   export let user: {
     email: string;
     created_at: string;
-    raw_user_meta_data?: {
+    user_metadata?: {
       first_name?: string;
       last_name?: string;
       name?: string;
+      full_name?: string;
       picture?: string;
       avatar_url?: string;
       provider?: string;
       email_verified?: boolean;
       phone_verified?: boolean;
-    };
-    user_metadata?: {
-      first_name?: string;
-      last_name?: string;
-      name?: string;
+      provider_id?: string;
     };
   };
   export let profile: any = null;
@@ -28,17 +25,20 @@
 
   const supabase = getContext<SupabaseClient>('supabase');
   
-  // Extrahiere Namen basierend auf Auth Provider
-  $: isGoogleAuth = user.raw_user_meta_data?.provider === 'google';
-  $: firstName = isGoogleAuth
-    ? (user.raw_user_meta_data?.name?.split(' ')[0] || '')
-    : (user.raw_user_meta_data?.first_name || user.user_metadata?.first_name || '');
-  $: lastName = isGoogleAuth
-    ? (user.raw_user_meta_data?.name?.split(' ').slice(1).join(' ') || '')
-    : (user.raw_user_meta_data?.last_name || user.user_metadata?.last_name || '');
-  $: avatarUrl = isGoogleAuth
-    ? user.raw_user_meta_data?.picture
-    : (profile?.avatar_url || user.raw_user_meta_data?.avatar_url);
+  // Extrahiere Namen aus user_metadata
+  $: firstName = user.user_metadata?.first_name ||
+                (user.user_metadata?.name?.split(' ')[0]) ||
+                (user.user_metadata?.full_name?.split(' ')[0]) || '';
+                 
+  $: lastName = user.user_metadata?.last_name ||
+                (user.user_metadata?.name ? user.user_metadata.name.split(' ').slice(1).join(' ') : '') ||
+                (user.user_metadata?.full_name ? user.user_metadata.full_name.split(' ').slice(1).join(' ') : '') || '';
+
+  // Extrahiere Avatar URL mit Fallback-Logik
+  $: displayAvatar = profile?.avatar_url || // Zuerst das Profil-Bild
+                    user.user_metadata?.picture || // Dann Google Auth Bild
+                    user.user_metadata?.avatar_url || // Dann sonstige Auth Provider
+                    '';
   $: completionPercentage = calculateProfileCompletion(
     profile,
     firstName,
@@ -72,13 +72,15 @@
     </div>
 
     <div class="space-y-4">
-      <div class="flex items-center space-x-4">
-        <OptimizedAvatar
-          image={avatarUrl || profile?.avatar_url || user.raw_user_meta_data?.picture || ''}
-          size="md"
-          border={true}
-        />
-      </div>
+      {#if displayAvatar}
+        <div class="flex items-center space-x-4">
+          <OptimizedAvatar
+            image={displayAvatar}
+            size="md"
+            border={true}
+          />
+        </div>
+      {/if}
 
       <div class="flex items-center space-x-4">
         <div class="bg-gray-950 rounded-full p-4">
@@ -114,7 +116,7 @@
         </div>
         <div>
           <p class="text-gray-400">Name</p>
-          <p class="text-white font-medium">{user.raw_user_meta_data?.first_name || user.user_metadata?.first_name || ''} {user.raw_user_meta_data?.last_name || user.user_metadata?.last_name || ''}</p>
+          <p class="text-white font-medium">{firstName} {lastName}</p>
         </div>
       </div>
 

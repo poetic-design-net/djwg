@@ -28,10 +28,13 @@ export interface User {
     first_name?: string;
     last_name?: string;
     name?: string;
-  };
-  raw_user_meta_data?: {
-    first_name?: string;
-    last_name?: string;
+    full_name?: string;
+    picture?: string;
+    avatar_url?: string;
+    provider?: string;
+    email_verified?: boolean;
+    phone_verified?: boolean;
+    provider_id?: string;
   };
 }
 
