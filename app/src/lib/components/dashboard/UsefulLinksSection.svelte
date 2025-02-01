@@ -23,7 +23,7 @@
   ];
 </script>
 
-<div class="relative rounded-3xl p-8 border border-gray-800 overflow-hidden">
+<div class="relative rounded-3xl p-8 border border-gray-800 overflow-hidden flex-grow">
   <div class="absolute inset-0 mix-blend-overlay noise-filter"></div>
   <div class="relative">
     <h2 class="text-2xl font-medium text-white mb-6">Useful Links</h2>

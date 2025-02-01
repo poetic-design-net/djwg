@@ -16,17 +16,38 @@
 
   export let data;
   let { user, navigation, pages, headerSettings } = data;
+  let profile: any = null;
+
+  // Lade das Profil client-seitig
+  const loadProfile = async () => {
+    try {
+      if (!user?.id || !supabase) return;
+
+      const { data: profileData, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+      
+      if (error) {
+        console.error('Error loading profile in Header:', error);
+        return;
+      }
+
+      profile = profileData;
+      console.log('Header Profile loaded:', {
+        hasProfile: !!profile,
+        profile,
+        userId: user.id
+      });
+    } catch (error) {
+      console.error('Error in loadProfile:', error);
+    }
+  };
+
   $: {
     ({ user, navigation, pages, headerSettings } = data);
-    console.log('Header Component Data:', {
-      data,
-      headerSettings,
-      hasType: headerSettings?._type === 'headerSettings',
-      hasLogo: !!headerSettings?.logo,
-      hasAsset: !!headerSettings?.logo?.asset,
-      hasUrl: !!headerSettings?.logo?.asset?.url,
-      fullLogo: headerSettings?.logo
-    });
+    if (user?.id) loadProfile();
   }
   $: if (!pages) pages = {};
 
@@ -149,6 +170,7 @@
               {isAuthenticated}
               {showAuthUI}
               onLogout={handleLogout}
+              {profile}
             />
           </div>
         </div>
@@ -160,6 +182,7 @@
             {showAuthUI}
             onLogout={handleLogout}
             isMobile={true}
+            {profile}
           />
           
           <button 

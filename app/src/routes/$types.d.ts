@@ -3,11 +3,13 @@ import type { FooterSettings, HeaderSettings } from '$lib/sanity/queries/content
 import type { Post, Testimonial, Logo, Artist, Event, FAQ, KnowledgeBaseItem, SiteSettings } from '$lib/sanity/queries';
 import type { HomePage } from '$lib/sanity/queries/homepage';
 import type { MenuItems } from '$lib/types/menu';
+import type { Profile } from '$lib/types/profile';
 
 export interface LayoutData {
     supabase: SupabaseClient;
     session: Session | null;
     user: User | null;
+    profile: Profile | null;
     preview: boolean;
     footerSettings: FooterSettings | null;
     headerSettings: HeaderSettings | null;

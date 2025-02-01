@@ -20,7 +20,8 @@ export async function uploadToSanity(
 ): Promise<UploadResult> {
   try {
     // 1. Lade die Datei als Asset hoch
-    const asset = await uploadClient.assets.upload('file', file);
+    const assetType = file.type.startsWith('image/') ? 'image' : 'file';
+    const asset = await uploadClient.assets.upload(assetType, file);
 
     // 2. Erstelle das mediaUpload Dokument mit erweiterten Informationen
     const doc = await uploadClient.create({
@@ -54,13 +55,23 @@ export async function uploadToSanity(
         } : undefined
       },
 
-      // Datei-Referenz
-      file: {
-        _type: 'file',
-        asset: {
-          _type: 'reference',
-          _ref: asset._id
-        }
+      // Asset-Referenz
+      asset: {
+        type: file.type.startsWith('image/') ? 'image' : 'file',
+        image: file.type.startsWith('image/') ? {
+          _type: 'image',
+          asset: {
+            _type: 'reference',
+            _ref: asset._id
+          }
+        } : undefined,
+        file: !file.type.startsWith('image/') ? {
+          _type: 'file',
+          asset: {
+            _type: 'reference',
+            _ref: asset._id
+          }
+        } : undefined
       },
 
       // Administratives
@@ -80,10 +91,15 @@ export async function uploadToSanity(
     });
 
     // 3. Bereite das Ergebnis vor
+    // Generiere die öffentliche URL für das Bild
+    const imageUrl = builder
+      .image(asset._id)
+      .url();
+
     const result: UploadResult = {
       sanityId: doc._id,
       sanityAssetId: asset._id,
-      url: asset.url
+      url: imageUrl
     };
 
     console.log('Upload erfolgreich:', {
