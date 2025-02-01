@@ -16,6 +16,36 @@
   let success = false;
   let error = '';
 
+  async function handleAvatarDelete() {
+    loading = true;
+    error = '';
+    success = false;
+
+    try {
+      const { data: updatedProfile, error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          avatar_url: null
+        })
+        .eq('id', user.id)
+        .select()
+        .single();
+
+      if (profileError) {
+        throw profileError;
+      }
+
+      avatarUrl = undefined;
+      success = true;
+      dispatch('profileUpdated', { profile: updatedProfile });
+    } catch (err: any) {
+      error = err?.message || 'Fehler beim Löschen des Avatars';
+      console.error('Löschen Fehler:', err);
+    } finally {
+      loading = false;
+    }
+  }
+
   async function handleAvatarUpload(event: Event) {
     const input = event.target as HTMLInputElement;
     if (!input.files?.length) return;
@@ -141,51 +171,62 @@
   <h3 class="text-lg font-medium text-white">Profilbild</h3>
   <div class="space-y-4">
     {#if avatarUrl}
-      <div class="flex items-center space-x-4">
-        <OptimizedAvatar
-          image={avatarUrl}
-          size="md"
-          border={true}
-        />
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+          <OptimizedAvatar
+            image={avatarUrl}
+            size="md"
+            border={true}
+          />
+        </div>
+        <button
+          on:click={handleAvatarDelete}
+          class="px-3 py-2 text-sm font-medium text-red-500 hover:text-red-400 bg-gray-950 rounded-xl border border-gray-800 hover:border-red-500 transition-colors duration-200"
+          disabled={loading}
+        >
+          Avatar löschen
+        </button>
       </div>
     {/if}
     
-    <label
-      for="avatar-upload"
-      class="relative cursor-pointer rounded-xl bg-gray-950 px-4 py-4 border border-gray-800 hover:border-green-500 transition-colors duration-200 flex items-center justify-center"
-    >
-      <input
-        id="avatar-upload"
-        name="avatar-upload"
-        type="file"
-        class="sr-only"
-        on:change={handleAvatarUpload}
-        accept="image/*"
-      />
-      <div class="space-y-1 text-center">
-        <svg
-          class="mx-auto h-12 w-12 text-gray-400"
-          stroke="currentColor"
-          fill="none"
-          viewBox="0 0 48 48"
-          aria-hidden="true"
+    {#if !avatarUrl}
+      <label
+          for="avatar-upload"
+          class="relative cursor-pointer rounded-xl bg-gray-950 px-4 py-4 border border-gray-800 hover:border-green-500 transition-colors duration-200 flex items-center justify-center"
         >
-          <path
-            d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
+          <input
+            id="avatar-upload"
+            name="avatar-upload"
+            type="file"
+            class="sr-only"
+            on:change={handleAvatarUpload}
+            accept="image/*"
           />
-        </svg>
-        <div class="text-sm text-gray-400">
-          <span>Profilbild hochladen</span>
-          <span class="text-green-500 hover:text-green-400"> (max. 5MB)</span>
-        </div>
-        <p class="text-xs text-gray-500">
-          PNG, JPG, GIF
-        </p>
-      </div>
-    </label>
+          <div class="space-y-1 text-center">
+            <svg
+              class="mx-auto h-12 w-12 text-gray-400"
+              stroke="currentColor"
+              fill="none"
+              viewBox="0 0 48 48"
+              aria-hidden="true"
+            >
+              <path
+                d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <div class="text-sm text-gray-400">
+              <span>Profilbild hochladen</span>
+              <span class="text-green-500 hover:text-green-400"> (max. 5MB)</span>
+            </div>
+            <p class="text-xs text-gray-500">
+              PNG, JPG, GIF
+            </p>
+          </div>
+        </label>
+    {/if}
   </div>
 
   {#if error}
