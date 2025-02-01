@@ -119,21 +119,23 @@
         return;
       }
 
-      const { error } = await supabase.auth.signUp({
+      const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: { 
-            first_name: firstName,
-            last_name: lastName
-          },
           emailRedirectTo: `${browser ? location.origin : ''}/auth/callback?next=${encodeURIComponent(next)}`,
-        },
+          data: {
+            raw_user_meta_data: {
+              first_name: firstName,
+              last_name: lastName
+            }
+          }
+        }
       });
 
-      if (error) {
-        console.error('Sign up error:', error);
-        errorMsg = error.message;
+      if (signUpError) {
+        console.error('Sign up error:', signUpError);
+        errorMsg = signUpError.message;
         toasts.error('Registrierung fehlgeschlagen');
         loading = false;
         return;

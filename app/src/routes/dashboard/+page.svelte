@@ -14,25 +14,10 @@
   import type { Badge } from '$lib/sanity/queries/badges';
   import { onMount } from 'svelte';
 
+  import type { User } from '$lib/types/profile';
+
   export let data: {
-    user: {
-      id: string;
-      email: string;
-      created_at: string;
-      user_metadata?: {
-        first_name?: string;
-        last_name?: string;
-        name?: string;
-      };
-      raw_user_meta_data?: {
-        first_name?: string;
-        last_name?: string;
-        email?: string;
-        email_verified?: boolean;
-        phone_verified?: boolean;
-      };
-      aud?: string;
-    };
+    user: User;
     onlineTalks: {
       _id: string;
       title: string;
@@ -112,10 +97,11 @@
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
       <!-- Profile Section -->
-      <ProfileSection 
+      <ProfileSection
         {user}
         {profile}
         onEdit={() => showEditProfile = true}
+        on:profileUpdated={loadProfile}
       />
 
       <!-- Badges & Useful Links Container -->

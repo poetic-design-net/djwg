@@ -1,7 +1,10 @@
 export interface Profile {
   id: string;
   username?: string;
+  first_name?: string;
+  last_name?: string;
   full_name?: string;
+  email?: string;
   avatar_url?: string;
   website?: string;
   address_street?: string;
@@ -21,10 +24,21 @@ export interface Profile {
   is_public: boolean;
 }
 
+export interface StandardUserMetadata {
+  first_name: string;
+  last_name: string;
+  email: string;
+  avatar_url?: string;
+  provider?: string;
+  provider_id?: string;
+}
+
 export interface User {
   id: string;
   email: string;
-  user_metadata?: {
+  created_at: string;
+  user_metadata?: StandardUserMetadata;
+  raw_user_meta_data?: {
     first_name?: string;
     last_name?: string;
     name?: string;
@@ -32,9 +46,9 @@ export interface User {
     picture?: string;
     avatar_url?: string;
     provider?: string;
+    provider_id?: string;
     email_verified?: boolean;
     phone_verified?: boolean;
-    provider_id?: string;
   };
 }
 

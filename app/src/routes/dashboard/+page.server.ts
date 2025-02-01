@@ -41,10 +41,7 @@ interface OnlineTalk {
   visibleFromHours: number;
 }
 
-interface User {
-  id: string;
-  // Weitere User-Properties hier hinzufügen
-}
+import type { User } from '$lib/types/profile';
 
 const fetchBadges = async (supabase: SupabaseClient, userId: string): Promise<Badge[]> => {
   try {

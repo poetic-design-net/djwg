@@ -1,49 +1,37 @@
 <script lang="ts">
-  import type { SupabaseClient } from '@supabase/supabase-js';
-  import { getContext } from 'svelte';
-  import { calculateProfileCompletion } from '$lib/utils/profile-utils';
+  import { calculateProfileCompletion, normalizeUserMetadata } from '$lib/utils/profile-utils';
   import OptimizedAvatar from '$lib/components/OptimizedAvatar.svelte';
+  import AvatarUpload from '$lib/components/profile/AvatarUpload.svelte';
+  import type { User } from '$lib/types/profile';
+  import type { SupabaseClient } from '@supabase/supabase-js';
+  import { getContext, createEventDispatcher } from 'svelte';
 
-  export let user: {
-    email: string;
-    created_at: string;
-    user_metadata?: {
-      first_name?: string;
-      last_name?: string;
-      name?: string;
-      full_name?: string;
-      picture?: string;
-      avatar_url?: string;
-      provider?: string;
-      email_verified?: boolean;
-      phone_verified?: boolean;
-      provider_id?: string;
-    };
-  };
+  const dispatch = createEventDispatcher();
+
+  export let user: User;
   export let profile: any = null;
   export let onEdit: () => void;
 
   const supabase = getContext<SupabaseClient>('supabase');
+
+  // Funktion zum Dispatchen des profileUpdated Events
+  function handleProfileUpdate() {
+    dispatch('profileUpdated');
+  }
   
-  // Extrahiere Namen aus user_metadata
-  $: firstName = user.user_metadata?.first_name ||
-                (user.user_metadata?.name?.split(' ')[0]) ||
-                (user.user_metadata?.full_name?.split(' ')[0]) || '';
-                 
-  $: lastName = user.user_metadata?.last_name ||
-                (user.user_metadata?.name ? user.user_metadata.name.split(' ').slice(1).join(' ') : '') ||
-                (user.user_metadata?.full_name ? user.user_metadata.full_name.split(' ').slice(1).join(' ') : '') || '';
+  // Normalisiere die Benutzerdaten
+  $: normalizedMetadata = normalizeUserMetadata(user);
+  $: firstName = normalizedMetadata.first_name || profile?.first_name || '';
+  $: lastName = normalizedMetadata.last_name || profile?.last_name || '';
 
   // Extrahiere Avatar URL mit Fallback-Logik
   $: displayAvatar = profile?.avatar_url || // Zuerst das Profil-Bild
-                    user.user_metadata?.picture || // Dann Google Auth Bild
-                    user.user_metadata?.avatar_url || // Dann sonstige Auth Provider
-                    '';
+                     user.raw_user_meta_data?.picture || // Dann Google Auth Bild
+                     user.raw_user_meta_data?.avatar_url || // Dann sonstige Auth Provider
+                     '';
   $: completionPercentage = calculateProfileCompletion(
     profile,
-    firstName,
-    lastName,
-    profile?.social_links || {}
+    profile?.social_links || { instagram: '', facebook: '', soundcloud: '' }
   );
 </script>
 
@@ -72,15 +60,14 @@
     </div>
 
     <div class="space-y-4">
-      {#if displayAvatar}
-        <div class="flex items-center space-x-4">
-          <OptimizedAvatar
-            image={displayAvatar}
-            size="md"
-            border={true}
-          />
-        </div>
-      {/if}
+      <!-- Avatar Upload -->
+      <AvatarUpload
+        {user}
+        avatarUrl={displayAvatar}
+        firstName={firstName}
+        lastName={lastName}
+        on:profileUpdated={handleProfileUpdate}
+      />
 
       <div class="flex items-center space-x-4">
         <div class="bg-gray-950 rounded-full p-4">
@@ -108,16 +95,38 @@
         </div>
       {/if}
 
-      <div class="flex items-center space-x-4">
-        <div class="bg-gray-950 rounded-full p-4">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+      <div class="space-y-4">
+        <div class="flex items-center space-x-4">
+          <div class="bg-gray-950 rounded-full p-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div>
+            <p class="text-gray-400">Name</p>
+            <p class="text-white font-medium">
+              {#if firstName || lastName}
+                {firstName} {lastName}
+              {:else}
+                Nicht angegeben
+              {/if}
+            </p>
+          </div>
         </div>
-        <div>
-          <p class="text-gray-400">Name</p>
-          <p class="text-white font-medium">{firstName} {lastName}</p>
-        </div>
+
+        {#if profile?.username}
+          <div class="flex items-center space-x-4">
+            <div class="bg-gray-950 rounded-full p-4">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            </div>
+            <div>
+              <p class="text-gray-400">Username</p>
+              <p class="text-white font-medium">@{profile.username}</p>
+            </div>
+          </div>
+        {/if}
       </div>
 
       {#if profile?.social_links}

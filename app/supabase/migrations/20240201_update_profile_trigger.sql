@@ -33,10 +33,10 @@ BEGIN
     );
 
     -- Aktualisiere die user_metadata mit den aufbereiteten Daten
-    UPDATE auth.users 
+    UPDATE auth.users
     SET raw_user_meta_data = jsonb_set(
         jsonb_set(
-            raw_user_meta_data,
+            COALESCE(raw_user_meta_data, '{}'::jsonb),
             '{first_name}',
             to_jsonb(first_name)
         ),
