@@ -12,6 +12,8 @@
 	import Header from '$lib/components/Header.svelte';
 	import Footer from '$lib/components/Footer.svelte';
 	import Toast from '$lib/components/Toast.svelte';
+	import BetaBanner from '$lib/components/BetaBanner.svelte';
+	import CookieBanner from '$lib/components/CookieBanner.svelte';
 	import "../app.pcss";
 	import type { LayoutData } from './$types';
 
@@ -174,10 +176,12 @@
 
 <Toast />
 
+<BetaBanner />
 <main>
 	<Header {data} />
 	<slot />
 </main>
+<CookieBanner />
 <footer>
 	<section class="bg-gray-50 overflow-hidden">
 		<Footer data={data.footerSettings || defaultFooterSettings} />
