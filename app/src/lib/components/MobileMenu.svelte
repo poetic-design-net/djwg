@@ -1,5 +1,6 @@
 <script lang="ts">
   import { slide } from 'svelte/transition';
+  import { goto } from '$app/navigation';
   import type { MenuItems } from '$lib/types/menu';
   import { navigateToSection } from '$lib/utils/navigation';
   import OptimizedImage from '$lib/components/OptimizedImage.svelte';
@@ -31,6 +32,38 @@
     }
     handleLinkClick();
   }
+
+  const handleColumnLinkClick = async (link: string | undefined, linkType: string | undefined = 'direct') => {
+    if (!link) return;
+    
+    const [baseUrl, anchor] = link.split('#');
+    const currentPath = window.location.pathname;
+    const isCurrentPage = baseUrl === '' || baseUrl === currentPath;
+
+    if (isCurrentPage && anchor) {
+      const element = document.getElementById(anchor);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+        history.pushState(null, '', `#${anchor}`);
+      }
+    } else {
+      try {
+        await goto(baseUrl || '/');
+        if (anchor) {
+          setTimeout(() => {
+            const element = document.getElementById(anchor);
+            if (element) {
+              element.scrollIntoView({ behavior: 'smooth' });
+              window.location.hash = anchor;
+            }
+          }, 500);
+        }
+      } catch (error) {
+        console.error('Navigation error:', error);
+      }
+    }
+    handleLinkClick();
+  };
 </script>
 
 {#if isOpen}
@@ -75,7 +108,7 @@
                     <a
                       href={menu.featured.link}
                       class="block mb-6 group"
-                      on:click={handleLinkClick}
+                      on:click|preventDefault={() => handleColumnLinkClick(menu.featured?.link, menu.featured?.linkType)}
                     >
                       <div class="relative rounded-xl overflow-hidden mb-3 aspect-video">
                         {#if menu.featured.image?._type === 'image' && menu.featured.image?.asset}
@@ -101,14 +134,32 @@
                     <div class="space-y-4">
                       {#each menu.columns as column}
                         <div>
-                          <h4 class="text-green-500 font-heading text-sm mb-2">{column.title}</h4>
+                          {#if column.link && column.linkType}
+                            <a
+                              href={column.link}
+                              class="group block font-heading text-sm text-green-500 hover:text-white font-medium mb-2"
+                              on:click|preventDefault={() => handleColumnLinkClick(column.link, column.linkType)}
+                              data-no-scroll
+                            >
+                              <div class="flex items-center">
+                                {#if column.linkType === 'anchor'}
+                                  <span class="text-green-500/0 group-hover:text-green-500 transition-colors duration-200 mr-1">#</span>
+                                {:else}
+                                  <span class="text-green-500/0 group-hover:text-green-500 transition-colors duration-200 mr-1">→</span>
+                                {/if}
+                                {column.title}
+                              </div>
+                            </a>
+                          {:else}
+                            <h4 class="text-green-500 font-heading text-sm mb-2">{column.title}</h4>
+                          {/if}
                           <ul class="space-y-2 ml-4">
                             {#each column.items as item}
                               <li>
                                 <a
                                   href={item.link}
                                   class="text-gray-300 hover:text-white transition duration-200"
-                                  on:click={handleLinkClick}
+                                  on:click|preventDefault={() => handleColumnLinkClick(item.link, item.linkType)}
                                 >
                                   {item.label}
                                 </a>
@@ -130,7 +181,7 @@
                             <a
                               href={quickLink.link}
                               class="text-gray-300 hover:text-white transition duration-200"
-                              on:click={handleLinkClick}
+                              on:click|preventDefault={() => handleColumnLinkClick(quickLink.link, quickLink.linkType)}
                             >
                               {quickLink.label}
                             </a>

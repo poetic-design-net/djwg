@@ -1,19 +1,28 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, getContext } from 'svelte';
   import { clickOutside } from '$lib/utils/clickOutside';
   import { fade, slide } from 'svelte/transition';
+  import { goto } from '$app/navigation';
   import OptimizedImage from '$lib/components/OptimizedImage.svelte';
   import OptimizedAvatar from '$lib/components/OptimizedAvatar.svelte';
   import type { Profile } from '$lib/types/profile';
+  import { profileStore } from '$lib/stores/profile';
 
   export let isAuthenticated: boolean;
   export let showAuthUI: boolean;
   export let onLogout: () => Promise<void>;
   export let isMobile = false;
-  export let profile: Profile | null = null;
+  export let user: any = null;
 
   let showDropdown = false;
   let loading = false;
+
+  const supabase = getContext('supabase');
+
+  // Profil aus dem Store
+  $: if (user?.id && isAuthenticated) {
+    profileStore.refresh(supabase, user.id);
+  }
 
   const handleLogoutClick = async () => {
     if (loading) return;
@@ -46,18 +55,19 @@
     >
       {#if isMobile}
         <button
-          on:click={() => {
+          on:click={async () => {
             loading = true;
-            window.location.href = '/dashboard';
+            await goto('/dashboard');
+            loading = false;
           }}
           disabled={loading}
           class="text-white hover:text-green-500 transition-colors duration-200 flex items-center space-x-2 relative"
           title="Dashboard"
         >
           <div class:opacity-50={loading}>
-            {#if profile?.avatar_url}
+            {#if $profileStore?.avatar_url}
               <OptimizedAvatar
-                image={profile.avatar_url}
+                image={$profileStore.avatar_url}
                 size="sm"
               />
             {:else}
@@ -81,9 +91,9 @@
           class="text-white hover:text-green-500 transition-colors duration-200 flex items-center space-x-2"
           title="Benutzermenü"
         >
-          {#if profile?.avatar_url}
+          {#if $profileStore?.avatar_url}
             <OptimizedAvatar
-              image={profile.avatar_url}
+              image={$profileStore.avatar_url}
               size="sm"
             />
           {:else}
