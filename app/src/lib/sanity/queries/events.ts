@@ -106,7 +106,7 @@ export const eventQuery = groq`*[_type == "event" && slug.current == $slug][0] {
     asset->,
     hotspot
   },
-  "schedule": *[_type == "eventSchedule" && event._ref == ^._id][0] {
+  "schedule": *[_type == "eventSchedule" && references(^._id)][0] {
     _id,
     days[] {
       "date": date,
