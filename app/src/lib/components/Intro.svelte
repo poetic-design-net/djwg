@@ -19,6 +19,9 @@
   export let cta: { text: string; link: string } | undefined = undefined;
   export let secondaryCta: { text: string; link: string } | undefined = undefined;
 
+  import PortableTextContent from './PortableTextContent.svelte';
+
+  // Verwende die vorgefertigte PortableTextContent Komponente
   const components: Partial<PortableTextComponents> = {};
 
   function validateIcon(icon: string): IconType {
@@ -55,10 +58,10 @@
           <div class="w-full md:w-1/2 p-8 order-1 md:order-2">
             <div class="md:max-w-md">
               <h2 class="font-heading mb-4 text-4xl lg:text-5xl text-black tracking-4xl lg:tracking-5xl">
-                <PortableText value={processedTitle} {components} />
+                <PortableTextContent value={processedTitle} />
               </h2>
               <div class="mb-6 text-black text-xl">
-                <PortableText value={description} {components} />
+                <PortableTextContent value={description} />
               </div>
               {#if cta?.text && cta?.link}
                 <div class="flex flex-wrap items-center -m-2">
@@ -75,11 +78,11 @@
           <!-- Content Column (Full Width) -->
           <div class="w-full p-8">
             <div class="mx-auto">
-              <h2 class="font-heading mb-4 text-4xl lg:text-5xl text-black tracking-4xl lg:tracking-5xl ">
-                <PortableText value={processedTitle} {components} />
+              <h2 class="font-heading mb-4 text-4xl lg:text-5xl text-black tracking-4xl lg:tracking-5xl">
+                <PortableTextContent value={processedTitle} />
               </h2>
               <div class="mb-6 text-black text-xl">
-                <PortableText value={description} {components} />
+                <PortableTextContent value={description} />
               </div>
               {#if cta?.text && cta?.link}
                 <div class="flex flex-wrap items-center justify-center -m-2">

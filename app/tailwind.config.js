@@ -1,7 +1,21 @@
 /** @type {import('tailwindcss').Config} */
+import typography from '@tailwindcss/typography';
+
 export default {
   content: ['./src/**/*.{html,js,svelte,ts}'],
   theme: {
+    typography: {
+      DEFAULT: {
+        css: {
+          'p': {
+            marginBottom: '1rem',
+          },
+          'strong': {
+            fontWeight: '500',
+          },
+        },
+      },
+    },
     extend: {
       screens: {
   "sm": "640px",
@@ -233,5 +247,6 @@ export default {
         body: '#fff',
       }),
     }
-  }
+  },
+  plugins: [typography]
 }

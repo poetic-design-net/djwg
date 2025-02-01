@@ -15,40 +15,9 @@
   import OptimizedImage from './OptimizedImage.svelte';
 
   export let data;
-  let { user, navigation, pages, headerSettings } = data;
-  let profile: any = null;
+  let { user, navigation, pages, headerSettings, profile } = data;
 
-  // Lade das Profil client-seitig
-  const loadProfile = async () => {
-    try {
-      if (!user?.id || !supabase) return;
-
-      const { data: profileData, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-      
-      if (error) {
-        console.error('Error loading profile in Header:', error);
-        return;
-      }
-
-      profile = profileData;
-      console.log('Header Profile loaded:', {
-        hasProfile: !!profile,
-        profile,
-        userId: user.id
-      });
-    } catch (error) {
-      console.error('Error in loadProfile:', error);
-    }
-  };
-
-  $: {
-    ({ user, navigation, pages, headerSettings } = data);
-    if (user?.id) loadProfile();
-  }
+  $: ({ user, navigation, pages, headerSettings, profile } = data);
   $: if (!pages) pages = {};
 
   const supabase = getContext<SupabaseClient>('supabase');
