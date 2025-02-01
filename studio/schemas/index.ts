@@ -1,6 +1,7 @@
 import blockContent from './blockContent'
 import ticket from './ticket'
 import pricingSection from './objects/pricingSection'
+import djCourse from './djCourse'
 import mediaUpload from './mediaUpload'
 import category from './category'
 import post from './post'
@@ -28,6 +29,7 @@ import footerSettings from './documents/settings/footerSettings'
 import headerSettings from './documents/settings/headerSettings'
 import partnerPage from './documents/pages/partnerPage'
 import artistPage from './documents/pages/artistPage'
+import nextLevelDjs from './documents/pages/nextLevelDjs'
 
 // Object Types
 import seo from './objects/seo'
@@ -51,11 +53,13 @@ export const schemaTypes = [
   mediaUpload,
   ticket,
   post,
+  djCourse,
   page,
   homePage,
   eventPage,
   partnerPage,
   artistPage,
+  nextLevelDjs,
   artist,
   event,
   eventSchedule,
