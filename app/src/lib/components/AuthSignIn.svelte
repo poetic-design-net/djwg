@@ -169,6 +169,54 @@
         console.error('Google sign in error:', error);
         errorMsg = error.message;
         toasts.error('Google-Anmeldung fehlgeschlagen');
+        return;
+      }
+
+      // Nach erfolgreicher Anmeldung, erstelle/aktualisiere das Profil
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      
+      if (currentUser) {
+        const { data: existingProfile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', currentUser.id)
+          .single();
+
+        if (!existingProfile) {
+          // Extrahiere Namen aus Google-Daten
+          const fullName = currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || '';
+          const [firstName = '', lastName = ''] = fullName.split(' ');
+          
+          // Erstelle neues Profil
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert({
+              id: currentUser.id,
+              full_name: fullName,
+              avatar_url: currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture,
+              username: `${firstName.toLowerCase()}.${lastName.toLowerCase()}`.replace(/[^a-z0-9.]/g, ''),
+              is_public: false
+            });
+
+          if (profileError) {
+            console.error('Error creating profile:', profileError);
+            toasts.error('Fehler beim Erstellen des Profils');
+          }
+        } else {
+          // Aktualisiere bestehendes Profil mit neuen Google-Daten
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update({
+              full_name: currentUser.user_metadata?.full_name || currentUser.user_metadata?.name,
+              avatar_url: currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture
+            })
+            .eq('id', currentUser.id);
+
+          if (updateError) {
+            console.error('Error updating profile:', updateError);
+            toasts.error('Fehler beim Aktualisieren des Profils');
+          }
+        }
       }
     } catch (error) {
       console.error('Unexpected error during Google sign in:', error);

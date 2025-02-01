@@ -10,10 +10,17 @@
     raw_user_meta_data?: {
       first_name?: string;
       last_name?: string;
+      name?: string;
+      picture?: string;
+      avatar_url?: string;
+      provider?: string;
+      email_verified?: boolean;
+      phone_verified?: boolean;
     };
     user_metadata?: {
       first_name?: string;
       last_name?: string;
+      name?: string;
     };
   };
   export let profile: any = null;
@@ -21,8 +28,17 @@
 
   const supabase = getContext<SupabaseClient>('supabase');
   
-  $: firstName = user.raw_user_meta_data?.first_name || user.user_metadata?.first_name || '';
-  $: lastName = user.raw_user_meta_data?.last_name || user.user_metadata?.last_name || '';
+  // Extrahiere Namen basierend auf Auth Provider
+  $: isGoogleAuth = user.raw_user_meta_data?.provider === 'google';
+  $: firstName = isGoogleAuth
+    ? (user.raw_user_meta_data?.name?.split(' ')[0] || '')
+    : (user.raw_user_meta_data?.first_name || user.user_metadata?.first_name || '');
+  $: lastName = isGoogleAuth
+    ? (user.raw_user_meta_data?.name?.split(' ').slice(1).join(' ') || '')
+    : (user.raw_user_meta_data?.last_name || user.user_metadata?.last_name || '');
+  $: avatarUrl = isGoogleAuth
+    ? user.raw_user_meta_data?.picture
+    : (profile?.avatar_url || user.raw_user_meta_data?.avatar_url);
   $: completionPercentage = calculateProfileCompletion(
     profile,
     firstName,
@@ -56,15 +72,13 @@
     </div>
 
     <div class="space-y-4">
-      {#if profile?.avatar_url}
-        <div class="flex items-center space-x-4">
-          <OptimizedAvatar
-            image={profile.avatar_url}
-            size="md"
-            border={true}
-          />
-        </div>
-      {/if}
+      <div class="flex items-center space-x-4">
+        <OptimizedAvatar
+          image={avatarUrl || profile?.avatar_url || user.raw_user_meta_data?.picture || ''}
+          size="md"
+          border={true}
+        />
+      </div>
 
       <div class="flex items-center space-x-4">
         <div class="bg-gray-950 rounded-full p-4">
