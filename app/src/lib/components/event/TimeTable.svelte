@@ -130,7 +130,7 @@
     <div class="container px-4 mx-auto">
       <div class="mb-20 text-center">
         <span class="inline-block mb-4 text-sm text-green-400 font-medium tracking-tighter">Tagesablauf</span>
-        <h2 class="font-heading text-5xl md:text-6xl text-white tracking-tighter">Schedule</h2>
+        <h2 class="font-heading text-5xl md:text-6xl text-white tracking-tighter">Timeline</h2>
       </div>
 
       <!-- Day Tabs -->
@@ -138,7 +138,7 @@
         <div class="flex flex-wrap justify-center mb-8 gap-4">
           {#each schedule as day, i}
             <button
-              class="px-6 py-3 rounded-full text-sm font-medium transition-all duration-300 {selectedDayIndex === i ? 'bg-green-500 text-black scale-105' : 'text-white hover:text-green-500 hover:scale-105'}"
+              class="px-6 py-3 rounded-full text-sm font-medium transition-all duration-300 {selectedDayIndex === i ? 'bg-green-500 text-black scale-105' : 'text-white hover:text-green-500 hover:scale-105 border border-gray-700 hover:border-green-500'}"
               on:click={() => selectDay(i)}
             >
               {formatDate(day.date)}
@@ -153,7 +153,7 @@
           <div class="flex flex-wrap justify-center mb-12 gap-4">
             {#each selectedDay.stages as stage, i}
               <button
-                class="px-6 py-3 rounded-full text-sm font-medium transition-all duration-300 {selectedStageIndex === i ? 'bg-green-500 text-black scale-105' : 'text-white hover:text-green-500 hover:scale-105'}"
+                class="px-6 py-3 rounded-full text-sm font-medium transition-all duration-300 {selectedStageIndex === i ? 'bg-green-500 text-black scale-105' : 'text-white hover:text-green-500 hover:scale-105 border border-gray-700 hover:border-green-500'}"
                 on:click={() => selectStage(i)}
               >
                 {stage.name}

@@ -35,19 +35,21 @@
     tickets: homeData?.pricingSection?.tickets
   });
 
-  // Format logos and testimonials data to match component expectations
-  const logosData = { 
-    data: (data.logos.options.initial as Logo[] || []).map(logo => ({
-      ...logo,
-      image: {
-        ...logo.image,
-        asset: {
-          _type: 'reference',
-          _ref: String(logo.image.asset._id) || '',
-          _id: logo.image.asset._id || ''
+  // Format and randomize logos data for homepage
+  const logosData = {
+    data: (data.logos.options.initial as Logo[] || [])
+      .map(logo => ({
+        ...logo,
+        image: {
+          ...logo.image,
+          asset: {
+            _type: 'reference',
+            _ref: String(logo.image.asset._id) || '',
+            _id: logo.image.asset._id || ''
+          }
         }
-      }
-    }))
+      }))
+      .sort(() => Math.random() - 0.5) // Randomize logos on homepage
   };
   const testimonialsData = { data: data.testimonials.options.initial as Testimonial[] || [] };
 

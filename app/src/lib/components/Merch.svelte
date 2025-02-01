@@ -58,14 +58,14 @@
 </script>
 
 <section {id} class="relative overflow-hidden pt-36">
-  <div class="container px-4 mx-auto">
+  <div class="container px-4 mx-auto {validProducts.length === 1 ? 'max-w-2xl' : ''}">
     <div class="text-center mb-20">
       <span class="inline-block mb-4 text-sm text-tourquis-500 font-medium tracking-tighter">Merchandise</span>
       <h2 class="font-heading mb-6 text-5xl md:text-6xl text-white tracking-tighter">{title}</h2>
       <p class="text-lg text-gray-300 md:max-w-md mx-auto">{description}</p>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 auto-cols-fr" style="grid-template-columns: repeat({Math.min(validProducts.length, 4)}, minmax(0, 1fr));">
+    <div class="grid grid-cols-1 sm:grid-cols-2 {validProducts.length <= 3 ? 'lg:grid-cols-' + validProducts.length : 'lg:grid-cols-3'} {validProducts.length === 4 ? 'xl:grid-cols-4' : ''} gap-8 max-w-7xl mx-auto">
       {#each validProducts as product}
         <div class="h-full">
           <div class="relative h-full flex flex-col bg-black/40 border-gray-800 border rounded-5xl bg-gradient-radial-dark transition duration-200">
@@ -181,15 +181,5 @@
 <style>
   .rounded-5xl {
     border-radius: 2rem;
-  }
-
-  @media (min-width: 1024px) {
-    .merch-grid {
-      grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr));
-    }
-  }
-
-  :global(.merch-grid) {
-    --grid-columns: {gridColumns};
   }
 </style>
