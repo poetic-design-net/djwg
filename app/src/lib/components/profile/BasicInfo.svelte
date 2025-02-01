@@ -1,9 +1,6 @@
 <script lang="ts">
   import type { Profile } from '$lib/types/profile';
 
-  export let email: string;
-  export let firstName: string;
-  export let lastName: string;
   export let profile: Partial<Profile>;
 </script>
 
@@ -18,20 +15,21 @@
       <input
         type="email"
         id="email"
-        bind:value={email}
-        required
-        class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500"
+        value={profile.email || ''}
+        disabled
+        class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50"
       />
     </div>
 
     <div>
       <label for="firstName" class="block text-sm font-medium text-gray-400 mb-2">
-        Vorname
+        Vorname <span class="text-yellow-500">*</span>
       </label>
       <input
         type="text"
         id="firstName"
-        bind:value={firstName}
+        bind:value={profile.first_name}
+        required
         class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500"
       />
     </div>
@@ -52,12 +50,13 @@
 
     <div>
       <label for="lastName" class="block text-sm font-medium text-gray-400 mb-2">
-        Nachname
+        Nachname <span class="text-yellow-500">*</span>
       </label>
       <input
         type="text"
         id="lastName"
-        bind:value={lastName}
+        bind:value={profile.last_name}
+        required
         class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500"
       />
     </div>

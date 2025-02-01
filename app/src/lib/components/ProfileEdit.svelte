@@ -4,8 +4,12 @@
   import { invalidateAll } from '$app/navigation';
   const dispatch = createEventDispatcher();
   import type { SupabaseClient } from '@supabase/supabase-js';
-  import type { Profile, User } from '$lib/types/profile';
-  import { calculateProfileCompletion } from '$lib/utils/profile-utils';
+  import type { Profile, User, StandardUserMetadata } from '$lib/types/profile';
+  import { 
+    calculateProfileCompletion, 
+    normalizeUserMetadata,
+    generateUsername 
+  } from '$lib/utils/profile-utils';
 
   // Komponenten
   import Progress from './profile/Progress.svelte';
@@ -22,18 +26,17 @@
   let loading = false;
   let error = '';
 
-  // Basis-Felder
-  let firstName = user.user_metadata?.first_name ||
-                 (user.user_metadata?.name?.split(' ')[0]) ||
-                 (user.user_metadata?.full_name?.split(' ')[0]) || '';
-                 
-  let lastName = user.user_metadata?.last_name ||
-                (user.user_metadata?.name ? user.user_metadata.name.split(' ').slice(1).join(' ') : '') ||
-                (user.user_metadata?.full_name ? user.user_metadata.full_name.split(' ').slice(1).join(' ') : '') || '';
-  let email = user.email;
+  // Normalisiere die Benutzerdaten
+  const normalizedMetadata = normalizeUserMetadata(user);
   
-  // Profil-Daten
-  let profile: Partial<Profile> = {};
+  // Initialisiere das Profil mit den normalisierten Daten
+  let profile: Partial<Profile> = {
+    first_name: normalizedMetadata.first_name,
+    last_name: normalizedMetadata.last_name,
+    email: normalizedMetadata.email,
+    avatar_url: normalizedMetadata.avatar_url
+  };
+  
   let showAddress = false;
   let showContact = false;
   
@@ -43,7 +46,7 @@
   let soundcloud = '';
 
   // Berechne Profilfortschritt
-  $: completionPercentage = calculateProfileCompletion(profile, firstName, lastName, { instagram, facebook, soundcloud });
+  $: completionPercentage = calculateProfileCompletion(profile, { instagram, facebook, soundcloud });
   
   // Initialisiere Social Media Links wenn Profil geladen wird
   const initializeSocialLinks = (data: any) => {
@@ -65,7 +68,14 @@
         
       if (profileError) throw profileError;
       if (data) {
-        profile = data;
+        profile = {
+          ...profile,
+          ...data,
+          // Stelle sicher, dass die normalisierten Daten Vorrang haben
+          first_name: profile.first_name || data.first_name,
+          last_name: profile.last_name || data.last_name,
+          email: profile.email || data.email
+        };
         initializeSocialLinks(data);
       }
     } catch (e: any) {
@@ -78,26 +88,52 @@
     error = '';
 
     try {
-      // Hole zuerst die Badge-ID
-      const { data: badgeData, error: badgeError } = await supabase
-        .from('badges')
-        .select('*')
-        .eq('slug', 'dj-level-1')
-        .single();
+      // Generiere Username falls nicht vorhanden
+      if (!profile.username) {
+        profile.username = generateUsername(profile.first_name || '', profile.last_name || '');
+      }
 
-      if (badgeError) throw badgeError;
+      // 1. Aktualisiere die Auth Metadaten
+      const metadataUpdate: StandardUserMetadata = {
+        first_name: profile.first_name || '',
+        last_name: profile.last_name || '',
+        email: profile.email || user.email,
+        avatar_url: profile.avatar_url,
+        provider: normalizedMetadata.provider,
+        provider_id: normalizedMetadata.provider_id
+      };
 
-      // Dann das Profil aktualisieren
-      const profileData = {
+      const { data: authData, error: authError } = await supabase.auth.updateUser({
+        email: profile.email || user.email,
+        data: metadataUpdate
+      });
+
+      if (authError) throw authError;
+
+      // 2. Aktualisiere das Profil
+      const profileData: Partial<Profile> = {
         id: user.id,
-        full_name: `${firstName} ${lastName}`.trim(),
-        username: `${firstName} ${lastName}`.trim().toLowerCase().replace(/\s+/g, '-'),
-        ...profile,
+        first_name: profile.first_name,
+        last_name: profile.last_name,
+        email: profile.email || user.email,
+        username: profile.username,
+        avatar_url: profile.avatar_url,
+        bio: profile.bio,
+        website: profile.website,
+        address_street: profile.address_street,
+        address_number: profile.address_number,
+        address_city: profile.address_city,
+        address_zip: profile.address_zip,
+        address_country: profile.address_country,
+        phone: profile.phone,
+        company_name: profile.company_name,
+        position: profile.position,
         social_links: {
           instagram,
           facebook,
           soundcloud
-        }
+        },
+        is_public: profile.is_public ?? false
       };
 
       const { error: profileError } = await supabase
@@ -107,8 +143,14 @@
 
       if (profileError) throw profileError;
 
-      // Warte kurz, damit der Trigger das Badge vergeben kann
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // 3. Badge-Logik
+      const { data: badgeData, error: badgeError } = await supabase
+        .from('badges')
+        .select('*')
+        .eq('slug', 'dj-level-1')
+        .single();
+
+      if (badgeError) throw badgeError;
 
       // Prüfe ob das Badge bereits existiert
       const { data: existingBadge, error: badgeCheckError } = await supabase
@@ -132,24 +174,6 @@
 
       // Badge wurde neu vergeben wenn es vorher nicht existierte aber jetzt ja
       const badgeAwarded = !existingBadge && newBadge;
-
-      // Dann erst den User updaten
-      const { data: authData, error: authError } = await supabase.auth.updateUser({
-        email: email,
-        data: {
-          first_name: firstName,
-          last_name: lastName
-        }
-      });
-
-      if (authError) throw authError;
-
-      if (authData.user.user_metadata) {
-        user.user_metadata = authData.user.user_metadata;
-      }
-      if (authData.user.email) {
-        user.email = authData.user.email;
-      }
 
       // Seite neu laden
       await invalidateAll();
@@ -182,8 +206,6 @@
   <!-- Fortschrittsanzeige -->
   <Progress
     {profile}
-    {firstName}
-    {lastName}
     {instagram}
     {facebook}
     {soundcloud}
@@ -191,9 +213,6 @@
 
   <!-- Basis-Informationen -->
   <BasicInfo
-    {email}
-    {firstName}
-    {lastName}
     {profile}
   />
 
@@ -201,8 +220,9 @@
   <AvatarUpload
     {user}
     avatarUrl={profile.avatar_url}
-    {firstName}
-    {lastName}
+    firstName={profile.first_name || ''}
+    lastName={profile.last_name || ''}
+    on:profileUpdated={loadProfile}
   />
 
   <!-- Über mich -->
@@ -226,8 +246,8 @@
   <!-- Datei-Upload -->
   <FileUpload
     {user}
-    {firstName}
-    {lastName}
+    firstName={profile.first_name || ''}
+    lastName={profile.last_name || ''}
   />
 
   {#if error}

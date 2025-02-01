@@ -110,6 +110,31 @@ export const load = async ({ locals, depends, url }: { locals: Locals; depends: 
           
           if (profile) {
             authData.profile = profile;
+            
+            // Wenn es ein Google-Auth ist, behalte die benutzerdefinierten Namen
+            if (authData.user.user_metadata?.provider === 'google' && profile.full_name) {
+              const [firstName = '', lastName = ''] = profile.full_name.split(' ');
+              
+              // Aktualisiere die Metadaten mit den benutzerdefinierten Namen
+              const { error: updateError } = await locals.supabase.auth.updateUser({
+                data: {
+                  first_name: firstName,
+                  last_name: lastName,
+                  name: profile.full_name,
+                  full_name: profile.full_name
+                }
+              });
+              
+              if (!updateError) {
+                authData.user.user_metadata = {
+                  ...authData.user.user_metadata,
+                  first_name: firstName,
+                  last_name: lastName,
+                  name: profile.full_name,
+                  full_name: profile.full_name
+                };
+              }
+            }
           }
 
           if (badges) {

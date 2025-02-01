@@ -1,14 +1,16 @@
 <script lang="ts">
   import type { SupabaseClient } from '@supabase/supabase-js';
-  import { getContext } from 'svelte';
+  import { getContext, createEventDispatcher } from 'svelte';
   import { uploadToSanity } from '$lib/sanity/uploadMedia';
   import type { User } from '$lib/types/profile';
+  import OptimizedAvatar from '$lib/components/OptimizedAvatar.svelte';
 
   export let user: User;
   export let avatarUrl: string | undefined = undefined;
   export let firstName: string;
   export let lastName: string;
 
+  const dispatch = createEventDispatcher();
   const supabase = getContext<SupabaseClient>('supabase');
   let loading = false;
   let success = false;
@@ -50,6 +52,7 @@
       if (dbError) throw dbError;
       if (!uploadData) throw new Error('Keine Daten vom Upload erhalten');
 
+      console.log('Starte Sanity Upload...', { file, userId: user.id, uploadId: uploadData.id });
       const sanityResult = await uploadToSanity(
         file,
         user.id,
@@ -57,8 +60,14 @@
         firstName || lastName || user.email?.split('@')[0] || 'Unbekannter Benutzer',
         user.email
       );
+      console.log('Sanity Upload erfolgreich:', sanityResult);
 
       // Aktualisiere den Eintrag mit den Sanity-Referenzen
+      console.log('Aktualisiere media_uploads...', {
+        sanityId: sanityResult.sanityId,
+        sanityAssetId: sanityResult.sanityAssetId,
+        url: sanityResult.url
+      });
       const { error: updateError } = await supabase
         .from('media_uploads')
         .update({
@@ -67,24 +76,58 @@
           metadata: {
             ...uploadData.metadata,
             sanity_url: sanityResult.url
-          }
+          },
+          status: 'completed'
         })
         .eq('id', uploadData.id);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Fehler beim Aktualisieren von media_uploads:', updateError);
+        throw updateError;
+      }
+      console.log('media_uploads erfolgreich aktualisiert');
 
       // Aktualisiere das Profil mit der neuen Avatar-URL
-      const { error: profileError } = await supabase
+      // Hole zuerst die aktuellen Profildaten
+      console.log('Hole aktuelle Profildaten...');
+      const { data: currentProfile, error: fetchError } = await supabase
+        .from('profiles')
+        .select('first_name, last_name, avatar_url')
+        .eq('id', user.id)
+        .single();
+
+      if (fetchError) {
+        console.error('Fehler beim Abrufen der Profildaten:', fetchError);
+        throw fetchError;
+      }
+      console.log('Aktuelle Profildaten:', currentProfile);
+
+      // Aktualisiere das Profil und behalte die bestehenden Namen bei
+      console.log('Aktualisiere Profil...', {
+        newAvatarUrl: sanityResult.url,
+        firstName: currentProfile.first_name,
+        lastName: currentProfile.last_name
+      });
+      const { data: updatedProfile, error: profileError } = await supabase
         .from('profiles')
         .update({
-          avatar_url: sanityResult.url
+          avatar_url: sanityResult.url,
+          first_name: currentProfile.first_name,
+          last_name: currentProfile.last_name
         })
-        .eq('id', user.id);
+        .eq('id', user.id)
+        .select()
+        .single();
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error('Fehler beim Aktualisieren des Profils:', profileError);
+        throw profileError;
+      }
+      console.log('Profil erfolgreich aktualisiert:', updatedProfile);
 
       avatarUrl = sanityResult.url;
       success = true;
+      dispatch('profileUpdated', { profile: updatedProfile });
     } catch (err: any) {
       error = err?.message || 'Fehler beim Upload';
       console.error('Upload Fehler:', err);
@@ -99,10 +142,10 @@
   <div class="space-y-4">
     {#if avatarUrl}
       <div class="flex items-center space-x-4">
-        <img
-          src={avatarUrl}
-          alt="Aktuelles Profilbild"
-          class="w-20 h-20 rounded-full object-cover border-2 border-green-500"
+        <OptimizedAvatar
+          image={avatarUrl}
+          size="md"
+          border={true}
         />
       </div>
     {/if}
