@@ -108,6 +108,9 @@ export const load = async ({ locals, depends, url }: { locals: Locals; depends: 
             .select('badge_id')
             .eq('user_id', authData.user.id);
           
+          // Debug: Log profile data
+          console.log('Loaded profile data:', JSON.stringify(profile, null, 2));
+          
           if (profile) {
             authData.profile = profile;
             

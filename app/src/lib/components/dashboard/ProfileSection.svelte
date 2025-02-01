@@ -2,36 +2,34 @@
   import { calculateProfileCompletion, normalizeUserMetadata } from '$lib/utils/profile-utils';
   import OptimizedAvatar from '$lib/components/OptimizedAvatar.svelte';
   import AvatarUpload from '$lib/components/profile/AvatarUpload.svelte';
-  import type { User } from '$lib/types/profile';
+  import type { User, Profile } from '$lib/types/profile';
   import type { SupabaseClient } from '@supabase/supabase-js';
   import { getContext, createEventDispatcher } from 'svelte';
+  import { profileStore } from '$lib/stores/profile';
 
   const dispatch = createEventDispatcher();
 
   export let user: User;
-  export let profile: any = null;
   export let onEdit: () => void;
 
   const supabase = getContext<SupabaseClient>('supabase');
 
   // Funktion zum Dispatchen des profileUpdated Events
   function handleProfileUpdate() {
+    profileStore.refresh(supabase, user.id);
     dispatch('profileUpdated');
   }
   
   // Normalisiere die Benutzerdaten
   $: normalizedMetadata = normalizeUserMetadata(user);
-  $: firstName = normalizedMetadata.first_name || profile?.first_name || '';
-  $: lastName = normalizedMetadata.last_name || profile?.last_name || '';
+  $: firstName = normalizedMetadata.first_name || $profileStore?.first_name || '';
+  $: lastName = normalizedMetadata.last_name || $profileStore?.last_name || '';
 
   // Extrahiere Avatar URL mit Fallback-Logik
-  $: displayAvatar = profile?.avatar_url || // Zuerst das Profil-Bild
-                     user.raw_user_meta_data?.picture || // Dann Google Auth Bild
-                     user.raw_user_meta_data?.avatar_url || // Dann sonstige Auth Provider
-                     '';
+  $: displayAvatar = $profileStore?.avatar_url || '';
   $: completionPercentage = calculateProfileCompletion(
-    profile,
-    profile?.social_links || { instagram: '', facebook: '', soundcloud: '' }
+    $profileStore || {},
+    $profileStore?.social_links || { instagram: '', facebook: '', soundcloud: '' }
   );
 </script>
 
@@ -81,7 +79,7 @@
         </div>
       </div>
 
-      {#if profile?.bio}
+      {#if $profileStore?.bio}
         <div class="flex items-center space-x-4">
           <div class="bg-gray-950 rounded-full p-4">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -90,7 +88,7 @@
           </div>
           <div>
             <p class="text-gray-400">Bio</p>
-            <p class="text-white font-medium">{profile.bio}</p>
+            <p class="text-white font-medium">{$profileStore.bio}</p>
           </div>
         </div>
       {/if}
@@ -114,7 +112,7 @@
           </div>
         </div>
 
-        {#if profile?.username}
+        {#if $profileStore?.username}
           <div class="flex items-center space-x-4">
             <div class="bg-gray-950 rounded-full p-4">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -123,13 +121,13 @@
             </div>
             <div>
               <p class="text-gray-400">Username</p>
-              <p class="text-white font-medium">@{profile.username}</p>
+              <p class="text-white font-medium">@{$profileStore.username}</p>
             </div>
           </div>
         {/if}
       </div>
 
-      {#if profile?.social_links}
+      {#if $profileStore?.social_links}
         <div class="flex items-center space-x-4">
           <div class="bg-gray-950 rounded-full p-4">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -139,24 +137,19 @@
           <div class="flex-1">
             <p class="text-gray-400 mb-2">Social Media</p>
             <div class="space-y-2">
-              {#if profile.social_links.instagram}
-                <a href={profile.social_links.instagram} target="_blank" class="block text-green-500 hover:text-green-400">
+              {#if $profileStore.social_links.instagram}
+                <a href={$profileStore.social_links.instagram} target="_blank" class="block text-green-500 hover:text-green-400">
                   Instagram
                 </a>
               {/if}
-              {#if profile.social_links.facebook}
-                <a href={profile.social_links.facebook} target="_blank" class="block text-green-500 hover:text-green-400">
+              {#if $profileStore.social_links.facebook}
+                <a href={$profileStore.social_links.facebook} target="_blank" class="block text-green-500 hover:text-green-400">
                   Facebook
                 </a>
               {/if}
-              {#if profile.social_links.soundcloud}
-                <a href={profile.social_links.soundcloud} target="_blank" class="block text-green-500 hover:text-green-400">
+              {#if $profileStore.social_links.soundcloud}
+                <a href={$profileStore.social_links.soundcloud} target="_blank" class="block text-green-500 hover:text-green-400">
                   Soundcloud
-                </a>
-              {/if}
-              {#if profile.social_links.linkedin}
-                <a href={profile.social_links.linkedin} target="_blank" class="block text-green-500 hover:text-green-400">
-                  LinkedIn
                 </a>
               {/if}
             </div>
@@ -164,7 +157,7 @@
         </div>
       {/if}
 
-      {#if profile?.website}
+      {#if $profileStore?.website}
         <div class="flex items-center space-x-4">
           <div class="bg-gray-950 rounded-full p-4">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -173,8 +166,8 @@
           </div>
           <div>
             <p class="text-gray-400">Website</p>
-            <a href={profile.website} target="_blank" class="text-green-500 hover:text-green-400 font-medium">
-              {profile.website}
+            <a href={$profileStore.website} target="_blank" class="text-green-500 hover:text-green-400 font-medium">
+              {$profileStore.website}
             </a>
           </div>
         </div>

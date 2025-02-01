@@ -91,15 +91,18 @@ export async function uploadToSanity(
     });
 
     // 3. Bereite das Ergebnis vor
-    // Generiere die öffentliche URL für das Bild
-    const imageUrl = builder
-      .image(asset._id)
-      .url();
+    // Generiere die öffentliche URL je nach Assettyp
+    let url;
+    if (assetType === 'image') {
+      url = builder.image(asset._id).url();
+    } else {
+      url = `${process.env.SANITY_PROJECT_URL || 'https://cdn.sanity.io'}/files/${process.env.SANITY_PROJECT_ID}/production/${asset._id.replace('file-', '')}`;
+    }
 
     const result: UploadResult = {
       sanityId: doc._id,
       sanityAssetId: asset._id,
-      url: imageUrl
+      url: url
     };
 
     console.log('Upload erfolgreich:', {

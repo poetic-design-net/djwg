@@ -17,7 +17,17 @@
   export let data;
   let { user, navigation, pages, headerSettings, profile } = data;
 
-  $: ({ user, navigation, pages, headerSettings, profile } = data);
+  $: {
+    console.log('Header Component Debug:', {
+      'Complete data': data,
+      'hasUser': !!user,
+      'hasProfile': !!profile,
+      'profile': profile,
+      'user': user
+    });
+
+    ({ user, navigation, pages, headerSettings, profile } = data);
+  }
   $: if (!pages) pages = {};
 
   const supabase = getContext<SupabaseClient>('supabase');
@@ -139,7 +149,7 @@
               {isAuthenticated}
               {showAuthUI}
               onLogout={handleLogout}
-              {profile}
+              {user}
             />
           </div>
         </div>
@@ -151,9 +161,8 @@
             {showAuthUI}
             onLogout={handleLogout}
             isMobile={true}
-            {profile}
+            {user}
           />
-          
           <button 
             class="relative z-[110] text-white p-2"
             on:click={toggleMobileMenu}
