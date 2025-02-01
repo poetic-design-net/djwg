@@ -20,7 +20,7 @@
   interface TransformedInstructor {
     name: string;
     role: string;
-    image?: SanityImageSource;
+    image?: string;
     soundcloud?: string;
     instagram?: string;
   }
@@ -95,13 +95,13 @@ $: sections = [
       <div class="container px-4 mx-auto">
         <div class="flex justify-center gap-4">
           <button
-            class="px-6 py-3 rounded-full text-sm font-medium transition-all duration-300 {scheduleView === 'timeline' ? 'bg-green-500 text-black scale-105' : 'text-white hover:text-green-500 hover:scale-105'}"
+            class="px-6 py-3 rounded-full text-sm font-medium transition-all duration-300 {scheduleView === 'timeline' ? 'bg-green-500 text-black scale-105' : 'text-white hover:text-green-500 hover:scale-105 border border-gray-700 hover:border-green-500'}"
             on:click={() => scheduleView = 'timeline'}
           >
             Timeline
           </button>
           <button
-            class="px-6 py-3 rounded-full text-sm font-medium transition-all duration-300 {scheduleView === 'overview' ? 'bg-green-500 text-black scale-105' : 'text-white hover:text-green-500 hover:scale-105'}"
+            class="px-6 py-3 rounded-full text-sm font-medium transition-all duration-300 {scheduleView === 'overview' ? 'bg-[#33cc99] text-black scale-105' : 'text-white hover:text-[#33cc99] hover:scale-105 border border-gray-700 hover:border-[#33cc99]'}"
             on:click={() => scheduleView = 'overview'}
           >
             Übersicht
