@@ -1,6 +1,8 @@
 <script lang="ts">
   import type { SupabaseClient } from '@supabase/supabase-js';
   import { getContext } from 'svelte';
+  import { calculateProfileCompletion } from '$lib/utils/profile-utils';
+  import OptimizedAvatar from '$lib/components/OptimizedAvatar.svelte';
 
   export let user: {
     email: string;
@@ -18,6 +20,15 @@
   export let onEdit: () => void;
 
   const supabase = getContext<SupabaseClient>('supabase');
+  
+  $: firstName = user.raw_user_meta_data?.first_name || user.user_metadata?.first_name || '';
+  $: lastName = user.raw_user_meta_data?.last_name || user.user_metadata?.last_name || '';
+  $: completionPercentage = calculateProfileCompletion(
+    profile,
+    firstName,
+    lastName,
+    profile?.social_links || {}
+  );
 </script>
 
 <div class="relative rounded-3xl p-8 border border-gray-800 overflow-hidden">
@@ -32,13 +43,25 @@
         Bearbeiten
       </button>
     </div>
+
+    <!-- Fortschrittsbalken -->
+    <div class="w-full bg-gray-800 rounded-full h-4 overflow-hidden mb-6">
+      <div
+        class="bg-green-500 h-full rounded-full transition-all duration-500 ease-out"
+        style="width: {completionPercentage}%"
+      />
+      <div class="text-center text-sm text-gray-400 mt-1">
+        Profil zu {completionPercentage}% vollständig
+      </div>
+    </div>
+
     <div class="space-y-4">
       {#if profile?.avatar_url}
         <div class="flex items-center space-x-4">
-          <img
-            src={profile.avatar_url}
-            alt="Profilbild"
-            class="w-20 h-20 rounded-full object-cover border-2 border-green-500"
+          <OptimizedAvatar
+            image={profile.avatar_url}
+            size="md"
+            border={true}
           />
         </div>
       {/if}

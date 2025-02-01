@@ -9,6 +9,8 @@
   import UsefulLinksSection from '$lib/components/dashboard/UsefulLinksSection.svelte';
   import BadgeDisplay from '$lib/components/badges/BadgeDisplay.svelte';
   import ProfileEdit from '$lib/components/ProfileEdit.svelte';
+  import MediaUploader from '$lib/components/dashboard/MediaUploader.svelte';
+  import MyFiles from '$lib/components/dashboard/MyFiles.svelte';
   import type { Badge } from '$lib/sanity/queries/badges';
   import { onMount } from 'svelte';
 
@@ -117,9 +119,9 @@
       />
 
       <!-- Badges & Useful Links Container -->
-      <div class="space-y-8">
+      <div class="space-y-8 h-full flex flex-col">
         <!-- Badges Section -->
-        <div class="relative rounded-3xl p-8 border border-gray-800 overflow-hidden">
+        <div class="relative rounded-3xl p-8 border border-gray-800 overflow-hidden flex-grow">
           <div class="absolute inset-0 mix-blend-overlay noise-filter"></div>
           <div class="relative">
             <h2 class="text-2xl font-medium text-white mb-6">Deine Badges</h2>
@@ -131,6 +133,15 @@
         <UsefulLinksSection />
       </div>
 
+       <!-- Media Upload Section -->
+       <div class="relative rounded-3xl p-8 border border-gray-800 overflow-hidden">
+        <div class="absolute inset-0 mix-blend-overlay noise-filter"></div>
+        <div class="relative space-y-8">
+          <MediaUploader {user} />
+          <MyFiles {user} />
+        </div>
+      </div>
+
       <!-- Online Talk Section -->
       <OnlineTalkSection {onlineTalks} />
 
@@ -140,6 +151,8 @@
         firstName={user.raw_user_meta_data?.first_name || user.user_metadata?.first_name || ''} 
         lastName={user.raw_user_meta_data?.last_name || user.user_metadata?.last_name || ''} 
       />
+
+     
     </div>
   </div>
 </div>

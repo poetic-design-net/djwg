@@ -51,30 +51,27 @@ const fetchBadges = async (supabase: SupabaseClient, userId: string): Promise<Ba
     const { data: userBadges, error } = await supabase
       .from('user_badges')
       .select('badge_id, badge:badges!inner(*)')
-      .eq('user_id', userId)
-      .single<UserBadgeRow>();
+      .eq('user_id', userId);
 
     if (error) {
       console.error('Error fetching badges:', error);
       return [];
     }
 
-    if (!userBadges?.badge) {
+    if (!userBadges?.length) {
       return [];
     }
 
-    const badge: Badge = {
-      _id: userBadges.badge.id,
-      name: userBadges.badge.name,
-      description: userBadges.badge.description || undefined,
-      style: userBadges.badge.style ? {
+    return userBadges.map(userBadge => ({
+      _id: userBadge.badge.id,
+      name: userBadge.badge.name,
+      description: userBadge.badge.description || undefined,
+      style: userBadge.badge.style ? {
         customColor: { hex: '#50C878' }, // Standard Premium-Grün
-        borderStyle: userBadges.badge.style.borderStyle,
-        variant: userBadges.badge.style.variant
+        borderStyle: userBadge.badge.style.borderStyle,
+        variant: userBadge.badge.style.variant
       } : undefined
-    };
-
-    return [badge];
+    }));
   } catch (error) {
     console.error('Error in fetchBadges:', error);
     return [];

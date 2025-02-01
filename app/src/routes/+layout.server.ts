@@ -77,10 +77,12 @@ export const load = async ({ locals, depends, url }: { locals: Locals; depends: 
       user: any;
       session: any;
       userBadges: UserBadge[];
+      profile: any;
     } = {
       user: null,
       session: null,
-      userBadges: []
+      userBadges: [],
+      profile: null
     };
 
     try {
@@ -92,6 +94,13 @@ export const load = async ({ locals, depends, url }: { locals: Locals; depends: 
         // Only get user and badges if we have a session
         if (authData.session && locals.getUser) {
           authData.user = await locals.getUser();
+
+          // Lade das Profil des Users
+          const { data: profile } = await locals.supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', authData.user.id)
+            .single();
           
           // Lade die Badges des Users
           const { data: badges } = await locals.supabase
@@ -99,6 +108,10 @@ export const load = async ({ locals, depends, url }: { locals: Locals; depends: 
             .select('badge_id')
             .eq('user_id', authData.user.id);
           
+          if (profile) {
+            authData.profile = profile;
+          }
+
           if (badges) {
             authData.userBadges = badges;
           }
@@ -140,6 +153,7 @@ export const load = async ({ locals, depends, url }: { locals: Locals; depends: 
     return {
       user: authData.user,
       session: authData.session,
+      profile: authData.profile,
       preview,
       footerSettings,
       headerSettings: finalHeaderSettings,
@@ -153,6 +167,7 @@ export const load = async ({ locals, depends, url }: { locals: Locals; depends: 
     return {
       user: null,
       session: null,
+      profile: null,
       preview: false,
       footerSettings: null,
       headerSettings: null,

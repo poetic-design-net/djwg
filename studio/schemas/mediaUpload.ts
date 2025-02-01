@@ -46,9 +46,34 @@ export default {
       type: 'number'
     },
     {
-      name: 'file',
-      title: 'File',
-      type: 'file'
+      name: 'asset',
+      title: 'Asset',
+      type: 'object',
+      fields: [
+        {
+          name: 'type',
+          title: 'Asset Type',
+          type: 'string',
+          options: {
+            list: [
+              {title: 'Image', value: 'image'},
+              {title: 'File', value: 'file'}
+            ]
+          }
+        },
+        {
+          name: 'image',
+          title: 'Image',
+          type: 'image',
+          hidden: ({parent}: {parent: {type?: string}}) => parent?.type !== 'image'
+        },
+        {
+          name: 'file',
+          title: 'File',
+          type: 'file',
+          hidden: ({parent}: {parent: {type?: string}}) => parent?.type !== 'file'
+        }
+      ]
     },
 
     // Timestamps
@@ -193,7 +218,23 @@ export default {
     select: {
       title: 'originalFilename',
       subtitle: 'userName',
-      media: 'file'
+      assetType: 'asset.type',
+      imageAsset: 'asset.image',
+      fileAsset: 'asset.file'
+    },
+    prepare(selection: {
+      title: string;
+      subtitle: string;
+      assetType: string;
+      imageAsset: any;
+      fileAsset: any;
+    }) {
+      const { title, subtitle, assetType, imageAsset, fileAsset } = selection;
+      return {
+        title,
+        subtitle,
+        media: assetType === 'image' ? imageAsset : fileAsset
+      };
     }
   },
   orderings: [
