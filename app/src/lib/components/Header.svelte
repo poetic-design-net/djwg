@@ -48,10 +48,10 @@
     loading = true;
     try {
       if (!supabase) return;
-
+  
       const { error } = await supabase.auth.signOut();
       if (error) return;
-
+  
       // Invalidate auth state first
       await invalidate('supabase:auth');
       await invalidateAll();
@@ -61,7 +61,69 @@
       loading = false;
     }
   };
-
+  
+  const handleLogoClick = async () => {
+    loading = true;
+    try {
+      const previousAuthState = isAuthenticated;
+      
+      // Aktualisiere den Authentifizierungsstatus
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error) throw error;
+  
+      // Aktualisiere den Benutzer und das Profil
+      if (session) {
+        const { data: { user: updatedUser }, error: userError } = await supabase.auth.getUser();
+        if (userError) throw userError;
+  
+        user = updatedUser;
+        isAuthenticated = user?.aud === 'authenticated';
+  
+        // Aktualisiere das Profil
+        const { data: updatedProfile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+  
+        profile = updatedProfile;
+  
+        // Aktualisiere den authState-Store
+        authState.updateAuthState(true);
+      } else {
+        user = null;
+        profile = null;
+        isAuthenticated = false;
+  
+        // Aktualisiere den authState-Store
+        authState.updateAuthState(false);
+      }
+  
+      // Invalidiere den Auth-Status und aktualisiere die Seite
+      await invalidate('supabase:auth');
+      await invalidateAll();
+  
+      console.log('Auth status updated:', { isAuthenticated, user, profile });
+      
+      // Zeige Toast nur, wenn sich der Authentifizierungsstatus geändert hat
+      if (previousAuthState !== isAuthenticated) {
+        if (isAuthenticated) {
+          toasts.success('Erfolgreich angemeldet');
+        } else {
+          toasts.info('Abgemeldet');
+        }
+      }
+    } catch (error) {
+      console.error('Error updating auth status:', error);
+      toasts.error('Fehler beim Aktualisieren des Authentifizierungsstatus');
+    } finally {
+      loading = false;
+    }
+  
+    // Navigiere zur Startseite
+    goto('/');
+  };
+  
   onMount(() => {
     const handleScroll = () => {
       isScrolled = window.scrollY > 20;
@@ -110,19 +172,29 @@
     <div class="container mx-auto px-4 py-1">
       <div class="flex items-center justify-between h-20">
         <!-- Logo -->
-        <a href="/" class="relative z-[110] mt-2">
-          {#if headerSettings?._type === 'headerSettings' && headerSettings?.logo?.asset?.url}
-            {console.log('Logo data:', JSON.stringify(headerSettings?.logo, null, 2))}
-            <img
-              src={headerSettings.logo.asset.url}
-              alt="DJ Workshop Germany"
-              class="h-20 w-auto"
-              width={100}
-              height={64}
-            />
-          {:else}
-            <img src="/assets/logo.svg" alt="DJ Workshop Germany" class="h-20 w-auto" width={100} height={64}>
-          {/if}
+        <a href="/" class="relative z-[110] mt-2" on:click|preventDefault={handleLogoClick}>
+          <div class="relative">
+            {#if headerSettings?._type === 'headerSettings' && headerSettings?.logo?.asset?.url}
+              {console.log('Logo data:', JSON.stringify(headerSettings?.logo, null, 2))}
+              <img
+                src={headerSettings.logo.asset.url}
+                alt="DJ Workshop Germany"
+                class="h-20 w-auto"
+                width={100}
+                height={64}
+              />
+            {:else}
+              <img src="/assets/logo.svg" alt="DJ Workshop Germany" class="h-20 w-auto" width={100} height={64}>
+            {/if}
+            {#if loading}
+              <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded">
+                <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              </div>
+            {/if}
+          </div>
         </a>
 
         <!-- Desktop Navigation -->
