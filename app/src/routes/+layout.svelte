@@ -184,7 +184,7 @@
 
 <Toast />
 
-<BetaBanner />
+<BetaBanner enabled={false} />
 <main>
 	<Header {data} />
 	<slot />

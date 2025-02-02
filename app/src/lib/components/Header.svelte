@@ -70,7 +70,10 @@
         })
       }))
       // Entferne leere Spalten
-      .filter((column: MenuColumn) => column.items.length > 0),
+      .filter((column) => {
+        if (!column || !Array.isArray(column.items)) return false;
+        return column.items.length > 0;
+      }),
       // Quick Links filtern
       quickLinks: (item.quickLinks || []).filter((link) => {
         if (link.link?.startsWith('/auth')) {
@@ -260,12 +263,32 @@
 
           <!-- Right Side Items -->
           <div class="flex items-center space-x-8">
-            <a 
-              href="/events" 
+            <button
+              on:click={async () => {
+                // Wenn wir nicht auf der Homepage sind, navigiere zuerst dorthin
+                if (window.location.pathname !== '/') {
+                  await goto('/');
+                }
+                
+                // Warte kurz, bis die Seite geladen ist
+                setTimeout(() => {
+                  const element = document.getElementById('tickets');
+                  if (element) {
+                    const headerOffset = 100;
+                    const elementPosition = element.getBoundingClientRect().top;
+                    const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                    
+                    window.scrollTo({
+                      top: offsetPosition,
+                      behavior: 'smooth'
+                    });
+                  }
+                }, 100);
+              }}
               class="font-heading font-medium px-6 py-3 text-white border border-green-500 hover:bg-green-500 hover:text-black rounded-full transition duration-200"
             >
               Tickets buchen
-            </a>
+            </button>
 
             <HeaderAuth
               {isAuthenticated}
