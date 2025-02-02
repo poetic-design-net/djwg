@@ -1,4 +1,5 @@
 import blockContent from './blockContent'
+import award from './award'
 import ticket from './ticket'
 import pricingSection from './objects/pricingSection'
 import djCourse from './djCourse'
@@ -30,6 +31,7 @@ import headerSettings from './documents/settings/headerSettings'
 import partnerPage from './documents/pages/partnerPage'
 import artistPage from './documents/pages/artistPage'
 import nextLevelDjs from './documents/pages/nextLevelDjs'
+import merchPage from './documents/pages/merchPage'
 
 // Object Types
 import seo from './objects/seo'
@@ -60,6 +62,7 @@ export const schemaTypes = [
   partnerPage,
   artistPage,
   nextLevelDjs,
+  merchPage,
   artist,
   event,
   eventSchedule,
@@ -75,10 +78,11 @@ export const schemaTypes = [
   category,
   siteSettings,
   footerSettings,
-  headerSettings, // headerSettings hinzugefügt
+  headerSettings,
   merchProduct,
   onlineTalk,
-  badge, // Neues Badge-Schema hinzugefügt
+  badge,
+  award,
   // Objects
   blockContent,
   seo,

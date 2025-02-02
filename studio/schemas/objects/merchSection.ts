@@ -15,7 +15,6 @@ const merchSection: SchemaTypeDefinition = {
       name: 'description',
       title: 'Beschreibung',
       type: 'text',
-      validation: (rule: Rule) => rule.required()
     },
     {
       name: 'products',

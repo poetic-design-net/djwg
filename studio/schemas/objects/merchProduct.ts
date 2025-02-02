@@ -29,6 +29,12 @@ const merchProduct: SchemaTypeDefinition = {
       validation: (Rule: Rule) => Rule.min(1).error('Mindestens ein Bild ist erforderlich')
     },
     {
+      name: 'shopUrl',
+      title: 'Shop URL',
+      type: 'url',
+      description: 'Allgemeine Shop-URL für Produkte ohne Varianten'
+    },
+    {
       name: 'variants',
       title: 'Produktvarianten',
       type: 'array',
@@ -65,8 +71,7 @@ const merchProduct: SchemaTypeDefinition = {
             description: 'Spezifische URL für diese Variante'
           }
         ]
-      }],
-      validation: (Rule: Rule) => Rule.min(1).error('Mindestens eine Variante ist erforderlich')
+      }]
     }
   ]
 }

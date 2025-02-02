@@ -23,6 +23,9 @@ export const contentSection: Section = (S) =>
             .title('Artist Page')
             .child(S.document().schemaType('artistPage').documentId('artistPage')),
           S.listItem()
+            .title('Merch Page')
+            .child(S.document().schemaType('merchPage').documentId('merchPage')),
+          S.listItem()
             .title('Events')
             .child(S.documentTypeList('event')),
           S.listItem()
