@@ -47,7 +47,7 @@
           {:else}
             <img class="mb-7 w-32" src="/assets/logo_dark.svg" alt="DJ Workshop Germany">
           {/if}
-          <p class="text-gray-400 font-medium">DJ Workshop Germany ist deine Plattform für professionelle DJ-Ausbildung und exklusive Events in der elektronischen Musikszene.</p>
+          <p class="text-gray-400 font-medium">DJ Workshop Germany ist deine Plattform für professionelle DJ-Ausbildung und exklusive Events.</p>
         </div>
       </div>
 
