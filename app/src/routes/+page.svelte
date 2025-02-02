@@ -1,9 +1,8 @@
 <script lang="ts">
-  import { useQuery } from '@sanity/svelte-loader';
   import { writable } from 'svelte/store';
   import type { PageData } from './$types';
-  import type { FAQ, Logo, Testimonial, KnowledgeBaseItem, SiteSettings } from '$lib/sanity/queries';
-  import type { TransformedArtist } from '$lib/sanity/queries/artists';
+  import type { FAQ, Testimonial, KnowledgeBaseItem, SiteSettings } from '$lib/sanity/queries';
+  import type { Logo } from '$lib/types/menu';
   import type { TransformedEvent } from '$lib/sanity/queries/events';
   import type { PortableTextBlock } from '@portabletext/types';
   import type { HomePage } from '$lib/sanity/queries/homepage';
@@ -36,21 +35,18 @@
   });
 
   // Format and randomize logos data for homepage
-  const logosData = {
-    data: (data.logos.options.initial as Logo[] || [])
-      .map(logo => ({
-        ...logo,
-        image: {
-          ...logo.image,
-          asset: {
-            _type: 'reference',
-            _ref: String(logo.image.asset._id) || '',
-            _id: logo.image.asset._id || ''
-          }
+  const logosData: Logo[] = ((data.logos.options.initial as any[]) || [])
+    .map(logo => ({
+      ...logo,
+      image: {
+        ...logo.image,
+        asset: {
+          _type: 'reference',
+          _ref: String(logo.image.asset._id) || '',
         }
-      }))
-      .sort(() => Math.random() - 0.5) // Randomize logos on homepage
-  };
+      }
+    }))
+    .sort(() => Math.random() - 0.5); // Randomize logos on homepage
   const testimonialsData = { data: data.testimonials.options.initial as Testimonial[] || [] };
 
   // Event und Ticket Stores initialisieren
@@ -98,12 +94,6 @@
     showSelector: $showEventSelectorStore
   });
 
-  // Transform artists for ArtistSlider
-  $: artists = homeData?.artistsSection?.selectedArtists?.map(artist => ({
-    ...artist,
-    image: artist.image || null
-  })) as TransformedArtist[];
-
   // Default PortableText block for title if none exists
   const defaultTitle: PortableTextBlock[] = [{
     _type: 'block',
@@ -126,8 +116,8 @@
     { id: 'intro', label: 'Intro' },
     { id: 'workshops', label: 'Workshops' },
     { id: 'tickets', label: 'Tickets' },
-    ...(logosData.data?.length > 0 ? [{ id: 'partners', label: 'Partner' }] : []),
-    ...(testimonialsData.data?.length > 0 ? [{ id: 'testimonials', label: 'Testimonials' }] : []),
+    ...(logosData.length > 0 ? [{ id: 'partners', label: 'Partner' }] : []),
+    ...(testimonialsData.data.length > 0 ? [{ id: 'testimonials', label: 'Testimonials' }] : []),
     { id: 'faq', label: 'FAQ' },
     ...(homeData?.aboutSection ? [{ id: 'about', label: 'About' }] : []),
     { id: 'newsletter', label: 'Newsletter' }
@@ -173,8 +163,6 @@
     description={homeData?.workshopsSection?.description ?? ''}
   />
 </section>
-  
-
 
 <Pricing
   id="tickets"
@@ -188,16 +176,14 @@
 />
 
 <section id="partners" class="relative py-36 overflow-hidden">  
-  {#if logosData.data && logosData.data.length > 0}
+  {#if logosData.length > 0}
     <Logos logos={logosData} />
   {/if}
 </section>
 
-<section id="testimonials" class="relative py-24 overflow-hidden">  
-  {#if testimonialsData.data && testimonialsData.data.length > 0}
-    <Testimonials testimonials={testimonialsData} />
-  {/if}
-</section>
+{#if testimonialsData.data.length > 0}
+  <Testimonials testimonials={testimonialsData} />
+{/if}
 
 <section id="faq" class="relative pt-24 overflow-hidden">
   <Faq faqs={faqsArray} />

@@ -52,5 +52,16 @@ export const awardQuery = `*[_type == "award"][0]{
       socials,
       slug
     }
+  },
+  ticket->{
+    _id,
+    phase,
+    title,
+    description,
+    features,
+    status,
+    price,
+    currency,
+    url
   }
 }`;

@@ -146,7 +146,7 @@ $: sections = [
 
   {#if event.logos && event.logos.length > 0}
     <div id="logos" class="py-20 bg-black/40">
-      <Logos logos={{ data: event.logos }} />
+      <Logos logos={event.logos || []} />
     </div>
   {/if}
 

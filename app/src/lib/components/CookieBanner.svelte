@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { slide } from 'svelte/transition';
+    import { fade } from 'svelte/transition';
     import { cookieInfo, type CookieSettings, defaultSettings, saveCookieSettings, applyCookieSettings, hasAcceptedCookies } from '$lib/utils/cookie-service';
     import { onMount } from 'svelte';
 
@@ -7,9 +7,15 @@
     let showAdvancedSettings = false;
     let settings: CookieSettings = { ...defaultSettings };
     let accepted = false;
+    let isVisible = false;
 
     onMount(() => {
         accepted = hasAcceptedCookies();
+        if (!accepted) {
+            setTimeout(() => {
+                isVisible = true;
+            }, 500); // 500ms Verzögerung vor dem Einblenden
+        }
     });
 
     function acceptAll() {
@@ -30,13 +36,14 @@
         saveCookieSettings(settings);
         applyCookieSettings(settings);
         accepted = true;
+        isVisible = false;
     }
 </script>
 
-{#if !accepted}
+{#if !accepted && isVisible}
     <div
-        transition:slide
-        class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50 p-4"
+        transition:fade={{ duration: 300 }}
+        class="cookie-banner fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50 p-4"
     >
         <div class="max-w-7xl mx-auto">
             {#if !showAdvancedSettings}

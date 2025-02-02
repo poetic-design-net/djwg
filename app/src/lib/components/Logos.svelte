@@ -4,7 +4,7 @@
   import { page } from '$app/stores';
   import OptimizedImage from './OptimizedImage.svelte';
   
-  export let logos: { data: Logo[] } = { data: [] };
+  export let logos: Logo[] = [];
   export let showButton = true;
   let currentHighlight = 0;
   let displayedLogos: Logo[] = [];
@@ -17,7 +17,7 @@
   // Randomize and limit logos
   $: {
     const isHomePage = $page.url.pathname === '/';
-    let processedLogos = [...logos.data];
+    let processedLogos = [...logos];
     
     // Randomize only on homepage
     if (isHomePage) {
@@ -90,7 +90,7 @@
     </div>
     
   </div>
-  {#if !showAll && logos.data.length > LOGOS_PER_PAGE}
+  {#if !showAll && logos.length > LOGOS_PER_PAGE}
         <div class="w-full text-center flex justify-center p-4">
           <button
             class="text-green-400 hover:text-green-500 underline text-sm font-medium tracking-tighter transition-colors duration-200"

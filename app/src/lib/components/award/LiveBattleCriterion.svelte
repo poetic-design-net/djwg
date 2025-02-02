@@ -4,6 +4,7 @@
   export let isActive: boolean;
   export let index: number;
   export let isLast: boolean;
+  export let icon: string;
 </script>
 
 <div
@@ -15,7 +16,7 @@
   tabindex="0"
 >
   <div
-    class="w-full max-w-2xl mx-auto p-6 rounded-xl bg-white/[0.03] text-left transition-all duration-700 ease-out"
+    class="w-full max-w-2xl mx-auto p-6 rounded-xl bg-white/[0.12] text-white text-left transition-all duration-700 ease-out"
     style="opacity: {isActive ? '1' : '0.3'}; transform: scale({isActive ? '1' : '0.98'}) translateY({isActive ? '0' : '10px'});"
   >
     <div class="flex items-start gap-4">
@@ -29,10 +30,10 @@
         </svg>
       </div>
       <div>
-        <h4 id="criterion-{index}-title" class="text-lg font-medium text-gray-200 mb-2">
+        <h4 id="criterion-{index}-title" class="text-lg font-medium text-gray-50 mb-2">
           {title}
         </h4>
-        <p id="criterion-{index}-description" class="text-gray-400 leading-relaxed">
+        <p id="criterion-{index}-description" class="text-gray-100 leading-relaxed">
           {description}
         </p>
       </div>

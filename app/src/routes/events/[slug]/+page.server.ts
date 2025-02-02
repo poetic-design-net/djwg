@@ -129,10 +129,6 @@ export const load: PageServerLoad = async ({ params, locals: { loadQuery } }) =>
       } : undefined
     };
 
-    console.log('Transformed event schedule:', JSON.stringify(transformedEvent.schedule, null, 2));
-
-    console.log('Event data:', JSON.stringify(event.data, null, 2));
-    console.log('Transformed event:', JSON.stringify(transformedEvent, null, 2));
     
     return {
       event: transformedEvent

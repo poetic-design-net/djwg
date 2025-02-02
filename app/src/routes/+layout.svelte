@@ -2,6 +2,7 @@
 	import { isPreviewing, VisualEditing } from '@sanity/visual-editing/svelte';
 	import { page } from '$app/stores';
 	import { setContext, onMount } from 'svelte';
+	import { browser } from '$app/environment';
 	import { afterNavigate, beforeNavigate } from '$app/navigation';
 	import { PUBLIC_SUPABASE_ANON_KEY, PUBLIC_SUPABASE_URL } from '$env/static/public';
 	import { createSupabaseLoadClient } from '@supabase/auth-helpers-sveltekit';
@@ -153,6 +154,13 @@
 				}, 0);
 			}
 		}
+
+		// Remove loading class when page is fully loaded
+		if (browser) {
+			window.addEventListener('load', () => {
+				document.body.classList.remove('loading');
+			});
+		}
 	});
 
 	// Handle after navigation
@@ -194,6 +202,9 @@
 {/if}
 
 <style>
+	:global(body.loading) {
+		visibility: hidden;
+	}
 	:global(html) {
 		scroll-padding-top: 2rem; /* Adjust based on your header height */
 	}

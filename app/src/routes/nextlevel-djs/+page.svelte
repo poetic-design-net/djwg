@@ -6,9 +6,9 @@
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
   import { loadUserProgress, saveLessonProgress } from '$lib/services/courseProgress';
+  import OptimizedImage from '$lib/components/OptimizedImage.svelte';
 
   export let data: PageData;
-
 
   let selectedCourse = data.courses?.[0];
   let selectedChapter = selectedCourse?.chapters?.[0];
@@ -59,6 +59,30 @@
   />
 {:else}
   <div class="min-h-screen bg-black text-white">
+    <!-- Hero Section -->
+    <div class="relative overflow-hidden">
+      {#if data.pageData?.coverImage}
+        <div class="absolute inset-0 z-0">
+          <OptimizedImage
+            image={data.pageData.coverImage}
+            alt={data.pageData.coverImage.alt || 'NextLevel DJs Academy Cover Image'}
+            sizes="100vw"
+            className="w-full h-[60vh] object-cover"
+          />
+          <div class="absolute inset-0 bg-black/70" />
+        </div>
+      {/if}
+      <div class="relative z-10 py-32">
+        <div class="container px-4 mx-auto">
+          <div class="max-w-3xl mx-auto text-center">
+            <span class="inline-block mb-4 text-sm text-green-400 font-medium tracking-tighter">NextLevel DJs Academy</span>
+            <h1 class="font-heading mb-6 text-5xl md:text-7xl lg:text-8xl text-white tracking-tighter">Werde zum Pro-DJ</h1>
+            <p class="text-2xl text-white/80 mb-8">Deine professionelle DJ-Ausbildung in Deutschland</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Navigation Header -->
     <header class="bg-black/80 backdrop-blur-lg border-b border-white/10 sticky top-0 z-50">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">

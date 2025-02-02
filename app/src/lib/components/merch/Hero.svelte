@@ -31,7 +31,7 @@
   <div class="container relative z-10 px-4 mx-auto">
     <div class="max-w-3xl mx-auto text-center">
       <span class="inline-block mb-4 text-sm text-green-400 font-medium tracking-tighter">{eyebrow}</span>
-      <h1 class="font-heading mb-6 text-5xl lg:text-6xl text-white tracking-tighter">{title}</h1>
+      <h1 class="font-heading mb-6 text-5xl md:text-7xl lg:text-8xl text-white tracking-tighter">{title}</h1>
       <p class="text-xl text-gray-300">{description}</p>
     </div>
   </div>

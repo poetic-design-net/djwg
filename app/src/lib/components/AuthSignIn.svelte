@@ -3,18 +3,18 @@
   import { invalidateAll } from '$app/navigation';
   import { browser } from '$app/environment';
   import { goto } from '$app/navigation';
-  import { getContext } from 'svelte';
+  import { getContext, onMount } from 'svelte';
   import { toasts } from '$lib/stores/toast';
   import type { AuthPageData } from '../../routes/auth/+page';
   import type { SupabaseClient } from '@supabase/supabase-js';
-
+  
   export let data: AuthPageData;
   let { user } = data;
   $: ({ user } = data);
-
+  
   // Get Supabase client from context
   const supabase = getContext<SupabaseClient>('supabase');
-
+  
   let email = '';
   let password = '';
   let firstName = '';
@@ -23,12 +23,19 @@
   let errorMsg = '';
   let showPassword = false;
   let isRegistering = false;
-
-  // Get the 'next' parameter from URL if it exists, safely
+  
+  // Get the 'next' and 'register' parameters from URL if they exist, safely
   let next = '/';
+  let register = false;
   if (browser) {
-    next = new URLSearchParams(window.location.search).get('next') ?? '/';
+    const urlParams = new URLSearchParams(window.location.search);
+    next = urlParams.get('next') ?? '/';
+    register = urlParams.get('register') === 'true';
   }
+  
+  onMount(() => {
+    isRegistering = register;
+  });
 
   // Only redirect if we have a confirmed authenticated user
   $: if (user?.aud === 'authenticated' && browser) {
@@ -48,7 +55,7 @@
       }
 
       if (!supabase) {
-        errorMsg = 'Authentifizierungsdienst nicht verfügbar. Bitte versuchen Sie es später erneut.';
+        errorMsg = 'Authentifizierungsdienst nicht verfügbar. Bitte versuche es später erneut.';
         toasts.error(errorMsg);
         loading = false;
         return;
@@ -113,7 +120,7 @@
       }
 
       if (!supabase) {
-        errorMsg = 'Authentifizierungsdienst nicht verfügbar. Bitte versuchen Sie es später erneut.';
+        errorMsg = 'Authentifizierungsdienst nicht verfügbar. Bitte versuche es später erneut.';
         toasts.error(errorMsg);
         loading = false;
         return;
@@ -142,8 +149,8 @@
       }
 
       loading = false;
-      errorMsg = 'Überprüfen Sie Ihre E-Mail für den Bestätigungslink.';
-      toasts.success('Registrierung erfolgreich. Bitte überprüfen Sie Ihre E-Mail.');
+      errorMsg = 'Überprüfe Deine E-Mail für den Bestätigungslink.';
+      toasts.success('Registrierung erfolgreich. Bitte überprüfe Deie E-Mail.');
     } catch (error) {
       console.error('Unexpected error during sign up:', error);
       errorMsg = 'Ein unerwarteter Fehler ist aufgetreten';
@@ -155,7 +162,7 @@
   const handleSignInWithGoogle = async () => {
     try {
       if (!supabase) {
-        errorMsg = 'Authentifizierungsdienst nicht verfügbar. Bitte versuchen Sie es später erneut.';
+        errorMsg = 'Authentifizierungsdienst nicht verfügbar. Bitte versuche es später erneut.';
         toasts.error(errorMsg);
         return;
       }
@@ -245,25 +252,26 @@
           <div class="w-auto p-2">
             <p class="text-sm text-gray-300">
               <span>{isRegistering ? 'Schon ein Konto?' : 'Noch kein Konto?'}</span>
-              <button 
+              <button
                 class="underline ml-1"
                 on:click={toggleAuthMode}
               >
                 {isRegistering ? 'Anmelden' : 'Registrieren'}
               </button>
             </p>
+            
           </div>
         </div>
         <div class="text-center mx-auto">
           <h3 class="mb-4 text-5xl text-white tracking-5xl">
-            {isRegistering ? 'Registrieren Sie sich' : 'Melden Sie sich in Ihrem Konto an'}
+            {isRegistering ? 'Registriere Dich' : 'Melde dich in Ihrem Konto an'}
           </h3>
           <p class="mb-10 text-gray-300">
-            {isRegistering ? 'Erstellen Sie Ihr Konto' : 'Schön, Sie wiederzusehen!'}
+            {isRegistering ? 'Erstelle Dein Konto' : 'Schön, Dich wiederzusehen!'}
           </p>
           
           {#if errorMsg}
-          <div class="mb-4 p-4 {errorMsg === 'Überprüfen Sie Ihre E-Mail für den Bestätigungslink.' ? 'bg-green-500 bg-opacity-10 text-green-500' : 'bg-red-500 bg-opacity-10 text-red-500'} rounded-3xl">
+          <div class="mb-4 p-4 {errorMsg === 'Überprüfe Deine E-Mail für den Bestätigungslink.' ? 'bg-green-500 bg-opacity-10 text-green-500' : 'bg-red-500 bg-opacity-10 text-red-500'} rounded-3xl">
             {errorMsg}
           </div>
         {/if}
@@ -293,7 +301,7 @@
             <input 
               class="pl-6 pr-16 py-4 text-gray-300 w-full placeholder-gray-300 outline-none bg-transparent" 
               type="email" 
-              placeholder="Geben Sie Ihre E-Mail-Adresse ein"
+              placeholder="Gebe Deine E-Mail-Adresse ein"
               bind:value={email}
               disabled={loading}
             >
