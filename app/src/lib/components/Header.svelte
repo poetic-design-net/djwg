@@ -115,66 +115,77 @@
     }
   };
   
-  const handleLogoClick = async () => {
-    loading = true;
-    try {
-      const previousAuthState = isAuthenticated;
-      
-      // Aktualisiere den Authentifizierungsstatus
-      const { data: { session }, error } = await supabase.auth.getSession();
-      if (error) throw error;
-  
-      // Aktualisiere den Benutzer und das Profil
-      if (session) {
-        const { data: { user: updatedUser }, error: userError } = await supabase.auth.getUser();
-        if (userError) throw userError;
-  
-        user = updatedUser;
-        isAuthenticated = user?.aud === 'authenticated';
-  
-        // Aktualisiere das Profil
-        const { data: updatedProfile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-  
-        profile = updatedProfile;
-  
-        // Aktualisiere den authState-Store
-        authState.updateAuthState(true);
-      } else {
-        user = null;
-        profile = null;
-        isAuthenticated = false;
-  
-        // Aktualisiere den authState-Store
-        authState.updateAuthState(false);
-      }
-  
-      // Invalidiere den Auth-Status und aktualisiere die Seite
-      await invalidate('supabase:auth');
-      await invalidateAll();
-  
-      console.log('Auth status updated:', { isAuthenticated, user, profile });
-      
-      // Zeige Toast nur, wenn sich der Authentifizierungsstatus geändert hat
-      if (previousAuthState !== isAuthenticated) {
-        if (isAuthenticated) {
-          toasts.success('Erfolgreich angemeldet');
-        } else {
-          toasts.info('Abgemeldet');
-        }
-      }
-    } catch (error) {
-      console.error('Error updating auth status:', error);
-      toasts.error('Fehler beim Aktualisieren des Authentifizierungsstatus');
-    } finally {
-      loading = false;
+  const handleLogoContainerClick = (e: MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target && target.tagName.toLowerCase() === 'img') {
+      handleLogoClick();
+    } else {
+      goto('/');
     }
-  
-    // Navigiere zur Startseite
-    goto('/');
+  };
+
+  const handleLogoClick = async () => {
+    if (window.location.pathname === '/') {
+      loading = true;
+      try {
+        const previousAuthState = isAuthenticated;
+        
+        // Aktualisiere den Authentifizierungsstatus
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) throw error;
+    
+        // Aktualisiere den Benutzer und das Profil
+        if (session) {
+          const { data: { user: updatedUser }, error: userError } = await supabase.auth.getUser();
+          if (userError) throw userError;
+    
+          user = updatedUser;
+          isAuthenticated = user?.aud === 'authenticated';
+    
+          // Aktualisiere das Profil
+          const { data: updatedProfile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single();
+    
+          profile = updatedProfile;
+    
+          // Aktualisiere den authState-Store
+          authState.updateAuthState(true);
+        } else {
+          user = null;
+          profile = null;
+          isAuthenticated = false;
+    
+          // Aktualisiere den authState-Store
+          authState.updateAuthState(false);
+        }
+    
+        // Invalidiere den Auth-Status und aktualisiere die Seite
+        await invalidate('supabase:auth');
+        await invalidateAll();
+    
+        console.log('Auth status updated:', { isAuthenticated, user, profile });
+        
+        // Zeige Toast nur, wenn sich der Authentifizierungsstatus geändert hat
+        if (previousAuthState !== isAuthenticated) {
+          if (isAuthenticated) {
+            toasts.success('Erfolgreich angemeldet');
+          } else {
+            toasts.info('Abgemeldet');
+          }
+        }
+      } catch (error) {
+        console.error('Error updating auth status:', error);
+        toasts.error('Fehler beim Aktualisieren des Authentifizierungsstatus');
+      } finally {
+        loading = false;
+      }
+    } else {
+      // Navigiere zur Startseite
+      await goto('/');
+    }
   };
   
   onMount(() => {
