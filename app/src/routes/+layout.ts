@@ -1,5 +1,7 @@
 import { PUBLIC_SUPABASE_ANON_KEY, PUBLIC_SUPABASE_URL } from '$env/static/public';
 import { createSupabaseLoadClient } from '@supabase/auth-helpers-sveltekit';
+import { injectAnalytics } from '@vercel/analytics/sveltekit';
+import { dev } from '$app/environment';
 interface LayoutData {
   session: any;
   user: any;
@@ -8,6 +10,8 @@ interface LayoutData {
   pages: Record<string, any>;
   footerSettings: any;
 }
+
+injectAnalytics({ mode: dev ? 'development' : 'production' });
 
 interface LoadParams {
   fetch: typeof window.fetch;
