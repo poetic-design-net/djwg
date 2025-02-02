@@ -8,17 +8,41 @@
   let submitting = false;
   let success = false;
   let error = '';
+  let video: HTMLVideoElement;
+  let isMuted = true;
+
+  function toggleSound() {
+    if (video) {
+      video.muted = !video.muted;
+      isMuted = video.muted;
+    }
+  }
 </script>
 
 <div class="min-h-screen bg-black text-white py-12 px-4">
   <div class="max-w-4xl mx-auto">
-    <OptimizedImage
-      image="https://cdn.sanity.io/images/kijh3dc6/production/c7c429b4bed564a64b1cea9eccc1431b083c9c38-1620x2880.png"
-      alt="Party Flyer"
-      className="w-full mb-8 rounded-lg shadow-xl"
-      maxWidth={810}
-      sizes="(max-width: 810px) 100vw, 810px"
-    />
+    <div class="max-w-md mx-auto relative">
+      <button
+        on:click={toggleSound}
+        class="absolute top-4 right-4 z-10 bg-black/50 hover:bg-black/75 text-white p-4 h-16 w-16 rounded-full transition-colors"
+      >
+        {#if isMuted}
+          <span class="text-2xl">🔇</span>
+        {:else}
+          <span class="text-2xl">🔊</span>
+        {/if}
+      </button>
+      <video
+        bind:this={video}
+        src="https://cdn.sanity.io/files/kijh3dc6/production/3580eaa0fba9f4e0990715300ee329acc72b6f0b.mp4"
+        class="w-full mb-8 rounded-lg shadow-xl"
+        autoplay
+        loop
+        muted
+        playsinline
+        controls
+      />
+    </div>
 
     {#if success}
       <div class="bg-green-900/50 p-6 rounded-lg text-center mb-8">

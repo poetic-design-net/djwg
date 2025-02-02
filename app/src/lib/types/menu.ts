@@ -149,14 +149,21 @@ export type ProductVariant = {
   shopUrl: string
 }
 
-export type MerchProduct = {
-  _id: string
-  title: string
-  description: string
-  features: string[]
-  images: SanityImage[]
-  variants: ProductVariant[]
+export interface MerchProduct {
+  _id: string;
+  title: string;
+  description?: string;
+  images: SanityImage[];
+  features?: string[];
+  shopUrl?: string;
+  variants?: {
+    name: string;
+    price: number;
+    currency: string;
+    shopUrl: string;
+  }[];
 }
+
 
 export type MerchSection = {
   title: string
