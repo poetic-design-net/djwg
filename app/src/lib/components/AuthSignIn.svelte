@@ -23,6 +23,7 @@
   let errorMsg = '';
   let showPassword = false;
   let isRegistering = false;
+  let isCheckingAuth = true;
   
   // Get the 'next' and 'register' parameters from URL if they exist, safely
   let next = '/';
@@ -33,12 +34,18 @@
     register = urlParams.get('register') === 'true';
   }
   
-  onMount(() => {
+  onMount(async () => {
     isRegistering = register;
+    // Check authentication status
+    const { data: { session }, error } = await supabase.auth.getSession();
+    if (session) {
+      user = session.user;
+    }
+    isCheckingAuth = false;
   });
 
   // Only redirect if we have a confirmed authenticated user
-  $: if (user?.aud === 'authenticated' && browser) {
+  $: if (user?.aud === 'authenticated' && browser && !isCheckingAuth) {
     goto(next);
   }
 
@@ -234,7 +241,7 @@
     }
   };
 
-  const togglePasswordVisibility = () => {
+const togglePasswordVisibility = () => {
     showPassword = !showPassword;
   };
 
@@ -244,7 +251,12 @@
   };
 </script>
 
-{#if !user?.aud || user.aud !== 'authenticated'}
+
+  {#if isCheckingAuth}
+  <div class="flex justify-center items-center h-screen">
+    <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-1 border-green-500"></div>
+  </div>
+{:else if !user?.aud || user.aud !== 'authenticated'}
   <div class="flex flex-wrap -m-8">
     <div class="w-full md:w-1/2 p-8">
       <div class="px-4 pt-10 md:pb-40 max-w-lg mx-auto">
@@ -259,7 +271,6 @@
                 {isRegistering ? 'Anmelden' : 'Registrieren'}
               </button>
             </p>
-            
           </div>
         </div>
         <div class="text-center mx-auto">
@@ -271,25 +282,25 @@
           </p>
           
           {#if errorMsg}
-          <div class="mb-4 p-4 {errorMsg === 'Überprüfe Deine E-Mail für den Bestätigungslink.' ? 'bg-green-500 bg-opacity-10 text-green-500' : 'bg-red-500 bg-opacity-10 text-red-500'} rounded-3xl">
-            {errorMsg}
-          </div>
-        {/if}
+            <div class="mb-4 p-4 {errorMsg === 'Überprüfe Deine E-Mail für den Bestätigungslink.' ? 'bg-green-500 bg-opacity-10 text-green-500' : 'bg-red-500 bg-opacity-10 text-red-500'} rounded-3xl">
+              {errorMsg}
+            </div>
+          {/if}
 
           {#if isRegistering}
             <div class="mb-2 border border-gray-900 focus-within:border-white overflow-hidden rounded-3xl">
-              <input 
-                class="pl-6 pr-16 py-4 text-gray-300 w-full placeholder-gray-300 outline-none bg-transparent" 
-                type="text" 
+              <input
+                class="pl-6 pr-16 py-4 text-gray-300 w-full placeholder-gray-300 outline-none bg-transparent"
+                type="text"
                 placeholder="Vorname"
                 bind:value={firstName}
                 disabled={loading}
               >
             </div>
             <div class="mb-2 border border-gray-900 focus-within:border-white overflow-hidden rounded-3xl">
-              <input 
-                class="pl-6 pr-16 py-4 text-gray-300 w-full placeholder-gray-300 outline-none bg-transparent" 
-                type="text" 
+              <input
+                class="pl-6 pr-16 py-4 text-gray-300 w-full placeholder-gray-300 outline-none bg-transparent"
+                type="text"
                 placeholder="Nachname"
                 bind:value={lastName}
                 disabled={loading}
@@ -298,16 +309,16 @@
           {/if}
 
           <div class="mb-2 border border-gray-900 focus-within:border-white overflow-hidden rounded-3xl">
-            <input 
-              class="pl-6 pr-16 py-4 text-gray-300 w-full placeholder-gray-300 outline-none bg-transparent" 
-              type="email" 
+            <input
+              class="pl-6 pr-16 py-4 text-gray-300 w-full placeholder-gray-300 outline-none bg-transparent"
+              type="email"
               placeholder="Gebe Deine E-Mail-Adresse ein"
               bind:value={email}
               disabled={loading}
             >
           </div>
           <div class="mb-6 relative border border-gray-900 focus-within:border-white overflow-hidden rounded-3xl">
-            <button 
+            <button
               type="button"
               class="absolute right-7 top-1/2 transform -translate-y-1/2"
               on:click={togglePasswordVisibility}
@@ -315,16 +326,16 @@
               <img src="nightsable-assets/images/sign-in/eyeslash.svg" alt="Passwort-Sichtbarkeit umschalten">
             </button>
             {#if showPassword}
-              <input 
-                class="pl-6 pr-16 py-4 text-gray-300 w-full placeholder-gray-300 outline-none bg-transparent" 
+              <input
+                class="pl-6 pr-16 py-4 text-gray-300 w-full placeholder-gray-300 outline-none bg-transparent"
                 type="text"
                 placeholder="Passwort"
                 bind:value={password}
                 disabled={loading}
               >
             {:else}
-              <input 
-                class="pl-6 pr-16 py-4 text-gray-300 w-full placeholder-gray-300 outline-none bg-transparent" 
+              <input
+                class="pl-6 pr-16 py-4 text-gray-300 w-full placeholder-gray-300 outline-none bg-transparent"
                 type="password"
                 placeholder="Passwort"
                 bind:value={password}
@@ -332,8 +343,8 @@
               >
             {/if}
           </div>
-          <button 
-            class="block w-full mb-6 px-14 py-4 text-center font-medium tracking-2xl border-2 border-green-400 bg-green-400 hover:bg-green-500 text-black focus:ring-4 focus:ring-green-500 focus:ring-opacity-40 rounded-full transition duration-300 disabled:opacity-50" 
+          <button
+            class="block w-full mb-6 px-14 py-4 text-center font-medium tracking-2xl border-2 border-green-400 bg-green-400 hover:bg-green-500 text-black focus:ring-4 focus:ring-green-500 focus:ring-opacity-40 rounded-full transition duration-300 disabled:opacity-50"
             on:click={isRegistering ? handleSignUp : handleSignIn}
             disabled={loading}
           >
@@ -356,7 +367,7 @@
           
           <div class="flex flex-wrap -1 mb-7">
             <div class="w-full p-1">
-              <button 
+              <button
                 class="w-full p-5 flex flex-wrap justify-center bg-gray-900 hover:bg-gray-900 bg-opacity-30 hover:bg-opacity-10 rounded-full transition duration-300"
                 on:click={handleSignInWithGoogle}
                 disabled={loading}
@@ -373,7 +384,7 @@
     </div>
     <div class="w-full md:w-1/2 p-8">
       <div class="p-5 h-full">
-        <img class="h-full mx-auto md:mr-0 object-cover rounded-5xl" src="assets/home_hero_2.jpg" alt="Hintergrund">
+        <img class="h-full mx-auto md:mr-0 object-cover rounded-5xl" src="https://cdn.sanity.io/images/kijh3dc6/production/4bc03b1c7ccffb71c9cb9d2883a11ad890066031-1024x1536.jpg" alt="Hintergrund">
       </div>
     </div>
   </div>
