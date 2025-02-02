@@ -24,6 +24,7 @@
 		"@sveltejs/enhanced-img": "^0.4.1",
 		"@sveltejs/kit": "^2.7.3",
 		"@types/nodemailer": "^6.4.17",
+		"@vercel/analytics": "^1.4.1",
 		"clsx": "^2.1.1",
 		"groq": "^3.33.0",
 		"heroicons-svelte": "^2.0.2",
