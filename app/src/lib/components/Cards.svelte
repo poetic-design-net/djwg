@@ -44,22 +44,38 @@
     currentIndex = (currentIndex - 1 + events.length) % (events.length - cardsPerView + 1);
   };
 
+  let touchStartTime = 0;
+  let touchStartY = 0;
+  let isSwiping = false;
+  
   const handleTouchStart = (e: TouchEvent) => {
     if (!mounted) return;
     touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].pageY;
+    touchStartTime = Date.now();
+    isSwiping = false;
   };
-
+  
   const handleTouchMove = (e: TouchEvent) => {
     if (!mounted) return;
-    touchEndX = e.touches[0].clientX;
+    const touchMoveX = e.touches[0].clientX;
+    const touchMoveY = e.touches[0].pageY;
+    const deltaX = touchMoveX - touchStartX;
+    const deltaY = touchMoveY - touchStartY;
+  
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
+      isSwiping = true;
+    }
   };
-
-  const handleTouchEnd = () => {
+  
+  const handleTouchEnd = (e: TouchEvent) => {
     if (!mounted) return;
-    const swipeThreshold = 50;
-    const swipeDistance = touchEndX - touchStartX;
+    const touchEndTime = Date.now();
+    const touchDuration = touchEndTime - touchStartTime;
+    const swipeThreshold = 100;
+    const swipeDistance = e.changedTouches[0].clientX - touchStartX;
     
-    if (Math.abs(swipeDistance) > swipeThreshold) {
+    if (isSwiping && Math.abs(swipeDistance) > swipeThreshold && touchDuration < 300) {
       if (swipeDistance > 0) {
         prevSlide();
       } else {
@@ -109,9 +125,9 @@
       bind:this={sliderContainer}
       role="region"
       aria-label="Event slider"
-      on:touchstart={handleTouchStart}
-      on:touchmove={handleTouchMove}
-      on:touchend={handleTouchEnd}
+      on:touchstart|preventDefault={handleTouchStart}
+      on:touchmove|preventDefault={handleTouchMove}
+      on:touchend|preventDefault={handleTouchEnd}
     >
       <!-- Cards Container -->
       <div 

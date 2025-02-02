@@ -17,14 +17,17 @@
   let openTimeout: NodeJS.Timeout;
   let closeTimeout: NodeJS.Timeout;
 
+  // Behandelt beide Link-Typen: 'direct' oder 'megamenu'
   function handleMouseEnter(menu: any) {
-    if (menu.type !== 'direct') {
+    if (menu.type === 'direct' || menu.type === 'megamenu') {
       if (closeTimeout) {
         clearTimeout(closeTimeout);
       }
       openTimeout = setTimeout(() => {
         onClick(menu._id);
       }, 100);
+    } else {
+      onClick('');
     }
   }
 
@@ -52,6 +55,7 @@
           class="font-heading text-white font-medium hover:text-green-500 transition-colors duration-200 py-8 block"
           class:text-green-500={activeMenu === menu._id}
           target={href?.startsWith('http') ? '_blank' : undefined}
+          on:click={() => onClick('')}
         >
           {menu.title}
         </a>

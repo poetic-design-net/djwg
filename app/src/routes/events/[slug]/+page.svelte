@@ -19,7 +19,7 @@
     fallback={{
       title: event.title,
       description: event.description,
-      image: event.image
+      image: event.image?.asset?._ref || ''
     }}
   />
 {/if}

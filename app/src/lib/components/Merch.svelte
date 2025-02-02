@@ -4,6 +4,7 @@
   import { onMount } from 'svelte';
 
   export let id: string | undefined = undefined;
+  export let eyebrow: string = "Merchandise";
   export let title: string = "Unser Merch Shop";
   export let description: string = "Entdecke unsere exklusive DJ Workshop Kollektion";
   export let products: MerchProduct[] = [];
@@ -59,10 +60,10 @@
 
 <section {id} class="relative overflow-hidden pt-36">
   <div class="container px-4 mx-auto {validProducts.length === 1 ? 'max-w-2xl' : ''}">
-    <div class="text-center mb-20">
-      <span class="inline-block mb-4 text-sm text-tourquis-500 font-medium tracking-tighter">Merchandise</span>
+    <div class="mb-20">
+      <span class="inline-block mb-4 text-sm text-tourquis-500 font-medium tracking-tighter">{eyebrow}</span>
       <h2 class="font-heading mb-6 text-5xl md:text-6xl text-white tracking-tighter">{title}</h2>
-      <p class="text-lg text-gray-300 md:max-w-md mx-auto">{description}</p>
+      <p class="text-lg text-gray-300 md:max-w-lg">{description}</p>
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 {validProducts.length <= 3 ? 'lg:grid-cols-' + validProducts.length : 'lg:grid-cols-3'} {validProducts.length === 4 ? 'xl:grid-cols-4' : ''} gap-8 max-w-7xl mx-auto">
@@ -159,8 +160,8 @@
             </div>
             
             <!-- Button Container (Always at Bottom) -->
-            {#if product.variants && product.variants.length > 0}
-              <div class="p-8 pt-0 text-center">
+            <div class="p-8 pt-0 text-center">
+              {#if product.variants && product.variants.length > 0}
                 <a
                   class="inline-block w-full py-4 px-6 text-sm text-black font-medium bg-green-500 hover:bg-green-600 rounded-full transition duration-200"
                   href={product.variants[selectedVariants[product._id]].shopUrl}
@@ -169,8 +170,17 @@
                 >
                   Zum Shop
                 </a>
-              </div>
-            {/if}
+              {:else if product.shopUrl}
+                <a
+                  class="inline-block w-full py-4 px-6 text-sm text-black font-medium bg-green-500 hover:bg-green-600 rounded-full transition duration-200"
+                  href={product.shopUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Zum Shop
+                </a>
+              {/if}
+            </div>
           </div>
         </div>
       {/each}

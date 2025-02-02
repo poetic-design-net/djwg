@@ -6,6 +6,8 @@
   
   export let artists: TransformedArtist[] = [];
   export let isLineupRevealed = false;
+  export let title = 'DJ Line-Up';
+  export let subtitle = 'Unsere Artists';
   
   console.log('Artists data:', artists);
   
@@ -26,8 +28,8 @@
 <!-- Header with container alignment -->
 <div class="container px-4 mx-auto">
   <div class="mb-20 text-center">
-    <span class="inline-block mb-4 text-sm text-green-400 font-medium tracking-tighter">Unsere Artists</span>
-    <h2 class="font-heading text-7xl lg:text-8xl text-white tracking-7xl lg:tracking-8xl">DJ Line-Up</h2>
+    <span class="inline-block mb-4 text-sm text-green-400 font-medium tracking-tighter">{subtitle}</span>
+    <h2 class="font-heading text-7xl lg:text-8xl text-white tracking-7xl lg:tracking-8xl">{title}</h2>
   </div>
 </div>
 
