@@ -6,6 +6,7 @@
   import ArtistsSlider from '$lib/components/ArtistsSlider.svelte';
   import EvaluationCriteria from '$lib/components/award/EvaluationCriteria.svelte';
   import PortableTextContent from '$lib/components/PortableTextContent.svelte';
+  import Pricing from '$lib/components/Pricing.svelte';
 
   export let data: PageData;
 
@@ -30,19 +31,19 @@
     <div class="bg-black">
       <div class="container mx-auto px-4 py-24">
         <div class="max-w-4xl mx-auto">
-          <h2 class="text-4xl lg:text-5xl font-medium text-center mb-12 text-gray-200">Deine Chance, die Bühne zu erobern</h2>
-          <div class="prose prose-lg mx-auto prose-headings:font-medium prose-headings:text-gray-200 prose-p:text-gray-400">
+          <h2 class="text-4xl lg:text-5xl font-medium mb-12 text-gray-200">Deine Chance, die Bühne zu erobern</h2>
+          <div class="prose prose-lg text-lg mx-auto prose-headings:font-medium prose-headings:text-gray-100 prose-p:text-gray-200">
             <PortableTextContent value={award.introText} />
           </div>
           <div class="mt-12 flex justify-center gap-6">
-            <a 
-              href="#" 
+            <a
+              href="#ticket"
               class="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-black bg-green-500 hover:bg-green-600 rounded-full transition-colors duration-200"
             >
               Jetzt anmelden
             </a>
-            <a 
-              href="#criteria" 
+            <a
+              href="#criteria"
               class="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-gray-200 bg-white/5 hover:bg-white/10 rounded-full transition-colors duration-200"
             >
               Kriterien ansehen
@@ -53,8 +54,18 @@
     </div>
   {/if}
 
+  {#if award.ticket}
+    <div id="ticket" class="bg-black">
+      <Pricing
+        selectedTicket={award.ticket}
+        title="Sichere dir dein Ticket"
+        description="Dein Ticket für den DJ Award"
+      />
+    </div>
+  {/if}
+
   {#if award.preselectionCriteria && award.evaluationCriteria}
-    <div class="bg-black">
+    <div id="criteria" class="bg-black">
       <EvaluationCriteria
         evaluationCriteriaTitle={award.evaluationCriteriaTitle}
         evaluationCriteriaSubtitle={award.evaluationCriteriaSubtitle}
@@ -68,7 +79,7 @@
 
   {#if award.artistsSection?.artists && award.artistsSection.artists.length > 0}
     <div class="bg-black py-24">
-      <ArtistsSlider 
+      <ArtistsSlider
         artists={award.artistsSection.artists}
         isLineupRevealed={award.artistsSection.isLineupRevealed}
         title={award.artistsSection.title}

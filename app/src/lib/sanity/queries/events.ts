@@ -145,6 +145,7 @@ export const eventQuery = groq`*[_type == "event" && slug.current == $slug][0] {
       asset->,
       hotspot
     },
+    url,
     order
   },
   locationDetails {

@@ -107,7 +107,7 @@
 
 <header class="fixed top-0 left-0 w-full z-[100]">
   <div class="bg-black w-full {mobileMenuOpen || isScrolled ? 'bg-opacity-100' : 'bg-opacity-100 hover:bg-opacity-100 transition-all duration-300'}">
-    <div class="container mx-auto px-4 pt-2">
+    <div class="container mx-auto px-4 py-1">
       <div class="flex items-center justify-between h-20">
         <!-- Logo -->
         <a href="/" class="relative z-[110] mt-2">
@@ -200,4 +200,4 @@
   {/if}
 </header>
 
-<div class="h-20"></div>
+<div class="h-10"></div>

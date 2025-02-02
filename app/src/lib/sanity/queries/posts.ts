@@ -66,6 +66,7 @@ export const logosQuery = groq`*[_type == "logo"] | order(order asc) {
   _id,
   _createdAt,
   name,
+  url,
   image {
     asset->,
     alt,
@@ -79,6 +80,7 @@ export interface Logo {
   _type: 'logo';
   _createdAt: string;
   name: string;
+  url?: string;
   image: {
     asset: Image;
     alt: string;

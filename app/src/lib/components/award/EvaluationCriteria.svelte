@@ -123,20 +123,7 @@
         </div>
       {/if}
 
-      {#if totalProgressBar}
-        <div class="my-12 bg-white/[0.02] backdrop-blur-xl rounded-2xl p-8 border border-white/[0.05]">
-          <h3 class="text-2xl font-medium mb-4 text-gray-200">{totalProgressBar.title}</h3>
-          <div class="relative h-3 bg-white/[0.02] rounded-full overflow-hidden">
-            <div
-              class="absolute top-0 left-0 h-full bg-gradient-to-r from-green-700 to-green-400 transition-all duration-1000 ease-out"
-              style="width: {totalProgress}%"
-            >
-              <div class="absolute inset-0 bg-green-400/20 animate-pulse"></div>
-            </div>
-          </div>
-          <p class="text-right mt-2 text-xl font-medium text-green-400">{totalProgress.toFixed(1)}%</p>
-        </div>
-      {/if}
+   
 
       <div class="relative bg-white/[0.02] backdrop-blur-xl rounded-2xl p-8 border border-white/[0.05]">
         <h3 class="text-2xl font-medium mb-8 text-gray-200">{liveBattleTitle}</h3>

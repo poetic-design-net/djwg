@@ -38,6 +38,12 @@
 		scroll-padding-top: 2rem; /* Adjust based on your header height */
 	}
 
+  /* Hide banners during page load */
+  body.loading .beta-banner,
+  body.loading .cookie-banner {
+    display: none !important;
+  }
+
 	.preview-toggle-container {
 		position: fixed;
 		bottom: 1rem;

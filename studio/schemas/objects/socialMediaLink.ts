@@ -12,6 +12,7 @@ export default defineType({
       options: {
         list: [
           { title: 'Instagram', value: 'instagram' },
+          { title: 'WhatsApp', value: 'whatsapp' },
           { title: 'Facebook', value: 'facebook' },
           { title: 'TikTok', value: 'tiktok' },
           { title: 'YouTube', value: 'youtube' },
