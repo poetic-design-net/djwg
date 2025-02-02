@@ -149,11 +149,7 @@
       class="fixed left-1/2 top-2 transform -translate-x-1/2 z-[999] px-6 py-3 rounded-full bg-black/40 backdrop-blur-sm border border-green-500/20 w-auto max-w-[90%] mx-auto"
     >
       <div class="text-gray-300 text-xs mb-1 font-medium text-center">
-        <span>
-        {#if displayTitle}
-          {displayTitle} - 
-        {/if}
-        </span>
+       
         <span class="block text-green-500 text-sm">
           {currentSectionLabel}
         </span>
