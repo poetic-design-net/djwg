@@ -26,13 +26,13 @@
   let isCheckingAuth = true;
   
   // Get the 'next' and 'register' parameters from URL if they exist, safely
-  let next = '/';
+  let next = '/dashboard';
   let register = false;
   if (browser) {
-    const urlParams = new URLSearchParams(window.location.search);
-    next = urlParams.get('next') ?? '/';
-    register = urlParams.get('register') === 'true';
-  }
+  const urlParams = new URLSearchParams(window.location.search);
+  register = urlParams.get('register') === 'true';
+  // next wird nicht mehr aus den URL-Parametern gelesen
+}
   
   onMount(async () => {
     isRegistering = register;

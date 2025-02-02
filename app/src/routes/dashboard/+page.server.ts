@@ -91,7 +91,7 @@ export const load: PageServerLoad = async ({ locals, setHeaders }: { locals: Loc
   const user = await locals.getUser();
   
   if (!session || !user) {
-    throw redirect(303, '/auth');
+    throw redirect(303, `/auth?next=${encodeURIComponent('/dashboard')}`);
   }
 
   // Parallel Requests für bessere Performance
