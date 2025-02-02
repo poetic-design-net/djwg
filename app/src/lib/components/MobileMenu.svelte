@@ -202,9 +202,32 @@
     <div class="fixed bottom-0 left-0 right-0 p-4 bg-black/95 border-t border-gray-800 z-[110]">
       <div class="container mx-auto">
         <a
-          href="/events#tickets"
+          href="/#tickets"
           class="block w-full text-center font-heading font-medium px-6 py-4 text-black bg-green-500 hover:bg-green-600 rounded-full transition duration-200"
-          on:click|preventDefault={() => handleColumnLinkClick('/events#tickets')}
+          on:click|preventDefault={async () => {
+            // Wenn wir nicht auf der Homepage sind, navigiere zuerst dorthin
+            if (window.location.pathname !== '/') {
+              await goto('/');
+            }
+            
+            // Warte kurz, bis die Seite geladen ist
+            setTimeout(() => {
+              const element = document.getElementById('tickets');
+              if (element) {
+                const headerOffset = 100;
+                const elementPosition = element.getBoundingClientRect().top;
+                const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                
+                window.scrollTo({
+                  top: offsetPosition,
+                  behavior: 'smooth'
+                });
+              }
+            }, 100);
+            
+            // Schließe das mobile Menü
+            handleLinkClick();
+          }}
         >
           Tickets buchen
         </a>
