@@ -9,8 +9,3 @@
 
 <AuthSignIn {data} />
 
-{#if !data.user}
-  <p>Debugging: No user data available</p>
-{:else}
-  <p>Debugging: User data available</p>
-{/if}

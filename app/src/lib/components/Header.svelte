@@ -4,6 +4,7 @@
   import { invalidate, invalidateAll } from '$app/navigation';
   import { goto } from '$app/navigation';
   import type { MenuItems } from '$lib/types/menu';
+  import type { NavigationItem, MenuColumn, MenuLink } from '$lib/sanity/queries/navigation';
   import type { SupabaseClient } from '@supabase/supabase-js';
   import { toasts } from '$lib/stores/toast';
   import { authState } from '$lib/stores/auth';
@@ -40,7 +41,56 @@
   // Initialize menuItems with an empty array if navigation is undefined
   let menuItems: MenuItems = [];
 
-  $: menuItems = navigation || [];
+  $: menuItems = (navigation || []).map((item: NavigationItem) => {
+  // Für Megamenü-Items, die Spalten haben
+  if (item.type === 'megamenu' && item.columns) {
+    return {
+      ...item,
+      // Featured Content filtern
+      featured: item.featured && (!item.featured.link?.startsWith('/auth') || !isAuthenticated) 
+        ? item.featured 
+        : null,
+      // Columns filtern
+      columns: item.columns.map((column: MenuColumn) => ({
+        ...column,
+        // Column-Link selbst filtern
+        link: column.link?.startsWith('/auth') && isAuthenticated ? null : column.link,
+        // Items in der Column filtern
+        items: column.items.filter((menuItem: MenuLink) => {
+          // Auth-Links ausblenden wenn authentifiziert
+          if (menuItem.link?.startsWith('/auth')) {
+            return !isAuthenticated;
+          }
+          // Dashboard-Links nur anzeigen wenn authentifiziert
+          if (menuItem.link?.includes('/dashboard')) {
+            return isAuthenticated;
+          }
+          // Alle anderen Links anzeigen
+          return true;
+        })
+      }))
+      // Entferne leere Spalten
+      .filter((column: MenuColumn) => column.items.length > 0),
+      // Quick Links filtern
+      quickLinks: (item.quickLinks || []).filter((link) => {
+        if (link.link?.startsWith('/auth')) {
+          return !isAuthenticated;
+        }
+        if (link.link?.includes('/dashboard')) {
+          return isAuthenticated;
+        }
+        return true;
+      })
+    };
+  }
+  
+  // Für direkte Links
+  return {
+    ...item,
+    hidden: (item.directLink?.startsWith('/auth') && isAuthenticated) ||
+            (item.directLink?.includes('/dashboard') && !isAuthenticated)
+  };
+}).filter((item: NavigationItem & { hidden?: boolean }) => !item.hidden);
 
   const handleLogout = async () => {
     if (loading) return;
