@@ -275,7 +275,7 @@ const togglePasswordVisibility = () => {
         </div>
         <div class="text-center mx-auto">
           <h3 class="mb-4 text-5xl text-white tracking-5xl">
-            {isRegistering ? 'Registriere Dich' : 'Melde Dich in Deinen Konto an'}
+            {isRegistering ? 'Registriere Dich' : 'Melde Dich in Deinem Konto an'}
           </h3>
           <p class="mb-10 text-gray-300">
             {isRegistering ? 'Erstelle Dein Konto' : 'Schön, Dich wiederzusehen!'}
