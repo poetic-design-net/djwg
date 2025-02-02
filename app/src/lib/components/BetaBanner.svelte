@@ -2,10 +2,12 @@
   import { onMount } from 'svelte';
   import { writable } from 'svelte/store';
 
+  export let enabled = true;
   const isVisible = writable(false);
   let isFading = false;
   
   onMount(() => {
+      if (!enabled) return;
       const bannerClosed = localStorage.getItem('betaBannerClosed');
       if (!bannerClosed) {
           // Verzögertes Einblenden
