@@ -48,11 +48,14 @@
   let touchStartY = 0;
   let isSwiping = false;
   
+  let initialTouchDistance = 0;
+  
   const handleTouchStart = (e: TouchEvent) => {
     if (!mounted) return;
     touchStartX = e.touches[0].clientX;
     touchStartY = e.touches[0].pageY;
     touchStartTime = Date.now();
+    initialTouchDistance = 0;
     isSwiping = false;
   };
   
@@ -62,20 +65,31 @@
     const touchMoveY = e.touches[0].pageY;
     const deltaX = touchMoveX - touchStartX;
     const deltaY = touchMoveY - touchStartY;
+    
+    // Aktualisiere die zurückgelegte Distanz
+    initialTouchDistance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
   
-    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
+    // Setze isSwiping nur, wenn die horizontale Bewegung signifikant größer ist
+    if (Math.abs(deltaX) > Math.abs(deltaY) && initialTouchDistance > 15) {
       isSwiping = true;
     }
   };
   
   const handleTouchEnd = (e: TouchEvent) => {
     if (!mounted) return;
+    
+    // Wenn keine signifikante Bewegung stattgefunden hat oder es kein Swipe war,
+    // erlaube das normale Link-Verhalten
+    if (initialTouchDistance < 15 || !isSwiping) {
+      return;
+    }
+    
     const touchEndTime = Date.now();
     const touchDuration = touchEndTime - touchStartTime;
     const swipeThreshold = 100;
     const swipeDistance = e.changedTouches[0].clientX - touchStartX;
     
-    if (isSwiping && Math.abs(swipeDistance) > swipeThreshold && touchDuration < 300) {
+    if (Math.abs(swipeDistance) > swipeThreshold && touchDuration < 300) {
       if (swipeDistance > 0) {
         prevSlide();
       } else {
@@ -125,9 +139,12 @@
       bind:this={sliderContainer}
       role="region"
       aria-label="Event slider"
-      on:touchstart|preventDefault={handleTouchStart}
-      on:touchmove|preventDefault={handleTouchMove}
-      on:touchend|preventDefault={handleTouchEnd}
+      on:touchstart={handleTouchStart}
+      on:touchmove={(e) => {
+        if (isSwiping) e.preventDefault();
+        handleTouchMove(e);
+      }}
+      on:touchend={handleTouchEnd}
     >
       <!-- Cards Container -->
       <div 
