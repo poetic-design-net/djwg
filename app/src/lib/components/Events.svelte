@@ -36,7 +36,7 @@
                 </span>
                 <div>
                   <span class="inline-block mb-2 text-sm text-green-400 font-medium tracking-tighter">{event.date}</span>
-                  <h3 class="mb-2 text-3xl text-white tracking-3xl group-hover:text-green-400 transition-colors duration-500">{event.title}</h3>
+                  <h3 class="mb-2 text-2xl text-white tracking-2xl group-hover:text-green-400 transition-colors duration-500">{event.title}</h3>
                   <p class="text-gray-300">{event.location}</p>
                 </div>
               </div>
