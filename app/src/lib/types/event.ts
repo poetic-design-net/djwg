@@ -9,6 +9,7 @@ export interface ScheduleItem {
     soundcloud?: string;
     instagram?: string;
   };
+  
   icon?: string;
 }
 

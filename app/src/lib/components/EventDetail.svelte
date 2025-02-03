@@ -15,6 +15,7 @@
   import Pricing from './Pricing.svelte';
   import FAQ from './FAQ.svelte';
   import SectionNav from './navigation/SectionNav.svelte';
+  import StructuredEventData from './StructuredEventData.svelte';
   import type { Image } from '@sanity/types';
 
   interface TransformedInstructor {
@@ -54,20 +55,21 @@
   let scheduleView: 'timeline' | 'overview' = 'timeline';
 
   // Define sections based on available content
-// Define sections based on available content
-$: sections = [
-  { id: 'hero', label: 'Start' },
-  { id: 'about', label: 'About' },
-  { id: 'tickets', label: 'Tickets' },  // Moved up to match template order
-  ...(hasValidSchedule ? [{ id: 'schedule', label: 'Schedule' }] : []),
-  ...(event.hasOpenStage ? [{ id: 'openstage', label: 'Open Stage' }] : []),
-  ...(event.artists && event.artists.length > 0 ? [{ id: 'artists', label: 'Artists' }] : []),
-  ...(event.locationDetails ? [{ id: 'location', label: 'Location' }] : []),
-  ...(event.logos && event.logos.length > 0 ? [{ id: 'logos', label: 'Partner' }] : []),
-  ...(event.gallery ? [{ id: 'gallery', label: 'Gallery' }] : []),
-  ...((event.faqSection?.selectedFaqs ?? []).length > 0 ? [{ id: 'faq', label: 'FAQ' }] : [])
-];
+  $: sections = [
+    { id: 'hero', label: 'Start' },
+    { id: 'about', label: 'About' },
+    { id: 'tickets', label: 'Tickets' },  // Moved up to match template order
+    ...(hasValidSchedule ? [{ id: 'schedule', label: 'Schedule' }] : []),
+    ...(event.hasOpenStage ? [{ id: 'openstage', label: 'Open Stage' }] : []),
+    ...(event.artists && event.artists.length > 0 ? [{ id: 'artists', label: 'Artists' }] : []),
+    ...(event.locationDetails ? [{ id: 'location', label: 'Location' }] : []),
+    ...(event.logos && event.logos.length > 0 ? [{ id: 'logos', label: 'Partner' }] : []),
+    ...(event.gallery ? [{ id: 'gallery', label: 'Gallery' }] : []),
+    ...((event.faqSection?.selectedFaqs ?? []).length > 0 ? [{ id: 'faq', label: 'FAQ' }] : [])
+  ];
 </script>
+
+<StructuredEventData {event} />
 
 <div class="min-h-screen bg-black relative">
   <SectionNav {sections} enabled={event.enableSectionNav ?? true} />
@@ -150,9 +152,6 @@ $: sections = [
     </div>
   {/if}
 
-
- 
-
   {#if event.faqSection}
     {@const faqSection = event.faqSection}
     {@const hasFaqs = faqSection.selectedFaqs && faqSection.selectedFaqs.length > 0}
@@ -173,7 +172,6 @@ $: sections = [
       <Gallery images={event.gallery} />
     </div>
   {/if}
-
 
 </div>
 
