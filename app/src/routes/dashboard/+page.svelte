@@ -27,34 +27,14 @@
       visibleFromHours: number;
     }[];
     badges: Badge[];
+    isAdmin: boolean;
   };
   
-  const { user, onlineTalks, badges } = data;
+  const { user, onlineTalks, badges, isAdmin } = data;
   let showEditProfile = false;
-  let profile: any = null;
 
   const supabase = getContext<SupabaseClient>('supabase');
   let loading = false;
-
-  // Lade das Profil
-  const loadProfile = async () => {
-    try {
-      const { data: profileData, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-      
-      if (error) throw error;
-      profile = profileData;
-    } catch (error) {
-      console.error('Error loading profile:', error);
-    }
-  };
-
-  onMount(() => {
-    loadProfile();
-  });
 
   const handleLogout = async () => {
     if (loading) return;
@@ -99,9 +79,7 @@
       <!-- Profile Section -->
       <ProfileSection
         {user}
-        {profile}
         onEdit={() => showEditProfile = true}
-        on:profileUpdated={loadProfile}
       />
 
       <!-- Badges & Useful Links Container -->
@@ -116,7 +94,7 @@
         </div>
 
         <!-- Useful Links Section -->
-        <UsefulLinksSection />
+        <UsefulLinksSection {isAdmin} />
       </div>
 
        <!-- Media Upload Section -->
@@ -137,8 +115,6 @@
         firstName={user.raw_user_meta_data?.first_name || user.user_metadata?.first_name || ''} 
         lastName={user.raw_user_meta_data?.last_name || user.user_metadata?.last_name || ''} 
       />
-
-     
     </div>
   </div>
 </div>
@@ -159,7 +135,6 @@
         {user}
         on:close={() => {
           showEditProfile = false;
-          loadProfile();
         }}
       />
     </div>

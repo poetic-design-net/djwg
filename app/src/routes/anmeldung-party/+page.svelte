@@ -5,9 +5,6 @@
 
   export let data;
 
-  let submitting = false;
-  let success = false;
-  let error = '';
   let video: HTMLVideoElement;
   let isMuted = true;
 
@@ -21,7 +18,13 @@
 
 <div class="min-h-screen bg-black text-white py-12 px-4">
   <div class="max-w-4xl mx-auto">
-    <div class="max-w-md mx-auto relative">
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-bold mb-4">DJ CLICK, DEFRA, BASSMASSAGE, MiBA, COOPER, DAWN, PD, YVELLICIOUS, OLDE</h1>
+      <h2 class="text-2xl mb-2">Resident Club Night – ✨DJ CLICK & Friends✨</h2>
+      <p class="text-xl">15.03.2025 · 22:00</p>
+    </div>
+
+    <div class="max-w-md mx-auto relative mb-12">
       <button
         on:click={toggleSound}
         class="absolute top-4 right-4 z-10 bg-black/50 hover:bg-black/75 text-white p-4 h-16 w-16 rounded-full transition-colors"
@@ -32,10 +35,11 @@
           <span class="text-2xl">🔊</span>
         {/if}
       </button>
+
       <video
         bind:this={video}
         src="https://cdn.sanity.io/files/kijh3dc6/production/3580eaa0fba9f4e0990715300ee329acc72b6f0b.mp4"
-        class="w-full mb-8 rounded-lg shadow-xl"
+        class="w-full rounded-lg shadow-xl"
         autoplay
         loop
         muted
@@ -44,90 +48,46 @@
       />
     </div>
 
-    {#if success}
-      <div class="bg-green-900/50 p-6 rounded-lg text-center mb-8">
-        <h2 class="text-2xl font-bold mb-2">🎉 Danke für deine Anmeldung!</h2>
-        <p>Wir freuen uns auf dich!</p>
+    <div class="max-w-2xl mx-auto text-center">
+      <div class="mb-8 space-y-4">
+        <p>Am 15.03.2025 erwartet euch ein Special Event.</p>
+        <p>DJ CLICK läd seine Freunde vom DJ Workshop Germany ein und feiert mit euch eine ganz spezielle Nacht.</p>
+        <p>Dieses mal gibt es eine besondere Mischung aus HIP HOP, Electronische Musik und dem besten aus den Charts.</p>
       </div>
-    {:else}
-      <form
-        method="POST"
-        use:enhance={() => {
-          submitting = true;
-          return async ({ result }) => {
-            submitting = false;
-            if (result.type === 'success') {
-              success = true;
-              await invalidateAll();
-            } else {
-              error = 'Es gab einen Fehler bei der Anmeldung. Bitte versuche es erneut.';
-            }
-          };
-        }}
-        class="bg-white/5 backdrop-blur-sm p-8 rounded-lg shadow-xl"
-      >
-        <h1 class="text-3xl font-bold mb-6 text-center">Party Anmeldung</h1>
-        
-        {#if error}
-          <div class="bg-red-900/50 p-4 rounded mb-6">
-            {error}
-          </div>
-        {/if}
 
-        <div class="space-y-6">
-          <div>
-            <label for="name" class="block text-sm font-medium mb-2">Name</label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              required
-              class="w-full px-4 py-2 bg-black/50 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Dein Name"
-            />
-          </div>
+      <div class="mb-8">
+        <h3 class="text-2xl font-bold mb-4">Lineup:</h3>
+        <ul class="space-y-2">
+          <li>DJ CLICK</li>
+          <li>DEFRA</li>
+          <li>BASSMASSAGE</li>
+          <li>MiBA</li>
+          <li>COOPER</li>
+          <li>DAWN</li>
+          <li>PD</li>
+          <li>YVELLICIOUS</li>
+          <li>OLDE</li>
+        </ul>
+      </div>
 
-          <div>
-           <label for="email" class="block text-sm font-medium mb-2">Email</label>
-           <input
-             type="email"
-             id="email"
-             name="email"
-             required
-             class="w-full px-4 py-2 bg-black/50 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-             placeholder="deine@email.de"
-           />
-         </div>
+      <div class="mb-8">
+        <p>AK ab 22:00</p>
+        <p>Einlass ab 18</p>
+      </div>
 
-         <div>
-           <label for="personCount" class="block text-sm font-medium mb-2">Wie viele Personen?</label>
-           <input
-             type="number"
-             id="personCount"
-             name="personCount"
-             required
-             min="1"
-             max="10"
-             value="1"
-             class="w-full px-4 py-2 bg-black/50 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-           />
-         </div>
-
-          <button
-            type="submit"
-            disabled={submitting}
-            class="w-full bg-green-500 hover:bg-green-400 text-black disabled:opacity-50 py-3 px-6 rounded-lg font-medium transition-colors"
-          >
-            {submitting ? 'Wird angemeldet...' : 'Jetzt anmelden'}
-          </button>
-        </div>
-
-        {#if data.registrationCount !== undefined}
-          <p class="mt-6 text-center text-sm text-gray-400">
-            Bereits {data.registrationCount} Anmeldungen 🎉
-          </p>
-        {/if}
-      </form>
-    {/if}
+      <div class="relative">
+        <a 
+          href="https://zita-club.de/events/resident-club-night-%E2%9C%A8dj-click-friends%E2%9C%A8/"
+          target="_blank"
+          rel="noopener noreferrer" 
+          class="inline-block bg-green-400 hover:bg-green-500 text-black py-3 px-8 rounded-full font-medium transition-colors"
+        >
+          Ticket kaufen
+        </a>
+        <p class="mt-2 text-sm text-gray-400">
+          Weiterleitung zu zita-club.de
+        </p>
+      </div>
+    </div>
   </div>
 </div>

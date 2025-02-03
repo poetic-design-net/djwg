@@ -1,30 +1,18 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { isAdmin } from '$lib/config/admin.server';
 import { client } from '$lib/sanity/client';
 import { onlineTalksQuery } from '$lib/sanity/queries/onlineTalks';
-import type { SupabaseClient } from '@supabase/supabase-js';
-
-interface DatabaseBadge {
-  id: string;
-  name: string;
-  description: string | null;
-  style: {
-    variant?: string;
-    borderStyle?: string;
-  } | null;
-}
-
-interface UserBadgeRow {
-  badge_id: string;
-  badge: DatabaseBadge;
-}
+import type { User } from '$lib/types/profile';
+import type { OnlineTalk } from '$lib/types/onlineTalk';
 
 interface Badge {
   _id: string;
   name: string;
   description?: string;
   style?: {
-    customColor?: {
+    customColor: {
       hex: string;
     };
     borderStyle?: string;
@@ -32,22 +20,11 @@ interface Badge {
   };
 }
 
-interface OnlineTalk {
-  _id: string;
-  title: string;
-  date: string;
-  link: string;
-  password: string;
-  visibleFromHours: number;
-}
-
-import type { User } from '$lib/types/profile';
-
 const fetchBadges = async (supabase: SupabaseClient, userId: string): Promise<Badge[]> => {
   try {
-    const { data: userBadges, error } = await supabase
+    const { data, error } = await supabase
       .from('user_badges')
-      .select('badge_id, badge:badges!inner(*)')
+      .select('badge_id, badge:badges(id, name, description, style)')
       .eq('user_id', userId);
 
     if (error) {
@@ -55,18 +32,18 @@ const fetchBadges = async (supabase: SupabaseClient, userId: string): Promise<Ba
       return [];
     }
 
-    if (!userBadges?.length) {
+    if (!data) {
       return [];
     }
 
-    return userBadges.map(userBadge => ({
-      _id: userBadge.badge.id,
-      name: userBadge.badge.name,
-      description: userBadge.badge.description || undefined,
-      style: userBadge.badge.style ? {
-        customColor: { hex: '#50C878' }, // Standard Premium-Grün
-        borderStyle: userBadge.badge.style.borderStyle,
-        variant: userBadge.badge.style.variant
+    return data.map(row => ({
+      _id: row.badge?.id || '',
+      name: row.badge?.name || '',
+      description: row.badge?.description || undefined,
+      style: row.badge?.style ? {
+        customColor: { hex: '#50C878' },
+        borderStyle: row.badge.style.borderStyle,
+        variant: row.badge.style.variant
       } : undefined
     }));
   } catch (error) {
@@ -75,24 +52,15 @@ const fetchBadges = async (supabase: SupabaseClient, userId: string): Promise<Ba
   }
 };
 
-interface Locals {
-  supabase: SupabaseClient;
-  getUser: () => Promise<User | null>;
-}
-
-export const load: PageServerLoad = async ({ locals, setHeaders }: { locals: Locals; setHeaders: (headers: Record<string, string>) => void }) => {
-  setHeaders({
-    'cache-control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-    'pragma': 'no-cache',
-    'expires': '0'
-  });
-
-  const session = locals.supabase ? (await locals.supabase.auth.getSession()).data.session : null;
+export const load = async ({ locals }) => {
+  const session = await locals.supabase.auth.getSession();
   const user = await locals.getUser();
   
-  if (!session || !user) {
+  if (!session.data.session || !user) {
     throw redirect(303, `/auth?next=${encodeURIComponent('/dashboard')}`);
   }
+
+  const isUserAdmin = isAdmin(user.email);
 
   // Parallel Requests für bessere Performance
   const [onlineTalks, badges] = await Promise.all([
@@ -104,8 +72,9 @@ export const load: PageServerLoad = async ({ locals, setHeaders }: { locals: Loc
 
   return {
     user,
-    session,
+    session: session.data.session,
     badges,
-    onlineTalks
+    onlineTalks,
+    isAdmin: isUserAdmin
   };
 };
