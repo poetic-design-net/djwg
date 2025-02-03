@@ -22,6 +22,8 @@ export interface Profile {
     soundcloud?: string;
   };
   is_public: boolean;
+  created_at?: string;
+  last_seen?: string;
 }
 
 export interface StandardUserMetadata {

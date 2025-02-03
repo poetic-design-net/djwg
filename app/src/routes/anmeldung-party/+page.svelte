@@ -51,7 +51,7 @@
     <div class="max-w-2xl mx-auto text-center">
       <div class="mb-8 space-y-4">
         <p>Am 15.03.2025 erwartet euch ein Special Event.</p>
-        <p>DJ CLICK läd seine Freunde vom DJ Workshop Germany ein und feiert mit euch eine ganz spezielle Nacht.</p>
+        <p>DJ CLICK lädt seine Freunde vom DJ Workshop Germany ein und feiert mit euch eine ganz spezielle Nacht.</p>
         <p>Dieses mal gibt es eine besondere Mischung aus HIP HOP, Electronische Musik und dem besten aus den Charts.</p>
       </div>
 
