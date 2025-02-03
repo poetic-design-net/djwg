@@ -1,4 +1,6 @@
 <script lang="ts">
+  export let isAdmin: boolean = false;
+
   const links = [
     {
       href: '/events',
@@ -21,6 +23,15 @@
       text: 'Feedback'
     }
   ];
+
+  $: allLinks = isAdmin ? [
+    ...links,
+    {
+      href: '/admin',
+      icon: 'M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z',
+      text: 'Admin Dashboard'
+    }
+  ] : links;
 </script>
 
 <div class="relative rounded-3xl p-8 border border-gray-800 overflow-hidden flex-grow">
@@ -28,7 +39,7 @@
   <div class="relative">
     <h2 class="text-2xl font-medium text-white mb-6">Useful Links</h2>
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      {#each links as link}
+      {#each allLinks as link}
         <a 
           href={link.href} 
           class="group flex items-center space-x-3 p-4 rounded-xl bg-gray-950 hover:bg-green-500 transition-colors duration-200"
