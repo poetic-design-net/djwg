@@ -257,8 +257,8 @@ const togglePasswordVisibility = () => {
     <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-1 border-green-500"></div>
   </div>
 {:else if !user?.aud || user.aud !== 'authenticated'}
-  <div class="flex flex-wrap -m-8">
-    <div class="w-full md:w-1/2 p-8">
+  <div class="flex flex-wrap">
+    <div class="w-full md:w-1/2 p-4 md:p-8">
       <div class="px-4 pt-10 md:pb-40 max-w-lg mx-auto">
         <div class="flex flex-wrap items-center justify-between mb-36 -m-2">
           <div class="w-auto p-2">
@@ -382,7 +382,7 @@ const togglePasswordVisibility = () => {
         </div>
       </div>
     </div>
-    <div class="w-full md:w-1/2 p-8">
+    <div class="w-full md:w-1/2 p-4 md:p-8">
       <div class="p-5 h-full">
         <img class="h-full mx-auto md:mr-0 object-cover rounded-5xl" src="https://cdn.sanity.io/images/kijh3dc6/production/4bc03b1c7ccffb71c9cb9d2883a11ad890066031-1024x1536.jpg" alt="Hintergrund">
       </div>

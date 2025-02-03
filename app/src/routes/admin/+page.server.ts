@@ -1,20 +1,31 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Profile } from '$lib/types/profile';
-import { isAdmin } from '$lib/config/admin.server';
 
-export const load = async ({ locals }) => {
+export const load: PageServerLoad = async ({ locals }) => {
   const session = await locals.supabase.auth.getSession();
   
-  if (!session.data.session?.user?.email || !isAdmin(session.data.session.user.email)) {
+  if (!session.data.session?.user) {
     throw redirect(303, '/');
   }
 
+  // Hole das Profil des aktuellen Benutzers
+  const { data: profile } = await locals.supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', session.data.session.user.id)
+    .single();
+
+  // Prüfe ob der Benutzer Admin ist
+  if (!profile?.role || profile.role !== 'admin') {
+    throw redirect(303, '/');
+  }
+
+  // Für Admins: Hole alle Benutzerprofile
   const { data: users, error } = await locals.supabase
     .from('profiles')
     .select('*')
-    .order('created_at', { ascending: false });
+    .order('email', { ascending: true });
 
   if (error) {
     console.error('Fehler beim Laden der Benutzer:', error);
@@ -24,6 +35,6 @@ export const load = async ({ locals }) => {
   }
 
   return {
-    users: users as Profile[]
+    users: (users || []) as Profile[]
   };
 };

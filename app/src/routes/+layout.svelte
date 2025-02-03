@@ -3,7 +3,7 @@
 	import { page } from '$app/stores';
 	import { setContext, onMount } from 'svelte';
 	import { browser } from '$app/environment';
-	import { afterNavigate, beforeNavigate } from '$app/navigation';
+	import { afterNavigate, beforeNavigate, goto } from '$app/navigation';
 	import { PUBLIC_SUPABASE_ANON_KEY, PUBLIC_SUPABASE_URL } from '$env/static/public';
 	import { createSupabaseLoadClient } from '@supabase/auth-helpers-sveltekit';
 	import { initBento, identifyBentoUser } from '$lib/bento/init';
@@ -15,10 +15,13 @@
 	import Toast from '$lib/components/Toast.svelte';
 	import BetaBanner from '$lib/components/BetaBanner.svelte';
 	import CookieBanner from '$lib/components/CookieBanner.svelte';
+	import Spinner from '$lib/components/Spinner.svelte';
 	import "../app.pcss";
 	import type { LayoutData } from './$types';
 
 	export let data: LayoutData;
+
+	let isAuthToDashboardTransition = false;
 
 	$: {
 		console.log('Layout Component:', {
@@ -26,7 +29,8 @@
 			hasSession: !!data.session,
 			hasProfile: !!data.profile,
 			profile: data.profile,
-			isAuthenticated: data.user?.aud === 'authenticated'
+			isAuthenticated: data.user?.aud === 'authenticated',
+			isAuthToDashboardTransition
 		});
 	}
 
@@ -45,9 +49,16 @@
 		bottomText: '© 2025 djworkshopgermany.de'
 	};
 
-	// Set up navigation scroll behavior
-	beforeNavigate(() => {
-	  smoothScrollTo(0);
+	// Set up navigation behavior
+	beforeNavigate(({ to }) => {
+		if (to?.route.id === '/dashboard' && $page.route.id === '/auth') {
+			isAuthToDashboardTransition = true;
+		}
+		smoothScrollTo(0);
+	});
+
+	afterNavigate(() => {
+		isAuthToDashboardTransition = false;
 	});
 	
 	// Create and set Supabase client in context using environment variables
@@ -70,6 +81,8 @@
 	$: if ($authState.previousAuthState !== null && $authState.currentAuthState !== $authState.previousAuthState) {
 		if ($authState.currentAuthState) {
 			toasts.success('Erfolgreich angemeldet');
+			isAuthToDashboardTransition = true;
+			goto('/dashboard');
 		} else {
 			toasts.error('Erfolgreich abgemeldet');
 		}
@@ -169,6 +182,12 @@
 	});
 </script>
 
+{#if isAuthToDashboardTransition}
+	<div class="fixed inset-0 z-50 flex items-center bg-black justify-center">
+		<Spinner size="lg" color="text-green-500" />
+	</div>
+{/if}
+
 {#if $isPreviewing}
 	<div class="preview-toggle-container">
 		<a href={`/preview/disable?redirect=${$page.url.pathname}`} class="preview-toggle">
@@ -185,12 +204,12 @@
 <Toast />
 
 <BetaBanner enabled={false} />
-<main>
+<main class:pointer-events-none={isAuthToDashboardTransition}>
 	<Header {data} />
 	<slot />
 </main>
 <CookieBanner />
-<footer>
+<footer class:pointer-events-none={isAuthToDashboardTransition}>
 	<section class="bg-gray-50 overflow-hidden">
 		<Footer data={data.footerSettings || defaultFooterSettings} />
 	</section>

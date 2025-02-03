@@ -1,81 +1,89 @@
 <script lang="ts">
   import type { Profile } from '$lib/types/profile';
 
-  export let data: { users: Profile[] };
+  export let data: {
+    users: Profile[];
+  };
 
-  let searchTerm = '';
-  $: filteredUsers = data.users.filter(user => 
-    user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.username?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const formatDate = (dateString: string | undefined) => {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleDateString('de-DE', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
 </script>
 
-<div class="container mx-auto px-4 py-8">
-  <h1 class="text-3xl font-bold mb-6">Admin Dashboard</h1>
-  
-  <div class="mb-6">
-    <input
-      type="text"
-      bind:value={searchTerm}
-      placeholder="Benutzer suchen..."
-      class="w-full max-w-md px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-    />
-  </div>
+<div class="min-h-screen bg-black py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-7xl mx-auto">
+    <div class="mb-8">
+      <h1 class="text-4xl font-medium text-white mb-2">Admin Dashboard</h1>
+      <p class="text-gray-400">Verwalte Benutzer und Systemeinstellungen</p>
+    </div>
 
-  <div class="overflow-x-auto bg-white rounded-lg shadow">
-    <table class="min-w-full table-auto">
-      <thead class="bg-gray-50">
-        <tr>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Öffentlich</th>
-        </tr>
-      </thead>
-      <tbody class="bg-white divide-y divide-gray-200">
-        {#each filteredUsers as user}
-          <tr class="hover:bg-gray-50">
-            <td class="px-6 py-4 whitespace-nowrap">
-              <div class="flex items-center">
-                {#if user.avatar_url}
-                  <img src={user.avatar_url} alt="" class="h-8 w-8 rounded-full mr-3" />
-                {:else}
-                  <div class="h-8 w-8 rounded-full bg-gray-200 mr-3 flex items-center justify-center">
-                    <span class="text-gray-500 text-sm">
-                      {(user.full_name?.[0] || user.email?.[0] || '?').toUpperCase()}
-                    </span>
+    <!-- Benutzerliste -->
+    <div class="bg-gray-900 rounded-3xl border border-gray-800 overflow-hidden">
+      <div class="px-8 py-6 border-b border-gray-800">
+        <h2 class="text-2xl font-medium text-white">
+          Benutzer ({data.users.length})
+        </h2>
+      </div>
+      
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="text-left bg-gray-800/50">
+              <th class="px-8 py-4 text-sm font-medium text-gray-400">Name</th>
+              <th class="px-8 py-4 text-sm font-medium text-gray-400">E-Mail</th>
+              <th class="px-8 py-4 text-sm font-medium text-gray-400">Registriert</th>
+              <th class="px-8 py-4 text-sm font-medium text-gray-400">Zuletzt aktiv</th>
+            </tr>
+          </thead>
+          <tbody>
+            {#each data.users as user}
+              <tr class="border-t border-gray-800 hover:bg-gray-800/30">
+                <td class="px-8 py-4">
+                  <div class="flex items-center">
+                    {#if user.avatar_url}
+                      <img
+                        src={user.avatar_url}
+                        alt=""
+                        class="w-8 h-8 rounded-full mr-3 bg-gray-800"
+                      />
+                    {:else}
+                      <div class="w-8 h-8 rounded-full mr-3 bg-gray-800 flex items-center justify-center">
+                        <span class="text-sm font-medium text-gray-400">
+                          {(user.first_name?.[0] || '') + (user.last_name?.[0] || '')}
+                        </span>
+                      </div>
+                    {/if}
+                    <div>
+                      <div class="text-white">
+                        {user.first_name} {user.last_name}
+                      </div>
+                      {#if user.username}
+                        <div class="text-sm text-gray-400">@{user.username}</div>
+                      {/if}
+                    </div>
                   </div>
-                {/if}
-                <div>
-                  <div class="text-sm font-medium text-gray-900">
-                    {user.full_name || 'Kein Name'}
-                  </div>
-                </div>
-              </div>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              {user.email || 'Keine Email'}
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              {user.username || 'Kein Username'}
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                Aktiv
-              </span>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              {user.is_public ? 'Ja' : 'Nein'}
-            </td>
-          </tr>
-        {/each}
-      </tbody>
-    </table>
-  </div>
-
-  <div class="mt-4 text-sm text-gray-500">
-    Insgesamt {data.users.length} Benutzer
+                </td>
+                <td class="px-8 py-4 text-gray-300">{user.email || '-'}</td>
+                <td class="px-8 py-4 text-gray-300">{formatDate(user.created_at)}</td>
+                <td class="px-8 py-4 text-gray-300">
+                  {formatDate(user.last_seen)}
+                </td>
+              </tr>
+            {:else}
+              <tr>
+                <td colspan="4" class="px-8 py-4 text-center text-gray-400">
+                  Keine Benutzer gefunden
+                </td>
+              </tr>
+            {/each}
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 </div>
