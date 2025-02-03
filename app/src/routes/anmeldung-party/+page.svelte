@@ -84,7 +84,7 @@
         >
           Ticket kaufen
         </a>
-        <p class="mt-2 text-sm text-gray-400">
+        <p class="mt-2 text-sm text-gray-300">
           Weiterleitung zu zita-club.de
         </p>
       </div>
