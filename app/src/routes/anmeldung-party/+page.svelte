@@ -38,7 +38,7 @@
 
       <video
         bind:this={video}
-        src="https://cdn.sanity.io/files/kijh3dc6/production/3580eaa0fba9f4e0990715300ee329acc72b6f0b.mp4"
+        src="https://cdn.sanity.io/files/kijh3dc6/production/011d468cf96a1dbd932137e799f1af3cfe19f361.mp4"
         class="w-full rounded-lg shadow-xl"
         autoplay
         loop
