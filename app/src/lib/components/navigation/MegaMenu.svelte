@@ -122,6 +122,7 @@
               class="block group"
               on:click|preventDefault={() => handleLinkClick(activeMenuItem.featured?.link, activeMenuItem.featured?.linkType)}
               data-no-scroll
+              data-sveltekit-preload-data
             >
               <div class="relative rounded-2xl overflow-hidden mb-4 aspect-video">
                 {#if activeMenuItem.featured.image}
@@ -155,21 +156,22 @@
           {#each activeMenuItem.columns as column}
             <div class="col-span-2">
               {#if column.link && column.linkType}
-                <a
-                  href={column.link}
-                  class="group block font-heading text-sm text-green-400 hover:text-white font-medium mb-3"
-                  on:click|preventDefault={() => handleLinkClick(column.link, column.linkType)}
-                  data-no-scroll
-                >
-                  <div class="flex items-center">
-                    {#if column.linkType === 'anchor'}
-                      <span class="text-green-500/0 group-hover:text-green-500 transition-colors duration-200 mr-1">#</span>
-                    {:else}
-                      <span class="text-green-500/0 group-hover:text-green-500 transition-colors duration-200 mr-1">→</span>
-                    {/if}
-                    {column.title}
-                  </div>
-                </a>
+               <a
+                 href={column.link}
+                 class="group block font-heading text-sm text-green-400 hover:text-white font-medium mb-3"
+                 on:click|preventDefault={() => handleLinkClick(column.link, column.linkType)}
+                 data-no-scroll
+                 data-sveltekit-preload-data
+               >
+                 <div class="flex items-center">
+                   {#if column.linkType === 'anchor'}
+                     <span class="text-green-500/0 group-hover:text-green-500 transition-colors duration-200 mr-1">#</span>
+                   {:else}
+                     <span class="text-green-500/0 group-hover:text-green-500 transition-colors duration-200 mr-1">→</span>
+                   {/if}
+                   {column.title}
+                 </div>
+               </a>
               {:else}
                 <h4 class="font-heading text-sm text-green-400 font-medium mb-3">{column.title}</h4>
               {/if}
@@ -181,6 +183,7 @@
                       class="group flex items-center font-heading text-gray-300 hover:text-white transition duration-200"
                       on:click|preventDefault={() => handleLinkClick(item.link, item.linkType)}
                       data-no-scroll
+                      data-sveltekit-preload-data
                     >
                       {#if item.linkType === 'anchor'}
                         <span class="text-green-500/0 group-hover:text-green-500 transition-colors duration-200 mr-1">#</span>
