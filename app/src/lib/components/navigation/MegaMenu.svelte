@@ -37,6 +37,12 @@
     if (!link) return;
     onClose();
 
+    // Bei Auth-Links normale Navigation zulassen
+    if (link === '/auth') {
+      window.location.href = link;
+      return;
+    }
+
     // Extrahiere Basis-URL und Anker aus dem Link
     const [baseUrl, anchor] = link.split('#');
     const currentPath = window.location.pathname;
