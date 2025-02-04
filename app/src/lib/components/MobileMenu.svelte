@@ -35,6 +35,13 @@
 
   const handleColumnLinkClick = async (link: string | undefined, linkType: string | undefined = 'direct') => {
     if (!link) return;
+
+    // Bei Auth-Links normale Navigation zulassen
+    if (link === '/auth') {
+      handleLinkClick(); // Schließe das Mobile-Menü
+      window.location.href = link;
+      return;
+    }
     
     const [baseUrl, anchor] = link.split('#');
     const currentPath = window.location.pathname;
