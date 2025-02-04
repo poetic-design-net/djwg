@@ -9,8 +9,8 @@
   export let menuItems: MenuItems;
   export let pages: Record<string, { slug: string }> | undefined = undefined;
 
-  // Zustand für aufgeklappte Menüpunkte
   let expandedMenus: Set<number> = new Set();
+  let loading = false;
 
   function toggleSubmenu(index: number) {
     if (expandedMenus.has(index)) {
@@ -37,11 +37,12 @@
     if (!link) return;
 
     // Bei Auth-Links normale Navigation zulassen
-    if (link === '/auth') {
-      handleLinkClick(); // Schließe das Mobile-Menü
-      window.location.href = link;
-      return;
-    }
+    if (link.startsWith('/auth')) {
+        loading = true;
+        handleLinkClick();
+        window.location.href = link;
+        return;
+      }
     
     const [baseUrl, anchor] = link.split('#');
     const currentPath = window.location.pathname;
@@ -80,6 +81,16 @@
   >
     <div class="fixed inset-0 bg-black/95" />
     <div class="container relative mx-auto px-4 pt-28">
+      <!-- Loading Overlay für Auth Navigation -->
+      {#if loading}
+        <div class="fixed inset-0 bg-black/80 flex items-center justify-center z-[110]">
+          <svg class="animate-spin h-12 w-12 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        </div>
+      {/if}
+
       <nav class="space-y-4">
         {#each menuItems as menu, index}
           <div class="border-b border-gray-800 pb-4">
