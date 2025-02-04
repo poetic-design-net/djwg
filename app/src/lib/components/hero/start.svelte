@@ -63,7 +63,7 @@
             </div>
           {/if}
         </div>
-        <p class="text-lg text-white md:max-w-xs">{subtitle}</p>
+        <p class="text-lg text-white md:max-w-md">{subtitle}</p>
       </div>
       <div class="w-full md:w-1/2 p-8">
         <div class="w-full aspect-[4/4] max-w-[600px] mx-auto md:mr-0 relative overflow-hidden rounded-3xl bg-gray-900">

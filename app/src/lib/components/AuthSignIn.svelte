@@ -9,11 +9,8 @@
   import type { SupabaseClient } from '@supabase/supabase-js';
   
   export let data: AuthPageData;
-  let { user } = data;
-  $: ({ user } = data);
-  
-  // Get Supabase client from context
-  const supabase = getContext<SupabaseClient>('supabase');
+  let { user, supabase } = data;
+  $: ({ user, supabase } = data);
   
   let email = '';
   let password = '';
@@ -24,32 +21,30 @@
   let showPassword = false;
   let isRegistering = false;
   let isCheckingAuth = true;
+  let mounted = false;
   
-  // Get the 'next' and 'register' parameters from URL if they exist, safely
+  // Initialize URL parameters after hydration
   let next = '/dashboard';
   let register = false;
-  if (browser) {
-  const urlParams = new URLSearchParams(window.location.search);
-  register = urlParams.get('register') === 'true';
-  // next wird nicht mehr aus den URL-Parametern gelesen
-}
-  
-  onMount(async () => {
-    isRegistering = register;
-    // Check authentication status
-    const { data: { session }, error } = await supabase.auth.getSession();
-    if (session) {
-      user = session.user;
+
+  onMount(() => {
+    if (browser) {
+      const urlParams = new URLSearchParams(window.location.search);
+      register = urlParams.get('register') === 'true';
+      isRegistering = register;
     }
+    mounted = true;
     isCheckingAuth = false;
   });
 
-  // Only redirect if we have a confirmed authenticated user
-  $: if (user?.aud === 'authenticated' && browser && !isCheckingAuth) {
+  // Only redirect if we have a confirmed authenticated user and we're mounted
+  $: if (mounted && user?.aud === 'authenticated' && browser) {
     goto(next);
   }
 
   const handleSignIn = async () => {
+    if (!mounted) return;
+    
     try {
       loading = true;
       errorMsg = '';
@@ -57,18 +52,16 @@
       if (!email || !password) {
         errorMsg = 'Bitte geben Sie E-Mail und Passwort ein';
         toasts.error(errorMsg);
-        loading = false;
         return;
       }
 
       if (!supabase) {
         errorMsg = 'Authentifizierungsdienst nicht verfügbar. Bitte versuche es später erneut.';
         toasts.error(errorMsg);
-        loading = false;
         return;
       }
 
-      const { error: signInError, data: signInData } = await supabase.auth.signInWithPassword({
+      const { error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -77,35 +70,11 @@
         console.error('Sign in error:', signInError);
         errorMsg = signInError.message;
         toasts.error('Anmeldung fehlgeschlagen');
-        loading = false;
         return;
       }
 
-      // Verify the user after sign in
-      const { data: { user: verifiedUser }, error: verifyError } = await supabase.auth.getUser();
-
-      if (verifyError) {
-        console.error('Verify error:', verifyError);
-        errorMsg = 'Fehler bei der Benutzerüberprüfung';
-        toasts.error(errorMsg);
-        loading = false;
-        return;
-      }
-
-      if (!verifiedUser || verifiedUser.aud !== 'authenticated') {
-        console.error('User not authenticated after sign in');
-        errorMsg = 'Authentifizierung fehlgeschlagen';
-        toasts.error(errorMsg);
-        loading = false;
-        return;
-      }
-
-      // Successfully authenticated
-      loading = false;
-      await invalidateAll(); // Refresh auth state
-      if (browser) {
-        goto(next);
-      }
+      // Nach erfolgreicher Anmeldung direkt invalidieren und weiterleiten
+      await invalidateAll();
     } catch (error) {
       console.error('Unexpected error during sign in:', error);
       errorMsg = 'Ein unerwarteter Fehler ist aufgetreten';
@@ -167,7 +136,11 @@
   };
 
   const handleSignInWithGoogle = async () => {
+    if (!mounted) return;
+    
     try {
+      loading = true;
+      
       if (!supabase) {
         errorMsg = 'Authentifizierungsdienst nicht verfügbar. Bitte versuche es später erneut.';
         toasts.error(errorMsg);
@@ -177,7 +150,11 @@
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${browser ? location.origin : ''}/auth/callback?next=${encodeURIComponent(next)}`
+          redirectTo: `${browser ? location.origin : ''}/auth/callback?next=${encodeURIComponent(next)}`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent'
+          }
         }
       });
 
@@ -186,53 +163,6 @@
         errorMsg = error.message;
         toasts.error('Google-Anmeldung fehlgeschlagen');
         return;
-      }
-
-      // Nach erfolgreicher Anmeldung, erstelle/aktualisiere das Profil
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-      
-      if (currentUser) {
-        const { data: existingProfile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', currentUser.id)
-          .single();
-
-        if (!existingProfile) {
-          // Extrahiere Namen aus Google-Daten
-          const fullName = currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || '';
-          const [firstName = '', lastName = ''] = fullName.split(' ');
-          
-          // Erstelle neues Profil
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .insert({
-              id: currentUser.id,
-              full_name: fullName,
-              avatar_url: currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture,
-              username: `${firstName.toLowerCase()}.${lastName.toLowerCase()}`.replace(/[^a-z0-9.]/g, ''),
-              is_public: false
-            });
-
-          if (profileError) {
-            console.error('Error creating profile:', profileError);
-            toasts.error('Fehler beim Erstellen des Profils');
-          }
-        } else {
-          // Aktualisiere bestehendes Profil mit neuen Google-Daten
-          const { error: updateError } = await supabase
-            .from('profiles')
-            .update({
-              full_name: currentUser.user_metadata?.full_name || currentUser.user_metadata?.name,
-              avatar_url: currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture
-            })
-            .eq('id', currentUser.id);
-
-          if (updateError) {
-            console.error('Error updating profile:', updateError);
-            toasts.error('Fehler beim Aktualisieren des Profils');
-          }
-        }
       }
     } catch (error) {
       console.error('Unexpected error during Google sign in:', error);

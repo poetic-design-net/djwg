@@ -45,6 +45,42 @@ export const GET = async (event: RequestEvent) => {
       throw redirect(303, '/auth?error=not_authenticated');
     }
 
+    // Wenn es eine OAuth-Anmeldung war (z.B. Google), Profil aktualisieren
+    if (user.app_metadata.provider === 'google') {
+      const { data: existingProfile } = await event.locals.supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      // Extrahiere die Profildaten aus den Google-Metadaten
+      const fullName = user.user_metadata?.full_name || user.user_metadata?.name || '';
+      const avatarUrl = user.user_metadata?.avatar_url || user.user_metadata?.picture;
+
+      if (!existingProfile) {
+        // Erstelle ein neues Profil
+        const [firstName = '', lastName = ''] = fullName.split(' ');
+        await event.locals.supabase
+          .from('profiles')
+          .insert({
+            id: user.id,
+            full_name: fullName,
+            avatar_url: avatarUrl,
+            username: `${firstName.toLowerCase()}.${lastName.toLowerCase()}`.replace(/[^a-z0-9.]/g, ''),
+            is_public: false
+          });
+      } else {
+        // Aktualisiere bestehendes Profil
+        await event.locals.supabase
+          .from('profiles')
+          .update({
+            full_name: fullName,
+            avatar_url: avatarUrl
+          })
+          .eq('id', user.id);
+      }
+    }
+
     // Successfully authenticated - redirect to next page
     throw redirect(303, next);
   } catch (err) {
