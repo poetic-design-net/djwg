@@ -13,15 +13,22 @@
   
   let currentHighlight = 0;
   let sliderContainer: HTMLDivElement;
+  let activeIndex = 0;
+
+  function updateActiveIndex() {
+    if (!sliderContainer) return;
+    const scrollPercentage = sliderContainer.scrollLeft / (sliderContainer.scrollWidth - sliderContainer.clientWidth);
+    activeIndex = Math.round(scrollPercentage * (artists.length - 1));
+  }
 
   onMount(() => {
-    if (artists.length > 0) {
-      const interval = setInterval(() => {
-        currentHighlight = (currentHighlight + 1) % artists.length;
-      }, 2000);
-
-      return () => clearInterval(interval);
-    }
+    if (!sliderContainer) return;
+    sliderContainer.addEventListener('scroll', updateActiveIndex);
+    return () => {
+      if (sliderContainer) {
+        sliderContainer.removeEventListener('scroll', updateActiveIndex);
+      }
+    };
   });
 </script>
 
@@ -43,15 +50,20 @@
     </div>
   {/if}
 
-  <!-- Full width slider with left padding matching container -->
-  <div class="w-full pl-[max(1rem,calc((100vw-1280px)/2+1rem))]">
+  <!-- Full width slider with responsive left padding -->
+  <div class="relative w-full pl-4 md:pl-8 lg:pl-[max(2rem,calc((100vw-1280px)/2+2rem))] xl:pl-[max(2.5rem,calc((100vw-1536px)/2+2.5rem))]">
+    <!-- Subtle gradient overlay on the right -->
+    <div class="hidden lg:block absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-black/80 via-black/20 to-transparent z-10 pointer-events-none"></div>
+    <!-- Horizontal scroll hint -->
+
+    </div>
     <div 
       bind:this={sliderContainer}
       class="flex overflow-x-auto hide-scrollbar snap-x snap-mandatory"
     >
       {#each artists as artist, i}
         <div 
-          class="flex-none w-[85vw] md:w-[45vw] lg:w-[35vw] pr-8 snap-start"
+          class="flex-none w-[85vw] md:w-[45vw] lg:w-[30vw] xl:w-[25vw] pr-8 snap-start"
         >
           <div 
             class="relative group rounded-3xl overflow-hidden transition-all duration-300 hover:shadow-xl aspect-[3/4]"
@@ -98,8 +110,25 @@
         </div>
       {/each}
     </div>
+    
+    <!-- Navigation dots -->
+    <div class="hidden lg:flex justify-center mt-12 gap-3">
+      {#each artists as _, i}
+        <button
+          class="w-2 h-2 rounded-full transition-all duration-300 hover:bg-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-black {i === activeIndex ? 'bg-purple-600 w-6' : 'bg-white/20'}"
+          on:click={() => {
+            if (sliderContainer) {
+              const scrollAmount = (sliderContainer.scrollWidth - sliderContainer.clientWidth) * (i / (artists.length - 1));
+              sliderContainer.scrollTo({
+                left: scrollAmount,
+                behavior: 'smooth'
+              });
+            }
+          }}
+        />
+      {/each}
+    </div>
   </div>
-</div>
 
 <style>
   .hide-scrollbar {
@@ -109,5 +138,20 @@
   }
   .hide-scrollbar::-webkit-scrollbar {
     display: none;
+  }
+
+  @keyframes slideRight {
+    0% {
+      transform: translateX(-5px);
+      opacity: 0.2;
+    }
+    50% {
+      transform: translateX(5px);
+      opacity: 1;
+    }
+    100% {
+      transform: translateX(-5px);
+      opacity: 0.2;
+    }
   }
 </style>
