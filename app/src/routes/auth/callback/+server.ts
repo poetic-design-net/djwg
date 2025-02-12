@@ -1,97 +1,260 @@
 import { redirect } from '@sveltejs/kit';
 import type { RequestEvent } from '@sveltejs/kit';
+import type { PostgrestError, User, SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '$lib/supabase';
+import Logger from '$lib/services/logger';
+
+const MAX_RETRIES = 3;
+const INITIAL_RETRY_DELAY = 1000; // 1 second
+const PROFILE_SYNC_TIMEOUT = 5000; // 5 seconds
+
+interface Profile {
+  id: string;
+  username?: string;
+  is_public?: boolean;
+}
+
+type SupabaseResponse<T> = {
+  data: T;
+  error: PostgrestError | null;
+};
+
+// Exponential Backoff Retry
+async function retryWithBackoff<T>(
+  operation: () => Promise<T>,
+  context: Record<string, unknown>,
+  maxRetries: number = MAX_RETRIES,
+  initialDelay: number = INITIAL_RETRY_DELAY
+): Promise<T> {
+  let lastError;
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error;
+      if (i < maxRetries - 1) {
+        const delay = initialDelay * Math.pow(2, i); // Exponential backoff
+        Logger.warn(`Retry attempt ${i + 1} for operation`, {
+          ...context,
+          error: error instanceof Error ? error.message : String(error),
+          nextRetryDelay: delay
+        });
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+  throw lastError;
+}
+
+async function ensureProfile(event: RequestEvent, user: User): Promise<void> {
+  const startTime = Date.now();
+  const context = { userId: user.id, operation: 'ensureProfile' };
+  const supabase = event.locals.supabase as SupabaseClient<Database>;
+
+  try {
+    // Timeout Promise
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Profile sync timeout')), PROFILE_SYNC_TIMEOUT);
+    });
+
+    // Profile Operation Promise
+    const profilePromise = (async () => {
+      const result = await retryWithBackoff(
+        async () => supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single(),
+        context
+      );
+
+      const existingProfile = result.data as Profile | null;
+
+      if (result.error) {
+        Logger.error('Error fetching profile', context, result.error);
+        return;
+      }
+
+      // Extrahiere die Profildaten aus den Metadaten mit Validierung
+      const fullName = user.user_metadata?.full_name || 
+                      user.user_metadata?.name || 
+                      'Anonymous User';
+      const avatarUrl = user.user_metadata?.avatar_url || 
+                       user.user_metadata?.picture;
+      const [firstName = '', lastName = ''] = fullName.split(' ');
+
+      const profileData = {
+        id: user.id,
+        full_name: fullName.slice(0, 100), // Längen-Begrenzung
+        avatar_url: avatarUrl,
+        username: existingProfile?.username || 
+          `${firstName.toLowerCase()}.${lastName.toLowerCase()}`
+            .replace(/[^a-z0-9.]/g, '')
+            .slice(0, 30), // Längen-Begrenzung
+        is_public: existingProfile?.is_public ?? false,
+        email: user.email,
+        updated_at: new Date().toISOString()
+      };
+
+      if (!existingProfile) {
+        const insertResult = await retryWithBackoff(
+          async () => supabase
+            .from('profiles')
+            .insert([profileData]),
+          { ...context, operation: 'insertProfile' }
+        );
+
+        if (insertResult.error) {
+          Logger.error('Error creating profile', context, insertResult.error);
+        }
+      } else {
+        const updateResult = await retryWithBackoff(
+          async () => supabase
+            .from('profiles')
+            .update(profileData)
+            .eq('id', user.id),
+          { ...context, operation: 'updateProfile' }
+        );
+
+        if (updateResult.error) {
+          Logger.error('Error updating profile', context, updateResult.error);
+        }
+      }
+    })();
+
+    // Race zwischen Timeout und Profile Operation
+    await Promise.race([profilePromise, timeoutPromise]);
+
+    Logger.info('Profile sync completed', {
+      ...context,
+      duration: Date.now() - startTime
+    });
+  } catch (error) {
+    Logger.error('Error in profile management', {
+      ...context,
+      duration: Date.now() - startTime,
+      error: error instanceof Error ? error.message : String(error)
+    });
+  }
+}
+
+async function validateSession(event: RequestEvent) {
+  const context = { operation: 'validateSession' };
+  const supabase = event.locals.supabase as SupabaseClient<Database>;
+
+  const { data: { session }, error: sessionError } = await retryWithBackoff(
+    async () => supabase.auth.getSession(),
+    context
+  );
+
+  if (sessionError || !session) {
+    Logger.error('Session validation failed', { 
+      error: sessionError?.message 
+    });
+    throw redirect(303, '/auth?error=session_validation_failed');
+  }
+
+  return session;
+}
+
+async function validateUser(event: RequestEvent): Promise<User> {
+  const context = { operation: 'validateUser' };
+  const supabase = event.locals.supabase as SupabaseClient<Database>;
+
+  const { data: { user }, error: userError } = await retryWithBackoff(
+    async () => supabase.auth.getUser(),
+    context
+  );
+
+  if (userError || !user) {
+    Logger.error('User validation failed', { 
+      error: userError?.message 
+    });
+    throw redirect(303, '/auth?error=user_validation_failed');
+  }
+
+  if (user.aud !== 'authenticated') {
+    Logger.error('Invalid audience', { 
+      userId: user.id,
+      audience: user.aud 
+    });
+    throw redirect(303, '/auth?error=invalid_audience');
+  }
+
+  return user;
+}
 
 export const GET = async (event: RequestEvent) => {
+  const startTime = Date.now();
+  const requestId = crypto.randomUUID();
+  const supabase = event.locals.supabase as SupabaseClient<Database>;
+
   try {
+    // Parameter validieren
     const code = event.url.searchParams.get('code');
     const next = event.url.searchParams.get('next') ?? '/';
 
+    const context = {
+      requestId,
+      url: event.url.toString(),
+      next
+    };
+
     if (!code) {
-      console.error('No code provided in callback');
+      Logger.error('No code provided in callback', context);
       throw redirect(303, '/auth?error=no_code');
     }
 
-    if (!event.locals.supabase) {
-      console.error('No Supabase client available');
+    if (!supabase) {
+      Logger.error('No Supabase client available', context);
       throw redirect(303, '/auth?error=no_client');
     }
 
-    // Exchange the code for a session
-    const { error: exchangeError } = await event.locals.supabase.auth.exchangeCodeForSession(code);
-    
+    // Session-Code austauschen mit verbessertem Error Handling
+    const { error: exchangeError } = await retryWithBackoff(
+      async () => supabase.auth.exchangeCodeForSession(code),
+      { ...context, operation: 'exchangeCode' }
+    );
+
     if (exchangeError) {
-      console.error('Error exchanging code for session:', exchangeError);
+      Logger.error('Code exchange failed', { 
+        ...context,
+        error: exchangeError.message 
+      });
       throw redirect(303, `/auth?error=exchange_error&message=${encodeURIComponent(exchangeError.message)}`);
     }
 
-    // Get the session after exchange
-    const { data: { session }, error: sessionError } = await event.locals.supabase.auth.getSession();
-    
-    if (sessionError || !session) {
-      console.error('Error getting session:', sessionError);
-      throw redirect(303, '/auth?error=session_error');
-    }
+    // Session und User validieren
+    const session = await validateSession(event);
+    const user = await validateUser(event);
 
-    // Verify the user is authenticated
-    const { data: { user }, error: userError } = await event.locals.supabase.auth.getUser();
-    
-    if (userError || !user) {
-      console.error('Error getting user after exchange:', userError);
-      throw redirect(303, '/auth?error=user_error');
-    }
+    // Profil synchronisieren (non-blocking mit Timeout)
+    ensureProfile(event, user).catch(error => {
+      Logger.error('Profile sync failed', {
+        ...context,
+        userId: user.id
+      }, error);
+    });
 
-    if (user.aud !== 'authenticated') {
-      console.error('User not properly authenticated');
-      throw redirect(303, '/auth?error=not_authenticated');
-    }
+    // Log successful auth
+    Logger.info('Authentication successful', {
+      ...context,
+      userId: user.id,
+      duration: Date.now() - startTime
+    });
 
-    // Wenn es eine OAuth-Anmeldung war (z.B. Google), Profil aktualisieren
-    if (user.app_metadata.provider === 'google') {
-      const { data: existingProfile } = await event.locals.supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      // Extrahiere die Profildaten aus den Google-Metadaten
-      const fullName = user.user_metadata?.full_name || user.user_metadata?.name || '';
-      const avatarUrl = user.user_metadata?.avatar_url || user.user_metadata?.picture;
-
-      if (!existingProfile) {
-        // Erstelle ein neues Profil
-        const [firstName = '', lastName = ''] = fullName.split(' ');
-        await event.locals.supabase
-          .from('profiles')
-          .insert({
-            id: user.id,
-            full_name: fullName,
-            avatar_url: avatarUrl,
-            username: `${firstName.toLowerCase()}.${lastName.toLowerCase()}`.replace(/[^a-z0-9.]/g, ''),
-            is_public: false
-          });
-      } else {
-        // Aktualisiere bestehendes Profil
-        await event.locals.supabase
-          .from('profiles')
-          .update({
-            full_name: fullName,
-            avatar_url: avatarUrl
-          })
-          .eq('id', user.id);
-      }
-    }
-
-    // Successfully authenticated - redirect to next page
     throw redirect(303, next);
   } catch (err) {
-    console.error('Error in auth callback:', err);
-    
-    // If it's already a redirect, just throw it
     if (err instanceof Response && err.status === 303) {
       throw err;
     }
 
-    // Otherwise, redirect to auth with a generic error
+    Logger.error('Unhandled auth error', {
+      requestId,
+      url: event.url.toString(),
+      duration: Date.now() - startTime
+    }, err instanceof Error ? err : new Error(String(err)));
+
     throw redirect(303, '/auth?error=unknown');
   }
 };

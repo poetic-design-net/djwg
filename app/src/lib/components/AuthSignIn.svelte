@@ -6,7 +6,8 @@
   import { getContext, onMount } from 'svelte';
   import { toasts } from '$lib/stores/toast';
   import type { AuthPageData } from '../../routes/auth/+page';
-  import type { SupabaseClient } from '@supabase/supabase-js';
+  import type { SupabaseClient, AuthError } from '@supabase/supabase-js';
+  import Logger from '$lib/services/logger';
   
   export let data: AuthPageData;
   let { user, supabase } = data;
@@ -22,22 +23,93 @@
   let isRegistering = false;
   let isCheckingAuth = true;
   let mounted = false;
+  let retryCount = 0;
+  const MAX_RETRIES = 3;
+  const RETRY_DELAY = 1000;
   
   // Initialize URL parameters after hydration
   let next = '/dashboard';
   let register = false;
+
+  const passwordStrengthRegex = {
+    hasNumber: /\d/,
+    hasUpper: /[A-Z]/,
+    hasLower: /[a-z]/,
+    hasSpecial: /[!@#$%^&*(),.?":{}|<>]/,
+    minLength: 8
+  };
+
+  function validatePassword(pwd: string): { isValid: boolean; errors: string[] } {
+    const errors: string[] = [];
+    
+    if (pwd.length < passwordStrengthRegex.minLength) {
+      errors.push(`Passwort muss mindestens ${passwordStrengthRegex.minLength} Zeichen lang sein`);
+    }
+    if (!passwordStrengthRegex.hasNumber.test(pwd)) {
+      errors.push('Passwort muss mindestens eine Zahl enthalten');
+    }
+    if (!passwordStrengthRegex.hasUpper.test(pwd)) {
+      errors.push('Passwort muss mindestens einen Großbuchstaben enthalten');
+    }
+    if (!passwordStrengthRegex.hasLower.test(pwd)) {
+      errors.push('Passwort muss mindestens einen Kleinbuchstaben enthalten');
+    }
+    if (!passwordStrengthRegex.hasSpecial.test(pwd)) {
+      errors.push('Passwort muss mindestens ein Sonderzeichen enthalten');
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
+  }
+
+  async function handleAuthError(error: AuthError | null): Promise<boolean> {
+    if (!error) return false;
+
+    const errorMap: Record<string, string> = {
+      'Invalid login credentials': 'Ungültige Anmeldedaten',
+      'Email not confirmed': 'E-Mail wurde noch nicht bestätigt',
+      'Rate limit exceeded': 'Zu viele Versuche. Bitte warten Sie einen Moment.',
+      'User already registered': 'Diese E-Mail ist bereits registriert',
+      'Password recovery required': 'Passwort-Zurücksetzung erforderlich',
+      'Network error': 'Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung.'
+    };
+
+    const message = errorMap[error.message] || error.message;
+    errorMsg = message;
+    toasts.error(message);
+
+    // Log den Fehler
+    Logger.error('Auth error', {
+      code: error.status || 500,
+      message: error.message,
+      context: error.message
+    });
+
+    // Prüfen ob Retry sinnvoll ist
+    const retryableErrors = ['Network error', 'Rate limit exceeded'];
+    if (retryableErrors.includes(error.message) && retryCount < MAX_RETRIES) {
+      retryCount++;
+      await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * retryCount));
+      return true; // Retry durchführen
+    }
+
+    return false; // Kein Retry
+  }
 
   onMount(() => {
     if (browser) {
       const urlParams = new URLSearchParams(window.location.search);
       register = urlParams.get('register') === 'true';
       isRegistering = register;
+      next = urlParams.get('next') || '/dashboard';
     }
     mounted = true;
     isCheckingAuth = false;
   });
 
-  // Only redirect if we have a confirmed authenticated user and we're mounted
+  // Redirect wenn authentifiziert
   $: if (mounted && user?.aud === 'authenticated' && browser) {
     goto(next);
   }
@@ -48,6 +120,7 @@
     try {
       loading = true;
       errorMsg = '';
+      retryCount = 0;
 
       if (!email || !password) {
         errorMsg = 'Bitte geben Sie E-Mail und Passwort ein';
@@ -61,24 +134,34 @@
         return;
       }
 
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      let success = false;
+      while (!success && retryCount <= MAX_RETRIES) {
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
 
-      if (signInError) {
-        console.error('Sign in error:', signInError);
-        errorMsg = signInError.message;
-        toasts.error('Anmeldung fehlgeschlagen');
-        return;
+        if (signInError) {
+          const shouldRetry = await handleAuthError(signInError);
+          if (!shouldRetry) break;
+          continue;
+        }
+
+        success = true;
       }
 
-      // Nach erfolgreicher Anmeldung direkt invalidieren und weiterleiten
-      await invalidateAll();
+      if (success) {
+        await invalidateAll();
+      }
     } catch (error) {
-      console.error('Unexpected error during sign in:', error);
+      Logger.error('Unexpected auth error', { 
+        context: 'signIn',
+        email 
+      }, error instanceof Error ? error : new Error(String(error)));
+      
       errorMsg = 'Ein unerwarteter Fehler ist aufgetreten';
       toasts.error(errorMsg);
+    } finally {
       loading = false;
     }
   };
@@ -87,50 +170,65 @@
     try {
       loading = true;
       errorMsg = '';
+      retryCount = 0;
 
       if (!email || !password || !firstName || !lastName) {
         errorMsg = 'Bitte füllen Sie alle Felder aus';
         toasts.error(errorMsg);
-        loading = false;
+        return;
+      }
+
+      // Passwort-Validierung
+      const { isValid, errors } = validatePassword(password);
+      if (!isValid) {
+        errorMsg = errors.join('\n');
+        toasts.error(errorMsg);
         return;
       }
 
       if (!supabase) {
         errorMsg = 'Authentifizierungsdienst nicht verfügbar. Bitte versuche es später erneut.';
         toasts.error(errorMsg);
-        loading = false;
         return;
       }
 
-      const { error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${browser ? location.origin : ''}/auth/callback?next=${encodeURIComponent(next)}`,
-          data: {
-            raw_user_meta_data: {
+      let success = false;
+      while (!success && retryCount <= MAX_RETRIES) {
+        const { error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${browser ? location.origin : ''}/auth/callback?next=${encodeURIComponent(next)}`,
+            data: {
               first_name: firstName,
-              last_name: lastName
+              last_name: lastName,
+              full_name: `${firstName} ${lastName}`
             }
           }
-        }
-      });
+        });
 
-      if (signUpError) {
-        console.error('Sign up error:', signUpError);
-        errorMsg = signUpError.message;
-        toasts.error('Registrierung fehlgeschlagen');
-        loading = false;
-        return;
+        if (signUpError) {
+          const shouldRetry = await handleAuthError(signUpError);
+          if (!shouldRetry) break;
+          continue;
+        }
+
+        success = true;
       }
 
-      loading = false;
-      errorMsg = 'Überprüfe Deine E-Mail für den Bestätigungslink.';
-      toasts.success('Registrierung erfolgreich. Bitte überprüfe Deie E-Mail.');
+      if (success) {
+        errorMsg = 'Überprüfe Deine E-Mail für den Bestätigungslink.';
+        toasts.success('Registrierung erfolgreich. Bitte überprüfe Deine E-Mail.');
+      }
     } catch (error) {
-      console.error('Unexpected error during sign up:', error);
+      Logger.error('Unexpected auth error', { 
+        context: 'signUp',
+        email 
+      }, error instanceof Error ? error : new Error(String(error)));
+      
       errorMsg = 'Ein unerwarteter Fehler ist aufgetreten';
       toasts.error(errorMsg);
+    } finally {
       loading = false;
     }
   };
@@ -140,6 +238,7 @@
     
     try {
       loading = true;
+      retryCount = 0;
       
       if (!supabase) {
         errorMsg = 'Authentifizierungsdienst nicht verfügbar. Bitte versuche es später erneut.';
@@ -147,42 +246,54 @@
         return;
       }
 
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${browser ? location.origin : ''}/auth/callback?next=${encodeURIComponent(next)}`,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent'
+      let success = false;
+      while (!success && retryCount <= MAX_RETRIES) {
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: `${browser ? location.origin : ''}/auth/callback?next=${encodeURIComponent(next)}`,
+            queryParams: {
+              access_type: 'offline',
+              prompt: 'consent'
+            }
           }
-        }
-      });
+        });
 
-      if (error) {
-        console.error('Google sign in error:', error);
-        errorMsg = error.message;
-        toasts.error('Google-Anmeldung fehlgeschlagen');
-        return;
+        if (error) {
+          const shouldRetry = await handleAuthError(error);
+          if (!shouldRetry) break;
+          continue;
+        }
+
+        success = true;
       }
     } catch (error) {
-      console.error('Unexpected error during Google sign in:', error);
+      Logger.error('Unexpected auth error', { 
+        context: 'googleSignIn'
+      }, error instanceof Error ? error : new Error(String(error)));
+      
       errorMsg = 'Ein unerwarteter Fehler ist aufgetreten';
       toasts.error(errorMsg);
+    } finally {
+      loading = false;
     }
   };
 
-const togglePasswordVisibility = () => {
+  const togglePasswordVisibility = () => {
     showPassword = !showPassword;
   };
 
   const toggleAuthMode = () => {
     isRegistering = !isRegistering;
     errorMsg = '';
+    email = '';
+    password = '';
+    firstName = '';
+    lastName = '';
   };
 </script>
 
-
-  {#if isCheckingAuth}
+{#if isCheckingAuth}
   <div class="flex justify-center items-center h-screen">
     <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-1 border-green-500"></div>
   </div>
@@ -212,7 +323,7 @@ const togglePasswordVisibility = () => {
           </p>
           
           {#if errorMsg}
-            <div class="mb-4 p-4 {errorMsg === 'Überprüfe Deine E-Mail für den Bestätigungslink.' ? 'bg-green-500 bg-opacity-10 text-green-500' : 'bg-red-500 bg-opacity-10 text-red-500'} rounded-3xl">
+            <div class="mb-4 p-4 {errorMsg === 'Überprüfe Deine E-Mail für den Bestätigungslink.' ? 'bg-green-500 bg-opacity-10 text-green-500' : 'bg-red-500 bg-opacity-10 text-red-500'} rounded-3xl whitespace-pre-line">
               {errorMsg}
             </div>
           {/if}
@@ -278,7 +389,14 @@ const togglePasswordVisibility = () => {
             on:click={isRegistering ? handleSignUp : handleSignIn}
             disabled={loading}
           >
-            {loading ? 'Laden...' : (isRegistering ? 'Registrieren' : 'Anmelden')}
+            {#if loading}
+              <div class="flex items-center justify-center">
+                <div class="animate-spin h-5 w-5 mr-3 border-t-2 border-b-2 border-black rounded-full"></div>
+                Laden...
+              </div>
+            {:else}
+              {isRegistering ? 'Registrieren' : 'Anmelden'}
+            {/if}
           </button>
           
           {#if !isRegistering}

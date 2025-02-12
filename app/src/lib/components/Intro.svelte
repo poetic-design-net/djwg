@@ -56,7 +56,7 @@
           </div>
           <!-- Content Column (Half Width) -->
           <div class="w-full md:w-1/2 p-8 order-1 md:order-2">
-            <div class="md:max-w-md">
+            <div class="md:max-w-xl">
               <h2 class="font-heading mb-4 text-4xl lg:text-5xl text-black tracking-4xl lg:tracking-5xl">
                 <PortableTextContent value={processedTitle} />
               </h2>
