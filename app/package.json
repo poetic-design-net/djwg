@@ -17,6 +17,7 @@
 		"@sanity/image-url": "^1.0.2",
 		"@sanity/svelte-loader": "^1.11.1",
 		"@sanity/visual-editing": "^2.0.0",
+		"@sentry/sveltekit": "^8",
 		"@studio-freight/lenis": "^1.0.42",
 		"@supabase/auth-helpers-sveltekit": "^0.13.0",
 		"@supabase/supabase-js": "^2.46.1",

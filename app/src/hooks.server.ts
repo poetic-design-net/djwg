@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/sveltekit';
 import { createRequestHandler, setServerClient } from '@sanity/svelte-loader';
 import { serverClient } from '$lib/server/sanity/client';
 import { createSupabaseServerClient } from '@supabase/auth-helpers-sveltekit';
@@ -6,6 +7,11 @@ import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/publi
 import { sequence } from '@sveltejs/kit/hooks';
 import Logger from '$lib/services/logger';
 import type { User } from '@supabase/supabase-js';
+
+Sentry.init({
+    dsn: "https://2ce9830d7f9b44fb02f10e6a023a1d8e@o4508806453526528.ingest.de.sentry.io/4508806537609296",
+    tracesSampleRate: 1
+})
 
 // Sets the client to be used by `loadQuery` when fetching data on the server.
 setServerClient(serverClient);
@@ -325,4 +331,5 @@ const errorHandler: Handle = async ({ event, resolve }) => {
 };
 
 // Combine handlers with Sanity first, then auth, then error handling
-export const handle = sequence(sanityHandler, supabaseHandler, errorHandler);
+export const handle = sequence(Sentry.sentryHandle(), sequence(sanityHandler, supabaseHandler, errorHandler));
+export const handleError = Sentry.handleErrorWithSentry();
