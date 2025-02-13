@@ -11,13 +11,28 @@
 
   onMount(() => {
     mounted = true;
-    // Check if we need to scroll after navigation
-    const shouldScroll = sessionStorage.getItem('scrollTarget') === targetId;
-    if (shouldScroll) {
-      sessionStorage.removeItem('scrollTarget');
-      setTimeout(scrollToElement, 100);
-    }
+    checkForPendingScroll();
   });
+
+  // Überprüft, ob wir nach einer Navigation scrollen müssen
+  function checkForPendingScroll() {
+    const pendingTarget = sessionStorage.getItem('scrollTarget');
+    if (pendingTarget) {
+      sessionStorage.removeItem('scrollTarget');
+      const [targetPath, targetAnchor] = pendingTarget.split('#');
+      
+      // Nur scrollen, wenn wir auf dem richtigen Pfad sind
+      if (window.location.pathname === targetPath) {
+        setTimeout(scrollToElement, 100);
+      }
+    } else {
+      // Überprüfe auch den aktuellen URL-Hash
+      const currentHash = window.location.hash.slice(1);
+      if (currentHash === targetId) {
+        setTimeout(scrollToElement, 100);
+      }
+    }
+  }
 
   function scrollToElement() {
     const element = document.getElementById(targetId);
@@ -30,7 +45,9 @@
         top: offsetPosition,
         behavior: 'smooth'
       });
+      return true;
     }
+    return false;
   }
 
   const handleScroll = async () => {
@@ -38,15 +55,21 @@
     isLoading = true;
 
     try {
-      if (window.location.pathname === '/') {
+      const currentPath = window.location.pathname;
+      const hasTargetElement = document.getElementById(targetId) !== null;
+
+      if (hasTargetElement) {
+        // Element existiert auf aktueller Seite
         scrollToElement();
       } else {
-        // Store the target ID before navigation
-        sessionStorage.setItem('scrollTarget', targetId);
+        // Speichere aktuellen Pfad und Ziel für Navigation
+        sessionStorage.setItem('scrollTarget', `/#${targetId}`);
+        
+        // Navigiere zur Home mit Anker
         await goto(`/#${targetId}`);
       }
     } catch (error) {
-      console.error('Navigation error:', error);
+      console.error('Navigation/Scroll error:', error);
     } finally {
       isLoading = false;
     }
