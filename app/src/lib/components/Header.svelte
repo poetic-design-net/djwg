@@ -14,6 +14,7 @@
   import HeaderAuth from './auth/HeaderAuth.svelte';
   import MegaMenu from './navigation/MegaMenu.svelte';
   import OptimizedImage from './OptimizedImage.svelte';
+  import ScrollButton from './ScrollButton.svelte';
 
   export let data;
   let { user, navigation, pages, headerSettings, profile } = data;
@@ -274,32 +275,7 @@
 
           <!-- Right Side Items -->
           <div class="flex items-center space-x-8">
-            <button
-              on:click={async () => {
-                const targetPath = '/#tickets';
-                
-                if (window.location.pathname === '/') {
-                  // Wenn wir bereits auf der Homepage sind, scrolle direkt zum Element
-                  const element = document.getElementById('tickets');
-                  if (element) {
-                    const headerOffset = 100;
-                    const elementPosition = element.getBoundingClientRect().top;
-                    const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-                    
-                    window.scrollTo({
-                      top: offsetPosition,
-                      behavior: 'smooth'
-                    });
-                  }
-                } else {
-                  // Wenn wir auf einer anderen Seite sind, navigiere zur Homepage mit Anker
-                  await goto(targetPath);
-                }
-              }}
-              class="font-heading font-medium px-6 py-3 text-white border border-green-500 hover:bg-green-500 hover:text-black rounded-full transition duration-200"
-            >
-              Tickets buchen
-            </button>
+            <ScrollButton />
 
             <HeaderAuth
               {isAuthenticated}
