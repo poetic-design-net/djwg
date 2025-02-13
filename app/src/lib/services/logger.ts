@@ -1,7 +1,7 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
 
-type LogLevel = 'info' | 'warn' | 'error';
+type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 type LogContext = Record<string, unknown>;
 
 interface LogEntry {
@@ -72,13 +72,31 @@ class Logger {
   }
 
   private static enrichContext(context?: LogContext): LogContext {
-    return {
+    const baseContext = {
       ...context,
       timestamp: new Date().toISOString(),
-      environment: import.meta.env.MODE,
-      nodeVersion: process.version,
-      platform: process.platform
+      environment: import.meta.env.MODE
     };
+
+    // Füge Node.js spezifische Informationen nur hinzu wenn verfügbar
+    if (typeof process !== 'undefined') {
+      return {
+        ...baseContext,
+        nodeVersion: process.version,
+        platform: process.platform
+      };
+    }
+
+    // Im Browser: Füge Browser-spezifische Informationen hinzu
+    if (typeof window !== 'undefined') {
+      return {
+        ...baseContext,
+        userAgent: navigator.userAgent,
+        platform: navigator.platform
+      };
+    }
+
+    return baseContext;
   }
 
   private static async createAndSaveLogEntry(
@@ -103,6 +121,16 @@ class Logger {
     }
 
     await this.retry(() => this.saveToSupabase(entry));
+  }
+
+  static async debug(message: string, context?: LogContext): Promise<void> {
+    // In Produktionsumgebung debugs nicht speichern
+    if (import.meta.env.DEV) {
+      await this.createAndSaveLogEntry('debug', message, context);
+    } else {
+      // Im DEV mode trotzdem in der Konsole ausgeben
+      console.debug(message, context);
+    }
   }
 
   static async info(message: string, context?: LogContext): Promise<void> {
@@ -163,7 +191,7 @@ class Logger {
 
       return result.data.reduce((acc: Record<string, Record<LogLevel, number>>, log: ErrorLog) => {
         const date = new Date(log.created_at).toLocaleDateString();
-        acc[date] = acc[date] || { info: 0, warn: 0, error: 0 };
+        acc[date] = acc[date] || { debug: 0, info: 0, warn: 0, error: 0 };
         acc[date][log.level]++;
         return acc;
       }, {});
@@ -190,7 +218,7 @@ class Logger {
 
       return result.data.reduce((acc: Record<string, { count: number; levels: Record<LogLevel, number> }>, log: ErrorLog) => {
         const errorType = log.error_type || 'unknown';
-        acc[errorType] = acc[errorType] || { count: 0, levels: { info: 0, warn: 0, error: 0 } };
+        acc[errorType] = acc[errorType] || { count: 0, levels: { debug: 0, info: 0, warn: 0, error: 0 } };
         acc[errorType].count++;
         acc[errorType].levels[log.level]++;
         return acc;

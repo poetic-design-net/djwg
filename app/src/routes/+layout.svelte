@@ -78,14 +78,15 @@
 	}
 
 	// Show toasts based on auth state changes
-	$: if ($authState.previousAuthState !== null && $authState.currentAuthState !== $authState.previousAuthState) {
-		if ($authState.currentAuthState) {
-			toasts.success('Erfolgreich angemeldet');
-			isAuthToDashboardTransition = true;
-			goto('/dashboard');
-		} else {
-			toasts.error('Erfolgreich abgemeldet');
-		}
+	$: if (browser && $authState.previousAuthState !== null && $authState.currentAuthState !== $authState.previousAuthState) {
+	  if ($authState.currentAuthState) {
+	    toasts.success('Erfolgreich angemeldet');
+	    isAuthToDashboardTransition = true;
+	    // Nur auf dem Client ausführen
+	    goto('/dashboard');
+	  } else {
+	    toasts.error('Erfolgreich abgemeldet');
+	  }
 	}
 
 	// Custom scroll animation function

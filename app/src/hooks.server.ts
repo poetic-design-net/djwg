@@ -301,13 +301,25 @@ const errorHandler: Handle = async ({ event, resolve }) => {
     
     // Check für non-200 responses
     if (!response.ok) {
-      Logger.warn('Non-200 response', {
-        url: event.url.toString(),
-        status: response.status,
-        statusText: response.statusText,
-        responseTime,
-        route: event.route.id
-      });
+      // Ignoriere 404-Fehler für Favicons und andere Browser-Ressourcen
+      const isResourceRequest = event.url.pathname.match(/\.(ico|png|jpg|webmanifest)$/i);
+      if (response.status === 404 && isResourceRequest) {
+        // Debug-Level Logging für fehlende Ressourcen
+        Logger.debug('Resource not found', {
+          url: event.url.toString(),
+          status: response.status,
+          type: 'resource-404'
+        });
+      } else {
+        // Normal Warning für andere non-200 Responses
+        Logger.warn('Non-200 response', {
+          url: event.url.toString(),
+          status: response.status,
+          statusText: response.statusText,
+          responseTime,
+          route: event.route.id
+        });
+      }
     }
     
     return response;
