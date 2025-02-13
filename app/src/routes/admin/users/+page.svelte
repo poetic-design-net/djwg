@@ -22,9 +22,13 @@
         class="w-full max-w-md px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
     </div>
-  
+    <div class="my-4 text font-medium text-gray-200">
+      Insgesamt {data.users.length} Benutzer
+    </div>
     <div class="overflow-x-auto bg-white rounded-lg shadow">
+
       <table class="min-w-full table-auto">
+
         <thead class="bg-gray-50">
           <tr>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
@@ -73,7 +77,5 @@
       </table>
     </div>
   
-    <div class="mt-4 text-sm text-gray-500">
-      Insgesamt {data.users.length} Benutzer
-    </div>
+   
   </div>
