@@ -2,13 +2,16 @@
   import { onMount } from 'svelte';
   import { browser } from '$app/environment';
 
+  // Props
   export let targetId: string = "tickets";
   export let label: string = "Tickets sichern";
   export let className = "font-heading font-medium px-6 py-3 text-white border border-green-500 hover:bg-green-500 hover:text-black rounded-full transition duration-200";
-  
+  export let variant: 'button' | 'mobile-link' = 'button';
+  export let onNavigate: (() => void) | null = null; // Callback für Mobile Menu Close
+
+  // State
   let isLoading = false;
   let mounted = false;
-  let scrollAttempts = 0;
   const MAX_ATTEMPTS = 5;
   const RETRY_DELAY = 200;
 
@@ -20,7 +23,8 @@
       targetExists: document.getElementById(targetId) !== null,
       isLoading,
       mounted,
-      sessionTarget: sessionStorage.getItem('scrollTarget')
+      sessionTarget: sessionStorage.getItem('scrollTarget'),
+      variant
     };
     console.log('ScrollButton Debug:', debugInfo);
   }
@@ -90,35 +94,49 @@
       if (element) {
         await attemptScroll();
       } else {
-        const currentPath = window.location.pathname;
         sessionStorage.setItem('scrollTarget', targetId);
-        
-        // Force a hard navigation to ensure proper page load
         window.location.href = `/#${targetId}`;
-        return; // Prevent further execution
+        return;
       }
     } catch (error) {
       console.error('Navigation/Scroll error:', error);
     } finally {
       isLoading = false;
+      // Führe onNavigate Callback aus wenn vorhanden
+      if (onNavigate) onNavigate();
     }
   };
+
+  // Bestimme die Basis-Klassen basierend auf der Variante
+  $: baseClassName = variant === 'mobile-link' 
+    ? "block w-full text-center font-heading font-medium px-6 py-4 text-black bg-green-500 hover:bg-green-600 rounded-full transition duration-200"
+    : className;
 </script>
 
-<button
-  on:click={handleScroll}
-  disabled={isLoading || !mounted || !browser}
-  class="{className} disabled:opacity-50"
->
-  {#if isLoading}
-    <span class="inline-flex items-center">
-      <svg class="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-      </svg>
-      Einen Moment...
-    </span>
-  {:else}
+{#if variant === 'button'}
+  <button
+    on:click={handleScroll}
+    disabled={isLoading || !mounted || !browser}
+    class="{baseClassName} disabled:opacity-50"
+  >
+    {#if isLoading}
+      <span class="inline-flex items-center">
+        <svg class="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        Einen Moment...
+      </span>
+    {:else}
+      {label}
+    {/if}
+  </button>
+{:else}
+  <a
+    href="/#${targetId}"
+    on:click|preventDefault={handleScroll}
+    class={baseClassName}
+  >
     {label}
-  {/if}
-</button>
+  </a>
+{/if}
