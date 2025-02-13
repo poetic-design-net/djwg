@@ -276,13 +276,10 @@
           <div class="flex items-center space-x-8">
             <button
               on:click={async () => {
-                // Wenn wir nicht auf der Homepage sind, navigiere zuerst dorthin
-                if (window.location.pathname !== '/') {
-                  await goto('/');
-                }
+                const targetPath = '/#tickets';
                 
-                // Warte kurz, bis die Seite geladen ist
-                setTimeout(() => {
+                if (window.location.pathname === '/') {
+                  // Wenn wir bereits auf der Homepage sind, scrolle direkt zum Element
                   const element = document.getElementById('tickets');
                   if (element) {
                     const headerOffset = 100;
@@ -294,7 +291,10 @@
                       behavior: 'smooth'
                     });
                   }
-                }, 100);
+                } else {
+                  // Wenn wir auf einer anderen Seite sind, navigiere zur Homepage mit Anker
+                  await goto(targetPath);
+                }
               }}
               class="font-heading font-medium px-6 py-3 text-white border border-green-500 hover:bg-green-500 hover:text-black rounded-full transition duration-200"
             >
