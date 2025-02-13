@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { goto } from '$app/navigation';
+  import { browser } from '$app/environment';
 
   export let targetId: string = "tickets";
   export let label: string = "Tickets sichern";
@@ -8,65 +8,94 @@
   
   let isLoading = false;
   let mounted = false;
+  let scrollAttempts = 0;
+  const MAX_ATTEMPTS = 5;
+  const RETRY_DELAY = 200;
+
+  // Debug logging
+  $: if (browser) {
+    const debugInfo = {
+      currentPath: window.location.pathname,
+      hash: window.location.hash,
+      targetExists: document.getElementById(targetId) !== null,
+      isLoading,
+      mounted,
+      sessionTarget: sessionStorage.getItem('scrollTarget')
+    };
+    console.log('ScrollButton Debug:', debugInfo);
+  }
 
   onMount(() => {
     mounted = true;
-    checkForPendingScroll();
+    if (browser) {
+      checkForPendingScroll();
+    }
   });
 
-  // Überprüft, ob wir nach einer Navigation scrollen müssen
-  function checkForPendingScroll() {
-    const pendingTarget = sessionStorage.getItem('scrollTarget');
-    if (pendingTarget) {
-      sessionStorage.removeItem('scrollTarget');
-      const [targetPath, targetAnchor] = pendingTarget.split('#');
+  async function checkForPendingScroll() {
+    try {
+      const pendingTarget = browser ? sessionStorage.getItem('scrollTarget') : null;
+      const currentHash = browser ? window.location.hash.slice(1) : '';
       
-      // Nur scrollen, wenn wir auf dem richtigen Pfad sind
-      if (window.location.pathname === targetPath) {
-        setTimeout(scrollToElement, 100);
+      if (pendingTarget) {
+        sessionStorage.removeItem('scrollTarget');
+        await attemptScroll();
+      } else if (currentHash === targetId) {
+        await attemptScroll();
       }
-    } else {
-      // Überprüfe auch den aktuellen URL-Hash
-      const currentHash = window.location.hash.slice(1);
-      if (currentHash === targetId) {
-        setTimeout(scrollToElement, 100);
-      }
+    } catch (error) {
+      console.error('Check scroll error:', error);
     }
   }
 
-  function scrollToElement() {
-    const element = document.getElementById(targetId);
-    if (element) {
-      const headerOffset = 100;
-      const elementPosition = element.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-      
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth'
-      });
-      return true;
-    }
-    return false;
+  async function attemptScroll(maxRetries = MAX_ATTEMPTS): Promise<boolean> {
+    return new Promise((resolve) => {
+      const tryScroll = async (attempt = 0) => {
+        const element = document.getElementById(targetId);
+        
+        if (element) {
+          try {
+            const headerOffset = 100;
+            const elementPosition = element.getBoundingClientRect().top;
+            const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+            window.scrollTo({
+              top: offsetPosition,
+              behavior: 'smooth'
+            });
+            resolve(true);
+          } catch (error) {
+            console.error('Scroll error:', error);
+            resolve(false);
+          }
+        } else if (attempt < maxRetries) {
+          setTimeout(() => tryScroll(attempt + 1), RETRY_DELAY);
+        } else {
+          console.warn(`Element #${targetId} nicht gefunden nach ${maxRetries} Versuchen`);
+          resolve(false);
+        }
+      };
+
+      tryScroll();
+    });
   }
 
   const handleScroll = async () => {
-    if (isLoading) return;
+    if (isLoading || !browser) return;
     isLoading = true;
 
     try {
-      const currentPath = window.location.pathname;
-      const hasTargetElement = document.getElementById(targetId) !== null;
-
-      if (hasTargetElement) {
-        // Element existiert auf aktueller Seite
-        scrollToElement();
+      const element = document.getElementById(targetId);
+      
+      if (element) {
+        await attemptScroll();
       } else {
-        // Speichere aktuellen Pfad und Ziel für Navigation
-        sessionStorage.setItem('scrollTarget', `/#${targetId}`);
+        const currentPath = window.location.pathname;
+        sessionStorage.setItem('scrollTarget', targetId);
         
-        // Navigiere zur Home mit Anker
-        await goto(`/#${targetId}`);
+        // Force a hard navigation to ensure proper page load
+        window.location.href = `/#${targetId}`;
+        return; // Prevent further execution
       }
     } catch (error) {
       console.error('Navigation/Scroll error:', error);
@@ -78,7 +107,7 @@
 
 <button
   on:click={handleScroll}
-  disabled={isLoading || !mounted}
+  disabled={isLoading || !mounted || !browser}
   class="{className} disabled:opacity-50"
 >
   {#if isLoading}
