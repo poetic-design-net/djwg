@@ -33,7 +33,16 @@ export default defineConfig(({ mode }) => {
       fs: {
         // Allow serving files from one level up to the project root
         allow: ['..']
+      },
+      hmr: {
+        // Verbesserte HMR-Konfiguration
+        timeout: 5000,
+        overlay: true,
+        clientPort: 5173
       }
+    },
+    optimizeDeps: {
+      exclude: ['@ethereum-mainnet/contracts'] // Excludiere Web3-bezogene Module von der Optimierung
     },
     define: {
       // Pass environment variables to the client

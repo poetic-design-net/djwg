@@ -15,6 +15,26 @@
       title: 'Benutzer',
       href: '/admin/users',
       description: 'Benutzerverwaltung und Berechtigungen'
+    },
+    {
+      title: 'Roadmap',
+      href: '/admin/roadmap',
+      description: 'Projektziele und Meilensteine verwalten'
+    },
+    {
+      title: 'Aufgaben',
+      href: '/admin/tasks',
+      description: 'Task-Management und Fortschrittsverfolgung'
+    },
+    {
+      title: 'Forum',
+      href: '/admin/forum',
+      description: 'Team-Diskussionen und Ankündigungen'
+    },
+    {
+      title: 'Ideenpool',
+      href: '/admin/ideas',
+      description: 'Neue Vorschläge und Feedback sammeln'
     }
   ];
 </script>
