@@ -1,6 +1,5 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
-import Logger from '$lib/services/logger';
 
 // Einfachere Connection Pool Implementation
 class SupabaseConnectionPool {
@@ -37,10 +36,7 @@ class SupabaseConnectionPool {
       this.isHealthy = !error;
 
       if (!this.isHealthy) {
-        Logger.error('Supabase connection unhealthy', {
-          error: error?.message,
-          timestamp: new Date().toISOString()
-        });
+        console.error('Supabase connection unhealthy:', error?.message);
         // Versuche Client neu zu initialisieren
         this.client = createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {
           auth: {
@@ -53,15 +49,13 @@ class SupabaseConnectionPool {
       }
     } catch (error) {
       this.isHealthy = false;
-      Logger.error('Health check failed', {
-        error: error instanceof Error ? error.message : String(error)
-      });
+      console.error('Health check failed:', error instanceof Error ? error.message : String(error));
     }
   }
 
   public getClient(): SupabaseClient {
     if (!this.isHealthy) {
-      Logger.warn('Getting client while connection is unhealthy');
+      console.warn('Getting client while connection is unhealthy');
     }
     return this.client;
   }
