@@ -7,7 +7,6 @@
   import { toasts } from '$lib/stores/toast';
   import type { AuthPageData } from '../../routes/auth/+page';
   import type { SupabaseClient, AuthError } from '@supabase/supabase-js';
-  import Logger from '$lib/services/logger';
   
   export let data: AuthPageData;
   let { user, supabase } = data;
@@ -80,13 +79,6 @@
     errorMsg = message;
     toasts.error(message);
 
-    // Log den Fehler
-    Logger.error('Auth error', {
-      code: error.status || 500,
-      message: error.message,
-      context: error.message
-    });
-
     // Prüfen ob Retry sinnvoll ist
     const retryableErrors = ['Network error', 'Rate limit exceeded'];
     if (retryableErrors.includes(error.message) && retryCount < MAX_RETRIES) {
@@ -154,13 +146,9 @@
         await invalidateAll();
       }
     } catch (error) {
-      Logger.error('Unexpected auth error', { 
-        context: 'signIn',
-        email 
-      }, error instanceof Error ? error : new Error(String(error)));
-      
       errorMsg = 'Ein unerwarteter Fehler ist aufgetreten';
       toasts.error(errorMsg);
+      throw error; // Sentry wird den Fehler automatisch erfassen
     } finally {
       loading = false;
     }
@@ -221,13 +209,9 @@
         toasts.success('Registrierung erfolgreich. Bitte überprüfe Deine E-Mail.');
       }
     } catch (error) {
-      Logger.error('Unexpected auth error', { 
-        context: 'signUp',
-        email 
-      }, error instanceof Error ? error : new Error(String(error)));
-      
       errorMsg = 'Ein unerwarteter Fehler ist aufgetreten';
       toasts.error(errorMsg);
+      throw error; // Sentry wird den Fehler automatisch erfassen
     } finally {
       loading = false;
     }
@@ -268,12 +252,9 @@
         success = true;
       }
     } catch (error) {
-      Logger.error('Unexpected auth error', { 
-        context: 'googleSignIn'
-      }, error instanceof Error ? error : new Error(String(error)));
-      
       errorMsg = 'Ein unerwarteter Fehler ist aufgetreten';
       toasts.error(errorMsg);
+      throw error; // Sentry wird den Fehler automatisch erfassen
     } finally {
       loading = false;
     }
@@ -324,7 +305,7 @@
           
           {#if errorMsg}
             <div class="mb-4 p-4 {errorMsg === 'Überprüfe Deine E-Mail für den Bestätigungslink.' ? 'bg-green-500 bg-opacity-10 text-green-500' : 'bg-red-500 bg-opacity-10 text-red-500'} rounded-3xl whitespace-pre-line">
-              {errorMsg}
+                {errorMsg}
             </div>
           {/if}
 
@@ -418,9 +399,8 @@
                   }
                   toasts.success('Passwort-Reset E-Mail wurde gesendet');
                 } catch (error) {
-                  const err = error instanceof Error ? error : new Error(String(error));
-                  Logger.error('Password reset error', { email }, err);
                   toasts.error('Fehler beim Zurücksetzen des Passworts');
+                  throw error; // Sentry wird den Fehler automatisch erfassen
                 } finally {
                   loading = false;
                 }
