@@ -5,7 +5,6 @@ import { createSupabaseServerClient } from '@supabase/auth-helpers-sveltekit';
 import type { Handle } from '@sveltejs/kit';
 import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
 import { sequence } from '@sveltejs/kit/hooks';
-import Logger from '$lib/services/logger';
 import type { User } from '@supabase/supabase-js';
 
 Sentry.init({
@@ -56,6 +55,11 @@ class LRUCache<K, V> {
 
   delete(key: K): boolean {
     return this.cache.delete(key);
+  }
+
+  hasExpired(key: K, ttl: number): boolean {
+    const value = this.cache.get(key) as { timestamp: number } | undefined;
+    return value ? Date.now() - value.timestamp > ttl : true;
   }
 }
 
@@ -161,11 +165,6 @@ const supabaseHandler: Handle = async ({ event, resolve }) => {
     // Rate limiting check
     const rateLimitResult = rateLimiter.isLimited(clientIp);
     if (rateLimitResult.limited) {
-      Logger.warn('Rate limit exceeded', {
-        ip: clientIp,
-        url: event.url.toString(),
-        requestCount: rateLimitResult.current
-      });
       return new Response('Too Many Requests', { status: 429 });
     }
 
@@ -177,12 +176,7 @@ const supabaseHandler: Handle = async ({ event, resolve }) => {
     });
 
     // Health check
-    const isHealthy = await checkSupabaseHealth(event.locals.supabase);
-    if (!isHealthy) {
-      Logger.error('Supabase health check failed', {
-        url: event.url.toString()
-      });
-    }
+    await checkSupabaseHealth(event.locals.supabase);
 
     // Get session with retry
     const sessionResult = await retryWithBackoff(() =>
@@ -190,13 +184,6 @@ const supabaseHandler: Handle = async ({ event, resolve }) => {
     );
 
     const { data: { session }, error: sessionError } = sessionResult;
-
-    if (sessionError) {
-      Logger.warn('Session error occurred', {
-        url: event.url.toString(),
-        error: sessionError.message
-      });
-    }
 
     // Enhanced getUser with caching
     event.locals.getUser = async () => {
@@ -222,11 +209,6 @@ const supabaseHandler: Handle = async ({ event, resolve }) => {
         const { data: { user }, error } = userResult;
 
         if (error) {
-          Logger.error('Error getting user', {
-            url: event.url.toString(),
-            userId: session?.user?.id,
-            error: error.message
-          });
           return null;
         }
 
@@ -241,20 +223,15 @@ const supabaseHandler: Handle = async ({ event, resolve }) => {
 
         return validUser;
       } catch (error) {
-        Logger.error('Critical error in getUser', {
-          url: event.url.toString(),
-          sessionId: session?.user?.id,
-          error: error instanceof Error ? error.message : String(error)
-        });
         return null;
       }
     };
 
     // Clean up expired cache entries
     const now = Date.now();
-    for (const [key, value] of userCache.cache.entries()) {
+    for (const [userId, value] of userCache.entries()) {
       if (now - value.timestamp > CACHE_TTL) {
-        userCache.cache.delete(key);
+        userCache.delete(userId);
       }
     }
 
@@ -265,14 +242,6 @@ const supabaseHandler: Handle = async ({ event, resolve }) => {
       }
     });
   } catch (error) {
-    Logger.error('Critical error in Supabase handler', {
-      url: event.url.toString(),
-      method: event.request.method,
-      route: event.route.id,
-      errorType: error instanceof Error ? error.constructor.name : 'Unknown',
-      errorMessage: error instanceof Error ? error.message : String(error)
-    });
-
     // Continue with the request even if Supabase fails
     return await resolve(event, {
       filterSerializedResponseHeaders(name) {
@@ -284,61 +253,11 @@ const supabaseHandler: Handle = async ({ event, resolve }) => {
 
 // Error handler with enhanced logging and metrics
 const errorHandler: Handle = async ({ event, resolve }) => {
-  const startTime = Date.now();
-  
   try {
     const response = await resolve(event);
-    
-    // Performance Monitoring für langsame Requests
-    const responseTime = Date.now() - startTime;
-    if (responseTime > 1000) { // Warne bei Requests über 1s
-      Logger.warn('Slow request detected', {
-        url: event.url.toString(),
-        responseTime,
-        status: response.status
-      });
-    }
-    
-    // Check für non-200 responses
-    if (!response.ok) {
-      // Ignoriere 404-Fehler für Favicons und andere Browser-Ressourcen
-      const isResourceRequest = event.url.pathname.match(/\.(ico|png|jpg|webmanifest)$/i);
-      if (response.status === 404 && isResourceRequest) {
-        // Debug-Level Logging für fehlende Ressourcen
-        Logger.debug('Resource not found', {
-          url: event.url.toString(),
-          status: response.status,
-          type: 'resource-404'
-        });
-      } else {
-        // Normal Warning für andere non-200 Responses
-        Logger.warn('Non-200 response', {
-          url: event.url.toString(),
-          status: response.status,
-          statusText: response.statusText,
-          responseTime,
-          route: event.route.id
-        });
-      }
-    }
-    
     return response;
   } catch (error) {
-    // Log mit erweiterten Metriken
-    Logger.logServerError(
-      error instanceof Error ? error : new Error(String(error)),
-      {
-        url: event.url,
-        request: event.request,
-        route: event.route,
-        context: {
-          errorType: error instanceof Error ? error.constructor.name : 'Unknown',
-          timestamp: new Date().toISOString(),
-          responseTime: Date.now() - startTime
-        }
-      }
-    );
-    throw error; // Rethrow to let SvelteKit handle the error response
+    throw error; // Rethrow to let SvelteKit/Sentry handle the error response
   }
 };
 

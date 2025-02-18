@@ -160,13 +160,27 @@
 
 		// Handle initial hash in URL
 		if (window.location.hash) {
-			const targetElement = document.querySelector(window.location.hash);
-			if (targetElement) {
-				setTimeout(() => {
-					const targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset;
-					smoothScrollTo(targetPosition, 300);
-				}, 0);
-			}
+		  // Check if hash contains error parameters
+		  if (window.location.hash.includes('error=')) {
+		    // Handle error parameters if needed
+		    const params = new URLSearchParams(window.location.hash.substring(1));
+		    const error = params.get('error');
+		    const errorCode = params.get('error_code');
+		    const errorDescription = params.get('error_description');
+		    
+		    if (error === 'access_denied' && errorCode === 'otp_expired') {
+		      toasts.error('Der Login-Link ist abgelaufen. Bitte fordere einen neuen Link an.');
+		    }
+		  } else {
+		    // Only use hash as selector if it's a valid element ID
+		    const targetElement = document.querySelector(window.location.hash);
+		    if (targetElement) {
+		      setTimeout(() => {
+		        const targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset;
+		        smoothScrollTo(targetPosition, 300);
+		      }, 0);
+		    }
+		  }
 		}
 
 		// Remove loading class when page is fully loaded

@@ -133,7 +133,7 @@
   </button>
 {:else}
   <a
-    href="/#${targetId}"
+    href={`/#${targetId}`}
     on:click|preventDefault={handleScroll}
     class={baseClassName}
   >

@@ -400,7 +400,35 @@
           </button>
           
           {#if !isRegistering}
-            <button class="mb-10 inline-block text-sm text-gray-300 underline">Passwort vergessen?</button>
+            <button
+              class="mb-10 inline-block text-sm text-gray-300 underline hover:text-green-400 transition-colors duration-200"
+              on:click={async () => {
+                if (!email) {
+                  toasts.error('Bitte geben Sie Ihre E-Mail-Adresse ein');
+                  return;
+                }
+                try {
+                  loading = true;
+                  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                    redirectTo: `${location.origin}/auth/callback?next=/auth`
+                  });
+                  if (error) {
+                    await handleAuthError(error);
+                    return;
+                  }
+                  toasts.success('Passwort-Reset E-Mail wurde gesendet');
+                } catch (error) {
+                  const err = error instanceof Error ? error : new Error(String(error));
+                  Logger.error('Password reset error', { email }, err);
+                  toasts.error('Fehler beim Zurücksetzen des Passworts');
+                } finally {
+                  loading = false;
+                }
+              }}
+              disabled={loading}
+            >
+              Passwort vergessen?
+            </button>
           {/if}
           
           <div class="flex flex-wrap items-center mb-8">
