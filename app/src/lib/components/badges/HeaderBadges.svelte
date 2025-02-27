@@ -1,11 +1,29 @@
 <script lang="ts">
-  import type { Badge } from '$lib/sanity/queries/badges';
-  import { urlFor } from '$lib/sanity/image';
+  import type { DisplayBadge } from '$lib/types/badges';
 
-  export let badges: Badge[] = [];
+  export let badges: DisplayBadge[] = [];
   
-  // Zeige maximal 3 Badges in der Kopfzeile
-  $: displayBadges = badges.slice(0, 3);
+  // Zeige nur freigeschaltete Badges, maximal 3
+  $: displayBadges = badges.filter(b => b.isUnlocked).slice(0, 3);
+
+  function getBadgeColor(badge: DisplayBadge): string {
+    if (badge.style?.customColor?.hex) {
+      return badge.style.customColor.hex;
+    }
+    
+    switch (badge.style?.variant) {
+      case 'gold':
+        return '#FFD700';
+      case 'silver':
+        return '#C0C0C0';
+      case 'bronze':
+        return '#CD7F32';
+      case 'premium':
+        return '#50C878';
+      default:
+        return '#50C878'; // Default grün
+    }
+  }
 </script>
 
 {#if displayBadges.length > 0}
@@ -14,21 +32,13 @@
       <div class="relative group">
         <div 
           class="w-8 h-8 rounded-full border-2 border-gray-800 overflow-hidden bg-gray-900 relative z-10 hover:z-20 transition-transform hover:scale-110"
-          style:border-color={badge.style?.customColor?.hex || '#50C878'}
+          style:border-color={getBadgeColor(badge)}
         >
-          {#if badge.icon}
-            <img
-              src={urlFor(badge.icon).width(32).height(32).url()}
-              alt={badge.name}
-              class="w-full h-full object-contain p-1"
-            />
-          {:else}
-            <div class="w-full h-full flex items-center justify-center bg-gray-900">
-              <span class="text-xs font-medium" style:color={badge.style?.customColor?.hex || '#50C878'}>
-                {badge.name.charAt(0)}
-              </span>
-            </div>
-          {/if}
+          <div class="w-full h-full flex items-center justify-center bg-gray-900">
+            <span class="text-xs font-medium" style:color={getBadgeColor(badge)}>
+              {badge.name.charAt(0)}
+            </span>
+          </div>
         </div>
         
         <!-- Tooltip -->
@@ -41,10 +51,10 @@
       </div>
     {/each}
     
-    {#if badges.length > 3}
+    {#if badges.filter(b => b.isUnlocked).length > 3}
       <div class="relative group">
         <div class="w-8 h-8 rounded-full border-2 border-gray-800 bg-gray-900 flex items-center justify-center text-xs font-medium text-gray-400 relative z-10 hover:z-20">
-          +{badges.length - 3}
+          +{badges.filter(b => b.isUnlocked).length - 3}
         </div>
         
         <!-- Tooltip -->

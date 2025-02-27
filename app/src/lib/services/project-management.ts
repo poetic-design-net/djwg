@@ -196,6 +196,15 @@ export async function updateTask(id: string, updates: UpdateTask) {
   return data;
 }
 
+export async function deleteTask(id: string) {
+  const { error } = await supabaseClient
+    .from('tasks')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw handleError(error);
+}
+
 // Tags Functions
 export async function getTags() {
   const { data, error } = await supabaseClient
