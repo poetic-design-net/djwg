@@ -9,7 +9,9 @@
     "start": "sanity start",
     "build": "sanity build",
     "deploy": "sanity deploy",
-    "deploy-graphql": "sanity graphql deploy"
+    "deploy-graphql": "sanity graphql deploy",
+    "build:migrations": "tsc -p migrations/tsconfig.json",
+    "migrate:badges": "npm run build:migrations && node migrations/dist/badges.js"
   },
   "keywords": [
     "sanity"

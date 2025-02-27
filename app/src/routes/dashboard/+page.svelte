@@ -11,7 +11,7 @@
   import ProfileEdit from '$lib/components/ProfileEdit.svelte';
   import MediaUploader from '$lib/components/dashboard/MediaUploader.svelte';
   import MyFiles from '$lib/components/dashboard/MyFiles.svelte';
-  import type { Badge } from '$lib/sanity/queries/badges';
+  import type { DisplayBadge } from '$lib/types/badges';
   import { onMount } from 'svelte';
 
   import type { User } from '$lib/types/profile';
@@ -26,7 +26,7 @@
       password: string;
       visibleFromHours: number;
     }[];
-    badges: Badge[];
+    badges: DisplayBadge[];
     isAdmin: boolean;
   };
   
