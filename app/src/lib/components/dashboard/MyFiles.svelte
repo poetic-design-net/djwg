@@ -122,6 +122,24 @@
     });
   }
 
+  // Dateinamen auf maximale Länge kürzen
+  function truncateFilename(filename: string, maxLength: number = 25): string {
+    if (filename.length <= maxLength) return filename;
+    
+    const extension = filename.split('.').pop() || '';
+    const nameWithoutExt = filename.substring(0, filename.length - extension.length - 1);
+    
+    const truncatedLength = maxLength - extension.length - 4;
+    return nameWithoutExt.substring(0, truncatedLength) + '...' + '.' + extension;
+  }
+
+
+  // Handler für erfolgreiche Uploads
+  function handleUploadComplete() {
+    // Lade die Dateiliste neu
+    loadFiles();
+  }
+
   onMount(() => {
     loadFiles();
   });
@@ -133,7 +151,7 @@
     <div class="bg-gray-800 p-6 rounded-xl max-w-md w-full mx-4">
       <h3 class="text-lg font-medium text-white mb-4">Datei löschen</h3>
       <p class="text-gray-300 mb-6">
-        Möchten Sie die Datei "{fileToDelete?.name}" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.
+        Möchten Sie die Datei "{truncateFilename(fileToDelete?.name || '')}" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.
       </p>
       <div class="flex justify-end space-x-4">
         <button
@@ -157,6 +175,8 @@
 
 <div class="space-y-4">
   <h3 class="text-lg font-medium text-white">Meine Dateien</h3>
+
+  <slot {handleUploadComplete} />
 
   {#if loading}
     <p class="text-gray-400">Lädt...</p>
@@ -188,7 +208,7 @@
 
               <div class="flex-1 min-w-0">
                 <p class="text-sm font-medium text-white truncate">
-                  {file.original_filename}
+                  {truncateFilename(file.original_filename)}
                 </p>
                 <p class="text-xs text-gray-400">
                   {formatFileSize(file.file_size)} • {formatDate(file.created_at)}
