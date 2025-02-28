@@ -101,8 +101,11 @@
        <div class="relative rounded-3xl p-8 border border-gray-800 overflow-hidden">
         <div class="absolute inset-0 mix-blend-overlay noise-filter"></div>
         <div class="relative space-y-8">
-          <MediaUploader {user} />
-          <MyFiles {user} />
+          <MyFiles {user} let:handleUploadComplete>
+            <MediaUploader 
+              {user} 
+              on:uploadComplete={handleUploadComplete} />
+          </MyFiles>
         </div>
       </div>
 

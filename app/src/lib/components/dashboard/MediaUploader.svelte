@@ -1,7 +1,8 @@
 <script lang="ts">
-  import { getContext } from 'svelte';
+  import { getContext, createEventDispatcher } from 'svelte';
   import type { SupabaseClient } from '@supabase/supabase-js';
   import { uploadToSanity } from '$lib/sanity/uploadMedia';
+  import { toasts } from '$lib/stores/toast';
 
   export let user: {
     id: string;
@@ -14,11 +15,34 @@
   };
 
   const supabase = getContext<SupabaseClient>('supabase');
+  const dispatch = createEventDispatcher();
   let loading = false;
   let error = '';
   let success = false;
   let selectedFiles: File[] = [];
+  let currentFileIndex = 0;
+  let totalFiles = 0;
+  let currentFileName = '';
+  let uploadStage = '';
   let dragOver = false;
+  
+  // Upload-Phase pro Datei (0 = Start, 1 = DB-Eintrag, 2 = Sanity Upload, 3 = Referenz-Update, 4 = Fertig)
+  let uploadPhase = 0;
+
+  // Dateinamen auf maximale Länge kürzen
+  function truncateFilename(filename: string, maxLength: number = 25): string {
+    if (filename.length <= maxLength) return filename;
+    
+    const extension = filename.split('.').pop() || '';
+    const nameWithoutExt = filename.substring(0, filename.length - extension.length - 1);
+    
+    if (extension.length + 4 >= maxLength) {
+      return filename.substring(0, maxLength - 3) + '...';
+    }
+    
+    const truncatedLength = maxLength - extension.length - 4;
+    return nameWithoutExt.substring(0, truncatedLength) + '...' + '.' + extension;
+  }
 
   // Drag & Drop Handlers
   function handleDragOver(event: DragEvent) {
@@ -66,9 +90,17 @@
     loading = true;
     error = '';
     success = false;
+    totalFiles = selectedFiles.length;
+    currentFileIndex = 0;
+    uploadPhase = 0;
 
     try {
       for (const file of selectedFiles) {
+        currentFileIndex++;
+        currentFileName = file.name;
+        uploadStage = 'Erstelle Datenbank-Eintrag...';
+        uploadPhase = 1;
+
         const { data: uploadData, error: dbError } = await supabase
           .from('media_uploads')
           .insert({
@@ -89,6 +121,9 @@
         if (dbError) throw dbError;
         if (!uploadData) throw new Error('Keine Daten vom Upload erhalten');
 
+        uploadStage = 'Lade Datei hoch...';
+        uploadPhase = 2;
+
         const sanityResult = await uploadToSanity(
           file,
           user.id,
@@ -97,7 +132,9 @@
           user.email
         );
 
-        // Aktualisiere den Eintrag mit den Sanity-Referenzen
+        uploadStage = 'Aktualisiere Referenzen...';
+        uploadPhase = 3;
+
         const { error: updateError } = await supabase
           .from('media_uploads')
           .update({
@@ -111,17 +148,27 @@
           .eq('id', uploadData.id);
 
         if (updateError) throw updateError;
+
+        dispatch('uploadComplete', { fileId: uploadData.id });
+        uploadPhase = 4;
+        toasts.success('Upload erfolgreich!');
       }
 
       success = true;
       selectedFiles = []; // Clear selection after successful upload
     } catch (err: any) {
       error = err?.message || 'Fehler beim Upload';
-      console.error('Upload Fehler:', err);
+      toasts.error(error);
+      uploadPhase = 0;
     } finally {
       loading = false;
     }
   }
+
+  $: uploadProgress = totalFiles === 0 ? 0 : Math.max(0, Math.min(100, Math.round(
+    ((currentFileIndex - 1 + uploadPhase / 4) / totalFiles) * 100
+  )));
+  
 </script>
 
 <div class="space-y-4">
@@ -180,10 +227,12 @@
       <div class="space-y-2">
         {#each selectedFiles as file, index}
           <div class="flex items-center justify-between bg-gray-900 p-2 rounded-lg">
-            <span class="text-sm text-gray-300">{file.name}</span>
+            <span class="text-sm text-gray-300 truncate flex-1">
+              {truncateFilename(file.name)}
+            </span>
             <button
               type="button"
-              class="text-red-500 hover:text-red-400"
+              class="text-red-500 hover:text-red-400 ml-2 flex-shrink-0"
               on:click={() => removeFile(index)}
             >
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -202,15 +251,31 @@
       on:click={uploadFiles}
       class="w-full px-6 py-3 text-sm font-medium text-black bg-green-500 hover:bg-green-400 rounded-xl transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
     >
-      {loading ? 'Wird hochgeladen...' : 'Dateien hochladen'}
+      {#if loading}
+        Wird hochgeladen... {currentFileIndex} von {totalFiles}
+      {:else}
+        Dateien hochladen
+      {/if}
     </button>
+
+    {#if loading}
+      <div class="mt-4 space-y-2">
+        <div class="flex justify-between text-sm text-gray-400 mb-2">
+          <span class="truncate flex-1">Aktueller Upload: {truncateFilename(currentFileName)}</span>
+          <span class="ml-2 flex-shrink-0">{uploadProgress}%</span>
+        </div>
+        <div class="text-xs text-gray-500 truncate">{uploadStage}</div>
+        <div class="w-full bg-gray-800 rounded-full h-2">
+          <div
+            class="bg-green-500 h-2 rounded-full transition-all duration-300"
+            style="width: {uploadProgress}%"
+          />
+        </div>
+      </div>
+    {/if}
   {/if}
 
   {#if error}
     <p class="text-red-500 text-sm">{error}</p>
-  {/if}
-
-  {#if success}
-    <p class="text-green-500 text-sm">Upload erfolgreich!</p>
   {/if}
 </div>
