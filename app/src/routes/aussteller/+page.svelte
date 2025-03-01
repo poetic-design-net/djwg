@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { fade } from 'svelte/transition';
+  import { fade, slide } from 'svelte/transition';
   import { enhance } from '$app/forms';
   
   export let data;
@@ -8,6 +8,7 @@
   const { settings, partnerPage } = data;
   
   let isSubmitting = false;
+  let showForm = false;
 </script>
 
 <svelte:head>
@@ -17,14 +18,14 @@
 
 <section class="py-20 overflow-hidden">
   <div class="container px-4 mx-auto">
-    <div class="md:max-w-4xl mx-auto">
+    <div class="md:max-w-5xl mx-auto">
       <div class="text-center mb-16">
         <span class="inline-block mb-4 text-sm text-green-400 font-medium tracking-tighter">Partner & Aussteller</span>
         <h1 class="font-heading mb-8 text-5xl md:text-7xl lg:text-8xl text-white tracking-7xl lg:tracking-8xl">
           {partnerPage?.title || 'Partner werden'}
         </h1>
         <p class="text-lg text-gray-300 max-w-2xl mx-auto">
-          {partnerPage?.description || 'Präsentiere deine Produkte auf unserem Event und erreiche die DJ-Community! Fülle das Formular aus und wir melden uns bei dir.'}
+          {partnerPage?.description || 'Präsentiere deine Produkte auf unserem Event und erreiche die DJ-Community!'}
         </p>
       </div>
 
@@ -53,171 +54,386 @@
         {/if}
       </div>
 
-      <!-- Partner Application Form -->
-      <form 
-        method="POST"
-        use:enhance={() => {
-          isSubmitting = true;
-          return async ({ update }) => {
-            await update();
-            isSubmitting = false;
-          };
-        }}
-        class="space-y-6" 
-        novalidate
-      >
-        <!-- Kontaktinformationen -->
-        <div class="grid md:grid-cols-2 gap-6">
-          <div class="space-y-2">
-            <label for="name" class="block text-sm font-medium text-gray-300">Name / Firma</label>
-            <div class="relative">
-              <input 
-                id="name"
-                name="name"
-                type="text" 
-                value={form?.values?.name ?? ''}
-                class="w-full px-6 py-4 text-gray-300 bg-transparent border border-gray-900 rounded-3xl focus:border-white focus:outline-none transition-colors"
-                class:border-red-500={form?.error}
-                placeholder="Dein Name oder Firmenname"
-              >
+      <!-- Pricing Section -->
+      <div class="mb-20">
+        <div class="text-center mb-12">
+          <h2 class="text-3xl font-medium text-white mb-4">Unsere Partnerpakete</h2>
+          <p class="text-gray-300 mb-8">Wähle das passende Paket für deine Präsentation auf dem DJ Workshop</p>
+        </div>
+
+        <!-- Pricing Cards -->
+        <div class="grid md:grid-cols-3 gap-8">
+          <!-- Sponsor/Supporter Card -->
+          <div class="relative p-8 rounded-xl bg-gray-800/70 backdrop-blur border border-gray-700 hover:border-green-400 transition-all duration-300 flex flex-col h-full">
+            <div class="flex-grow">
+              <h3 class="text-2xl font-medium text-white mb-2">Sponsor / Supporter</h3>
+              <div class="flex items-baseline mb-6">
+                <span class="text-4xl font-medium text-white">380€</span>
+                <span class="text-sm text-gray-400 ml-2">inkl. MwSt</span>
+              </div>
+              <ul class="space-y-3 mb-8">
+                <li class="flex items-start">
+                  <span class="text-green-400 mr-2">✔</span>
+                  <span class="text-gray-300">Social Media Advertising Basic</span>
+                </li>
+                <li class="flex items-start">
+                  <span class="text-green-400 mr-2">✔</span>
+                  <span class="text-gray-300">Homepage Advertising</span>
+                </li>
+                <li class="flex items-start">
+                  <span class="text-green-400 mr-2">✔</span>
+                  <span class="text-gray-300">Merchandise Advertising</span>
+                </li>
+              </ul>
             </div>
+            <a 
+              href="https://eventix.shop/vc4cqfbu" 
+              class="w-full px-6 py-3 text-center font-medium tracking-2xl border-2 border-green-400 bg-green-400 hover:bg-green-500 text-black rounded-full transition duration-300"
+            >
+              Jetzt Paket buchen
+            </a>
           </div>
 
-          <div class="space-y-2">
-            <label for="email" class="block text-sm font-medium text-gray-300">E-Mail</label>
-            <div class="relative">
-              <input 
-                id="email"
-                name="email"
-                type="email" 
-                value={form?.values?.email ?? ''}
-                class="w-full px-6 py-4 text-gray-300 bg-transparent border border-gray-900 rounded-3xl focus:border-white focus:outline-none transition-colors"
-                class:border-red-500={form?.error}
-                placeholder="Deine E-Mail"
-              >
+          <!-- Exhibitor Card -->
+          <div class="relative p-8 rounded-xl bg-gray-800/70 backdrop-blur border border-gray-700 hover:border-green-400 transition-all duration-300 flex flex-col h-full before:absolute before:top-0 before:left-0 before:w-full before:h-1 before:bg-gradient-to-r before:from-green-400 before:to-blue-500 before:rounded-t-3xl">
+            <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-green-400 to-blue-500 text-black text-sm font-medium px-4 py-1 rounded-full">Populär</div>
+            <div class="flex-grow">
+              <h3 class="text-2xl font-medium text-white mb-2">Exhibitor</h3>
+              <div class="flex items-baseline mb-6">
+                <span class="text-4xl font-medium text-white">700€</span>
+                <span class="text-sm text-gray-400 ml-2">inkl. MwSt</span>
+              </div>
+              <ul class="space-y-3 mb-8">
+                <li class="flex items-start">
+                  <span class="text-green-400 mr-2">✔</span>
+                  <span class="text-gray-300">2 Days</span>
+                </li>
+                <li class="flex items-start">
+                  <span class="text-green-400 mr-2">✔</span>
+                  <span class="text-gray-300">Stand space of 5 qm</span>
+                </li>
+                <li class="flex items-start">
+                  <span class="text-green-400 mr-2">✔</span>
+                  <span class="text-gray-300">3 Exhibitor Tickets</span>
+                </li>
+                <li class="flex items-start">
+                  <span class="text-green-400 mr-2">✔</span>
+                  <span class="text-gray-300">2 Free Tickets Giveaway</span>
+                </li>
+                <li class="flex items-start">
+                  <span class="text-green-400 mr-2">✔</span>
+                  <span class="text-gray-300">Social Media Advertising Basic</span>
+                </li>
+                <li class="flex items-start">
+                  <span class="text-green-400 mr-2">✔</span>
+                  <span class="text-gray-300">Homepage Advertising</span>
+                </li>
+                <li class="flex items-start">
+                  <span class="text-green-400 mr-2">✔</span>
+                  <span class="text-gray-300">Merchandise Advertising</span>
+                </li>
+              </ul>
             </div>
+            <a 
+              href="https://eventix.shop/vc4cqfbu" 
+              class="w-full px-6 py-3 text-center font-medium tracking-2xl border-2 border-green-400 bg-green-400 hover:bg-green-500 text-black rounded-full transition duration-300"
+            >
+              Jetzt Paket buchen
+            </a>
+          </div>
+
+          <!-- Area Branding Card -->
+          <div class="relative p-8 rounded-xl bg-gray-800/70 backdrop-blur border border-gray-700 hover:border-green-400 transition-all duration-300 flex flex-col h-full">
+            <div class="flex-grow">
+              <h3 class="text-2xl font-medium text-white mb-2">Area Branding</h3>
+              <p class="text-xs text-gray-400 mb-1">Exklusiv</p>
+              <div class="flex items-baseline mb-6">
+                <span class="text-4xl font-medium text-white">5000€</span>
+                <span class="text-sm text-gray-400 ml-2">inkl. MwSt</span>
+              </div>
+              <ul class="space-y-3 mb-8">
+                <li class="flex items-start">
+                  <span class="text-green-400 mr-2">✔</span>
+                  <span class="text-gray-300">Area Branding (Mixing Area by..., PA Area by..., Light Area by...)</span>
+                </li>
+                <li class="flex items-start">
+                  <span class="text-green-400 mr-2">✔</span>
+                  <span class="text-gray-300">2 Days</span>
+                </li>
+                <li class="flex items-start">
+                  <span class="text-green-400 mr-2">✔</span>
+                  <span class="text-gray-300">Stand space of 7 qm</span>
+                </li>
+                <li class="flex items-start">
+                  <span class="text-green-400 mr-2">✔</span>
+                  <span class="text-gray-300">5 Exhibitor Tickets</span>
+                </li>
+                <li class="flex items-start">
+                  <span class="text-green-400 mr-2">✔</span>
+                  <span class="text-gray-300">2 Free Tickets Giveaway</span>
+                </li>
+                <li class="flex items-start">
+                  <span class="text-green-400 mr-2">✔</span>
+                  <span class="text-gray-300">Social Media Advertising Premium</span>
+                </li>
+                <li class="flex items-start">
+                  <span class="text-green-400 mr-2">✔</span>
+                  <span class="text-gray-300">Homepage Advertising</span>
+                </li>
+                <li class="flex items-start">
+                  <span class="text-green-400 mr-2">✔</span>
+                  <span class="text-gray-300">Merchandise Advertising</span>
+                </li>
+                <li class="flex items-start">
+                  <span class="text-green-400 mr-2">✔</span>
+                  <span class="text-gray-300">Video Content Advertising</span>
+                </li>
+              </ul>
+            </div>
+            <a 
+              href="https://eventix.shop/vc4cqfbu" 
+              class="w-full px-6 py-3 text-center font-medium tracking-2xl border-2 border-green-400 bg-green-400 hover:bg-green-500 text-black rounded-full transition duration-300"
+            >
+              Jetzt Paket buchen
+            </a>
           </div>
         </div>
 
-        <!-- Zusätzliche Kontaktinformationen -->
-        <div class="grid md:grid-cols-2 gap-6">
-          <div class="space-y-2">
-            <label for="phone" class="block text-sm font-medium text-gray-300">Telefon</label>
-            <div class="relative">
-              <input 
-                id="phone"
-                name="phone"
-                type="tel" 
-                value={form?.values?.phone ?? ''}
-                class="w-full px-6 py-4 text-gray-300 bg-transparent border border-gray-900 rounded-3xl focus:border-white focus:outline-none transition-colors"
-                placeholder="Deine Telefonnummer"
-              >
-            </div>
-          </div>
+        <!-- Add-Ons Section -->
+       <!-- Add-Ons Section -->
+<div class="mt-16">
+  <h3 class="text-2xl font-medium text-white mb-6 text-center">Add-Ons</h3>
+  <p class="text-sm text-gray-400 mb-8 text-center">Für Exhibitor und Area Branding Pakete</p>
+  <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <!-- Card 1 -->
+    <div class="p-6 rounded-2xl bg-gray-800/50 backdrop-blur text-center flex flex-col h-full justify-between">
+      <div>
+        <h4 class="text-lg font-medium text-white mb-2">Extra Stand Space</h4>
+        <p class="text-gray-300 mb-3">1 qm - 140€ inkl. MwSt</p>
+      </div>
+      <div class="flex justify-center mt-auto">
+        <span class="text-xs px-3 py-1 bg-gray-700 rounded-full text-gray-300">Für Exhibitor & Area Branding</span>
+      </div>
+    </div>
+    
+    <!-- Card 2 -->
+    <div class="p-6 rounded-2xl bg-gray-800/50 backdrop-blur text-center flex flex-col h-full justify-between">
+      <div>
+        <h4 class="text-lg font-medium text-white mb-2">Social Media Promotion Push</h4>
+        <p class="text-gray-300 mb-3">240€ inkl. MwSt</p>
+      </div>
+      <div class="flex justify-center mt-auto">
+        <span class="text-xs px-3 py-1 bg-gray-700 rounded-full text-gray-300">Für Exhibitor & Area Branding</span>
+      </div>
+    </div>
+    
+    <!-- Card 3 -->
+    <div class="p-6 rounded-2xl bg-gray-800/50 backdrop-blur text-center flex flex-col h-full justify-between">
+      <div>
+        <h4 class="text-lg font-medium text-white mb-2">Extra Exhibitor Ticket</h4>
+        <p class="text-gray-300 mb-3">50€ inkl. MwSt pro Ticket (max. 3)</p>
+      </div>
+      <div class="flex justify-center mt-auto">
+        <span class="text-xs px-3 py-1 bg-gray-700 rounded-full text-gray-300">Für Exhibitor & Area Branding</span>
+      </div>
+    </div>
+    
+    <!-- Card 4 -->
+    <div class="p-6 rounded-2xl bg-gray-800/50 backdrop-blur text-center flex flex-col h-full justify-between">
+      <div>
+        <h4 class="text-lg font-medium text-white mb-2">Extra Video Content Advertising</h4>
+        <p class="text-gray-300 mb-3">380€ inkl. MwSt</p>
+      </div>
+      <div class="flex justify-center mt-auto">
+        <span class="text-xs px-3 py-1 bg-gray-700 rounded-full text-gray-300">Für Exhibitor & Area Branding</span>
+      </div>
+    </div>
+  </div>
+</div>
 
-          <div class="space-y-2">
-            <label for="website" class="block text-sm font-medium text-gray-300">Website</label>
-            <div class="relative">
-              <input 
-                id="website"
-                name="website"
-                type="url" 
-                value={form?.values?.website ?? ''}
-                class="w-full px-6 py-4 text-gray-300 bg-transparent border border-gray-900 rounded-3xl focus:border-white focus:outline-none transition-colors"
-                placeholder="https://www.deine-website.de"
-              >
-            </div>
-          </div>
-        </div>
 
-        <!-- Unternehmensinformationen -->
-        <div class="grid md:grid-cols-2 gap-6">
-          <div class="space-y-2">
-            <label for="company" class="block text-sm font-medium text-gray-300">Unternehmen</label>
-            <div class="relative">
-              <input 
-                id="company"
-                name="company"
-                type="text" 
-                value={form?.values?.company ?? ''}
-                class="w-full px-6 py-4 text-gray-300 bg-transparent border border-gray-900 rounded-3xl focus:border-white focus:outline-none transition-colors"
-                placeholder="Name deines Unternehmens"
-              >
-            </div>
-          </div>
-
-          <div class="space-y-2">
-            <label for="industry" class="block text-sm font-medium text-gray-300">Branche</label>
-            <div class="relative">
-              <input 
-                id="industry"
-                name="industry"
-                type="text" 
-                value={form?.values?.industry ?? ''}
-                class="w-full px-6 py-4 text-gray-300 bg-transparent border border-gray-900 rounded-3xl focus:border-white focus:outline-none transition-colors"
-                placeholder="z.B. DJ Equipment, Software, etc."
-              >
-            </div>
-          </div>
-        </div>
-
-        <!-- Produkte/Services -->
-        <div class="space-y-2">
-          <label for="products" class="block text-sm font-medium text-gray-300">Produkte/Services</label>
-          <p class="text-sm text-gray-400 mb-2">Welche Produkte oder Services möchtest du präsentieren?</p>
-          <div class="relative">
-            <textarea 
-              id="products"
-              name="products"
-              value={form?.values?.products ?? ''}
-              class="w-full px-6 py-4 text-gray-300 bg-transparent border border-gray-900 rounded-3xl focus:border-white focus:outline-none transition-colors min-h-[100px]"
-              placeholder="Beschreibe deine Produkte oder Services..."
-            ></textarea>
-          </div>
-        </div>
-
-        <!-- Nachricht -->
-        <div class="space-y-2">
-          <label for="message" class="block text-sm font-medium text-gray-300">Zusätzliche Informationen</label>
-          <p class="text-sm text-gray-400 mb-2">Hast du besondere Anforderungen oder Wünsche für deine Präsentation?</p>
-          <div class="relative">
-            <textarea 
-              id="message"
-              name="message"
-              value={form?.values?.message ?? ''}
-              class="w-full px-6 py-4 text-gray-300 bg-transparent border border-gray-900 rounded-3xl focus:border-white focus:outline-none transition-colors min-h-[150px]"
-              class:border-red-500={form?.error}
-              placeholder="Deine Nachricht..."
-            ></textarea>
-          </div>
-        </div>
-
-        <div class="flex flex-col items-center space-y-4">
+        <!-- Form Toggle Button -->
+        <div class="text-center mt-16">
           <button 
-            type="submit" 
-            class="px-14 py-4 text-center font-medium tracking-2xl border-2 border-green-400 bg-green-400 hover:bg-green-500 text-black focus:ring-4 focus:ring-green-500 focus:ring-opacity-40 rounded-full transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={isSubmitting}
+            on:click={() => showForm = !showForm}
+            class="px-8 py-3 text-center font-medium tracking-2xl border-2 border-gray-700 hover:border-white text-white rounded-full transition duration-300 focus:outline-none"
           >
-            {#if isSubmitting}
-              Wird gesendet...
-            {:else}
-              Anfrage senden
-            {/if}
+            {showForm ? 'Anfrage-Formular schließen' : 'Oder generell anfragen'}
           </button>
-
-          {#if form?.error}
-            <p class="text-red-500" transition:fade>{form.error}</p>
-          {/if}
-
-          {#if form?.success}
-            <p class="text-green-400" transition:fade>Vielen Dank für deine Anfrage! Wir melden uns in Kürze bei dir.</p>
-          {/if}
-
-          <p class="text-sm text-gray-300 max-w-xs text-center">
-            Deine Daten werden gemäß unserer Datenschutzrichtlinien verwendet.
-          </p>
         </div>
-      </form>
+      </div>
+
+      <!-- Partner Application Form (Collapsible) -->
+      {#if showForm}
+        <div transition:slide={{duration: 300, delay: 50}} class="mt-8 p-8 rounded-xl bg-gray-800/50 backdrop-blur">
+          <h3 class="text-2xl font-medium text-white mb-6 text-center">Kontaktiere uns für individuelle Anfragen</h3>
+          
+          <form 
+            method="POST"
+            use:enhance={() => {
+              isSubmitting = true;
+              return async ({ update }) => {
+                await update();
+                isSubmitting = false;
+              };
+            }}
+            class="space-y-6" 
+            novalidate
+          >
+            <!-- Kontaktinformationen -->
+            <div class="grid md:grid-cols-2 gap-6">
+              <div class="space-y-2">
+                <label for="name" class="block text-sm font-medium text-gray-300">Name / Firma</label>
+                <div class="relative">
+                  <input 
+                    id="name"
+                    name="name"
+                    type="text" 
+                    value={form?.values?.name ?? ''}
+                    class="w-full px-6 py-4 text-gray-300 bg-transparent border border-gray-900 rounded-xl focus:border-white focus:outline-none transition-colors"
+                    class:border-red-500={form?.error}
+                    placeholder="Dein Name oder Firmenname"
+                  >
+                </div>
+              </div>
+
+              <div class="space-y-2">
+                <label for="email" class="block text-sm font-medium text-gray-300">E-Mail</label>
+                <div class="relative">
+                  <input 
+                    id="email"
+                    name="email"
+                    type="email" 
+                    value={form?.values?.email ?? ''}
+                    class="w-full px-6 py-4 text-gray-300 bg-transparent border border-gray-900 rounded-xl focus:border-white focus:outline-none transition-colors"
+                    class:border-red-500={form?.error}
+                    placeholder="Deine E-Mail"
+                  >
+                </div>
+              </div>
+            </div>
+
+            <!-- Zusätzliche Kontaktinformationen -->
+            <div class="grid md:grid-cols-2 gap-6">
+              <div class="space-y-2">
+                <label for="phone" class="block text-sm font-medium text-gray-300">Telefon</label>
+                <div class="relative">
+                  <input 
+                    id="phone"
+                    name="phone"
+                    type="tel" 
+                    value={form?.values?.phone ?? ''}
+                    class="w-full px-6 py-4 text-gray-300 bg-transparent border border-gray-900 rounded-xl focus:border-white focus:outline-none transition-colors"
+                    placeholder="Deine Telefonnummer"
+                  >
+                </div>
+              </div>
+
+              <div class="space-y-2">
+                <label for="website" class="block text-sm font-medium text-gray-300">Website</label>
+                <div class="relative">
+                  <input 
+                    id="website"
+                    name="website"
+                    type="url" 
+                    value={form?.values?.website ?? ''}
+                    class="w-full px-6 py-4 text-gray-300 bg-transparent border border-gray-900 rounded-xl focus:border-white focus:outline-none transition-colors"
+                    placeholder="https://www.deine-website.de"
+                  >
+                </div>
+              </div>
+            </div>
+
+            <!-- Unternehmensinformationen -->
+            <div class="grid md:grid-cols-2 gap-6">
+              <div class="space-y-2">
+                <label for="company" class="block text-sm font-medium text-gray-300">Unternehmen</label>
+                <div class="relative">
+                  <input 
+                    id="company"
+                    name="company"
+                    type="text" 
+                    value={form?.values?.company ?? ''}
+                    class="w-full px-6 py-4 text-gray-300 bg-transparent border border-gray-900 rounded-xl focus:border-white focus:outline-none transition-colors"
+                    placeholder="Name deines Unternehmens"
+                  >
+                </div>
+              </div>
+
+              <div class="space-y-2">
+                <label for="industry" class="block text-sm font-medium text-gray-300">Branche</label>
+                <div class="relative">
+                  <input 
+                    id="industry"
+                    name="industry"
+                    type="text" 
+                    value={form?.values?.industry ?? ''}
+                    class="w-full px-6 py-4 text-gray-300 bg-transparent border border-gray-900 rounded-xl focus:border-white focus:outline-none transition-colors"
+                    placeholder="z.B. DJ Equipment, Software, etc."
+                  >
+                </div>
+              </div>
+            </div>
+
+            <!-- Produkte/Services -->
+            <div class="space-y-2">
+              <label for="products" class="block text-sm font-medium text-gray-300">Produkte/Services</label>
+              <p class="text-sm text-gray-400 mb-2">Welche Produkte oder Services möchtest du präsentieren?</p>
+              <div class="relative">
+                <textarea 
+                  id="products"
+                  name="products"
+                  value={form?.values?.products ?? ''}
+                  class="w-full px-6 py-4 text-gray-300 bg-transparent border border-gray-900 rounded-xl focus:border-white focus:outline-none transition-colors min-h-[100px]"
+                  placeholder="Beschreibe deine Produkte oder Services..."
+                ></textarea>
+              </div>
+            </div>
+
+            <!-- Nachricht -->
+            <div class="space-y-2">
+              <label for="message" class="block text-sm font-medium text-gray-300">Zusätzliche Informationen</label>
+              <p class="text-sm text-gray-400 mb-2">Hast du besondere Anforderungen oder Wünsche für deine Präsentation?</p>
+              <div class="relative">
+                <textarea 
+                  id="message"
+                  name="message"
+                  value={form?.values?.message ?? ''}
+                  class="w-full px-6 py-4 text-gray-300 bg-transparent border border-gray-900 rounded-xl focus:border-white focus:outline-none transition-colors min-h-[150px]"
+                  class:border-red-500={form?.error}
+                  placeholder="Deine Nachricht..."
+                ></textarea>
+              </div>
+            </div>
+
+            <div class="flex flex-col items-center space-y-4">
+              <button 
+                type="submit" 
+                class="px-14 py-4 text-center font-medium tracking-2xl border-2 border-green-400 bg-green-400 hover:bg-green-500 text-black focus:ring-4 focus:ring-green-500 focus:ring-opacity-40 rounded-full transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isSubmitting}
+              >
+                {#if isSubmitting}
+                  Wird gesendet...
+                {:else}
+                  Anfrage senden
+                {/if}
+              </button>
+
+              {#if form?.error}
+                <p class="text-red-500" transition:fade>{form.error}</p>
+              {/if}
+
+              {#if form?.success}
+                <p class="text-green-400" transition:fade>Vielen Dank für deine Anfrage! Wir melden uns in Kürze bei dir.</p>
+              {/if}
+
+              <p class="text-sm text-gray-300 max-w-xs text-center">
+                Deine Daten werden gemäß unserer Datenschutzrichtlinien verwendet.
+              </p>
+            </div>
+          </form>
+        </div>
+      {/if}
 
       <!-- Additional Info Section -->
       <div class="mt-20">
