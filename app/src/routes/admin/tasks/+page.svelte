@@ -302,8 +302,8 @@
     </div>
     
     {#if selectedTask}
-      <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" on:click={() => selectedTask = null}>
-        <div class="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto" on:click|stopPropagation>
+      <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]" on:click={() => selectedTask = null}>
+        <div class="bg-white rounded-lg p-6 max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto" on:click|stopPropagation>
           <div class="flex justify-between items-start mb-4">
             <h2 class="text-xl font-semibold">{selectedTask.title}</h2>
             <div class="flex gap-2">
