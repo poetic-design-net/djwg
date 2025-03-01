@@ -27,7 +27,7 @@
       </div>
 
       <!-- Contact Information -->
-      <div class="grid md:grid-cols-3 gap-8 mb-16 text-center md:text-left">
+      <div class="grid md:grid-cols-1 gap-8 mb-16 text-center ">
         {#if contact?.address}
           <div class="p-6 rounded-2xl bg-gray-800/50 backdrop-blur">
             <h3 class="text-xl font-medium text-white mb-2">Adresse</h3>
@@ -35,7 +35,7 @@
           </div>
         {/if}
         {#if contact?.email}
-          <div class="p-6 rounded-2xl bg-gray-800/50 backdrop-blur">
+          <div class="p-6 rounded-2xl bg-gray-800/50 backdrop-blur w-full">
             <h3 class="text-xl font-medium text-white mb-2">E-Mail</h3>
             <a href="mailto:{contact.email}" class="text-green-400 hover:text-green-300 transition-colors">{contact.email}</a>
           </div>
@@ -143,18 +143,18 @@
             href="/artist-werden"
             class="inline-block px-8 py-3 text-center font-medium tracking-2xl border-2 border-green-400 hover:bg-green-400 hover:text-black text-green-400 focus:ring-4 focus:ring-green-500 focus:ring-opacity-40 rounded-full transition duration-300"
           >
-            Jetzt anmelden
+            Mehr Information
           </a>
         </div>
 
         <div class="p-8 rounded-2xl bg-gray-800/50 backdrop-blur text-center md:text-left">
-          <h3 class="text-xl font-medium text-white mb-4">Partner werden</h3>
+          <h3 class="text-xl font-medium text-white mb-4">Aussteller werden</h3>
           <p class="text-gray-300 mb-6">Präsentiere deine Produkte auf unserem Event und erreiche die DJ-Community!</p>
           <a 
-            href="/partner"
+            href="/aussteller"
             class="inline-block px-8 py-3 text-center font-medium tracking-2xl border-2 border-green-400 hover:bg-green-400 hover:text-black text-green-400 focus:ring-4 focus:ring-green-500 focus:ring-opacity-40 rounded-full transition duration-300"
           >
-            Jetzt anmelden
+          Mehr Information
           </a>
         </div>
       </div>

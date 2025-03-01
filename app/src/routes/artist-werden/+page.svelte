@@ -2,6 +2,9 @@
   import { fade } from 'svelte/transition';
   import { enhance } from '$app/forms';
 
+  // Add collapsible state
+  let isFormOpen = false;
+
   export let data;
   export let form: {
     error?: string;
@@ -29,7 +32,7 @@
 
 <div class="min-h-screen bg-black">
   <!-- Hero Section -->
-  <div class="relative py-20 overflow-hidden">
+  <div class="relative pt-20 overflow-hidden">
     <div class="container px-4 mx-auto">
       <div class="max-w-3xl mx-auto text-center">
         <span class="inline-block mb-4 text-sm text-green-400 font-medium tracking-tighter">Artist werden</span>
@@ -77,8 +80,42 @@
         </div>
       </div>
 
+      <div class="relative p-8 rounded-xl bg-gray-800/70 backdrop-blur border border-gray-700 hover:border-green-400 transition-all duration-300 flex flex-col h-full">
+        <div class="flex-grow">
+          <h3 class="text-2xl font-medium text-white mb-2">Artist Live Präsentation</h3>
+          <div class="flex items-baseline mb-6">
+            <span class="text-4xl font-medium text-white">700€</span>
+            <span class="text-sm text-gray-400 ml-2">+ 0.58€ Gebühr</span>
+          </div>
+          <ul class="space-y-3 mb-8">
+            <li class="flex items-start">
+              <span class="text-green-400 mr-2">✔</span>
+              <span class="text-gray-300">45 min Präsentation</span>
+            </li>
+            <li class="flex items-start">
+              <span class="text-green-400 mr-2">✔</span>
+              <span class="text-gray-300">Social Media Advertising Basic</span>
+            </li>
+            <li class="flex items-start">
+              <span class="text-green-400 mr-2">✔</span>
+              <span class="text-gray-300">Homepage Advertising</span>
+            </li>
+            <li class="flex items-start">
+              <span class="text-green-400 mr-2">✔</span>
+              <span class="text-gray-300">Inkl. 2 Tickets</span>
+            </li>
+          </ul>
+        </div>
+        <a target="_blank" 
+          href="https://eventix.shop/3vqdq8w3" 
+          class="w-full px-6 py-3 text-center font-medium tracking-2xl border-2 border-green-400 bg-green-400 hover:bg-green-500 text-black rounded-full transition duration-300"
+        >
+          Jetzt Paket buchen
+        </a>
+      </div>
+
       <!-- Contact Form -->
-      <div class="mb-20">
+      <div class="my-20">
         <h2 class="text-4xl text-white mb-12 text-center">
           {artistPage?.formSettings?.title || 'Bewirb dich jetzt'}
         </h2>
