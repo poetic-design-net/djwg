@@ -88,7 +88,7 @@
             </div>
             <a target="_blank" 
               href="https://eventix.shop/vc4cqfbu" 
-              class="w-full px-6 py-3 text-center font-medium tracking-2xl border-2 border-green-400 bg-green-400 hover:bg-green-500 text-black rounded-full transition duration-300"
+              class="w-full px-6 py-3 text-center font-medium tracking-2xl border border-green-400 bg-green-400 hover:bg-green-500 text-black rounded-full transition duration-300"
             >
               Jetzt Paket buchen
             </a>
@@ -136,7 +136,7 @@
             </div>
             <a target="_blank" 
               href="https://eventix.shop/vc4cqfbu" 
-              class="w-full px-6 py-3 text-center font-medium tracking-2xl border-2 border-green-400 bg-green-400 hover:bg-green-500 text-black rounded-full transition duration-300"
+              class="w-full px-6 py-3 text-center font-medium tracking-2xl border border-green-400 bg-green-400 hover:bg-green-500 text-black rounded-full transition duration-300"
             >
               Jetzt Paket buchen
             </a>
@@ -192,7 +192,7 @@
             </div>
             <a target="_blank" 
               href="https://eventix.shop/vc4cqfbu" 
-              class="w-full px-6 py-3 text-center font-medium tracking-2xl border-2 border-green-400 bg-green-400 hover:bg-green-500 text-black rounded-full transition duration-300"
+              class="w-full px-6 py-3 text-center font-medium tracking-2xl border border-green-400 bg-green-400 hover:bg-green-500 text-black rounded-full transition duration-300"
             >
               Jetzt Paket buchen
             </a>
@@ -252,16 +252,22 @@
 </div>
 
 
-        <!-- Form Toggle Button -->
-        <div class="text-center mt-16">
-          <button 
-            on:click={() => showForm = !showForm}
-            class="px-8 py-3 text-center font-medium tracking-2xl border-2 border-gray-700 hover:border-white text-white rounded-full transition duration-300 focus:outline-none"
-          >
-            {showForm ? 'Anfrage-Formular schließen' : 'Oder generell anfragen'}
-          </button>
-        </div>
-      </div>
+<div class="text-center mt-16">
+  <button 
+    on:click={() => showForm = !showForm}
+    class="px-8 py-3 text-center font-medium tracking-2xl border border-gray-700 hover:border-white text-white rounded-full transition duration-300 focus:outline-none mr-4"
+  >
+    {showForm ? 'Anfrage-Formular schließen' : 'Oder generell anfragen'}
+  </button>
+  
+  <a 
+    href="/contact" 
+    class="px-8 py-3 text-center font-medium tracking-2xl border border-purple-500 hover:border-purple-400 text-white bg-blue-500/20 hover:bg-blue-400/20 rounded-full transition duration-300 inline-block"
+  >
+    Kontakt
+  </a>
+</div>
+
 
       <!-- Partner Application Form (Collapsible) -->
       {#if showForm}
@@ -409,7 +415,7 @@
             <div class="flex flex-col items-center space-y-4">
               <button 
                 type="submit" 
-                class="px-14 py-4 text-center font-medium tracking-2xl border-2 border-green-400 bg-green-400 hover:bg-green-500 text-black focus:ring-4 focus:ring-green-500 focus:ring-opacity-40 rounded-full transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                class="px-14 py-4 text-center font-medium tracking-2xl border border-green-400 bg-green-400 hover:bg-green-500 text-black focus:ring-4 focus:ring-green-500 focus:ring-opacity-40 rounded-full transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={isSubmitting}
               >
                 {#if isSubmitting}
@@ -434,6 +440,8 @@
           </form>
         </div>
       {/if}
+
+     
 
       <!-- Additional Info Section -->
       <div class="mt-20">
