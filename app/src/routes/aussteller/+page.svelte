@@ -86,7 +86,7 @@
                 </li>
               </ul>
             </div>
-            <a 
+            <a target="_blank" 
               href="https://eventix.shop/vc4cqfbu" 
               class="w-full px-6 py-3 text-center font-medium tracking-2xl border-2 border-green-400 bg-green-400 hover:bg-green-500 text-black rounded-full transition duration-300"
             >
@@ -134,7 +134,7 @@
                 </li>
               </ul>
             </div>
-            <a 
+            <a target="_blank" 
               href="https://eventix.shop/vc4cqfbu" 
               class="w-full px-6 py-3 text-center font-medium tracking-2xl border-2 border-green-400 bg-green-400 hover:bg-green-500 text-black rounded-full transition duration-300"
             >
@@ -190,7 +190,7 @@
                 </li>
               </ul>
             </div>
-            <a 
+            <a target="_blank" 
               href="https://eventix.shop/vc4cqfbu" 
               class="w-full px-6 py-3 text-center font-medium tracking-2xl border-2 border-green-400 bg-green-400 hover:bg-green-500 text-black rounded-full transition duration-300"
             >
