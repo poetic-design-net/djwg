@@ -25,6 +25,7 @@ export const actions = {
       const company = data.get('company')
       const industry = data.get('industry')
       const products = data.get('products')
+      const logoId = data.get('logoId')
       const message = data.get('message')
 
       if (!name || !email || !message) {
@@ -33,6 +34,12 @@ export const actions = {
           values: Object.fromEntries(data)
         }
       }
+      
+      // Speichere die logoId in der E-Mail mit
+      const logo = logoId ? {
+        id: logoId,
+        type: 'media_upload'
+      } : null;
 
       // Hier können Sie die E-Mail-Versand-Logik implementieren
       // Beispiel:
@@ -46,6 +53,7 @@ export const actions = {
       //     Website: ${website}
       //     Firma: ${company}
       //     Branche: ${industry}
+      //     Logo: ${logo ? `https://your-domain.com/media/${logo.id}` : 'Kein Logo hochgeladen'}
       //     Produkte: ${products}
       //     Nachricht: ${message}
       //   `
