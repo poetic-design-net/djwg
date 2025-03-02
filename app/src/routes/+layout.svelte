@@ -16,6 +16,7 @@
 	import BetaBanner from '$lib/components/BetaBanner.svelte';
 	import CookieBanner from '$lib/components/CookieBanner.svelte';
 	import Spinner from '$lib/components/Spinner.svelte';
+	import TooltipPortal from '$lib/components/TooltipPortal.svelte';
 	import "../app.pcss";
 	import type { LayoutData } from './$types';
 
@@ -222,6 +223,7 @@
 <main class:pointer-events-none={isAuthToDashboardTransition}>
 	<Header {data} />
 	<slot />
+	<TooltipPortal />
 </main>
 <CookieBanner />
 <footer class:pointer-events-none={isAuthToDashboardTransition}>
