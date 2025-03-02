@@ -1,7 +1,13 @@
 <script lang="ts">
   import { fade, slide } from 'svelte/transition';
   import { enhance } from '$app/forms';
+  import InfoIcon from '$lib/components/InfoIcon.svelte';
   
+
+
+  // Info text for pricing cards - besser formuliert
+  const priceInfo = "Bei Mitbringen eines eigenen DJs reduzieren sich die Paketpreise entsprechend. Bitte kontaktieren Sie uns für individuelle Angebote.          Scrollen Sie nach unten um Kontakt aufzunehmen.";
+
   export let data;
   export let form: any;
   
@@ -65,6 +71,9 @@
         <div class="grid md:grid-cols-3 gap-8">
           <!-- Sponsor/Supporter Card -->
           <div class="relative p-8 rounded-xl bg-gray-800/70 backdrop-blur border border-gray-700 hover:border-green-400 transition-all duration-300 flex flex-col h-full">
+            <div class="absolute top-4 right-4 z-50">
+                <InfoIcon text={priceInfo} position="top" />
+            </div>
             <div class="flex-grow">
               <h3 class="text-2xl font-medium text-white mb-2">Sponsor / Supporter</h3>
               <div class="flex items-baseline mb-6">
@@ -73,15 +82,24 @@
               </div>
               <ul class="space-y-3 mb-8">
                 <li class="flex items-start">
-                  <span class="text-green-400 mr-2">✔</span>
+                  <svg class="mr-2 flex-shrink-0" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M7.5 10L9.16667 11.6667L12.5 8.33333" stroke="#33cc99" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5C5.85786 2.5 2.5 5.85786 2.5 10C2.5 14.1421 5.85786 17.5 10 17.5Z" stroke="#33cc99" stroke-width="1.5"/>
+                  </svg>
                   <span class="text-gray-300">Social Media Advertising Basic</span>
                 </li>
                 <li class="flex items-start">
-                  <span class="text-green-400 mr-2">✔</span>
+                  <svg class="mr-2 flex-shrink-0" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M7.5 10L9.16667 11.6667L12.5 8.33333" stroke="#33cc99" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5C5.85786 2.5 2.5 5.85786 2.5 10C2.5 14.1421 5.85786 17.5 10 17.5Z" stroke="#33cc99" stroke-width="1.5"/>
+                  </svg>
                   <span class="text-gray-300">Homepage Advertising</span>
                 </li>
                 <li class="flex items-start">
-                  <span class="text-green-400 mr-2">✔</span>
+                  <svg class="mr-2 flex-shrink-0" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M7.5 10L9.16667 11.6667L12.5 8.33333" stroke="#33cc99" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5C5.85786 2.5 2.5 5.85786 2.5 10C2.5 14.1421 5.85786 17.5 10 17.5Z" stroke="#33cc99" stroke-width="1.5"/>
+                  </svg>
                   <span class="text-gray-300">Merchandise Advertising</span>
                 </li>
               </ul>
@@ -97,6 +115,9 @@
           <!-- Exhibitor Card -->
           <div class="relative p-8 rounded-xl bg-gray-800/70 backdrop-blur border border-gray-700 hover:border-green-400 transition-all duration-300 flex flex-col h-full before:absolute before:top-0 before:left-0 before:w-full before:h-1 before:bg-gradient-to-r before:from-green-400 before:to-blue-500 before:rounded-t-3xl">
             <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-green-400 to-blue-500 text-black text-sm font-medium px-4 py-1 rounded-full">Populär</div>
+            <div class="absolute top-4 right-4 z-50">
+                <InfoIcon text={priceInfo} position="top" />
+            </div>
             <div class="flex-grow">
               <h3 class="text-2xl font-medium text-white mb-2">Exhibitor</h3>
               <div class="flex items-baseline mb-6">
@@ -105,31 +126,52 @@
               </div>
               <ul class="space-y-3 mb-8">
                 <li class="flex items-start">
-                  <span class="text-green-400 mr-2">✔</span>
+                  <svg class="mr-2 flex-shrink-0" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M7.5 10L9.16667 11.6667L12.5 8.33333" stroke="#33cc99" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5C5.85786 2.5 2.5 5.85786 2.5 10C2.5 14.1421 5.85786 17.5 10 17.5Z" stroke="#33cc99" stroke-width="1.5"/>
+                  </svg>
                   <span class="text-gray-300">2 Days</span>
                 </li>
                 <li class="flex items-start">
-                  <span class="text-green-400 mr-2">✔</span>
+                  <svg class="mr-2 flex-shrink-0" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M7.5 10L9.16667 11.6667L12.5 8.33333" stroke="#33cc99" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5C5.85786 2.5 2.5 5.85786 2.5 10C2.5 14.1421 5.85786 17.5 10 17.5Z" stroke="#33cc99" stroke-width="1.5"/>
+                  </svg>
                   <span class="text-gray-300">Stand space of 5 qm</span>
                 </li>
                 <li class="flex items-start">
-                  <span class="text-green-400 mr-2">✔</span>
+                  <svg class="mr-2 flex-shrink-0" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M7.5 10L9.16667 11.6667L12.5 8.33333" stroke="#33cc99" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5C5.85786 2.5 2.5 5.85786 2.5 10C2.5 14.1421 5.85786 17.5 10 17.5Z" stroke="#33cc99" stroke-width="1.5"/>
+                  </svg>
                   <span class="text-gray-300">3 Exhibitor Tickets</span>
                 </li>
                 <li class="flex items-start">
-                  <span class="text-green-400 mr-2">✔</span>
+                  <svg class="mr-2 flex-shrink-0" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M7.5 10L9.16667 11.6667L12.5 8.33333" stroke="#33cc99" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5C5.85786 2.5 2.5 5.85786 2.5 10C2.5 14.1421 5.85786 17.5 10 17.5Z" stroke="#33cc99" stroke-width="1.5"/>
+                  </svg>
                   <span class="text-gray-300">2 Free Tickets Giveaway</span>
                 </li>
                 <li class="flex items-start">
-                  <span class="text-green-400 mr-2">✔</span>
+                  <svg class="mr-2 flex-shrink-0" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M7.5 10L9.16667 11.6667L12.5 8.33333" stroke="#33cc99" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5C5.85786 2.5 2.5 5.85786 2.5 10C2.5 14.1421 5.85786 17.5 10 17.5Z" stroke="#33cc99" stroke-width="1.5"/>
+                  </svg>
                   <span class="text-gray-300">Social Media Advertising Basic</span>
                 </li>
                 <li class="flex items-start">
-                  <span class="text-green-400 mr-2">✔</span>
+                  <svg class="mr-2 flex-shrink-0" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M7.5 10L9.16667 11.6667L12.5 8.33333" stroke="#33cc99" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5C5.85786 2.5 2.5 5.85786 2.5 10C2.5 14.1421 5.85786 17.5 10 17.5Z" stroke="#33cc99" stroke-width="1.5"/>
+                  </svg>
                   <span class="text-gray-300">Homepage Advertising</span>
                 </li>
                 <li class="flex items-start">
-                  <span class="text-green-400 mr-2">✔</span>
+                  <svg class="mr-2 flex-shrink-0" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M7.5 10L9.16667 11.6667L12.5 8.33333" stroke="#33cc99" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5C5.85786 2.5 2.5 5.85786 2.5 10C2.5 14.1421 5.85786 17.5 10 17.5Z" stroke="#33cc99" stroke-width="1.5"/>
+                  </svg>
                   <span class="text-gray-300">Merchandise Advertising</span>
                 </li>
               </ul>
@@ -144,6 +186,9 @@
 
           <!-- Area Branding Card -->
           <div class="relative p-8 rounded-xl bg-gray-800/70 backdrop-blur border border-gray-700 hover:border-green-400 transition-all duration-300 flex flex-col h-full">
+            <div class="absolute top-4 right-4 z-50">
+                <InfoIcon text={priceInfo} position="top" />
+            </div>
             <div class="flex-grow">
               <h3 class="text-2xl font-medium text-white mb-2">Area Branding</h3>
               <p class="text-xs text-gray-400 mb-1">Exklusiv</p>
@@ -153,39 +198,66 @@
               </div>
               <ul class="space-y-3 mb-8">
                 <li class="flex items-start">
-                  <span class="text-green-400 mr-2">✔</span>
+                  <svg class="mr-2 flex-shrink-0" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M7.5 10L9.16667 11.6667L12.5 8.33333" stroke="#33cc99" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5C5.85786 2.5 2.5 5.85786 2.5 10C2.5 14.1421 5.85786 17.5 10 17.5Z" stroke="#33cc99" stroke-width="1.5"/>
+                  </svg>
                   <span class="text-gray-300">Area Branding (Mixing Area by..., PA Area by..., Light Area by...)</span>
                 </li>
                 <li class="flex items-start">
-                  <span class="text-green-400 mr-2">✔</span>
+                  <svg class="mr-2 flex-shrink-0" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M7.5 10L9.16667 11.6667L12.5 8.33333" stroke="#33cc99" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5C5.85786 2.5 2.5 5.85786 2.5 10C2.5 14.1421 5.85786 17.5 10 17.5Z" stroke="#33cc99" stroke-width="1.5"/>
+                  </svg>
                   <span class="text-gray-300">2 Days</span>
                 </li>
                 <li class="flex items-start">
-                  <span class="text-green-400 mr-2">✔</span>
+                  <svg class="mr-2 flex-shrink-0" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M7.5 10L9.16667 11.6667L12.5 8.33333" stroke="#33cc99" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5C5.85786 2.5 2.5 5.85786 2.5 10C2.5 14.1421 5.85786 17.5 10 17.5Z" stroke="#33cc99" stroke-width="1.5"/>
+                  </svg>
                   <span class="text-gray-300">Stand space of 7 qm</span>
                 </li>
                 <li class="flex items-start">
-                  <span class="text-green-400 mr-2">✔</span>
+                  <svg class="mr-2 flex-shrink-0" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M7.5 10L9.16667 11.6667L12.5 8.33333" stroke="#33cc99" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5C5.85786 2.5 2.5 5.85786 2.5 10C2.5 14.1421 5.85786 17.5 10 17.5Z" stroke="#33cc99" stroke-width="1.5"/>
+                  </svg>
                   <span class="text-gray-300">5 Exhibitor Tickets</span>
                 </li>
                 <li class="flex items-start">
-                  <span class="text-green-400 mr-2">✔</span>
+                  <svg class="mr-2 flex-shrink-0" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M7.5 10L9.16667 11.6667L12.5 8.33333" stroke="#33cc99" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5C5.85786 2.5 2.5 5.85786 2.5 10C2.5 14.1421 5.85786 17.5 10 17.5Z" stroke="#33cc99" stroke-width="1.5"/>
+                  </svg>
                   <span class="text-gray-300">2 Free Tickets Giveaway</span>
                 </li>
                 <li class="flex items-start">
-                  <span class="text-green-400 mr-2">✔</span>
+                  <svg class="mr-2 flex-shrink-0" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M7.5 10L9.16667 11.6667L12.5 8.33333" stroke="#33cc99" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5C5.85786 2.5 2.5 5.85786 2.5 10C2.5 14.1421 5.85786 17.5 10 17.5Z" stroke="#33cc99" stroke-width="1.5"/>
+                  </svg>
                   <span class="text-gray-300">Social Media Advertising Premium</span>
                 </li>
                 <li class="flex items-start">
-                  <span class="text-green-400 mr-2">✔</span>
+                  <svg class="mr-2 flex-shrink-0" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M7.5 10L9.16667 11.6667L12.5 8.33333" stroke="#33cc99" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5C5.85786 2.5 2.5 5.85786 2.5 10C2.5 14.1421 5.85786 17.5 10 17.5Z" stroke="#33cc99" stroke-width="1.5"/>
+                  </svg>
                   <span class="text-gray-300">Homepage Advertising</span>
                 </li>
                 <li class="flex items-start">
-                  <span class="text-green-400 mr-2">✔</span>
+                  <svg class="mr-2 flex-shrink-0" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M7.5 10L9.16667 11.6667L12.5 8.33333" stroke="#33cc99" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5C5.85786 2.5 2.5 5.85786 2.5 10C2.5 14.1421 5.85786 17.5 10 17.5Z" stroke="#33cc99" stroke-width="1.5"/>
+                  </svg>
                   <span class="text-gray-300">Merchandise Advertising</span>
                 </li>
                 <li class="flex items-start">
-                  <span class="text-green-400 mr-2">✔</span>
+                  <svg class="mr-2 flex-shrink-0" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M7.5 10L9.16667 11.6667L12.5 8.33333" stroke="#33cc99" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5C5.85786 2.5 2.5 5.85786 2.5 10C2.5 14.1421 5.85786 17.5 10 17.5Z" stroke="#33cc99" stroke-width="1.5"/>
+                  </svg>
                   <span class="text-gray-300">Video Content Advertising</span>
                 </li>
               </ul>
@@ -200,56 +272,55 @@
         </div>
 
         <!-- Add-Ons Section -->
-       <!-- Add-Ons Section -->
-<div class="mt-16">
-  <h3 class="text-2xl font-medium text-white mb-6 text-center">Add-Ons</h3>
-  <p class="text-sm text-gray-400 mb-8 text-center">Für Exhibitor und Area Branding Pakete</p>
-  <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-    <!-- Card 1 -->
-    <div class="p-6 rounded-2xl bg-gray-800/50 backdrop-blur text-center flex flex-col h-full justify-between">
-      <div>
-        <h4 class="text-lg font-medium text-white mb-2">Extra Stand Space</h4>
-        <p class="text-gray-300 mb-3">1 qm - 140€ inkl. MwSt</p>
-      </div>
-      <div class="flex justify-center mt-auto">
-        <span class="text-xs px-3 py-1 bg-gray-700 rounded-full text-gray-300">Für Exhibitor & Area Branding</span>
-      </div>
-    </div>
-    
-    <!-- Card 2 -->
-    <div class="p-6 rounded-2xl bg-gray-800/50 backdrop-blur text-center flex flex-col h-full justify-between">
-      <div>
-        <h4 class="text-lg font-medium text-white mb-2">Social Media Promotion Push</h4>
-        <p class="text-gray-300 mb-3">240€ inkl. MwSt</p>
-      </div>
-      <div class="flex justify-center mt-auto">
-        <span class="text-xs px-3 py-1 bg-gray-700 rounded-full text-gray-300">Für Exhibitor & Area Branding</span>
-      </div>
-    </div>
-    
-    <!-- Card 3 -->
-    <div class="p-6 rounded-2xl bg-gray-800/50 backdrop-blur text-center flex flex-col h-full justify-between">
-      <div>
-        <h4 class="text-lg font-medium text-white mb-2">Extra Exhibitor Ticket</h4>
-        <p class="text-gray-300 mb-3">50€ inkl. MwSt pro Ticket (max. 3)</p>
-      </div>
-      <div class="flex justify-center mt-auto">
-        <span class="text-xs px-3 py-1 bg-gray-700 rounded-full text-gray-300">Für Exhibitor & Area Branding</span>
-      </div>
-    </div>
-    
-    <!-- Card 4 -->
-    <div class="p-6 rounded-2xl bg-gray-800/50 backdrop-blur text-center flex flex-col h-full justify-between">
-      <div>
-        <h4 class="text-lg font-medium text-white mb-2">Extra Video Content Advertising</h4>
-        <p class="text-gray-300 mb-3">380€ inkl. MwSt</p>
-      </div>
-      <div class="flex justify-center mt-auto">
-        <span class="text-xs px-3 py-1 bg-gray-700 rounded-full text-gray-300">Für Exhibitor & Area Branding</span>
-      </div>
-    </div>
-  </div>
-</div>
+        <div class="mt-16">
+          <h3 class="text-2xl font-medium text-white mb-6 text-center">Add-Ons</h3>
+          <p class="text-sm text-gray-400 mb-8 text-center">Für Exhibitor und Area Branding Pakete</p>
+          <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <!-- Card 1 -->
+            <div class="p-6 rounded-2xl bg-gray-800/50 backdrop-blur text-center flex flex-col h-full justify-between">
+              <div>
+                <h4 class="text-lg font-medium text-white mb-2">Extra Stand Space</h4>
+                <p class="text-gray-300 mb-3">1 qm - 140€ inkl. MwSt</p>
+              </div>
+              <div class="flex justify-center mt-auto">
+                <span class="text-xs px-3 py-1 bg-gray-700 rounded-full text-gray-300">Für Exhibitor & Area Branding</span>
+              </div>
+            </div>
+            
+            <!-- Card 2 -->
+            <div class="p-6 rounded-2xl bg-gray-800/50 backdrop-blur text-center flex flex-col h-full justify-between">
+              <div>
+                <h4 class="text-lg font-medium text-white mb-2">Social Media Promotion Push</h4>
+                <p class="text-gray-300 mb-3">240€ inkl. MwSt</p>
+              </div>
+              <div class="flex justify-center mt-auto">
+                <span class="text-xs px-3 py-1 bg-gray-700 rounded-full text-gray-300">Für Exhibitor & Area Branding</span>
+              </div>
+            </div>
+            
+            <!-- Card 3 -->
+            <div class="p-6 rounded-2xl bg-gray-800/50 backdrop-blur text-center flex flex-col h-full justify-between">
+              <div>
+                <h4 class="text-lg font-medium text-white mb-2">Extra Exhibitor Ticket</h4>
+                <p class="text-gray-300 mb-3">50€ inkl. MwSt pro Ticket (max. 3)</p>
+              </div>
+              <div class="flex justify-center mt-auto">
+                <span class="text-xs px-3 py-1 bg-gray-700 rounded-full text-gray-300">Für Exhibitor & Area Branding</span>
+              </div>
+            </div>
+            
+            <!-- Card 4 -->
+            <div class="p-6 rounded-2xl bg-gray-800/50 backdrop-blur text-center flex flex-col h-full justify-between">
+              <div>
+                <h4 class="text-lg font-medium text-white mb-2">Extra Video Content Advertising</h4>
+                <p class="text-gray-300 mb-3">380€ inkl. MwSt</p>
+              </div>
+              <div class="flex justify-center mt-auto">
+                <span class="text-xs px-3 py-1 bg-gray-700 rounded-full text-gray-300">Für Exhibitor & Area Branding</span>
+              </div>
+            </div>
+          </div>
+        </div>
 
 
 <div class="text-center mt-16">
@@ -266,7 +337,9 @@
   >
     Kontakt
   </a>
-</div>
+      </div>
+
+
 
 
       <!-- Partner Application Form (Collapsible) -->
