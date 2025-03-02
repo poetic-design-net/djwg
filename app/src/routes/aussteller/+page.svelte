@@ -61,6 +61,63 @@
         {/if}
       </div>
 
+      <!-- Additional Info Section -->
+      <div class="my-20">
+        <div class="text-center mb-12">
+          <h2 class="text-3xl font-medium text-white mb-4">
+            {partnerPage?.whyPartnerSection?.title || 'Warum Partner werden?'}
+          </h2>
+          <p class="text-gray-300">
+            {partnerPage?.whyPartnerSection?.description || 'Als Partner des DJ Workshops profitierst du von unserem starken Netzwerk und direktem Zugang zur DJ-Community.'}
+          </p>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-8">
+          {#if partnerPage?.exhibitorInfo}
+            <div class="p-8 rounded-2xl bg-gray-800/50 backdrop-blur">
+              <h3 class="text-xl font-medium text-white mb-4">{partnerPage.exhibitorInfo.title}</h3>
+              <ul class="space-y-3 text-gray-300">
+                {#each partnerPage.exhibitorInfo.items as item}
+                  <li>• {item}</li>
+                {/each}
+              </ul>
+            </div>
+          {:else}
+            <div class="p-8 rounded-2xl bg-gray-800/50 backdrop-blur">
+              <h3 class="text-xl font-medium text-white mb-4">Ausstellerfläche</h3>
+              <ul class="space-y-3 text-gray-300">
+                <li>• Professionell ausgestattete Standfläche</li>
+                <li>• Technische Ausstattung nach Bedarf</li>
+                <li>• Optimale Präsentationsmöglichkeiten</li>
+                <li>• Flexible Standgrößen verfügbar</li>
+              </ul>
+            </div>
+          {/if}
+
+          {#if partnerPage?.marketingInfo}
+            <div class="p-8 rounded-2xl bg-gray-800/50 backdrop-blur">
+              <h3 class="text-xl font-medium text-white mb-4">{partnerPage.marketingInfo.title}</h3>
+              <ul class="space-y-3 text-gray-300">
+                {#each partnerPage.marketingInfo.items as item}
+                  <li>• {item}</li>
+                {/each}
+              </ul>
+            </div>
+          {:else}
+            <div class="p-8 rounded-2xl bg-gray-800/50 backdrop-blur">
+              <h3 class="text-xl font-medium text-white mb-4">Marketing & Promotion</h3>
+              <ul class="space-y-3 text-gray-300">
+                <li>• Präsenz auf unserer Website</li>
+                <li>• Social Media Promotion</li>
+                <li>• Erwähnung in Newsletter</li>
+                <li>• Logo-Präsenz auf Event-Material</li>
+              </ul>
+            </div>
+          {/if}
+        </div>
+      </div>
+    </div>
+
       <!-- Pricing Section -->
       <div class="mb-20">
         <div class="text-center mb-12">
@@ -332,7 +389,7 @@
     on:click={() => showForm = !showForm}
     class="px-8 py-3 text-center font-medium tracking-2xl border border-gray-700 hover:border-white text-white rounded-full transition duration-300 focus:outline-none mr-4"
   >
-    {showForm ? 'Anfrage-Formular schließen' : 'Oder generell anfragen'}
+    {showForm ? 'Anfrage-Formular schließen' : 'Anfrage-Formular öffnen'}
   </button>
   
   <a 
@@ -520,61 +577,6 @@
 
      
 
-      <!-- Additional Info Section -->
-      <div class="mt-20">
-        <div class="text-center mb-12">
-          <h2 class="text-3xl font-medium text-white mb-4">
-            {partnerPage?.whyPartnerSection?.title || 'Warum Partner werden?'}
-          </h2>
-          <p class="text-gray-300">
-            {partnerPage?.whyPartnerSection?.description || 'Als Partner des DJ Workshops profitierst du von unserem starken Netzwerk und direktem Zugang zur DJ-Community.'}
-          </p>
-        </div>
-
-        <div class="grid md:grid-cols-2 gap-8">
-          {#if partnerPage?.exhibitorInfo}
-            <div class="p-8 rounded-2xl bg-gray-800/50 backdrop-blur">
-              <h3 class="text-xl font-medium text-white mb-4">{partnerPage.exhibitorInfo.title}</h3>
-              <ul class="space-y-3 text-gray-300">
-                {#each partnerPage.exhibitorInfo.items as item}
-                  <li>• {item}</li>
-                {/each}
-              </ul>
-            </div>
-          {:else}
-            <div class="p-8 rounded-2xl bg-gray-800/50 backdrop-blur">
-              <h3 class="text-xl font-medium text-white mb-4">Ausstellerfläche</h3>
-              <ul class="space-y-3 text-gray-300">
-                <li>• Professionell ausgestattete Standfläche</li>
-                <li>• Technische Ausstattung nach Bedarf</li>
-                <li>• Optimale Präsentationsmöglichkeiten</li>
-                <li>• Flexible Standgrößen verfügbar</li>
-              </ul>
-            </div>
-          {/if}
-
-          {#if partnerPage?.marketingInfo}
-            <div class="p-8 rounded-2xl bg-gray-800/50 backdrop-blur">
-              <h3 class="text-xl font-medium text-white mb-4">{partnerPage.marketingInfo.title}</h3>
-              <ul class="space-y-3 text-gray-300">
-                {#each partnerPage.marketingInfo.items as item}
-                  <li>• {item}</li>
-                {/each}
-              </ul>
-            </div>
-          {:else}
-            <div class="p-8 rounded-2xl bg-gray-800/50 backdrop-blur">
-              <h3 class="text-xl font-medium text-white mb-4">Marketing & Promotion</h3>
-              <ul class="space-y-3 text-gray-300">
-                <li>• Präsenz auf unserer Website</li>
-                <li>• Social Media Promotion</li>
-                <li>• Erwähnung in Newsletter</li>
-                <li>• Logo-Präsenz auf Event-Material</li>
-              </ul>
-            </div>
-          {/if}
-        </div>
-      </div>
-    </div>
+      
   </div>
 </section>
