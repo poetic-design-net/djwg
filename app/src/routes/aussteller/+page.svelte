@@ -2,11 +2,12 @@
   import { fade, slide } from 'svelte/transition';
   import { enhance } from '$app/forms';
   import InfoIcon from '$lib/components/InfoIcon.svelte';
+  import CheckIcon from '$lib/components/CheckIcon.svelte';
   
 
 
   // Info text for pricing cards - besser formuliert
-  const priceInfo = "Bei Mitbringen eines eigenen DJs reduzieren sich die Paketpreise entsprechend. Bitte kontaktieren Sie uns für individuelle Angebote.          Scrollen Sie nach unten um Kontakt aufzunehmen.";
+  const priceInfo = "Wenn Sie uns im Voraus einen Artist nach Absprache zur Verfügung stellen, profitieren Sie von einem reduzierten Paketpreis. Kontaktieren Sie uns einfach vorher – wir freuen uns auf Ihre Anfrage!";
 
   export let data;
   export let form: any;
@@ -63,44 +64,48 @@
       <!-- Pricing Section -->
       <div class="mb-20">
         <div class="text-center mb-12">
-          <h2 class="text-3xl font-medium text-white mb-4">Unsere Partnerpakete</h2>
-          <p class="text-gray-300 mb-8">Wähle das passende Paket für deine Präsentation auf dem DJ Workshop</p>
+          <h2 class="text-3xl font-medium text-white mb-4">Unsere Ausstellerpakete</h2>
+          <p class="text-gray-300 mb-8">Wähle das passende Paket für deine Präsentation auf dei DJ Workshop Germany</p>
         </div>
 
         <!-- Pricing Cards -->
         <div class="grid md:grid-cols-3 gap-8">
           <!-- Sponsor/Supporter Card -->
-          <div class="relative p-8 rounded-xl bg-gray-800/70 backdrop-blur border border-gray-700 hover:border-green-400 transition-all duration-300 flex flex-col h-full">
+          <div class="relative p-8 rounded-xl bg-gray-800/50 backdrop-blur border border-gray-700 hover:border-green-400 transition-all duration-300 flex flex-col h-full" style="isolation: isolate;">
             <div class="absolute top-4 right-4 z-50">
                 <InfoIcon text={priceInfo} position="top" />
             </div>
             <div class="flex-grow">
               <h3 class="text-2xl font-medium text-white mb-2">Sponsor / Supporter</h3>
               <div class="flex items-baseline mb-6">
-                <span class="text-4xl font-medium text-white">380€</span>
+                <span class="text-4xl font-medium text-white">380,- €</span>
                 <span class="text-sm text-gray-400 ml-2">inkl. MwSt</span>
               </div>
-              <ul class="space-y-3 mb-8">
-                <li class="flex items-start">
-                  <svg class="mr-2 flex-shrink-0" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M7.5 10L9.16667 11.6667L12.5 8.33333" stroke="#33cc99" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5C5.85786 2.5 2.5 5.85786 2.5 10C2.5 14.1421 5.85786 17.5 10 17.5Z" stroke="#33cc99" stroke-width="1.5"/>
-                  </svg>
-                  <span class="text-gray-300">Social Media Advertising Basic</span>
+              <ul class="space-y-3 mb-8 flex flex-col">
+                <li class="flex items-start justify-between group">
+                  <div class="flex items-start flex-grow">
+                  <div class="mr-2 flex-shrink-0">
+                    <CheckIcon />
+                  </div>
+                  <span class="text-gray-300">Social Media Basic</span>
+                  </div>
+                  <InfoIcon variant="light"size="sm" text="Regelmäßige Erwähnung in unseren Stories und Feed-Posts" position="left" className="ml-1 flex-shrink-0" />
                 </li>
-                <li class="flex items-start">
-                  <svg class="mr-2 flex-shrink-0" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M7.5 10L9.16667 11.6667L12.5 8.33333" stroke="#33cc99" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5C5.85786 2.5 2.5 5.85786 2.5 10C2.5 14.1421 5.85786 17.5 10 17.5Z" stroke="#33cc99" stroke-width="1.5"/>
-                  </svg>
-                  <span class="text-gray-300">Homepage Advertising</span>
+                <li class="flex items-start justify-between group">
+                  <div class="flex items-start flex-grow">
+                  <div class="mr-2 flex-shrink-0">
+                    <CheckIcon />
+                  </div>
+                  <span class="text-gray-300">Homepage Basic</span>
+                  </div>
+                  <InfoIcon variant="light"size="sm" text="Logo-Platzierung auf der Website und Verlinkung zu Ihrer Webpräsenz" position="left" className="ml-1 flex-shrink-0" />
                 </li>
-                <li class="flex items-start">
-                  <svg class="mr-2 flex-shrink-0" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M7.5 10L9.16667 11.6667L12.5 8.33333" stroke="#33cc99" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5C5.85786 2.5 2.5 5.85786 2.5 10C2.5 14.1421 5.85786 17.5 10 17.5Z" stroke="#33cc99" stroke-width="1.5"/>
-                  </svg>
-                  <span class="text-gray-300">Merchandise Advertising</span>
+                <li class="flex items-start justify-between group">
+                  <div class="flex items-start flex-grow">
+                  <div class="mr-2 flex-shrink-0"><CheckIcon /></div>
+                  <span class="text-gray-300">Merchandise Basic</span>
+                  </div>
+                  <InfoIcon variant="light"size="sm" text="Logo auf Event-Materialien" position="left" className="ml-1 flex-shrink-0" />
                 </li>
               </ul>
             </div>
@@ -113,7 +118,7 @@
           </div>
 
           <!-- Exhibitor Card -->
-          <div class="relative p-8 rounded-xl bg-gray-800/70 backdrop-blur border border-gray-700 hover:border-green-400 transition-all duration-300 flex flex-col h-full before:absolute before:top-0 before:left-0 before:w-full before:h-1 before:bg-gradient-to-r before:from-green-400 before:to-blue-500 before:rounded-t-3xl">
+          <div class="relative p-8 rounded-xl bg-gray-800/50 backdrop-blur border border-gray-700 hover:border-green-400 transition-all duration-300 flex flex-col h-full before:absolute before:top-0 before:left-0 before:w-full before:h-1 before:bg-gradient-to-r before:from-green-400 before:to-blue-500 before:rounded-t-3xl">
             <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-green-400 to-blue-500 text-black text-sm font-medium px-4 py-1 rounded-full">Populär</div>
             <div class="absolute top-4 right-4 z-50">
                 <InfoIcon text={priceInfo} position="top" />
@@ -121,58 +126,37 @@
             <div class="flex-grow">
               <h3 class="text-2xl font-medium text-white mb-2">Exhibitor</h3>
               <div class="flex items-baseline mb-6">
-                <span class="text-4xl font-medium text-white">700€</span>
+                <span class="text-4xl font-medium text-white">700,- €</span>
                 <span class="text-sm text-gray-400 ml-2">inkl. MwSt</span>
               </div>
-              <ul class="space-y-3 mb-8">
-                <li class="flex items-start">
-                  <svg class="mr-2 flex-shrink-0" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M7.5 10L9.16667 11.6667L12.5 8.33333" stroke="#33cc99" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5C5.85786 2.5 2.5 5.85786 2.5 10C2.5 14.1421 5.85786 17.5 10 17.5Z" stroke="#33cc99" stroke-width="1.5"/>
-                  </svg>
-                  <span class="text-gray-300">2 Days</span>
+              <p class="text-sm text-gray-100 mb-4 italic">Inkl. aller Features des Supporter Pakets (380€)</p>
+              <ul class="space-y-3 mb-8 flex flex-col">
+                <li class="flex items-start justify-between group">
+                  <div class="flex items-start flex-grow">
+                    <div class="mr-2 flex-shrink-0">
+                      <CheckIcon />
+                    </div>
+                    <span class="text-gray-300">5 qm Ausstellerfläche</span>
+                  </div>
+                  <InfoIcon variant="light"size="sm" text="Professionell ausgestattete Standfläche für 2 Tage, inkl. Strom und Grundausstattung" position="left" className="ml-1 flex-shrink-0" />
+                </li>
+                <li class="flex items-start justify-between group">
+                  <div class="flex items-start flex-grow">
+                    <div class="mr-2 flex-shrink-0">
+                      <CheckIcon />
+                    </div>
+                    <span class="text-gray-300">3 Exhibitor Tickets</span>
+                  </div>
+                  <InfoIcon variant="light"size="sm" text="Voller Event-Zugang für 3 Mitarbeiter, inkl. Catering" position="left" className="ml-1 flex-shrink-0" />
                 </li>
                 <li class="flex items-start">
-                  <svg class="mr-2 flex-shrink-0" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M7.5 10L9.16667 11.6667L12.5 8.33333" stroke="#33cc99" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5C5.85786 2.5 2.5 5.85786 2.5 10C2.5 14.1421 5.85786 17.5 10 17.5Z" stroke="#33cc99" stroke-width="1.5"/>
-                  </svg>
-                  <span class="text-gray-300">Stand space of 5 qm</span>
-                </li>
-                <li class="flex items-start">
-                  <svg class="mr-2 flex-shrink-0" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M7.5 10L9.16667 11.6667L12.5 8.33333" stroke="#33cc99" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5C5.85786 2.5 2.5 5.85786 2.5 10C2.5 14.1421 5.85786 17.5 10 17.5Z" stroke="#33cc99" stroke-width="1.5"/>
-                  </svg>
-                  <span class="text-gray-300">3 Exhibitor Tickets</span>
-                </li>
-                <li class="flex items-start">
-                  <svg class="mr-2 flex-shrink-0" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M7.5 10L9.16667 11.6667L12.5 8.33333" stroke="#33cc99" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5C5.85786 2.5 2.5 5.85786 2.5 10C2.5 14.1421 5.85786 17.5 10 17.5Z" stroke="#33cc99" stroke-width="1.5"/>
-                  </svg>
-                  <span class="text-gray-300">2 Free Tickets Giveaway</span>
-                </li>
-                <li class="flex items-start">
-                  <svg class="mr-2 flex-shrink-0" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M7.5 10L9.16667 11.6667L12.5 8.33333" stroke="#33cc99" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5C5.85786 2.5 2.5 5.85786 2.5 10C2.5 14.1421 5.85786 17.5 10 17.5Z" stroke="#33cc99" stroke-width="1.5"/>
-                  </svg>
-                  <span class="text-gray-300">Social Media Advertising Basic</span>
-                </li>
-                <li class="flex items-start">
-                  <svg class="mr-2 flex-shrink-0" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M7.5 10L9.16667 11.6667L12.5 8.33333" stroke="#33cc99" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5C5.85786 2.5 2.5 5.85786 2.5 10C2.5 14.1421 5.85786 17.5 10 17.5Z" stroke="#33cc99" stroke-width="1.5"/>
-                  </svg>
-                  <span class="text-gray-300">Homepage Advertising</span>
-                </li>
-                <li class="flex items-start">
-                  <svg class="mr-2 flex-shrink-0" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M7.5 10L9.16667 11.6667L12.5 8.33333" stroke="#33cc99" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5C5.85786 2.5 2.5 5.85786 2.5 10C2.5 14.1421 5.85786 17.5 10 17.5Z" stroke="#33cc99" stroke-width="1.5"/>
-                  </svg>
-                  <span class="text-gray-300">Merchandise Advertising</span>
+                  <div class="mr-2 flex-shrink-0">
+                    <CheckIcon />
+                  </div>
+                  <div class="flex items-start justify-between w-full">
+                    <span class="text-gray-300">2 Free Tickets</span>
+                    <InfoIcon variant="light" size="sm" text="Zwei Premium Event-Tickets zum Verschenken" position="left" className="ml-1 flex-shrink-0" />
+                  </div>
                 </li>
               </ul>
             </div>
@@ -182,83 +166,88 @@
             >
               Jetzt Paket buchen
             </a>
+            <div class="text-xs absolute bottom-1 left-1/2 transform -translate-x-1/2 text-white">
+              <span>+ Addons</span>
+            </div>
           </div>
 
           <!-- Area Branding Card -->
-          <div class="relative p-8 rounded-xl bg-gray-800/70 backdrop-blur border border-gray-700 hover:border-green-400 transition-all duration-300 flex flex-col h-full">
+          <div class="relative p-8 rounded-xl bg-gray-800/50 backdrop-blur border border-gray-700 hover:border-green-400 transition-all duration-300 flex flex-col h-full">
             <div class="absolute top-4 right-4 z-50">
                 <InfoIcon text={priceInfo} position="top" />
             </div>
             <div class="flex-grow">
               <h3 class="text-2xl font-medium text-white mb-2">Area Branding</h3>
-              <p class="text-xs text-gray-400 mb-1">Exklusiv</p>
               <div class="flex items-baseline mb-6">
-                <span class="text-4xl font-medium text-white">5000€</span>
+                <span class="text-4xl font-medium text-white">5.000,- €</span>
                 <span class="text-sm text-gray-400 ml-2">inkl. MwSt</span>
               </div>
-              <ul class="space-y-3 mb-8">
-                <li class="flex items-start">
-                  <svg class="mr-2 flex-shrink-0" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M7.5 10L9.16667 11.6667L12.5 8.33333" stroke="#33cc99" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5C5.85786 2.5 2.5 5.85786 2.5 10C2.5 14.1421 5.85786 17.5 10 17.5Z" stroke="#33cc99" stroke-width="1.5"/>
-                  </svg>
-                  <span class="text-gray-300">Area Branding (Mixing Area by..., PA Area by..., Light Area by...)</span>
+              <p class="text-sm text-gray-100 italic mb-4">Inkl. aller Features des Exhibitor Pakets (700€)</p>
+              <ul class="space-y-3 mb-8 flex flex-col">
+                <li class="flex items-start justify-between group">
+                  <div class="flex items-start flex-grow">
+                    <div class="mr-2 flex-shrink-0">
+                      <CheckIcon />
+                    </div>
+                    <span class="text-gray-300">Area Branding - Exklusive Bereiche</span>
+                  </div>
+                  <InfoIcon variant="light"size="sm" text="Exklusive Branding-Rechte für zentrale Event-Bereiche: Mixing Area, PA Area oder Light Area" position="left" className="ml-1 flex-shrink-0" />
+                </li>
+                <li class="flex items-start justify-between group">
+                  <div class="flex items-start flex-grow">
+                    <div class="mr-2 flex-shrink-0">
+                      <CheckIcon />
+                    </div>
+                    <span class="text-gray-300">7 qm Premium Standfläche</span>
+                  </div>
+                  <InfoIcon variant="light"size="sm" text="Großzügige Ausstellerfläche an Premium-Position, inkl. Strom und High-End Ausstattung" position="left" className="ml-1 flex-shrink-0" />
+                </li>
+                <li class="flex items-start justify-between group">
+                  <div class="flex items-start flex-grow">
+                    <div class="mr-2 flex-shrink-0">
+                      <CheckIcon />
+                    </div>
+                    <span class="text-gray-300">5 Exhibitor Tickets</span>
+                  </div>
+                  <InfoIcon variant="light"size="sm" text="Fünf Vollzugang-Tickets für Ihr Team, inkl. Premium-Catering" position="left" className="ml-1 flex-shrink-0" />
+                </li>
+                <li class="flex items-start justify-between group">
+                  <div class="flex items-start flex-grow">
+                    <div class="mr-2 flex-shrink-0">
+                      <CheckIcon />
+                    </div>
+                    <span class="text-gray-300">Premium Social Media</span>
+                  </div>
+                  <InfoIcon variant="light"size="sm" text="Eigene Story-Highlights, Reel-Produktion, Premium Posts mit Markierung" position="left" className="ml-1 flex-shrink-0" />
+                </li>
+                <li class="flex items-start justify-between group">
+                  <div class="flex items-start flex-grow">
+                    <div class="mr-2 flex-shrink-0">
+                      <CheckIcon />
+                    </div>
+                    <span class="text-gray-300">Premium Video Content</span>
+                  </div>
+                  <InfoIcon variant="light"size="sm" text="Professionelles Video-Feature, After-Movie Integration, eigene Produkt-Highlights" position="left" className="ml-1 flex-shrink-0" />
+                </li>
+                <li class="flex items-start justify-between group">
+                  <div class="flex items-start flex-grow">
+                    <div class="mr-2 flex-shrink-0">
+                      <CheckIcon />
+                    </div>
+                    <span class="text-gray-300">Featured Partner Status</span>
+                  </div>
+                  <InfoIcon variant="light"size="sm" text="Premium Website-Platzierung, Hervorgehobene Position in allen Marketingmaterialien" position="left" className="ml-1 flex-shrink-0" />
                 </li>
                 <li class="flex items-start">
-                  <svg class="mr-2 flex-shrink-0" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M7.5 10L9.16667 11.6667L12.5 8.33333" stroke="#33cc99" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5C5.85786 2.5 2.5 5.85786 2.5 10C2.5 14.1421 5.85786 17.5 10 17.5Z" stroke="#33cc99" stroke-width="1.5"/>
-                  </svg>
-                  <span class="text-gray-300">2 Days</span>
-                </li>
-                <li class="flex items-start">
-                  <svg class="mr-2 flex-shrink-0" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M7.5 10L9.16667 11.6667L12.5 8.33333" stroke="#33cc99" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5C5.85786 2.5 2.5 5.85786 2.5 10C2.5 14.1421 5.85786 17.5 10 17.5Z" stroke="#33cc99" stroke-width="1.5"/>
-                  </svg>
-                  <span class="text-gray-300">Stand space of 7 qm</span>
-                </li>
-                <li class="flex items-start">
-                  <svg class="mr-2 flex-shrink-0" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M7.5 10L9.16667 11.6667L12.5 8.33333" stroke="#33cc99" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5C5.85786 2.5 2.5 5.85786 2.5 10C2.5 14.1421 5.85786 17.5 10 17.5Z" stroke="#33cc99" stroke-width="1.5"/>
-                  </svg>
-                  <span class="text-gray-300">5 Exhibitor Tickets</span>
-                </li>
-                <li class="flex items-start">
-                  <svg class="mr-2 flex-shrink-0" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M7.5 10L9.16667 11.6667L12.5 8.33333" stroke="#33cc99" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5C5.85786 2.5 2.5 5.85786 2.5 10C2.5 14.1421 5.85786 17.5 10 17.5Z" stroke="#33cc99" stroke-width="1.5"/>
-                  </svg>
-                  <span class="text-gray-300">2 Free Tickets Giveaway</span>
-                </li>
-                <li class="flex items-start">
-                  <svg class="mr-2 flex-shrink-0" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M7.5 10L9.16667 11.6667L12.5 8.33333" stroke="#33cc99" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5C5.85786 2.5 2.5 5.85786 2.5 10C2.5 14.1421 5.85786 17.5 10 17.5Z" stroke="#33cc99" stroke-width="1.5"/>
-                  </svg>
-                  <span class="text-gray-300">Social Media Advertising Premium</span>
-                </li>
-                <li class="flex items-start">
-                  <svg class="mr-2 flex-shrink-0" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M7.5 10L9.16667 11.6667L12.5 8.33333" stroke="#33cc99" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5C5.85786 2.5 2.5 5.85786 2.5 10C2.5 14.1421 5.85786 17.5 10 17.5Z" stroke="#33cc99" stroke-width="1.5"/>
-                  </svg>
-                  <span class="text-gray-300">Homepage Advertising</span>
-                </li>
-                <li class="flex items-start">
-                  <svg class="mr-2 flex-shrink-0" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M7.5 10L9.16667 11.6667L12.5 8.33333" stroke="#33cc99" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5C5.85786 2.5 2.5 5.85786 2.5 10C2.5 14.1421 5.85786 17.5 10 17.5Z" stroke="#33cc99" stroke-width="1.5"/>
-                  </svg>
-                  <span class="text-gray-300">Merchandise Advertising</span>
-                </li>
-                <li class="flex items-start">
-                  <svg class="mr-2 flex-shrink-0" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M7.5 10L9.16667 11.6667L12.5 8.33333" stroke="#33cc99" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5C5.85786 2.5 2.5 5.85786 2.5 10C2.5 14.1421 5.85786 17.5 10 17.5Z" stroke="#33cc99" stroke-width="1.5"/>
-                  </svg>
-                  <span class="text-gray-300">Video Content Advertising</span>
+                  <div class="mr-2 flex-shrink-0">
+                    <CheckIcon />
+                  </div>
+                  <div class="flex items-start justify-between w-full">
+                    <span class="text-gray-300">Video Content Advertising</span>
+                    <InfoIcon
+                      variant="light" size="sm" text="Professionelles Video-Feature und After-Movie Integration"
+                      position="left" className="ml-1 flex-shrink-0" />
+                  </div>
                 </li>
               </ul>
             </div>
@@ -268,6 +257,9 @@
             >
               Jetzt Paket buchen
             </a>
+            <div class="text-xs absolute bottom-1 left-1/2 transform -translate-x-1/2 text-white">
+              <span>+ Addons</span>
+            </div>
           </div>
         </div>
 
@@ -279,7 +271,10 @@
             <!-- Card 1 -->
             <div class="p-6 rounded-2xl bg-gray-800/50 backdrop-blur text-center flex flex-col h-full justify-between">
               <div>
-                <h4 class="text-lg font-medium text-white mb-2">Extra Stand Space</h4>
+                <h4 class="text-lg font-medium text-white mb-2 flex items-center justify-center">
+                  Extra Stand Space
+                  <InfoIcon variant="light"size="sm" text="Erweitern Sie Ihre Präsentationsfläche, Flexible Gestaltungsmöglichkeiten, Stromversorgung und Grundausstattung inklusive, Ideal für große Produktpräsentationen" position="top" className="ml-1" />
+                </h4>
                 <p class="text-gray-300 mb-3">1 qm - 140€ inkl. MwSt</p>
               </div>
               <div class="flex justify-center mt-auto">
@@ -290,7 +285,10 @@
             <!-- Card 2 -->
             <div class="p-6 rounded-2xl bg-gray-800/50 backdrop-blur text-center flex flex-col h-full justify-between">
               <div>
-                <h4 class="text-lg font-medium text-white mb-2">Social Media Promotion Push</h4>
+                <h4 class="text-lg font-medium text-white mb-2 flex items-center justify-center">
+                  Social Media Promotion Push
+                  <InfoIcon variant="light"size="sm" text="Zusätzliche Social Media Kampagne, Dedizierte Story-Highlights, Produkt-Feature Posts, Gesteigerte Online-Präsenz" position="top" className="ml-1" />
+                </h4>
                 <p class="text-gray-300 mb-3">240€ inkl. MwSt</p>
               </div>
               <div class="flex justify-center mt-auto">
@@ -301,7 +299,10 @@
             <!-- Card 3 -->
             <div class="p-6 rounded-2xl bg-gray-800/50 backdrop-blur text-center flex flex-col h-full justify-between">
               <div>
-                <h4 class="text-lg font-medium text-white mb-2">Extra Exhibitor Ticket</h4>
+                <h4 class="text-lg font-medium text-white mb-2 flex items-center justify-center">
+                  Extra Exhibitor Ticket
+                  <InfoIcon variant="light"size="sm" text="Zusätzlicher Mitarbeiter-Zugang, Voller Event-Zugang, Verpflegung inklusive, Zugang zu allen Bereichen und Workshops" position="top" className="ml-1" />
+                </h4>
                 <p class="text-gray-300 mb-3">50€ inkl. MwSt pro Ticket (max. 3)</p>
               </div>
               <div class="flex justify-center mt-auto">
@@ -312,7 +313,10 @@
             <!-- Card 4 -->
             <div class="p-6 rounded-2xl bg-gray-800/50 backdrop-blur text-center flex flex-col h-full justify-between">
               <div>
-                <h4 class="text-lg font-medium text-white mb-2">Extra Video Content Advertising</h4>
+                <h4 class="text-lg font-medium text-white mb-2 flex items-center justify-center">
+                  Extra Video Content Advertising
+                  <InfoIcon variant="light"size="sm" text="Zusätzliche Video-Produktion, Eigene Produkt-Präsentationen, Integration in Event-Highlights, Social Media Distribution" position="top" className="ml-1" />
+                </h4>
                 <p class="text-gray-300 mb-3">380€ inkl. MwSt</p>
               </div>
               <div class="flex justify-center mt-auto">
