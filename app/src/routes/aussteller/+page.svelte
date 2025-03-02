@@ -116,7 +116,7 @@
           {/if}
         </div>
       </div>
-    </div>
+    
 
       <!-- Pricing Section -->
       <div class="mb-20">
