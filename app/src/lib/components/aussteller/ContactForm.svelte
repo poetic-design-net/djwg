@@ -1,24 +1,16 @@
 <script lang="ts">
-  import { enhance } from '$app/forms';
   import { fade } from 'svelte/transition';
-  import MediaUploader from '$lib/components/dashboard/MediaUploader.svelte';
-  import { getContext } from 'svelte';
-  import type { SupabaseClient } from '@supabase/supabase-js';
+  import { enhance } from '$app/forms';
+  import SimpleLogoUploader from './SimpleLogoUploader.svelte';
 
   export let form: any;
   
-  const supabase = getContext<SupabaseClient>('supabase');
   let isSubmitting = false;
   let uploadedLogoId: string | null = null;
+  let logoUploader: SimpleLogoUploader;
 
-  // Dummy user für MediaUploader - wird später durch echten User ersetzt
-  const dummyUser = {
-    id: 'temp',  
-    email: 'temp@example.com'
-  };
-
-  function handleUploadComplete(event: CustomEvent) {
-    uploadedLogoId = event.detail.fileId;
+  function handleUploadComplete(id: string) {
+    uploadedLogoId = id;
   }
 </script>
 
@@ -28,6 +20,10 @@
     isSubmitting = true;
     return async ({ update }) => {
       await update();
+      if (form?.success) {
+        uploadedLogoId = null;
+        logoUploader?.reset();
+      }
       isSubmitting = false;
     };
   }}
@@ -37,10 +33,10 @@
   <!-- Logo Upload -->
   <div class="space-y-2">
     <label class="block text-sm font-medium text-gray-300">Firmenlogo</label>
-    <p class="text-sm text-gray-400 mb-2">Lade dein Firmenlogo hoch (PNG, JPG oder SVG)</p>
-    <MediaUploader 
-      user={dummyUser}
-      on:uploadComplete={handleUploadComplete}
+    <SimpleLogoUploader 
+      bind:this={logoUploader}
+      clearAfterSubmit={true}
+      onUploadComplete={handleUploadComplete}
     />
     <input type="hidden" name="logoId" value={uploadedLogoId ?? ''}>
   </div>
