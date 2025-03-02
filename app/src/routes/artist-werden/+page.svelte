@@ -117,7 +117,7 @@
       <!-- Contact Form -->
       <div class="my-20">
         <h2 class="text-4xl text-white mb-12 text-center">
-          {artistPage?.formSettings?.title || 'Bewirb dich jetzt'}
+          {artistPage?.formSettings?.title || 'oder bewirb dich jetzt'}
         </h2>
         
         {#if form?.success}
