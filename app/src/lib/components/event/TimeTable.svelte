@@ -29,6 +29,9 @@
       timelineObserver?.observe(item);
     });
 
+    // URL-Parameter überprüfen und entsprechende Tabs auswählen
+    handleUrlParams();
+
     return () => {
       timelineObserver?.disconnect();
     };
@@ -116,12 +119,61 @@
     if (schedule[index]?.stages?.length > 0) {
       selectedStageIndex = 0;
     }
+    updateUrlParams();
   }
 
   function selectStage(index: number) {
     if (index < selectedDay?.stages?.length) {
       selectedStageIndex = index;
+      updateUrlParams();
     }
+  }
+
+  // Neue Funktionen für URL-Parameter
+
+  function handleUrlParams() {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      
+      // Tag-Parameter (day)
+      const dayParam = params.get('day');
+      if (dayParam !== null && !isNaN(parseInt(dayParam))) {
+        const dayIndex = parseInt(dayParam);
+        if (dayIndex >= 0 && dayIndex < schedule.length) {
+          selectedDayIndex = dayIndex;
+        }
+      }
+      
+      // Bühnen-Parameter (stage)
+      const stageParam = params.get('stage');
+      if (stageParam !== null && !isNaN(parseInt(stageParam))) {
+        const stageIndex = parseInt(stageParam);
+        if (stageIndex >= 0 && selectedDay?.stages && stageIndex < selectedDay.stages.length) {
+          selectedStageIndex = stageIndex;
+        }
+      }
+    }
+  }
+
+  function updateUrlParams() {
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.set('day', selectedDayIndex.toString());
+      url.searchParams.set('stage', selectedStageIndex.toString());
+      
+      // URL aktualisieren ohne Seite neu zu laden
+      window.history.pushState({}, '', url.toString());
+    }
+  }
+
+  function getTabUrl(dayIndex: number, stageIndex: number = 0): string {
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.set('day', dayIndex.toString());
+      url.searchParams.set('stage', stageIndex.toString());
+      return url.toString();
+    }
+    return '#';
   }
 </script>
 
@@ -137,12 +189,13 @@
       {#if schedule.length > 1}
         <div class="flex flex-wrap justify-center mb-8 gap-4">
           {#each schedule as day, i}
-            <button
+            <a
+              href={getTabUrl(i)}
               class="px-6 py-3 rounded-full text-sm font-medium transition-all duration-300 {selectedDayIndex === i ? 'bg-green-500 text-black scale-105' : 'text-white hover:text-green-500 hover:scale-105 border border-gray-700 hover:border-green-500'}"
-              on:click={() => selectDay(i)}
+              on:click|preventDefault={() => selectDay(i)}
             >
               {formatDate(day.date)}
-            </button>
+            </a>
           {/each}
         </div>
       {/if}
@@ -152,12 +205,13 @@
         {#if selectedDay.stages.length > 1}
           <div class="flex flex-wrap justify-center mb-12 gap-4">
             {#each selectedDay.stages as stage, i}
-              <button
+              <a
+                href={getTabUrl(selectedDayIndex, i)}
                 class="px-6 py-3 rounded-full text-sm font-medium transition-all duration-300 {selectedStageIndex === i ? 'bg-green-500 text-black scale-105' : 'text-white hover:text-green-500 hover:scale-105 border border-gray-700 hover:border-green-500'}"
-                on:click={() => selectStage(i)}
+                on:click|preventDefault={() => selectStage(i)}
               >
                 {stage.name}
-              </button>
+              </a>
             {/each}
           </div>
         {/if}
