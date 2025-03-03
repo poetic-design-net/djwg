@@ -11,6 +11,7 @@
   import ProfileEdit from '$lib/components/ProfileEdit.svelte';
   import MediaUploader from '$lib/components/dashboard/MediaUploader.svelte';
   import MyFiles from '$lib/components/dashboard/MyFiles.svelte';
+  import WebMaster from '$lib/components/dashboard/WebMaster.svelte';
   import type { DisplayBadge } from '$lib/types/badges';
   import { onMount } from 'svelte';
 
@@ -118,6 +119,8 @@
         firstName={user.raw_user_meta_data?.first_name || user.user_metadata?.first_name || ''} 
         lastName={user.raw_user_meta_data?.last_name || user.user_metadata?.last_name || ''} 
       />
+
+     <WebMaster />
     </div>
   </div>
 </div>
