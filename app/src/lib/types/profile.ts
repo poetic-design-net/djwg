@@ -52,6 +52,10 @@ export interface User {
     email_verified?: boolean;
     phone_verified?: boolean;
   };
+  badges?: Array<{
+    badge_id: string;
+    [key: string]: any;
+  }>;
 }
 
 export interface Badge {

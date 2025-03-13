@@ -4,6 +4,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { isAdmin } from '$lib/config/admin.server';
 import { client } from '$lib/sanity/client';
 import { onlineTalksQuery } from '$lib/sanity/queries/onlineTalks';
+import { videosQuery, type Video } from '$lib/sanity/queries/videos';
 import type { User, Profile } from '$lib/types/profile';
 import type { LoaderLocals } from '@sanity/svelte-loader';
 import { manageBadgesRealtime } from '$lib/services/badge-service';
@@ -45,12 +46,31 @@ export const load: PageServerLoad = async ({ locals }) => {
         // Fetch online talks
         const onlineTalks = await client.fetch(onlineTalksQuery);
 
+        // Fetch videos from Sanity with initial data
+        const rawVideos = await typedLocals.loadQuery<Video[]>(videosQuery);
+
+        // Get user badges
+        const { data: badges } = await typedLocals.supabase
+            .from('user_badges')
+            .select('badge_id')
+            .eq('user_id', user.id);
+        
+        const userBadges = badges || [];
+
         return {
-            user,
+            user: {
+                ...user,
+                badges: userBadges
+            },
             session,
             onlineTalks,
             isAdmin: isUserAdmin,
-            profile
+            profile,
+            videos: {
+                query: videosQuery,
+                data: rawVideos,
+                options: { initial: rawVideos }
+            }
         };
     } catch (error) {
         if (error instanceof Response && error.status === 303) {
