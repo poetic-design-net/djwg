@@ -1,19 +1,18 @@
+import type { SanityImage } from '$lib/sanity/image';
+
 export interface Badge {
   id: string;
+  supabaseId?: string;
   name: string;
-  description: string;
-  slug: string;
-  unlockCondition?: string;
-  unlockReward?: string;
-  style?: {
-    customColor?: {
-      hex: string;
-    };
-    variant?: 'gold' | 'silver' | 'bronze' | 'premium' | 'custom';
+  description?: string;
+  icon?: SanityImage;
+  conditions?: {
+    minDjGigs?: number;
+    minRating?: number;
+    requiredBadges?: string[];
+    [key: string]: any;
   };
-  created_at: string;
 }
-
 export interface UserBadge {
   user_id: string;
   badge_id: string;

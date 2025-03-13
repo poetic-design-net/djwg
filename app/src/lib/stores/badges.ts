@@ -42,6 +42,8 @@ function createBadgeStore() {
           .from('badges')
           .select('*')
           .order('created_at', { ascending: true });
+          
+        console.log('Geladene Badges aus Supabase:', availableBadges);
 
         if (badgesError) throw badgesError;
 
@@ -50,6 +52,8 @@ function createBadgeStore() {
           .from('user_badges')
           .select('*')
           .eq('user_id', userId);
+          
+        console.log('User Badges aus Supabase:', userBadges);
 
         if (userBadgesError) throw userBadgesError;
 

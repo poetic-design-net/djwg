@@ -4,9 +4,12 @@ export const badgesQuery = `*[_type == "badge"] {
   name,
   description,
   slug,
-  "icon": icon.asset->{
-    url
-  },
+ icon {
+    _type,
+    asset->,
+    hotspot,
+    alt 
+    },
   style {
     customColor,
     borderStyle,
@@ -24,9 +27,12 @@ export const badgeBySupabaseIdQuery = `*[_type == "badge" && supabaseId == $supa
   name,
   description,
   slug,
-  "icon": icon.asset->{
-    url
-  },
+  icon {
+    _type,
+    asset->,
+    hotspot,
+    alt 
+    },  
   style {
     customColor,
     borderStyle,

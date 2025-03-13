@@ -148,7 +148,7 @@
 <!-- Lösch-Bestätigungsdialog -->
 {#if showDeleteDialog}
   <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-gray-800 p-6 rounded-xl max-w-md w-full mx-4">
+    <div class="bg-gray-800/40 p-6 rounded-xl max-w-md w-full mx-4">
       <h3 class="text-lg font-medium text-white mb-4">Datei löschen</h3>
       <p class="text-gray-300 mb-6">
         Möchten Sie die Datei "{truncateFilename(fileToDelete?.name || '')}" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.

@@ -12,24 +12,15 @@
   import MediaUploader from '$lib/components/dashboard/MediaUploader.svelte';
   import MyFiles from '$lib/components/dashboard/MyFiles.svelte';
   import WebMaster from '$lib/components/dashboard/WebMaster.svelte';
+  import VideosSection from '$lib/components/dashboard/VideosSection.svelte';
+  import CollapsibleSection from '$lib/components/dashboard/CollapsibleSection.svelte';
+  import Support from '$lib/components/dashboard/Support.svelte';
   import { onMount } from 'svelte';
 
-  import type { User } from '$lib/types/profile';
+  export let data;
+  const { user, onlineTalks, isAdmin, videos } = data;
 
-  export let data: {
-    user: User;
-    onlineTalks: {
-      _id: string;
-      title: string;
-      date: string;
-      link: string;
-      password: string;
-      visibleFromHours: number;
-    }[];
-    isAdmin: boolean;
-  };
-  
-  const { user, onlineTalks, isAdmin } = data;
+  let videosComponent: VideosSection;
   let showEditProfile = false;
 
   const supabase = getContext<SupabaseClient>('supabase');
@@ -56,6 +47,12 @@
       loading = false;
     }
   };
+
+  function handleOpenVideos() {
+    if (videosComponent) {
+      videosComponent.openAndScrollTo();
+    }
+  }
 </script>
 
 <div class="min-h-screen bg-black py-12 px-4 sm:px-6 lg:px-8">
@@ -63,7 +60,7 @@
     <div class="mb-8 flex justify-between items-center">
       <div>
         <h1 class="text-4xl font-medium text-white mb-2">Dashboard</h1>
-        <p class="text-gray-400">Manage your profile and preferences</p>
+        <p class="text-gray-400">Dein Bereich zum Lernen und Verwalten</p>
       </div>
       <button 
         on:click={handleLogout}
@@ -74,51 +71,70 @@
       </button>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <div class="space-y-6">
       <!-- Profile Section -->
-      <ProfileSection
-        {user}
-        onEdit={() => showEditProfile = true}
-      />
-
-      <!-- Online Talk Section -->
-      <OnlineTalkSection {onlineTalks} />
-      
-      <!-- Badges & Useful Links Container -->
-      <div class="space-y-8 h-full flex flex-col">
-        <!-- Badges Section -->
-        <div class="relative rounded-3xl p-8 border border-gray-800 overflow-hidden flex-grow">
-          <div class="absolute inset-0 mix-blend-overlay noise-filter"></div>
-          <div class="relative">
-            <h2 class="text-2xl font-medium text-white mb-6">Deine Badges</h2>
-            <BadgeDisplay {user} />
+    
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <ProfileSection
+            {user}
+            onEdit={() => showEditProfile = true}
+          />
+          
+          <!-- Badges Section -->
+          <div class="relative rounded-xl p-6 border border-gray-800 overflow-hidden">
+            <div class="absolute inset-0 mix-blend-overlay noise-filter"></div>
+            <div class="relative">
+              <h3 class="text-xl font-medium text-white mb-4">Deine Badges</h3>
+              <BadgeDisplay {user} on:openVideos={handleOpenVideos} />
+            </div>
           </div>
         </div>
 
-        <!-- Useful Links Section -->
+
+      <!-- Videos Section -->
+      <VideosSection {videos} {user} bind:this={videosComponent} />
+
+      <!-- Online Talks Section -->
+      <CollapsibleSection title="Online Talks" initiallyOpen={true}>
+        <OnlineTalkSection {onlineTalks} />
+      </CollapsibleSection>
+
+      <!-- Media Section -->
+      <CollapsibleSection title="Deine Uploads" initiallyOpen={false}>
+        <MyFiles {user} let:handleUploadComplete>
+          <MediaUploader 
+            {user} 
+            on:uploadComplete={handleUploadComplete} 
+          />
+        </MyFiles>
+      </CollapsibleSection>
+
+          <!-- Support -->
+          <CollapsibleSection title="Support" initiallyOpen={false}>
+            <Support />
+          </CollapsibleSection>
+
+     
+
+      <!-- Links & Resources -->
+      <CollapsibleSection title="Links & Ressourcen" initiallyOpen={false}>
         <UsefulLinksSection {isAdmin} />
-      </div>
+      </CollapsibleSection>
 
-       <!-- Media Upload Section -->
-       <div class="relative rounded-3xl p-8 border border-gray-800 overflow-hidden">
-        <div class="absolute inset-0 mix-blend-overlay noise-filter"></div>
-        <div class="relative space-y-8">
-          <MyFiles {user} let:handleUploadComplete>
-            <MediaUploader 
-              {user} 
-              on:uploadComplete={handleUploadComplete} />
-          </MyFiles>
-        </div>
-      </div>
+   <!-- Newsletter Section -->
+   <CollapsibleSection title="Newsletter" initiallyOpen={false}>
+    <NewsletterSection 
+      email={user.email} 
+      firstName={user.raw_user_meta_data?.first_name || user.user_metadata?.first_name || ''} 
+      lastName={user.raw_user_meta_data?.last_name || user.user_metadata?.last_name || ''} 
+    />
+  </CollapsibleSection>
 
-      <!-- Newsletter Section -->
-      <NewsletterSection 
-        email={user.email} 
-        firstName={user.raw_user_meta_data?.first_name || user.user_metadata?.first_name || ''} 
-        lastName={user.raw_user_meta_data?.last_name || user.user_metadata?.last_name || ''} 
-      />
-
-      <WebMaster />
+  
+        <CollapsibleSection title="Webmaster" initiallyOpen={false}>
+          <WebMaster />
+        </CollapsibleSection>
+   
     </div>
   </div>
 </div>
@@ -145,11 +161,4 @@
   </div>
 {/if}
 
-<style>
-  .noise-filter {
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-    opacity: 0.4;
-    mix-blend-mode: overlay;
-    pointer-events: none;
-  }
-</style>
+

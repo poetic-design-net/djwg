@@ -1,5 +1,5 @@
  <!-- Webmaster Contact Section -->
- <div class="relative rounded-3xl p-8 border border-gray-800 overflow-hidden">
+ <div class="relative rounded-3xl p-8 border border-gray-800/40 overflow-hidden">
     <div class="absolute inset-0 mix-blend-overlay noise-filter"></div>
     <div class="relative">
       <h2 class="text-2xl font-medium text-white mb-6">Webmaster Kontakt</h2>
@@ -24,27 +24,6 @@
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
         </a>
       </div>
-      <div class="mt-auto pt-8">
-        <h3 class="text-xl font-medium text-white mb-4">Unterstütze DJ Workshop</h3>
-        <p class="text-gray-400 mb-4">
-          Hilf uns dabei, die DJ Community weiter zu fördern und neue Workshops anzubieten.
-        </p>
-        <div class="space-y-4">
-          <a 
-            href="https://buymeacoffee.com/djworkshopgermany"
-            target="_blank"
-            class="block px-6 py-3 text-sm font-medium text-black bg-yellow-500 hover:bg-yellow-400 rounded-xl text-center transition duration-300"
-          >
-            Buy me a Coffee ☕
-          </a>
-          <a 
-            href="https://gofund.me/b30d051e"
-            target="_blank"
-            class="block px-6 py-3 text-sm font-medium text-white bg-blue-600 hover:bg-blue-500 rounded-xl text-center transition duration-300"
-          >
-            GoFundMe Kampagne 🎵
-          </a>
-        </div>
-      </div>
+      
     </div>
   </div>
