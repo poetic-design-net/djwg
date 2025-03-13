@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { fade } from 'svelte/transition';
+  import { fade, slide } from 'svelte/transition';
   import type { Testimonial } from '$lib/sanity/queries';
   import { enhancedUrlFor } from '$lib/sanity/image';
 
@@ -7,9 +7,25 @@
 
   let visibleCount = 6; // Initial number of visible testimonials
   let isLoading = false;
+  let expandedQuotes = new Set<string>();
 
   $: visibleTestimonials = testimonials.data.slice(0, visibleCount);
   $: hasMore = visibleCount < testimonials.data.length;
+
+  function truncateQuote(quote: string, maxLength: number = 200): string {
+    if (!quote) return '';
+    if (quote.length <= maxLength) return quote;
+    return quote.substring(0, maxLength) + '...';
+  }
+
+  function toggleQuote(id: string) {
+    if (expandedQuotes.has(id)) {
+      expandedQuotes.delete(id);
+    } else {
+      expandedQuotes.add(id);
+    }
+    expandedQuotes = expandedQuotes; // Trigger reactivity
+  }
 
   async function loadMore() {
     isLoading = true;
@@ -44,11 +60,39 @@
           class="w-full md:w-1/2 lg:w-1/3 p-5"
           in:fade={{duration: 300, delay: index % 3 * 100}}
         >
-          <div class="relative px-9 py-10 h-full bg-gradient-radial-dark border border-gray-900 border-opacity-30 rounded-3xl">
+          <div class="relative px-9 py-10 h-full bg-gradient-radial-dark border border-green-400 border-opacity-50 rounded-3xl">
             {#if isInLastThree(index)}
               <div class="absolute inset-0 bg-gradient-to-b from-transparent via-black/50 to-black rounded-3xl pointer-events-none"></div>
             {/if}
-            <h3 class="mb-6 text-2xl text-white tracking-tighter leading-tight">{testimonial.quote}</h3>
+            
+            <div class="mb-6">
+              {#if expandedQuotes.has(testimonial._id)}
+                <div transition:slide>
+                  <h3 class="text-xl text-white tracking-tighter leading-tight">{testimonial.quote}</h3>
+                  <button 
+                    class="mt-2 text-sm text-green-400 hover:text-green-300 transition-colors"
+                    on:click={() => toggleQuote(testimonial._id)}
+                  >
+                    Weniger anzeigen
+                  </button>
+                </div>
+              {:else}
+                <div>
+                  <h3 class="text-xl text-white tracking-tighter leading-tight">
+                    {truncateQuote(testimonial.quote)}
+                  </h3>
+                  {#if testimonial.quote.length > 50}
+                    <button 
+                      class="mt-2 text-sm text-green-400 hover:text-green-300 transition-colors"
+                      on:click={() => toggleQuote(testimonial._id)}
+                    >
+                      Mehr anzeigen
+                    </button>
+                  {/if}
+                </div>
+              {/if}
+            </div>
+
             <div class="flex flex-wrap items-center -m-3">
               {#if testimonial.image}
                 <div class="w-auto p-3">

@@ -7,6 +7,7 @@
   import OptimizedAvatar from '$lib/components/OptimizedAvatar.svelte';
   import type { Profile } from '$lib/types/profile';
   import { profileStore } from '$lib/stores/profile';
+  import { badgeStore } from '$lib/stores/badges';
 
   export let isAuthenticated: boolean;
   export let showAuthUI: boolean;
@@ -22,6 +23,26 @@
   // Profil aus dem Store
   $: if (user?.id && isAuthenticated) {
     profileStore.refresh(supabase, user.id);
+  }
+
+  // Konvertiere die Badge-Daten in das richtige Format für HeaderBadges
+  $: userBadges = $badgeStore.userBadges.map(badge => ({
+    _id: badge.badge_id,
+    name: badge.badge?.name || 'Badge',
+    description: badge.badge?.description,
+    style: badge.badge?.style || { variant: 'gold' },
+    isUnlocked: true
+  }));
+
+  // Kombiniere User-Daten mit Badge-Store
+  $: {
+    if (user?.id && isAuthenticated && $badgeStore.userBadges.length > 0) {
+      user = {
+        ...user,
+        badges: $badgeStore.userBadges
+      };
+      console.log('🎯 HeaderAuth: Updated user badges from store:', $badgeStore.userBadges);
+    }
   }
 
   const handleLogoutClick = async () => {
@@ -75,6 +96,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
             {/if}
+  
           </div>
           {#if loading}
             <div class="absolute inset-0 flex items-center justify-center">
@@ -86,22 +108,24 @@
           {/if}
         </button>
       {:else}
-        <button
-          on:click={toggleDropdown}
-          class="text-white hover:text-green-500 transition-colors duration-200 flex items-center space-x-2"
-          title="Benutzermenü"
-        >
-          {#if $profileStore?.avatar_url}
-            <OptimizedAvatar
-              image={$profileStore.avatar_url}
-              size="sm"
-            />
-          {:else}
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
-          {/if}
-        </button>
+        <div class="flex items-center space-x-4">
+          <button
+            on:click={toggleDropdown}
+            class="text-white hover:text-green-500 transition-colors duration-200 flex items-center space-x-2"
+            title="Benutzermenü"
+          >
+            {#if $profileStore?.avatar_url}
+              <OptimizedAvatar
+                image={$profileStore.avatar_url}
+                size="sm"
+              />
+            {:else}
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            {/if}
+          </button>
+        </div>
 
         {#if showDropdown}
           <div

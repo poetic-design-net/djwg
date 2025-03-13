@@ -20,6 +20,8 @@ import knowledgeBaseItem from './knowledgeBaseItem'
 import aboutUs from './aboutUs'
 import onlineTalk from './onlineTalk'
 import badge from './badge'
+import video from './video'
+import videoCategory from './videoCategory'
 
 // Document Types
 import page from './documents/page'
@@ -32,6 +34,7 @@ import partnerPage from './documents/pages/partnerPage'
 import artistPage from './documents/pages/artistPage'
 import nextLevelDjs from './documents/pages/nextLevelDjs'
 import merchPage from './documents/pages/merchPage'
+import ausstellerPage from './documents/pages/ausstellerPage'
 
 // Object Types
 import seo from './objects/seo'
@@ -59,6 +62,7 @@ export const schemaTypes = [
   page,
   homePage,
   eventPage,
+  ausstellerPage,
   partnerPage,
   artistPage,
   nextLevelDjs,
@@ -83,6 +87,8 @@ export const schemaTypes = [
   onlineTalk,
   badge,
   award,
+  video,
+  videoCategory,
   // Objects
   blockContent,
   seo,

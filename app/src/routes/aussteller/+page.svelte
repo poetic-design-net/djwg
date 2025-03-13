@@ -10,15 +10,15 @@
   export let data;
   export let form: any;
   
-  const { settings, partnerPage } = data;
+  const { settings, ausstellerPage } = data;
   
   let isSubmitting = false;
   let showForm = false;
 </script>
 
 <svelte:head>
-  <title>{partnerPage?.seo?.title || 'Aussteller werden'} | {settings.title || 'DJ Workshop'}</title>
-  <meta name="description" content={partnerPage?.seo?.description || 'Präsentiere deine Produkte auf unserem Event und erreiche die DJ-Community!'} />
+  <title>{ausstellerPage?.seo?.title || 'Aussteller werden'} | {settings.title || 'DJ Workshop'}</title>
+  <meta name="description" content={ausstellerPage?.seo?.description || 'Präsentiere deine Produkte auf unserem Event und erreiche die DJ-Community!'} />
 </svelte:head>
 
 <section class="py-20 overflow-hidden">
@@ -27,17 +27,17 @@
       <div class="text-center mb-16">
         <span class="inline-block mb-4 text-sm text-green-400 font-medium tracking-tighter">Partner & Aussteller</span>
         <h1 class="font-heading mb-8 text-5xl md:text-7xl lg:text-8xl text-white tracking-7xl lg:tracking-8xl">
-          {partnerPage?.title || 'Aussteller werden'}
+          {ausstellerPage?.title || 'Aussteller werden'}
         </h1>
         <p class="text-lg text-gray-300 max-w-2xl mx-auto">
-          {partnerPage?.description || 'Präsentiere deine Produkte auf unserem Event und erreiche die DJ-Community!'}
+          {ausstellerPage?.description || 'Präsentiere deine Produkte auf unserem Event und erreiche die DJ-Community!'}
         </p>
       </div>
 
       <!-- Partner Benefits Section -->
       <div class="grid md:grid-cols-3 gap-8 mb-16">
-        {#if partnerPage?.benefits}
-          {#each partnerPage.benefits as benefit}
+        {#if ausstellerPage?.benefits}
+          {#each ausstellerPage.benefits as benefit}
             <div class="p-6 rounded-2xl  border border-gray-700 backdrop-blur text-center">
               <h3 class="text-xl font-medium text-white mb-3">{benefit.title}</h3>
               <p class="text-gray-300">{benefit.description}</p>
@@ -63,24 +63,25 @@
       <div class="my-20">
         <div class="text-center mb-12">
           <h2 class="text-3xl font-medium text-white mb-4">
-            {partnerPage?.whyPartnerSection?.title || 'Warum Aussteller werden?'}
+            {ausstellerPage?.whyPartnerSection?.title || 'Warum Aussteller werden?'}
           </h2>
           <p class="text-gray-300">
-            {partnerPage?.whyPartnerSection?.description || 'Als Partner des DJ Workshops profitierst du von unserem starken Netzwerk und direktem Zugang zur DJ-Community.'}
+            {ausstellerPage?.whyPartnerSection?.description || 'Als Partner des DJ Workshops profitierst du von unserem starken Netzwerk und direktem Zugang zur DJ-Community.'}
           </p>
         </div>
 
         <div class="grid md:grid-cols-2 gap-8">
-          {#if partnerPage?.exhibitorInfo}
+          {#if ausstellerPage?.exhibitorInfo}
             <div class="p-8 rounded-2xl border border-gray-700   backdrop-blur">
-              <h3 class="text-xl font-medium text-white mb-4">{partnerPage.exhibitorInfo.title}</h3>
+              <h3 class="text-xl font-medium text-white mb-4">{ausstellerPage.exhibitorInfo.title}</h3>
               <ul class="space-y-3 text-gray-300">
-                {#each partnerPage.exhibitorInfo.items as item}
+                {#each ausstellerPage.exhibitorInfo.items as item}
                   <li>• {item}</li>
                 {/each}
               </ul>
             </div>
           {:else}
+            <div class="p-8 rounded-2xl border border-gray-700 backdrop-blur">
               <h3 class="text-xl font-medium text-white mb-4">Ausstellerfläche</h3>
               <ul class="space-y-3 text-gray-300">
                 <li>• Professionell ausgestattete Standfläche</li>
@@ -88,20 +89,21 @@
                 <li>• Optimale Präsentationsmöglichkeiten</li>
                 <li>• Flexible Standgrößen verfügbar</li>
               </ul>
+            </div>
             
           {/if}
 
-          {#if partnerPage?.marketingInfo}
+          {#if ausstellerPage?.marketingInfo}
             <div class="p-8 rounded-2xl border border-gray-700 backdrop-blur">
-              <h3 class="text-xl font-medium text-white mb-4">{partnerPage.marketingInfo.title}</h3>
+              <h3 class="text-xl font-medium text-white mb-4">{ausstellerPage.marketingInfo.title}</h3>
               <ul class="space-y-3 text-gray-300">
-                {#each partnerPage.marketingInfo.items as item}
+                {#each ausstellerPage.marketingInfo.items as item}
                   <li>• {item}</li>
                 {/each}
               </ul>
             </div>
           {:else}
-            <div class="p-8 rounded-2xl   backdrop-blur">
+            <div class="p-8 rounded-2xl   backdrop-blur border-gray-700 border">
               <h3 class="text-xl font-medium text-white mb-4">Marketing & Promotion</h3>
               <ul class="space-y-3 text-gray-300">
                 <li>• Präsenz auf unserer Website</li>

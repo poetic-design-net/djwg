@@ -37,17 +37,17 @@
   };
 </script>
 
-<div class="relative rounded-3xl p-8 border border-gray-800 overflow-hidden">
+<div class="relative rounded-3xl p-8 border border-gray-800 overflow-hidden h-full">
   <div class="absolute inset-0 mix-blend-overlay noise-filter"></div>
-  <div class="relative">
-    <h2 class="text-2xl font-medium text-white mb-6">Online Talk & Unterstützung</h2>
+  <div class="relative flex flex-col h-full">
+    <h2 class="text-2xl font-medium text-white mb-6">Online Talk</h2>
     
     <!-- Online Talk Access -->
     <div class="mb-8">
       {#each onlineTalks as talk (talk._id)}
         <div class="mb-8">
-          <h3 class="text-xl font-medium text-white mb-4">{talk.title}</h3>
-          <p class="text-gray-400 mb-4">Termin: {formatDate(talk.date)}</p>
+          <h3 class="text-xl font-medium text-gray-200  mb-4">{talk.title}</h3>
+          <p class="text-green-400 mb-4">Termin: {formatDate(talk.date)}</p>
           <div class="space-y-4">
             {#if isVisible(talk.date, talk.visibleFromHours)}
               <div class="flex items-center space-x-3">
@@ -68,9 +68,17 @@
                 </button>
               </div>
             {:else}
-              <p class="text-gray-400">
-                Die Zugangsdaten werden {talk.visibleFromHours} Stunden vor Beginn freigeschaltet.
-              </p>
+              <div class="flex items-start space-x-3 p-4 bg-gray-900 rounded-xl border border-gray-800">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-400 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                  <p class="text-gray-100 font-medium">Zugangsdaten noch nicht verfügbar</p>
+                  <p class="text-gray-50 mt-2 ">
+                    Die Zugangsdaten werden automatisch {talk.visibleFromHours} Stunden vor Beginn des Talks freigeschaltet.
+                  </p>
+                </div>
+              </div>
             {/if}
           </div>
         </div>
@@ -78,28 +86,7 @@
     </div>
 
     <!-- Support Options -->
-    <div>
-      <h3 class="text-xl font-medium text-white mb-4">Unterstütze DJ Workshop</h3>
-      <p class="text-gray-400 mb-4">
-        Hilf uns dabei, die DJ Community weiter zu fördern und neue Workshops anzubieten.
-      </p>
-      <div class="space-y-4">
-        <a 
-          href="https://buymeacoffee.com/djworkshopgermany"
-          target="_blank"
-          class="block px-6 py-3 text-sm font-medium text-black bg-yellow-500 hover:bg-yellow-400 rounded-xl text-center transition duration-300"
-        >
-          Buy me a Coffee ☕
-        </a>
-        <a 
-          href="https://gofund.me/b30d051e"
-          target="_blank"
-          class="block px-6 py-3 text-sm font-medium text-white bg-blue-600 hover:bg-blue-500 rounded-xl text-center transition duration-300"
-        >
-          GoFundMe Kampagne 🎵
-        </a>
-      </div>
-    </div>
+    
   </div>
 </div>
 

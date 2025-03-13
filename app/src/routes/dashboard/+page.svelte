@@ -12,7 +12,6 @@
   import MediaUploader from '$lib/components/dashboard/MediaUploader.svelte';
   import MyFiles from '$lib/components/dashboard/MyFiles.svelte';
   import WebMaster from '$lib/components/dashboard/WebMaster.svelte';
-  import type { DisplayBadge } from '$lib/types/badges';
   import { onMount } from 'svelte';
 
   import type { User } from '$lib/types/profile';
@@ -27,11 +26,10 @@
       password: string;
       visibleFromHours: number;
     }[];
-    badges: DisplayBadge[];
     isAdmin: boolean;
   };
   
-  const { user, onlineTalks, badges, isAdmin } = data;
+  const { user, onlineTalks, isAdmin } = data;
   let showEditProfile = false;
 
   const supabase = getContext<SupabaseClient>('supabase');
@@ -83,6 +81,9 @@
         onEdit={() => showEditProfile = true}
       />
 
+      <!-- Online Talk Section -->
+      <OnlineTalkSection {onlineTalks} />
+      
       <!-- Badges & Useful Links Container -->
       <div class="space-y-8 h-full flex flex-col">
         <!-- Badges Section -->
@@ -90,7 +91,7 @@
           <div class="absolute inset-0 mix-blend-overlay noise-filter"></div>
           <div class="relative">
             <h2 class="text-2xl font-medium text-white mb-6">Deine Badges</h2>
-            <BadgeDisplay {badges} />
+            <BadgeDisplay {user} />
           </div>
         </div>
 
@@ -110,9 +111,6 @@
         </div>
       </div>
 
-      <!-- Online Talk Section -->
-      <OnlineTalkSection {onlineTalks} />
-
       <!-- Newsletter Section -->
       <NewsletterSection 
         email={user.email} 
@@ -120,7 +118,7 @@
         lastName={user.raw_user_meta_data?.last_name || user.user_metadata?.last_name || ''} 
       />
 
-     <WebMaster />
+      <WebMaster />
     </div>
   </div>
 </div>

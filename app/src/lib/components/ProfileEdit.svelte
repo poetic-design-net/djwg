@@ -5,11 +5,13 @@
   const dispatch = createEventDispatcher();
   import type { SupabaseClient } from '@supabase/supabase-js';
   import type { Profile, User, StandardUserMetadata } from '$lib/types/profile';
+  import { badgeStore } from '$lib/stores/badges';
   import { 
     calculateProfileCompletion, 
     normalizeUserMetadata,
     generateUsername 
   } from '$lib/utils/profile-utils';
+  import { manageBadgesRealtime } from '$lib/services/badge-service';
 
   // Komponenten
   import Progress from './profile/Progress.svelte';
@@ -37,23 +39,38 @@
     avatar_url: normalizedMetadata.avatar_url
   };
   
-  let showAddress = false;
-  let showContact = false;
+  let showAddress = true;  // Standardmäßig aufgeklappt
+  let showContact = true;  // Standardmäßig aufgeklappt
   
   // Social Media Links
   let instagram = '';
   let facebook = '';
   let soundcloud = '';
+  
+  // Social Media Aktivierungsstatus
+  let isInstagramEnabled = false;
+  let isFacebookEnabled = false;
+  let isSoundcloudEnabled = false;
 
   // Berechne Profilfortschritt
-  $: completionPercentage = calculateProfileCompletion(profile, { instagram, facebook, soundcloud });
+  $: completionPercentage = calculateProfileCompletion(
+    profile,
+    {
+      instagram: isInstagramEnabled ? instagram : undefined,
+      facebook: isFacebookEnabled ? facebook : undefined,
+      soundcloud: isSoundcloudEnabled ? soundcloud : undefined
+    }
+  );
   
   // Initialisiere Social Media Links wenn Profil geladen wird
   const initializeSocialLinks = (data: any) => {
     if (data?.social_links) {
       instagram = data.social_links.instagram || '';
+      isInstagramEnabled = !!data.social_links.instagram;
       facebook = data.social_links.facebook || '';
+      isFacebookEnabled = !!data.social_links.facebook;
       soundcloud = data.social_links.soundcloud || '';
+      isSoundcloudEnabled = !!data.social_links.soundcloud;
     }
   };
   
@@ -126,12 +143,11 @@
         address_zip: profile.address_zip,
         address_country: profile.address_country,
         phone: profile.phone,
-        company_name: profile.company_name,
-        position: profile.position,
         social_links: {
-          instagram,
-          facebook,
-          soundcloud
+          // Nur aktivierte Social Media Profile speichern
+          ...(isInstagramEnabled && instagram ? { instagram } : {}),
+          ...(isFacebookEnabled && facebook ? { facebook } : {}),
+          ...(isSoundcloudEnabled && soundcloud ? { soundcloud } : {})
         },
         is_public: profile.is_public ?? false
       };
@@ -143,37 +159,32 @@
 
       if (profileError) throw profileError;
 
-      // 3. Badge-Logik
-      const { data: badgeData, error: badgeError } = await supabase
+      // 3. Verwende die neue Echtzeit-Badge-Verwaltung
+      // Lade das aktualisierte Profil
+      const { data: updatedProfile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+        
+      // Prüfe und aktualisiere Badges in Echtzeit
+      await manageBadgesRealtime(supabase, user.id, updatedProfile);
+      
+      // Bestimme, ob ein Badge hinzugefügt wurde (für Toast-Nachricht)
+      const { data: badgeData } = await supabase
         .from('badges')
         .select('*')
         .eq('slug', 'dj-level-1')
         .single();
-
-      if (badgeError) throw badgeError;
-
-      // Prüfe ob das Badge bereits existiert
-      const { data: existingBadge, error: badgeCheckError } = await supabase
+        
+      const { data: existingBadge } = await supabase
         .from('user_badges')
-        .select('assigned_at')
+        .select('*')
         .eq('user_id', user.id)
-        .eq('badge_id', badgeData.id)
+        .eq('badge_id', badgeData?.id)
         .maybeSingle();
-
-      if (badgeCheckError) throw badgeCheckError;
-
-      // Warte kurz und prüfe dann, ob ein neues Badge vergeben wurde
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const { data: newBadge } = await supabase
-        .from('user_badges')
-        .select('assigned_at')
-        .eq('user_id', user.id)
-        .eq('badge_id', badgeData.id)
-        .maybeSingle();
-
-      // Badge wurde neu vergeben wenn es vorher nicht existierte aber jetzt ja
-      const badgeAwarded = !existingBadge && newBadge;
+        
+      const badgeAdded = !!existingBadge;
 
       // Seite neu laden
       await invalidateAll();
@@ -184,8 +195,8 @@
       // Toast anzeigen
       setTimeout(() => {
         toasts.success(
-          completionPercentage === 100 && badgeAwarded
-            ? '🎉 Profil aktualisiert und DJ Stufe 1 Badge erhalten!'
+          badgeAdded
+            ? '🎉 DJ Stufe 1 Badge freigeschaltet!'
             : 'Profil erfolgreich aktualisiert!'
         );
       }, 100);
@@ -240,6 +251,9 @@
     bind:showContact
     bind:instagram
     bind:facebook
+    bind:isInstagramEnabled
+    bind:isFacebookEnabled
+    bind:isSoundcloudEnabled
     bind:soundcloud
   />
 

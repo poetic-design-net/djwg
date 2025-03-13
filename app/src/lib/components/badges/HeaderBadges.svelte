@@ -1,10 +1,45 @@
 <script lang="ts">
   import type { DisplayBadge } from '$lib/types/badges';
+  import { onMount } from 'svelte';
+  import { browser } from '$app/environment';
+  import { badgeStore } from '$lib/stores/badges';
 
   export let badges: DisplayBadge[] = [];
   
+  // Kombiniere die Props mit dem Store
+  $: {
+    if (browser && $badgeStore.lastUpdate) {
+      console.log('HeaderBadges: Store Update', {
+        environment: 'Client',
+        storeBadges: $badgeStore.userBadges,
+        propBadges: badges,
+        timestamp: $badgeStore.lastUpdate
+      });
+
+      // Aktualisiere die Badges wenn sich der Store ändert
+      const unlockedStoreBadges = badges.filter(b => 
+        $badgeStore.userBadges.some(ub => ub.badge_id === b._id)
+      );
+
+      if (unlockedStoreBadges.length !== badges.filter(b => b.isUnlocked).length) {
+        badges = badges.map(badge => ({
+          ...badge,
+          isUnlocked: $badgeStore.userBadges.some(ub => ub.badge_id === badge._id)
+        }));
+      }
+    }
+  }
+  
   // Zeige nur freigeschaltete Badges, maximal 3
   $: displayBadges = badges.filter(b => b.isUnlocked).slice(0, 3);
+
+  onMount(() => {
+    console.log('HeaderBadges mounted:', {
+      initialBadges: badges,
+      storeBadges: $badgeStore.userBadges,
+      environment: 'Client'
+    });
+  });
 
   function getBadgeColor(badge: DisplayBadge): string {
     if (badge.style?.customColor?.hex) {

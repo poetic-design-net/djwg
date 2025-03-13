@@ -41,19 +41,7 @@
     </div>
     <div class="relative p-3 bg-gradient-radial-dark overflow-hidden border border-gray-900 border-opacity-30 rounded-5xl">
       <div class="relative z-10 flex flex-wrap lg:flex-nowrap">
-        {#if hasImage && currentTestimonial?.image}
-          <div class="w-full lg:w-1/4 p-4">
-            <div class="w-full h-full rounded-3xl overflow-hidden">
-              <OptimizedImage 
-                image={currentTestimonial.image}
-                alt={currentTestimonial.name || 'Testimonial'}
-                maxWidth={600}
-                sizes="(max-width: 768px) 100vw, 25vw"
-                className="w-full h-full object-cover"
-              />
-            </div>
-          </div>
-        {/if}
+        
         <div class="w-full {hasImage ? 'lg:w-3/4' : 'lg:w-full'} p-6">
           <div class="overflow-hidden">
             <div style="transform: translateX(-{$slideWidth}%)" class="flex transition-transform duration-500 ease-in-out">
