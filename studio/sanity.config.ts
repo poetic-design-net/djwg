@@ -4,6 +4,7 @@ import {structureTool} from 'sanity/structure'
 import {presentationTool} from 'sanity/presentation'
 import {media} from 'sanity-plugin-media'
 import {assist} from '@sanity/assist'
+import {documentInternationalization} from '@sanity/document-internationalization'
 import generateTailwindPlugin from './documentActions/generateTailwind'
 
 import {schemaTypes} from './schemas'
@@ -32,6 +33,17 @@ const config = defineConfig({
     generateTailwindPlugin,
     media(),
     assist(),
+    documentInternationalization({
+      supportedLanguages: [
+        {id: 'de', title: 'Deutsch'},
+        {id: 'en', title: 'English'}
+      ],
+      schemaTypes: [
+        'post',
+        'page',
+        'ausstellerPage'
+      ],
+    }),
   ],
   schema: {
     types: schemaTypes as SchemaTypeDefinition[],

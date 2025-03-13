@@ -95,19 +95,15 @@ export function calculateProfileCompletion(profile: Partial<Profile>, socialLink
     profile?.address_country
   ];
 
-  const socialFields = [
-    socialLinks?.instagram,
-    socialLinks?.facebook,
-    socialLinks?.soundcloud
-  ];
+  // Nur vorhandene Social Media Links zählen
+  const activeSocialFields = Object.values(socialLinks).filter(link => link !== undefined && link !== '');
 
   // Basis-Felder (80% des Gesamtprozentsatzes)
   const filledFields = fields.filter(field => !!field).length;
   const basePercentage = (filledFields / fields.length) * 80;
 
-  // Social Media als Bonus (20% des Gesamtprozentsatzes)
-  const filledSocialFields = socialFields.filter(field => !!field).length;
-  const socialPercentage = (filledSocialFields / socialFields.length) * 20;
+  // Wenn mindestens ein Social Media Profil aktiv ist, vergebe volle 20%
+  const socialPercentage = activeSocialFields.length > 0 ? 20 : 0;
 
   return Math.min(100, Math.round(basePercentage + socialPercentage));
 }

@@ -1,15 +1,18 @@
 import { client } from '$lib/sanity/client'
-import { partnerPageQuery } from '$lib/sanity/queries/artist-partner'
+import { ausstellerPageQuery } from '$lib/sanity/queries/aussteller'
 import type { PageServerLoad } from './$types'
 
-export const load: PageServerLoad = async () => {
-  const [partnerPage, settings] = await Promise.all([
-    client.fetch(partnerPageQuery),
+export const load: PageServerLoad = async ({ url }) => {
+  // Default to German, allow switching to English via URL parameter
+  const lang = url.searchParams.get('lang') || 'de'
+  
+  const [ausstellerPage, settings] = await Promise.all([
+    client.fetch(ausstellerPageQuery, { language: lang }),
     client.fetch(`*[_type == "siteSettings"][0]`)
   ])
 
   return {
-    partnerPage,
+    ausstellerPage,
     settings
   }
 }
@@ -35,29 +38,13 @@ export const actions = {
         }
       }
       
-      // Speichere die logoId in der E-Mail mit
       const logo = logoId ? {
         id: logoId,
         type: 'media_upload'
       } : null;
 
       // Hier können Sie die E-Mail-Versand-Logik implementieren
-      // Beispiel:
-      // await sendEmail({
-      //   to: 'partner@example.com',
-      //   subject: 'Neue Partner-Anfrage',
-      //   body: `
-      //     Name: ${name}
-      //     Email: ${email}
-      //     Telefon: ${phone}
-      //     Website: ${website}
-      //     Firma: ${company}
-      //     Branche: ${industry}
-      //     Logo: ${logo ? `https://your-domain.com/media/${logo.id}` : 'Kein Logo hochgeladen'}
-      //     Produkte: ${products}
-      //     Nachricht: ${message}
-      //   `
-      // })
+      // await sendEmail({...})
 
       return {
         success: true,

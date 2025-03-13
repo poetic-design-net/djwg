@@ -6,6 +6,11 @@
   export let instagram = '';
   export let facebook = '';
   export let soundcloud = '';
+  
+  // Social Media Aktivierungsstatus als Props
+  export let isInstagramEnabled = false;
+  export let isFacebookEnabled = false;
+  export let isSoundcloudEnabled = false;
 
   const toggleContact = () => showContact = !showContact;
 </script>
@@ -52,35 +57,83 @@
           class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500"
         />
       </div>
-      <div>
-        <label for="instagram" class="block text-sm font-medium text-gray-400 mb-2">Instagram</label>
-        <input
-          type="text"
-          id="instagram"
-          bind:value={instagram}
-          class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500"
-          placeholder="@username"
-        />
-      </div>
-      <div>
-        <label for="facebook" class="block text-sm font-medium text-gray-400 mb-2">Facebook</label>
-        <input
-          type="text"
-          id="facebook"
-          bind:value={facebook}
-          class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500"
-          placeholder="facebook.com/username"
-        />
-      </div>
-      <div>
-        <label for="soundcloud" class="block text-sm font-medium text-gray-400 mb-2">Soundcloud</label>
-        <input
-          type="text"
-          id="soundcloud"
-          bind:value={soundcloud}
-          class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500"
-          placeholder="soundcloud.com/username"
-        />
+
+      <!-- Social Media Section -->
+      <div class="border-t border-gray-800 pt-4 mt-6">
+        <h4 class="text-sm font-medium text-gray-400 mb-4">Social Media Profile</h4>
+        <div class="space-y-6">
+          <!-- Instagram -->
+          <div>
+            <div class="flex items-center mb-2">
+              <input
+                type="checkbox"
+                id="enable-instagram"
+                bind:checked={isInstagramEnabled}
+                class="w-4 h-4 text-green-500 bg-gray-950 border-gray-800 rounded focus:ring-green-500"
+              />
+              <label for="enable-instagram" class="ml-2 text-sm font-medium text-gray-400">
+                Instagram Profil aktivieren
+              </label>
+            </div>
+            {#if isInstagramEnabled}
+              <input
+                type="text"
+                id="instagram"
+                bind:value={instagram}
+                class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 mt-2"
+                placeholder="@username"
+              />
+            {/if}
+          </div>
+
+          <!-- Facebook -->
+          <div>
+            <div class="flex items-center mb-2">
+              <input
+                type="checkbox"
+                id="enable-facebook"
+                bind:checked={isFacebookEnabled}
+                class="w-4 h-4 text-green-500 bg-gray-950 border-gray-800 rounded focus:ring-green-500"
+              />
+              <label for="enable-facebook" class="ml-2 text-sm font-medium text-gray-400">
+                Facebook Profil aktivieren
+              </label>
+            </div>
+            {#if isFacebookEnabled}
+              <input
+                type="text"
+                id="facebook"
+                bind:value={facebook}
+                class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 mt-2"
+                placeholder="facebook.com/username"
+              />
+            {/if}
+          </div>
+
+          <!-- Soundcloud -->
+          <div>
+            <div class="flex items-center mb-2">
+              <input
+                type="checkbox"
+                id="enable-soundcloud"
+                bind:checked={isSoundcloudEnabled}
+                class="w-4 h-4 text-green-500 bg-gray-950 border-gray-800 rounded focus:ring-green-500"
+              />
+              <label for="enable-soundcloud" class="ml-2 text-sm font-medium text-gray-400">
+                Soundcloud Profil aktivieren
+              </label>
+            </div>
+            {#if isSoundcloudEnabled}
+              <input
+                type="text"
+                id="soundcloud"
+                bind:value={soundcloud}
+                class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 mt-2"
+                placeholder="soundcloud.com/username"
+              />
+            {/if}
+          </div>
+        </div>
       </div>
     </div>
   {/if}
