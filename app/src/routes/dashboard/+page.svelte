@@ -59,42 +59,47 @@
 
 <div class="min-h-screen bg-black py-12 px-4 sm:px-6 lg:px-8">
   <div class="max-w-7xl mx-auto">
-    <div class="mb-8 flex justify-between items-center">
-      <div>
-        <h1 class="text-4xl font-medium text-white mb-2">Dashboard</h1>
-        <p class="text-gray-400">Dein Bereich zum Lernen und Verwalten</p>
-      </div>
-      <div class="flex items-center gap-4">
-        <a 
-          href="https://buymeacoffee.com/djworkshopgermany"
-          target="_blank"
-          class="relative inline-flex px-6 py-2 text-sm font-medium text-black bg-green-500 hover:bg-green-400 rounded-full transition duration-300 items-center gap-2"
-        >
-          <span>☕</span>
-          <span class="hidden sm:inline">Support</span>
-          <InfoIcon
-            variant="light"
-            size="sm"
-            text="Mit dem Preis einer Tasse Kaffee (2,50€) unterstützt du uns dabei, noch mehr coole Features und Workshops für die DJ-Community anzubieten! 🙌"
-            position="bottom" />
-        </a>
-        {#if isAdmin}
-        <a 
-          href="/admin/users" 
-          class="px-6 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-full transition duration-300"
-        >
-          User Verwaltung
-        </a>
-      {/if}
-        <button 
-          on:click={handleLogout}
-          disabled={loading}
-          class="px-6 py-2 text-sm font-medium text-white bg-gray-600 hover:bg-red-700 rounded-full transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {loading ? 'Wird abgemeldet...' : 'Abmelden'}
-        </button>
-      </div>
-    </div>
+   <!-- Dashboard Header with better mobile responsiveness -->
+<div class="mb-8 flex flex-col sm:flex-row justify-between gap-4 sm:items-center">
+  <div>
+    <h1 class="text-3xl sm:text-4xl font-medium text-white mb-2">Dashboard</h1>
+    <p class="text-gray-400">Dein Bereich zum Lernen und Verwalten</p>
+  </div>
+  
+  <div class="flex flex-wrap justify-end items-center gap-2 sm:gap-3">
+    <a
+      href="https://buymeacoffee.com/djworkshopgermany"
+      target="_blank"
+      class="relative text-center justify-center flex flex-1 sm:flex-none px-4 sm:px-6 py-2 text-sm font-medium text-black bg-green-500 hover:bg-green-400 rounded-full transition duration-300 items-center gap-2"
+    >
+      <span>☕</span>
+      <span>Support</span>
+      <InfoIcon
+        variant="light"
+        size="sm"
+        text="Mit dem Preis einer Tasse Kaffee (2,50€) unterstützt du uns dabei, noch mehr coole Features und Workshops für die DJ-Community anzubieten! 🙌"
+        position="bottom" 
+      />
+    </a>
+    
+    {#if isAdmin}
+      <a
+        href="/admin/users"
+        class="flex-1 sm:flex-none text-center px-4 sm:px-6 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-full transition duration-300"
+      >
+        <span>User</span>
+      </a>
+    {/if}
+    
+    <button
+      on:click={handleLogout}
+      disabled={loading}
+      class="flex-1 sm:flex-none text-center px-4 sm:px-6 py-2 text-sm font-medium text-white bg-gray-600 hover:bg-red-700 rounded-full transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      {loading ? 'Abmelden...' : 'Logout'}
+    </button>
+  </div>
+</div>
 
     <div class="space-y-6">
       <!-- Profile Section -->
