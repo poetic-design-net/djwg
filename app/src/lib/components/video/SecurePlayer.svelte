@@ -286,11 +286,19 @@
     }
   }
 
-  function handleSeek(e: MouseEvent) {
-    if (!videoElement || !isLoaded || !userInteracted) return;
+  function handleSeek(e: MouseEvent | TouchEvent) {
+    // Behandle Seek als Benutzerinteraktion
+    if (!userInteracted) {
+      userInteracted = true;
+      needsUserInteraction = false;
+      hasError = false;
+    }
+    
+    if (!videoElement || !isLoaded) return;
     
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    const x = e.clientX - rect.left;
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const x = clientX - rect.left;
     const percent = x / rect.width;
     const newTime = percent * videoElement.duration;
     
@@ -419,8 +427,11 @@
     <!-- Progress Bar -->
     <div 
       class="w-full h-2 bg-gray-600 mb-3 rounded-full overflow-hidden cursor-pointer"
-      on:click={handleSeek}
-    >
+      on:mousedown={handleSeek}
+      on:touchstart|preventDefault={handleSeek}
+      style="position: relative; z-index: 50;"
+      role="slider"
+      aria-label="Video Fortschritt">
       <div 
         class="h-full bg-green-500 transition-all duration-100"
         style="width: {progress}%"
