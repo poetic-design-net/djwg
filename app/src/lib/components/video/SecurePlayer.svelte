@@ -13,6 +13,7 @@
     webkitEnterFullscreen?: () => Promise<void>;
     webkitSupportsFullscreen?: boolean;
     webkitDisplayingFullscreen?: boolean;
+    'webkit-playsinline'?: boolean;
   }
   
   const dispatch = createEventDispatcher();
@@ -458,7 +459,7 @@
     bind:this={videoElement}
     class="w-full h-full"
     preload="auto"
-    playsInline
+    playsinline
     on:loadedmetadata={setupVideoListeners}
     on:click={handleClick}
     on:timeupdate={handleTimeUpdate}
