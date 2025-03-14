@@ -65,19 +65,20 @@
   function closeVideo() {
     selectedVideo = null;
   }
+
   function getMissingBadgesText(video: Video & { hasAccess: boolean }): string {
-  if (video.hasAccess) return '';
-  
-  const missingBadges = video.requiredBadges.filter(badge =>
-    !userBadges.some((userBadge: UserBadge) => userBadge.badge_id === badge.supabaseId)
-  );
-  
-  const badgesList = missingBadges.map(badge =>
-    `${badge.name}${badge.description ? ` - ${badge.description}` : ''}`
-  ).join('\n');
-  
-  return `Um "${video.title}" ansehen zu können, benötigst du folgende Badges:\n\n${badgesList}`;
-}
+    if (video.hasAccess) return '';
+    
+    const missingBadges = video.requiredBadges.filter(badge =>
+      !userBadges.some((userBadge: UserBadge) => userBadge.badge_id === badge.supabaseId)
+    );
+    
+    const badgesList = missingBadges.map(badge =>
+      `${badge.name}${badge.description ? ` - ${badge.description}` : ''}`
+    ).join('\n');
+    
+    return `Um "${video.title}" ansehen zu können, benötigst du folgende Badges:\n\n${badgesList}`;
+  }
 
   function openVideo(video: Video & { hasAccess: boolean }) {
     if (!video.hasAccess) return;
@@ -147,7 +148,6 @@
                 <div class="animate-spin rounded-full h-12 w-12 border-2 border-green-500 border-t-transparent mb-4"></div>
                 <span class="text-gray-300 text-center">Video wird geladen...</span>
               </div>
-        
             </div>
           {/if}
           {#key playerKey}
@@ -157,7 +157,7 @@
               autoplay={true}
               onLoadingStateChange={handleLoadingStateChange}
               directUrl={selectedVideo.videoFile?.asset?.url || ''}
-          />
+            />
           {/key}
 
           <div class="p-4 space-y-4">
@@ -178,8 +178,7 @@
                 alt={categoryTitle}
                 class="w-8 h-8 object-contain"
               />
-            
-          {/if}
+            {/if}
             <div>
               <h3 class="text-xl font-medium text-white">{categoryTitle}</h3>
               {#if videos[0]?.category?.description}
@@ -219,7 +218,6 @@
                           <span>Gesperrt</span>
                           <InfoIcon variant="default" text={getMissingBadgesText(video)} position="left" size="sm" />
                         </div>
-                      
                       </div>
                     </div>
                   {/if}
@@ -236,11 +234,17 @@
                   <div 
                     class="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                   >
-                    <div class="bg-green-500 text-black rounded-full p-4">
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
-                      </svg>
-                    </div>
+                    <!-- Loading Icon bei Videoladevorgang -->
+                    {#if isVideoLoading && selectedVideo?._id === video._id}
+                      <div class="animate-spin rounded-full h-12 w-12 border-2 border-green-500 border-t-transparent"></div>
+                    <!-- Play Icon wenn nicht ausgewählt -->
+                    {:else}
+                      <div class="bg-green-500 text-black rounded-full p-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
+                        </svg>
+                      </div>
+                    {/if}
                   </div>
                 {/if}
               </button>
