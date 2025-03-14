@@ -24,8 +24,6 @@
   let selectedVideo: (Video & { hasAccess: boolean }) | null = null;
   let playerKey = 0; // Für erzwungenes Neuladen
   let isVideoLoading = false;
-  let showModal = false;
-  let forceModal = false; // Für Mobile-Fallback
 
   export function openAndScrollTo() {
     if (videoSection) {
@@ -64,6 +62,7 @@
 
   function closeVideo() {
     selectedVideo = null;
+    playerKey = 0;
   }
 
   function getMissingBadgesText(video: Video & { hasAccess: boolean }): string {
@@ -82,38 +81,40 @@
 
   function openVideo(video: Video & { hasAccess: boolean }) {
     if (!video.hasAccess) return;
-    selectedVideo = video;
-
+    
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    console.log('Video opening:', { 
+    console.log('Video wird geöffnet:', { 
       isMobile, 
       userAgent: navigator.userAgent,
       videoId: video._id,
-      forceModal,
-      showModal
+      isVideoLoading
     });
 
-    // Immer Modal für konsistentes Verhalten
-    showModal = true;
-    isVideoLoading = true;
-    playerKey += 1;
+    selectedVideo = video;
+    playerKey++;
+    
+    // Scroll zum Video
+    setTimeout(() => {
+      const videoPlayer = document.querySelector('.video-player-container');
+      if (videoPlayer) {
+        videoPlayer.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        }); 
+      }
+    }, 100);
   }
-  
+
   function handleVideoError(e: Event) {
     console.error('Video loading error:', { 
       event: e,
-      videoId: selectedVideo?._id,
-      showModal
+      videoId: selectedVideo?._id
     });
-    if (!showModal) {
-      console.log('Switching to modal fallback');
-      forceModal = true;
-      openVideo(selectedVideo!);
-    }
+    console.error('Video konnte nicht abgespielt werden');
   }
 
   function handleLoadingStateChange(loading: boolean) {
-    isVideoLoading = loading;
+    isVideoLoading = loading; // Nur ein Loading-State für beide Komponenten
   }
 </script>
 
@@ -133,7 +134,7 @@
     <div class="space-y-8">
       {#if selectedVideo}
         <div class="video-player-container w-full bg-gray-900 rounded-lg overflow-hidden relative">
-          {#if isVideoLoading}
+          {#if isVideoLoading} <!-- Gemeinsamer Loading-State -->
             <div 
               class="absolute inset-0 bg-gray-900/80 grid place-items-center z-20"
               transition:fade={{duration: 150}}
@@ -149,9 +150,10 @@
               videoId={selectedVideo._id}
               title={selectedVideo.title}
               autoplay={true}
-              requireFullscreen={true}
+              requireFullscreen={/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)}
               onLoadingStateChange={handleLoadingStateChange}
               directUrl={selectedVideo.videoFile?.asset?.url || ''}
+              on:error={handleVideoError}
             />
           {/key}
 
@@ -250,23 +252,3 @@
     </div>
   {/if}
 </CollapsibleSection>
-
-<!-- Modal für Mobile/Fallback -->
-{#if showModal && selectedVideo}
-  <div 
-    class="fixed inset-0 bg-black/90 z-[9999] flex items-center justify-center p-4"
-    transition:fade={{duration: 150}}
-  >
-    <div class="w-full max-w-3xl bg-gray-900 rounded-xl overflow-hidden relative">  
-      <SecurePlayer
-        videoId={selectedVideo._id}
-        title={selectedVideo.title}
-        autoplay={true}
-        requireFullscreen={true}
-        onLoadingStateChange={handleLoadingStateChange}
-        directUrl={selectedVideo.videoFile?.asset?.url || ''}
-        on:error={handleVideoError}
-      />
-    </div>
-  </div>
-{/if}
