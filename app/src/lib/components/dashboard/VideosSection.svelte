@@ -202,12 +202,12 @@
             {/key}
           </div>
 
-          <div class="p-4 space-y-4">
+          <div class="p-2 sm:p-4 space-y-4">
             <div class="flex justify-between items-start">
-              <h2 class="text-xl font-medium text-white">{selectedVideo.title}</h2>
+              <h2 class="text-xs sm:text-base font-medium text-white">{selectedVideo.title}</h2>
               
               <button 
-                class="text-gray-400 hover:text-white"
+                class="text-gray-400 hover:text-white hidden sm:block"
                 on:click={closeVideo}
                 aria-label="Schließen"
               >
