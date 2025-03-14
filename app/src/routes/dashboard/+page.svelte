@@ -127,10 +127,10 @@
         </MyFiles>
       </CollapsibleSection>
 
-          <!-- Support -->
+          <!-- Support 
           <CollapsibleSection title="Support" initiallyOpen={false}>
             <Support />
-          </CollapsibleSection>
+          </CollapsibleSection>-->
 
      
 
