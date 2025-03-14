@@ -4,6 +4,7 @@
   import type { Video } from '$lib/sanity/queries/videos';
   import SecurePlayer from '$lib/components/video/SecurePlayer.svelte';
   import CollapsibleSection from './CollapsibleSection.svelte';
+  import InfoIcon from '$lib/components/InfoIcon.svelte';
   import type { User } from '$lib/types/profile';
 
   export let videos: any;
@@ -23,8 +24,6 @@
   let selectedVideo: (Video & { hasAccess: boolean }) | null = null;
   let playerKey = 0; // Für erzwungenes Neuladen
   let isVideoLoading = false;
-  let showRequirementsModal = false;
-  let currentVideoRequirements: any = null;
 
   export function openAndScrollTo() {
     if (videoSection) {
@@ -64,28 +63,25 @@
   function closeVideo() {
     selectedVideo = null;
   }
-
-  function closeRequirementsModal() {
-    showRequirementsModal = false;
-    currentVideoRequirements = null;
-  }
+  function getMissingBadgesText(video: Video & { hasAccess: boolean }): string {
+  if (video.hasAccess) return '';
+  
+  const missingBadges = video.requiredBadges.filter(badge =>
+    !userBadges.some((userBadge: UserBadge) => userBadge.badge_id === badge.supabaseId)
+  );
+  
+  const badgesList = missingBadges.map(badge =>
+    `${badge.name}${badge.description ? ` - ${badge.description}` : ''}`
+  ).join('\n');
+  
+  return `Um "${video.title}" ansehen zu können, benötigst du folgende Badges:\n\n${badgesList}`;
+}
 
   function openVideo(video: Video & { hasAccess: boolean }) {
-    if (video.hasAccess) {
-      selectedVideo = video;
-      isVideoLoading = true;
-      playerKey += 1; // Erhöhe den Key für Neuladen
-    } else {
-      const missingBadges = video.requiredBadges.filter(badge => 
-        !userBadges.some((userBadge: UserBadge) => userBadge.badge_id === badge.supabaseId)
-      );
-      
-      currentVideoRequirements = {
-        video,
-        missingBadges
-      };
-      showRequirementsModal = true;
-    }
+    if (!video.hasAccess) return;
+    selectedVideo = video;
+    isVideoLoading = true;
+    playerKey += 1;
   }
 
   function handleLoadingStateChange(loading: boolean) {
@@ -149,7 +145,7 @@
                 alt={categoryTitle}
                 class="w-8 h-8 object-contain"
               />
-              />
+            
           {/if}
             <div>
               <h3 class="text-xl font-medium text-white">{categoryTitle}</h3>
@@ -182,17 +178,21 @@
 
                   {#if !video.hasAccess}
                     <div class="absolute top-2 right-2">
-                      <div class="bg-yellow-500/90 text-black text-xs px-2 py-1 rounded-full font-medium flex items-center space-x-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                        </svg>
-                        <span>Gesperrt</span>
+                      <div class="flex items-center gap-1">
+                        <div class="bg-yellow-500/90 text-black text-xs px-2 py-1 rounded-full font-medium flex items-center space-x-1">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                          </svg>
+                          <span>Gesperrt</span>
+                          <InfoIcon variant="default" text={getMissingBadgesText(video)} position="left" size="sm" />
+                        </div>
+                      
                       </div>
                     </div>
                   {/if}
                 </div>
 
-                <div class="p-3">
+               <div class="p-3">
                   <h4 class="font-medium mb-1 line-clamp-2">{video.title}</h4>
                   {#if video.description}
                     <p class="text-gray-400 text-sm line-clamp-2">{video.description}</p>
@@ -218,46 +218,3 @@
     </div>
   {/if}
 </CollapsibleSection>
-
-{#if showRequirementsModal}
-  <div 
-    class="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
-    transition:fade={{duration: 150}}
-  >
-    <div class="bg-gray-900 rounded-xl p-6 max-w-lg w-full border border-gray-800">
-      <div class="flex justify-between items-center mb-6">
-        <h2 class="text-xl font-medium text-gray-200">Video-Zugang</h2>
-        <button 
-          on:click={closeRequirementsModal}
-          class="text-gray-400 hover:text-white"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-
-      <div class="space-y-4">
-        <div class="flex items-center space-x-3 text-yellow-500">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-          </svg>
-          <p class="font-medium">Dieses Video ist noch gesperrt</p>
-        </div>
-
-        <p class="text-gray-400">Um „{currentVideoRequirements?.video.title}" ansehen zu können, benötigst du folgende Badges:</p>
-
-        <div class="space-y-3">
-          {#each currentVideoRequirements?.missingBadges || [] as badge}
-            <div class="p-4 bg-gray-800/50 rounded-lg border border-gray-700">
-              <div class="font-medium text-white mb-1">{badge.name}</div>
-              {#if badge.description}
-                <p class="text-sm text-gray-400">{badge.description}</p>
-              {/if}
-            </div>
-          {/each}
-        </div>
-      </div>
-    </div>
-  </div>
-{/if}
