@@ -6,7 +6,7 @@
   export let title: string;
   export let directUrl: string = '';
   export let autoplay: boolean = false;
-  export let requireFullscreen: boolean = false;
+  export let requireFullscreen: boolean = false; // Now only controls if fullscreen button is shown, no auto-fullscreen
   export let onLoadingStateChange: (isLoading: boolean) => void = () => {};
   
   interface HTMLVideoElementWithWebkit extends HTMLVideoElement {
@@ -132,10 +132,8 @@
       
       isPlaying = true;
       
-      // For mobile, try fullscreen if required
-      if (requireFullscreen && isMobile) {
-        setTimeout(enterFullscreen, 300);
-      }
+      // No longer automatically entering fullscreen
+      // Fullscreen is now only triggered by the fullscreen button
     } catch (err) {
       console.error('Autoplay failed:', err);
       videoElement.muted = false;
@@ -247,10 +245,7 @@
       await videoElement.play();
       isPlaying = true;
       
-      // Try fullscreen on mobile if required
-      if (requireFullscreen && isMobile) {
-        setTimeout(enterFullscreen, 300);
-      }
+      // No longer automatically entering fullscreen when play is pressed
       
       isLoading = false;
       onLoadingStateChange(false);
@@ -354,8 +349,8 @@
           on:click={handleUserInteraction}
         >
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
-          <path fill-rule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clip-rule="evenodd" />
-        </svg>
+            <path fill-rule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clip-rule="evenodd" />
+          </svg>
         
         </button>
         <h3 class="text-white text-lg font-medium mb-2">Video abspielen</h3>
