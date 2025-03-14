@@ -85,32 +85,26 @@
     selectedVideo = video;
 
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    console.log('Device check:', { isMobile, userAgent: navigator.userAgent });
+    console.log('Video opening:', { 
+      isMobile, 
+      userAgent: navigator.userAgent,
+      videoId: video._id,
+      forceModal,
+      showModal
+    });
 
-    if (isMobile || forceModal) {
-      showModal = true;
-      isVideoLoading = true;
-      playerKey += 1;
-    } else {
-      showModal = false;
-      isVideoLoading = true;
-      playerKey += 1;
-      
-      // Scroll nur bei Inline-Ansicht
-      setTimeout(() => {
-        const videoPlayer = document.querySelector('.video-player-container');
-        if (videoPlayer) {
-          videoPlayer.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start',
-          }); 
-        }
-      }, 100);
-    }
+    // Immer Modal für konsistentes Verhalten
+    showModal = true;
+    isVideoLoading = true;
+    playerKey += 1;
   }
   
   function handleVideoError(e: Event) {
-    console.error('Video loading error:', e);
+    console.error('Video loading error:', { 
+      event: e,
+      videoId: selectedVideo?._id,
+      showModal
+    });
     if (!showModal) {
       console.log('Switching to modal fallback');
       forceModal = true;
@@ -155,6 +149,7 @@
               videoId={selectedVideo._id}
               title={selectedVideo.title}
               autoplay={true}
+              requireFullscreen={true}
               onLoadingStateChange={handleLoadingStateChange}
               directUrl={selectedVideo.videoFile?.asset?.url || ''}
             />
@@ -223,7 +218,7 @@
                   {/if}
                 </div>
 
-               <div class="p-3">
+                <div class="p-3">
                   <h4 class="font-medium mb-1 line-clamp-2">{video.title}</h4>
                   {#if video.description}
                     <p class="text-gray-400 text-sm line-clamp-2">{video.description}</p>
@@ -262,25 +257,12 @@
     class="fixed inset-0 bg-black/90 z-[9999] flex items-center justify-center p-4"
     transition:fade={{duration: 150}}
   >
-    <div class="w-full max-w-3xl bg-gray-900 rounded-xl overflow-hidden relative">
-      <!-- Modal Header -->
-      <div class="flex justify-between items-center p-4 border-b border-gray-800">
-        <h2 class="text-xl font-medium text-white">{selectedVideo.title}</h2>
-        <button 
-          on:click={() => { showModal = false; selectedVideo = null; }}
-          class="text-gray-400 hover:text-white"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-
-      <!-- Video Player in Modal -->
+    <div class="w-full max-w-3xl bg-gray-900 rounded-xl overflow-hidden relative">  
       <SecurePlayer
         videoId={selectedVideo._id}
         title={selectedVideo.title}
         autoplay={true}
+        requireFullscreen={true}
         onLoadingStateChange={handleLoadingStateChange}
         directUrl={selectedVideo.videoFile?.asset?.url || ''}
         on:error={handleVideoError}

@@ -6,9 +6,18 @@
   export let title: string;
   export let directUrl: string = '';
   export let autoplay: boolean = false;
+  export let requireFullscreen: boolean = false;
   export let onLoadingStateChange: (isLoading: boolean) => void = () => {};
   
-  let videoElement: HTMLVideoElement;
+  // Erweitere HTMLVideoElement um iOS-spezifische Methoden
+  interface HTMLVideoElementWithWebkit extends HTMLVideoElement {
+    webkitEnterFullscreen?: () => Promise<void>;
+    webkitSupportsFullscreen?: boolean;
+    webkitDisplayingFullscreen?: boolean;
+    webkitExitFullscreen?: () => Promise<void>;
+  }
+  
+  let videoElement: HTMLVideoElementWithWebkit;
   let playerContainer: HTMLDivElement;
   let isPlaying = false;
   let progress = 0;
@@ -18,6 +27,7 @@
   let isFullscreen = false;
   let showControls = true;
   let isLoaded = false;
+  let readyToPlay = false;
   let controlsTimeout: NodeJS.Timeout;
   let videoUrl = '';
   
@@ -25,32 +35,72 @@
   onMount(async () => {
     if (browser) {      
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      console.log('Device check:', { isMobile, userAgent: navigator.userAgent });
+      console.log('Video wird initialisiert:', {
+        isMobile,
+        userAgent: navigator.userAgent,
+        autoplay,
+        requireFullscreen
+      });
       
       // Setze die Video-URL
-      if (directUrl) {
-        console.log('Direkte URL auf ' + (isMobile ? 'Mobile' : 'Desktop') + ':', directUrl);
-        videoUrl = directUrl;
-      } else {
-        console.log('API-URL auf ' + (isMobile ? 'Mobile' : 'Desktop') + ' für Video-ID:', videoId);
-        videoUrl = `/api/videos/${videoId}/stream`;
-      }
-      
+      videoUrl = directUrl || `/api/videos/${videoId}/stream`;
       console.log('Video-URL gesetzt:', videoUrl);
       
       // Warte bis das Video wirklich bereit ist
       if (videoElement) {
-        videoElement.addEventListener('canplaythrough', () => {
+        videoElement.addEventListener('canplaythrough', async () => {
+          console.log('Video ist bereit:', {
+            readyState: videoElement.readyState,
+            duration: videoElement.duration
+          });
+          
           isLoaded = true;
+          readyToPlay = true;
           onLoadingStateChange(false);
           
-          if (autoplay) {
-            videoElement.play().then(() => {
-              console.log('Autoplay erfolgreich gestartet');
-            }).catch(err => {
-              console.error('Autoplay fehlgeschlagen:', err);
-            });
+          // Aktiviere Vollbildmodus wenn erforderlich
+          if (requireFullscreen) {
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            try {
+              console.log('Versuche Vollbildmodus zu aktivieren:', {
+                isMobile,
+                hasWebkit: !!videoElement?.webkitEnterFullscreen,
+                hasStandard: !!playerContainer?.requestFullscreen
+              });
+
+              if (isMobile && videoElement?.webkitEnterFullscreen) {
+                await videoElement.webkitEnterFullscreen();
+                isFullscreen = true;
+              } else if (playerContainer?.requestFullscreen) {
+                await playerContainer.requestFullscreen();
+                isFullscreen = true;
+              }
+            } catch (err) {
+              console.error('Fehler beim Aktivieren des Vollbildmodus:', err);
+            }
           }
+          
+          // Starte Autoplay wenn aktiviert
+          if (autoplay) {
+            videoElement.muted = true; // Erforderlich für mobiles Autoplay
+            try {
+              await videoElement.play();
+              console.log('Autoplay erfolgreich gestartet');
+            } catch (err) {
+              console.error('Autoplay fehlgeschlagen:', err);
+            }
+          }
+        });
+
+        // Event-Listener für iOS Fullscreen
+        videoElement.addEventListener('webkitbeginfullscreen', () => {
+          console.log('iOS Vollbildmodus gestartet');
+          isFullscreen = true;
+        });
+
+        videoElement.addEventListener('webkitendfullscreen', () => {
+          console.log('iOS Vollbildmodus beendet');
+          isFullscreen = false;
         });
       }
 
@@ -59,17 +109,17 @@
       window.addEventListener('contextmenu', preventContextMenu);
     }
   });
-
+  
   // Verhindere Rechtsklick
   const preventContextMenu = (e: MouseEvent) => e.preventDefault();
-
+  
   // Formatiere Zeit (Sekunden -> MM:SS)
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
-
+  
   // Verstecke Controls nach Inaktivität
   const handleMouseMove = () => {
     showControls = true;
@@ -78,7 +128,7 @@
       if (isPlaying) showControls = false;
     }, 2000);
   };
-
+  
   // Update Progress
   const handleTimeUpdate = () => {
     if (!videoElement) return;
@@ -87,12 +137,16 @@
     currentTime = formatTime(videoElement.currentTime);
     duration = formatTime(videoElement.duration);
   };
-
+  
   // Play/Pause Toggle
   const togglePlay = () => {
-    if (!videoElement) return;
+    if (!videoElement || !readyToPlay) return;
     
-    console.log('Toggle Play. Ready State:', videoElement.readyState);
+    console.log('Toggle Play:', {
+      readyState: videoElement.readyState,
+      readyToPlay,
+      isPlaying
+    });
     
     if (isPlaying) {
       videoElement.pause();
@@ -105,7 +159,7 @@
     }
     isPlaying = !isPlaying;
   };
-
+  
   // Volume Control
   const updateVolume = (e: Event) => {
     if (!videoElement) return;
@@ -113,17 +167,11 @@
     volume = parseFloat(input.value);
     videoElement.volume = volume;
   };
-
+  
   // Seek Control
   const handleSeek = (e: MouseEvent) => {
-    if (!videoElement || !playerContainer) return;
-
-    // Überprüfe, ob das Video geladen ist
-    if (!isLoaded) {
-      console.error('Video is not loaded yet');
-      return;
-    }
-    // Überprüfe, ob duration ein gültiger Wert ist
+    if (!videoElement || !playerContainer || !isLoaded) return;
+    
     if (!videoElement.duration || !isFinite(videoElement.duration)) {
       console.error('Video duration is not valid:', videoElement.duration);
       return;
@@ -133,24 +181,31 @@
     const x = e.clientX - rect.left;
     const percent = x / rect.width;
     
-    // Berechne die neue Zeit und stelle sicher, dass sie gültig ist
     const newTime = percent * videoElement.duration;
     if (isFinite(newTime) && newTime >= 0 && newTime <= videoElement.duration) {
       videoElement.currentTime = newTime;
-    } else {
-      console.error('Invalid seek time calculated:', newTime, 'Duration:', videoElement.duration, 'Percent:', percent);
     }
   };
-
+  
   // Fullscreen Toggle
   const toggleFullscreen = async () => {
     if (!playerContainer) return;
     
     if (!isFullscreen) {
       try {
-        if (playerContainer.requestFullscreen) {
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        console.log('Versuche Vollbildmodus zu aktivieren:', {
+          isMobile,
+          hasWebkit: !!videoElement?.webkitEnterFullscreen,
+          hasStandard: !!playerContainer?.requestFullscreen
+        });
+        
+        if (isMobile && videoElement?.webkitEnterFullscreen) {
+          await videoElement.webkitEnterFullscreen();
+        } else if (playerContainer.requestFullscreen) {
           await playerContainer.requestFullscreen();
         }
+        isFullscreen = true;
       } catch (err) {
         console.error('Fehler beim Aktivieren des Vollbildmodus:', err);
       }
@@ -158,13 +213,14 @@
       try {
         if (document.exitFullscreen) {
           await document.exitFullscreen();
+          isFullscreen = false;
         }
       } catch (err) {
         console.error('Fehler beim Verlassen des Vollbildmodus:', err);
       }
     }
   };
-
+  
   // Tastatur-Steuerung
   const handleKeydown = (e: KeyboardEvent) => {
     if (!videoElement) return;
@@ -193,7 +249,7 @@
         break;
     }
   };
-
+  
   onDestroy(() => {
     if (browser) {
       document.removeEventListener('keydown', handleKeydown);
@@ -214,29 +270,33 @@
     class="w-full h-full"
     playsInline
     preload="auto"
+    muted={autoplay}
     on:timeupdate={handleTimeUpdate}
     on:play={() => isPlaying = true}
     on:loadedmetadata={() => {
-      console.log('Video metadata loaded:', {
+      console.log('Video metadata geladen:', {
         duration: videoElement?.duration,
         url: videoUrl,
         readyState: videoElement?.readyState
       });
-      isLoaded = true;
+      if (videoElement?.readyState >= 1) {
+        readyToPlay = true;
+        isLoaded = true;
+      }
     }}
     on:canplay={() => {
-      console.log('Video can play now');
+      console.log('Video kann abgespielt werden:', {
+        readyState: videoElement?.readyState,
+        duration: videoElement?.duration
+      });
       isLoaded = true;
       onLoadingStateChange(false);
     }}
     on:error={(e) => {
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      console.error('Video loading error auf ' + (isMobile ? 'Mobile' : 'Desktop') + ':');
-      console.error('Error Event:', e);
+      console.error('Video loading error:', e);
       console.error('Video error details:', videoElement?.error);
       onLoadingStateChange(false);
     }}
-    style="-webkit-playsinline: true;"
     on:pause={() => isPlaying = false}
     on:click={togglePlay}
     on:dblclick={toggleFullscreen}
