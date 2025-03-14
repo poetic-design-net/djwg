@@ -7,11 +7,17 @@ interface UserBadge {
 }
 
 // Constants for streaming optimization
-const INITIAL_CHUNK_SIZE = 1024 * 1024; // 1MB initial chunk for faster start
+const DESKTOP_CHUNK_SIZE = 1024 * 1024; // 1MB for desktop
+const MOBILE_CHUNK_SIZE = 256 * 1024;  // 256KB for mobile
 const CACHE_MAX_AGE = 60 * 60 * 24; // 24 hours caching for video chunks
 const STALE_WHILE_REVALIDATE = 60 * 60; // 1 hour stale-while-revalidate
 
 export const GET: RequestHandler = async ({ params, locals, request }) => {
+  // Mobile detection
+  const userAgent = request.headers.get('user-agent') || '';
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(userAgent);
+  const INITIAL_CHUNK_SIZE = isMobile ? MOBILE_CHUNK_SIZE : DESKTOP_CHUNK_SIZE;
+  
   const { id } = params;
   
   // Authentication check
@@ -89,6 +95,9 @@ export const GET: RequestHandler = async ({ params, locals, request }) => {
             'Accept-Ranges': 'bytes',
             'Content-Length': chunkSize.toString(),
             'Content-Type': contentType,
+            'Cross-Origin-Resource-Policy': 'cross-origin',
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, HEAD',
             // Enable caching for video chunks
             'Cache-Control': `max-age=${CACHE_MAX_AGE}, stale-while-revalidate=${STALE_WHILE_REVALIDATE}`,
             'X-Content-Type-Options': 'nosniff'

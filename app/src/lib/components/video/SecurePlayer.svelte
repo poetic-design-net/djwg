@@ -23,13 +23,16 @@
   
   // Lade das Video
   onMount(async () => {
-    if (browser) {
+    if (browser) {      
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      console.log('Device check:', { isMobile, userAgent: navigator.userAgent });
+      
       // Setze die Video-URL
       if (directUrl) {
-        console.log('Verwende direkte URL:', directUrl);
+        console.log('Direkte URL auf ' + (isMobile ? 'Mobile' : 'Desktop') + ':', directUrl);
         videoUrl = directUrl;
       } else {
-        console.log('Verwende API-URL für Video-ID:', videoId);
+        console.log('API-URL auf ' + (isMobile ? 'Mobile' : 'Desktop') + ' für Video-ID:', videoId);
         videoUrl = `/api/videos/${videoId}/stream`;
       }
       
@@ -209,6 +212,7 @@
   <video
     bind:this={videoElement}
     class="w-full h-full"
+    playsInline
     preload="auto"
     on:timeupdate={handleTimeUpdate}
     on:play={() => isPlaying = true}
@@ -226,14 +230,18 @@
       onLoadingStateChange(false);
     }}
     on:error={(e) => {
-      console.error('Video loading error:', e);
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      console.error('Video loading error auf ' + (isMobile ? 'Mobile' : 'Desktop') + ':');
+      console.error('Error Event:', e);
       console.error('Video error details:', videoElement?.error);
       onLoadingStateChange(false);
     }}
+    style="-webkit-playsinline: true;"
     on:pause={() => isPlaying = false}
     on:click={togglePlay}
     on:dblclick={toggleFullscreen}
   >
+    <track kind="captions"> <!-- Leerer Track für iOS -->
     {#if videoUrl}
       <source src={videoUrl} type="video/mp4">
     {/if}
