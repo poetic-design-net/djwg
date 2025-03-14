@@ -353,8 +353,6 @@
           </svg>
         
         </button>
-        <h3 class="text-white text-lg font-medium mb-2">Video abspielen</h3>
-        <p class="text-gray-300 text-sm">Tippe auf Play, um das Video zu starten</p>
       </div>
     </div>
   {/if}
