@@ -115,10 +115,15 @@
     }, 100);
   }
 
-  function handleVideoError(event) {
+  function handleVideoError(event: { detail: { code: number; }; }) {
     console.error('Video error event received:', event.detail);
-    videoLoadError = true;
-    isVideoLoading = false;
+    
+    // Only set error state if we have specific error details
+    // For desktop, be more selective about showing errors
+    if (!isMobile || (event.detail && event.detail.code && event.detail.code > 1)) {
+      videoLoadError = true;
+      isVideoLoading = false;
+    }
   }
 
   function handleLoadingStateChange(loading: boolean) {
@@ -161,9 +166,9 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <h3 class="text-xl font-medium text-white">Video konnte nicht geladen werden</h3>
-                <p class="text-gray-300 mb-4">Es gab ein Problem beim Abspielen dieses Videos. Bitte versuche es später erneut.</p>
+                <p class="text-gray-300 mb-4">Das Video konnte nicht abgespielt werden. Bitte versuche es später erneut.</p>
                 
-                <div class="flex space-x-4">
+                <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
                   <button 
                     class="bg-green-500 hover:bg-green-600 text-black px-4 py-2 rounded-lg font-medium transition"
                     on:click={retryVideo}
@@ -182,33 +187,34 @@
             </div>
           {/if}
           
-          {#key playerKey}
-            <SecurePlayer
-              videoId={selectedVideo._id}
-              title={selectedVideo.title}
-              autoplay={true}
-              requireFullscreen={isMobile}
-              onLoadingStateChange={handleLoadingStateChange}
-              directUrl={selectedVideo.videoFile?.asset?.url || ''}
-              on:error={handleVideoError}
-            />
-          {/key}
+          <div class="relative">
+            {#key playerKey}
+              <!-- Only autoplay on desktop, not on mobile -->
+              <SecurePlayer
+                videoId={selectedVideo._id}
+                title={selectedVideo.title}
+                autoplay={!isMobile}
+                requireFullscreen={isMobile}
+                onLoadingStateChange={handleLoadingStateChange}
+                directUrl={selectedVideo.videoFile?.asset?.url || ''}
+                on:error={handleVideoError}
+              />
+            {/key}
+          </div>
 
           <div class="p-4 space-y-4">
             <div class="flex justify-between items-start">
               <h2 class="text-xl font-medium text-white">{selectedVideo.title}</h2>
               
-              {#if !isMobile}
-                <button 
-                  class="text-gray-400 hover:text-white"
-                  on:click={closeVideo}
-                  aria-label="Schließen"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              {/if}
+              <button 
+                class="text-gray-400 hover:text-white"
+                on:click={closeVideo}
+                aria-label="Schließen"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
             
             {#if selectedVideo.description}

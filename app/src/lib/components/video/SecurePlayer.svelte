@@ -22,15 +22,20 @@
   let isLoaded = false;
   let isPlaying = false;
   let showControls = true;
-  let controlsTimeout: ReturnType<typeof setTimeout>;
+  let controlsTimeout: ReturnType<typeof setTimeout> | null = null;
   let progress = 0;
   let volume = 1;
   let currentTime = '0:00';
   let duration = '0:00';
   let isLoading = true;
   let hasError = false;
-  let loadingTimeout: ReturnType<typeof setTimeout>;
+  let loadingTimeout: ReturnType<typeof setTimeout> | null = null;
   let isMobile = false;
+  let isFullscreen = false;
+  
+  // For mobile-specific behavior
+  let needsUserInteraction = false;
+  let userInteracted = false;
   
   onMount(() => {
     if (!browser) return;
@@ -39,25 +44,37 @@
     onLoadingStateChange(true);
     isLoading = true;
     
-    // Set a timeout for loading - if video doesn't load after 10 seconds, show error
-    loadingTimeout = setTimeout(() => {
-      if (isLoading) {
-        console.error('Video loading timeout');
-        hasError = true;
-        isLoading = false;
-        onLoadingStateChange(false);
-        dispatch('error', { message: 'Loading timeout' });
-      }
-    }, 10000);
-    
+    // Detect mobile device
     isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    
+    // Set video URL
     videoUrl = directUrl || `/api/videos/${videoId}/stream`;
+    
+    // For mobile, especially iOS, we might need explicit user interaction
+    needsUserInteraction = isMobile;
+    
+    // If we're not on a mobile device, set a loading timeout
+    // Use a longer timeout for desktop
+    if (!isMobile) {
+      loadingTimeout = setTimeout(() => {
+        if (isLoading && !isPlaying) {
+          console.error('Video loading timeout');
+          hasError = true;
+          isLoading = false;
+          onLoadingStateChange(false);
+          dispatch('error', { message: 'Loading timeout' });
+        }
+      }, 20000); // 20 seconds for desktop should be plenty of time
+    }
     
     console.log('Player initialization:', {
       isMobile,
+      isIOS,
       autoplay,
       requireFullscreen,
-      videoUrl
+      videoUrl,
+      needsUserInteraction
     });
   });
 
@@ -67,47 +84,63 @@
     // Loading events
     videoElement.addEventListener('loadstart', () => {
       console.log('Video loadstart event');
-      isLoading = true;
-      onLoadingStateChange(true);
+      if (!needsUserInteraction || userInteracted) {
+        isLoading = true;
+        onLoadingStateChange(true);
+      }
     });
     
-    videoElement.addEventListener('loadeddata', handleVideoLoaded);
+    videoElement.addEventListener('loadeddata', () => {
+      console.log('Video loadeddata event');
+      isLoaded = true;
+      
+      if (!needsUserInteraction || userInteracted) {
+        isLoading = false;
+        onLoadingStateChange(false);
+        
+        if (autoplay && !needsUserInteraction) {
+          attemptAutoplay();
+        }
+      }
+    });
     
     // Error handling
     videoElement.addEventListener('error', (e) => {
       console.error('Video error event:', e);
-      clearTimeout(loadingTimeout);
-      hasError = true;
-      isLoading = false;
-      onLoadingStateChange(false);
-      dispatch('error', { event: e });
-    });
-    
-    // Stalled/waiting events
-    videoElement.addEventListener('stalled', () => {
-      console.log('Video stalled event');
-      isLoading = true;
-      onLoadingStateChange(true);
-    });
-    
-    videoElement.addEventListener('waiting', () => {
-      console.log('Video waiting event');
-      isLoading = true;
-      onLoadingStateChange(true);
-    });
-    
-    // Progress events
-    videoElement.addEventListener('progress', () => {
-      if (isLoading && videoElement.readyState >= 3) {
-        isLoading = false;
-        onLoadingStateChange(false);
+      if (loadingTimeout) clearTimeout(loadingTimeout);
+      
+      // On mobile, don't immediately show error - might just need interaction
+      if (isMobile && !userInteracted) {
+        needsUserInteraction = true;
+      } else {
+        // On desktop, only show error if we're sure it's a real error
+        // Check if the error is a meaningful one
+        const errorCode = videoElement.error ? videoElement.error.code : 0;
+        // MEDIA_ERR_ABORTED (1): User aborted
+        // MEDIA_ERR_NETWORK (2): Network error
+        // MEDIA_ERR_DECODE (3): Decoding error
+        // MEDIA_ERR_SRC_NOT_SUPPORTED (4): Format not supported
+        
+        // Only show error message for real errors (network, decode, not supported)
+        // Don't show for user abort or non-specific errors
+        if (errorCode > 1) {
+          hasError = true;
+          isLoading = false;
+          onLoadingStateChange(false);
+          dispatch('error', { event: e, code: errorCode });
+        }
       }
     });
     
+    // Progress events
     videoElement.addEventListener('canplay', () => {
       console.log('Video canplay event');
-      isLoading = false;
-      onLoadingStateChange(false);
+      isLoaded = true;
+      
+      if (!needsUserInteraction || userInteracted) {
+        isLoading = false;
+        onLoadingStateChange(false);
+      }
     });
     
     videoElement.addEventListener('playing', () => {
@@ -115,28 +148,23 @@
       isLoading = false;
       onLoadingStateChange(false);
       isPlaying = true;
+      hasError = false; // Clear any errors if playback starts
+      
+      // If we have a loading timeout, clear it since video is playing
+      if (loadingTimeout) {
+        clearTimeout(loadingTimeout);
+        loadingTimeout = null;
+      }
     });
     
     videoElement.addEventListener('pause', () => {
       isPlaying = false;
     });
     
-    // Mobile-specific setup
+    // Fullscreen change events
     if (isMobile) {
       document.addEventListener('fullscreenchange', handleFullscreenChange);
       document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-    }
-  }
-  
-  function handleVideoLoaded() {
-    console.log('Video loaded successfully');
-    clearTimeout(loadingTimeout);
-    isLoaded = true;
-    isLoading = false;
-    onLoadingStateChange(false);
-    
-    if (autoplay) {
-      attemptAutoplay();
     }
   }
   
@@ -167,6 +195,11 @@
       // Reset muted state if autoplay failed
       videoElement.muted = false;
       isPlaying = false;
+      
+      // On mobile, this is expected - just set the flag for user interaction
+      if (isMobile) {
+        needsUserInteraction = true;
+      }
     }
   }
   
@@ -185,16 +218,39 @@
         await (playerContainer as any).webkitRequestFullscreen();
       }
       console.log('Fullscreen activated');
+      isFullscreen = true;
     } catch (err) {
       console.error('Fullscreen error:', err);
     }
   }
   
+  async function exitFullscreen() {
+    try {
+      if (document.exitFullscreen) {
+        await document.exitFullscreen();
+      } else if ((document as any).webkitExitFullscreen) {
+        await (document as any).webkitExitFullscreen();
+      }
+      console.log('Fullscreen exited');
+      isFullscreen = false;
+    } catch (err) {
+      console.error('Exit fullscreen error:', err);
+    }
+  }
+  
+  async function toggleFullscreen() {
+    if (isFullscreen) {
+      await exitFullscreen();
+    } else {
+      await enterFullscreen();
+    }
+  }
+  
   function handleFullscreenChange() {
-    const isFullscreen = 
-      document.fullscreenElement || 
-      (document as any).webkitFullscreenElement || 
-      (videoElement && videoElement.webkitDisplayingFullscreen);
+    isFullscreen = 
+      !!document.fullscreenElement || 
+      !!(document as any).webkitFullscreenElement || 
+      !!(videoElement && videoElement.webkitDisplayingFullscreen);
       
     console.log('Fullscreen change:', { isFullscreen });
   }
@@ -225,7 +281,55 @@
     duration = formatTime(videoElement.duration);
   }
 
+  // Handle explicit user interaction for mobile
+  async function handleUserInteraction() {
+    if (!videoElement || !isLoaded) return;
+    
+    console.log('Explicit user interaction');
+    userInteracted = true;
+    needsUserInteraction = false;
+    
+    try {
+      // On mobile, reset any errors - user interaction may fix them
+      hasError = false;
+      isLoading = true;
+      onLoadingStateChange(true);
+      
+      // For iOS we need to load the video again sometimes
+      if (isMobile) {
+        videoElement.load();
+        
+        // Give a small delay for the video to start loading
+        await new Promise(resolve => setTimeout(resolve, 300));
+      }
+      
+      await videoElement.play();
+      isPlaying = true;
+      
+      // Try fullscreen on mobile if required
+      if (requireFullscreen && isMobile) {
+        setTimeout(enterFullscreen, 300);
+      }
+      
+      console.log('User-initiated playback successful');
+      isLoading = false;
+      onLoadingStateChange(false);
+    } catch (err) {
+      console.error('User-initiated playback error:', err);
+      isPlaying = false;
+      hasError = true;
+      isLoading = false;
+      onLoadingStateChange(false);
+      dispatch('error', { message: 'Failed to play video after user interaction' });
+    }
+  }
+  
   function handlePlayPause() {
+    if (needsUserInteraction && !userInteracted) {
+      handleUserInteraction();
+      return;
+    }
+    
     if (!videoElement || !isLoaded) return;
     
     if (videoElement.paused) {
@@ -233,10 +337,6 @@
         isPlaying = true;
       }).catch((err) => {
         console.error('Play error:', err);
-        // For mobile, user interaction might be needed first
-        if (isMobile) {
-          enterFullscreen();
-        }
       });
     } else {
       videoElement.pause();
@@ -244,17 +344,17 @@
     }
   }
   
-  // Separated click handler to use for both video and play button
+  // Handle video element click
   function handleClick() {
-    if (isMobile && requireFullscreen) {
-      // On mobile with fullscreen requirement, prioritize entering fullscreen
-      enterFullscreen();
+    if (needsUserInteraction && !userInteracted) {
+      handleUserInteraction();
+    } else {
+      handlePlayPause();
     }
-    handlePlayPause();
   }
 
   function handleSeek(e: MouseEvent) {
-    if (!videoElement || !playerContainer || !isLoaded) return;
+    if (!videoElement || !playerContainer || !isLoaded || !userInteracted) return;
     
     const rect = (e.target as HTMLElement).getBoundingClientRect();
     const x = e.clientX - rect.left;
@@ -277,7 +377,7 @@
     if (controlsTimeout) clearTimeout(controlsTimeout);
     if (loadingTimeout) clearTimeout(loadingTimeout);
     
-    // Remove mobile-specific listeners
+    // Remove fullscreen listeners
     if (isMobile) {
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
       document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
@@ -299,11 +399,31 @@
   on:mouseleave={() => showControls = false}
 >
   <!-- Loading Indicator -->
-  {#if isLoading}
+  {#if isLoading && (!needsUserInteraction || userInteracted)}
     <div class="absolute inset-0 bg-black/60 flex items-center justify-center z-10">
       <div class="flex flex-col items-center">
         <div class="animate-spin rounded-full h-12 w-12 border-2 border-green-500 border-t-transparent mb-4"></div>
         <span class="text-white text-sm">Video wird geladen...</span>
+      </div>
+    </div>
+  {/if}
+  
+  <!-- Mobile Interactive Play Screen -->
+  {#if needsUserInteraction && !userInteracted && !hasError}
+    <div class="absolute inset-0 bg-black/70 flex items-center justify-center z-20">
+      <div class="text-center">
+        <div 
+          class=" text-green-500 h-12 w-12 rounded-full flex justify-center items-center mx-auto mb-4 cursor-pointer hover:bg-green-400 transition-colors"
+          on:click={handleUserInteraction}
+        >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+          <path fill-rule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clip-rule="evenodd" />
+        </svg>
+        
+        
+        </div>
+        <h3 class="text-white text-lg font-medium mb-2">Video abspielen</h3>
+        <p class="text-gray-300 text-sm">Tippe auf Play, um das Video zu starten</p>
       </div>
     </div>
   {/if}
@@ -317,12 +437,18 @@
         </svg>
         <h3 class="text-white text-lg font-medium mb-2">Fehler beim Laden des Videos</h3>
         <p class="text-gray-300 mb-4">Das Video konnte nicht abgespielt werden. Bitte versuche es später erneut.</p>
-        <button 
-          class="bg-green-500 hover:bg-green-600 text-black font-medium py-2 px-4 rounded-lg transition"
-          on:click={() => window.location.reload()}
-        >
-          Neu laden
-        </button>
+        <div class="flex justify-center space-x-4">
+          <button 
+            class="bg-green-500 hover:bg-green-600 text-black font-medium py-2 px-4 rounded-lg transition"
+            on:click={() => {
+              hasError = false;
+              needsUserInteraction = true;
+              userInteracted = false;
+            }}
+          >
+            Erneut versuchen
+          </button>
+        </div>
       </div>
     </div>
   {/if}
@@ -344,24 +470,19 @@
     <p class="text-center p-4 text-white">Ihr Browser unterstützt keine Video-Wiedergabe.</p>
   </video>
 
-  <!-- Play Button for Mobile (always visible to help with playback) -->
-  {#if isMobile && !isPlaying && isLoaded && !hasError}
+  <!-- Play Button for Mobile (always visible when paused but loaded) -->
+  {#if isMobile && !isPlaying && isLoaded && !hasError && !needsUserInteraction}
     <button
       class="absolute inset-0 flex items-center justify-center bg-black/40 z-5"
       on:click={handleClick}
       aria-label="Video abspielen"
     >
-      <div class="bg-green-500 text-black rounded-full p-5">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      </div>
+      
     </button>
   {/if}
 
-  <!-- Custom Controls for Desktop -->
-  {#if !requireFullscreen || !isMobile}
+  <!-- Custom Controls for Desktop (or mobile when not requiring fullscreen) -->
+  {#if (!requireFullscreen || !isMobile) && (!needsUserInteraction || userInteracted)}
     <div 
       class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 transition-opacity duration-300"
       class:opacity-0={!showControls}
@@ -420,6 +541,23 @@
 
         <div class="flex items-center space-x-4">
           <span class="text-white text-sm hidden md:block">{title}</span>
+          
+          <!-- Fullscreen Button (Added to bottom right) -->
+          <button
+            class="text-white hover:text-green-500 transition-colors"
+            on:click={toggleFullscreen}
+            aria-label={isFullscreen ? "Vollbild beenden" : "Vollbild"}
+          >
+            {#if isFullscreen}
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9V4.5M9 9H4.5M15 9H19.5M15 9V4.5M9 15v4.5M9 15H4.5M15 15h4.5M15 15v4.5" />
+              </svg>
+            {:else}
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+              </svg>
+            {/if}
+          </button>
         </div>
       </div>
     </div>
