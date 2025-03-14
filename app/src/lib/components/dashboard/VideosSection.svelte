@@ -24,6 +24,8 @@
   let selectedVideo: (Video & { hasAccess: boolean }) | null = null;
   let playerKey = 0; // Für erzwungenes Neuladen
   let isVideoLoading = false;
+  let showModal = false;
+  let forceModal = false; // Für Mobile-Fallback
 
   export function openAndScrollTo() {
     if (videoSection) {
@@ -80,20 +82,39 @@
   function openVideo(video: Video & { hasAccess: boolean }) {
     if (!video.hasAccess) return;
     selectedVideo = video;
-    isVideoLoading = true;
 
-    // Warte einen Moment, bis das Video-Element gerendert ist
-    setTimeout(() => {
-      const videoPlayer = document.querySelector('.video-player-container');
-      if (videoPlayer) {
-        videoPlayer.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start',
-        }); 
-      }
-    }, 100);
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    console.log('Device check:', { isMobile, userAgent: navigator.userAgent });
 
-    playerKey += 1;
+    if (isMobile || forceModal) {
+      showModal = true;
+      isVideoLoading = true;
+      playerKey += 1;
+    } else {
+      showModal = false;
+      isVideoLoading = true;
+      playerKey += 1;
+      
+      // Scroll nur bei Inline-Ansicht
+      setTimeout(() => {
+        const videoPlayer = document.querySelector('.video-player-container');
+        if (videoPlayer) {
+          videoPlayer.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start',
+          }); 
+        }
+      }, 100);
+    }
+  }
+  
+  function handleVideoError(e: Event) {
+    console.error('Video loading error:', e);
+    if (!showModal) {
+      console.log('Switching to modal fallback');
+      forceModal = true;
+      openVideo(selectedVideo!);
+    }
   }
 
   function handleLoadingStateChange(loading: boolean) {
@@ -230,3 +251,36 @@
     </div>
   {/if}
 </CollapsibleSection>
+
+<!-- Modal für Mobile/Fallback -->
+{#if showModal && selectedVideo}
+  <div 
+    class="fixed inset-0 bg-black/90 z-[9999] flex items-center justify-center p-4"
+    transition:fade={{duration: 150}}
+  >
+    <div class="w-full max-w-3xl bg-gray-900 rounded-xl overflow-hidden relative">
+      <!-- Modal Header -->
+      <div class="flex justify-between items-center p-4 border-b border-gray-800">
+        <h2 class="text-xl font-medium text-white">{selectedVideo.title}</h2>
+        <button 
+          on:click={() => { showModal = false; selectedVideo = null; }}
+          class="text-gray-400 hover:text-white"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Video Player in Modal -->
+      <SecurePlayer
+        videoId={selectedVideo._id}
+        title={selectedVideo.title}
+        autoplay={true}
+        onLoadingStateChange={handleLoadingStateChange}
+        directUrl={selectedVideo.videoFile?.asset?.url || ''}
+        on:error={handleVideoError}
+      />
+    </div>
+  </div>
+{/if}
