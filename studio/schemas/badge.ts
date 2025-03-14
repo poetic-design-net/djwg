@@ -27,6 +27,12 @@ export default {
       validation: (Rule: any) => Rule.required(),
     },
     {
+      name: 'orderRank',
+      title: 'Order',
+      type: 'number',
+      description: 'Used to determine the order of badges (lower numbers appear first)',
+    },
+    {
       name: 'description',
       title: 'Description',
       type: 'text',

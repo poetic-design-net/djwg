@@ -4,6 +4,7 @@ export interface Badge {
   id: string;
   supabaseId?: string;
   name: string;
+  orderRank?: number;
   description?: string;
   icon?: SanityImage;
   conditions?: {

@@ -15,6 +15,8 @@
   import VideosSection from '$lib/components/dashboard/VideosSection.svelte';
   import CollapsibleSection from '$lib/components/dashboard/CollapsibleSection.svelte';
   import Support from '$lib/components/dashboard/Support.svelte';
+  import InfoIcon from '$lib/components/InfoIcon.svelte';
+  import TooltipPortal from '$lib/components/TooltipPortal.svelte';
   import { onMount } from 'svelte';
 
   export let data;
@@ -62,13 +64,29 @@
         <h1 class="text-4xl font-medium text-white mb-2">Dashboard</h1>
         <p class="text-gray-400">Dein Bereich zum Lernen und Verwalten</p>
       </div>
-      <button 
-        on:click={handleLogout}
-        disabled={loading}
-        class="px-6 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-full transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {loading ? 'Wird abgemeldet...' : 'Abmelden'}
-      </button>
+      <div class="flex items-center gap-4">
+        <a 
+          href="https://buymeacoffee.com/djworkshopgermany"
+          target="_blank"
+          class="relative inline-flex px-6 py-2 text-sm font-medium text-black bg-green-500 hover:bg-green-400 rounded-full transition duration-300 items-center gap-2"
+        >
+          <span>☕</span>
+          <span class="hidden sm:inline">Support</span>
+          <InfoIcon
+            variant="light"
+            size="sm"
+            text="Mit dem Preis einer Tasse Kaffee (2,50€) unterstützt du uns dabei, noch mehr coole Features und Workshops für die DJ-Community anzubieten! 🙌"
+            position="bottom" />
+        </a>
+
+        <button 
+          on:click={handleLogout}
+          disabled={loading}
+          class="px-6 py-2 text-sm font-medium text-white bg-gray-600 hover:bg-red-700 rounded-full transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {loading ? 'Wird abgemeldet...' : 'Abmelden'}
+        </button>
+      </div>
     </div>
 
     <div class="space-y-6">
@@ -160,5 +178,7 @@
     </div>
   </div>
 {/if}
+
+<TooltipPortal />
 
 

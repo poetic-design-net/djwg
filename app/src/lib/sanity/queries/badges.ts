@@ -1,4 +1,5 @@
-export const badgesQuery = `*[_type == "badge"] {
+export const badgesQuery = `*[_type == "badge"] | order(orderRank asc, name asc) {
+  orderRank,
   _id,
   supabaseId,
   name,
@@ -22,6 +23,7 @@ export const badgesQuery = `*[_type == "badge"] {
 }`;
 
 export const badgeBySupabaseIdQuery = `*[_type == "badge" && supabaseId == $supabaseId][0] {
+  orderRank,
   _id,
   supabaseId,
   name,
