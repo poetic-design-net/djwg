@@ -78,7 +78,14 @@
             text="Mit dem Preis einer Tasse Kaffee (2,50€) unterstützt du uns dabei, noch mehr coole Features und Workshops für die DJ-Community anzubieten! 🙌"
             position="bottom" />
         </a>
-
+        {#if isAdmin}
+        <a 
+          href="/admin/users" 
+          class="px-6 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-full transition duration-300"
+        >
+          User Verwaltung
+        </a>
+      {/if}
         <button 
           on:click={handleLogout}
           disabled={loading}
