@@ -9,8 +9,13 @@ interface UserBadge {
 // Constants for streaming optimization
 const DESKTOP_CHUNK_SIZE = 1024 * 1024; // 1MB for desktop
 const MOBILE_CHUNK_SIZE = 256 * 1024;  // 256KB for mobile
-const CACHE_MAX_AGE = 60 * 60 * 24; // 24 hours caching for video chunks
-const STALE_WHILE_REVALIDATE = 60 * 60; // 1 hour stale-while-revalidate
+
+// Reduziertes Caching für Mobile
+const CACHE_SETTINGS = {
+  desktop: { maxAge: 60 * 60 * 24, staleWhileRevalidate: 60 * 60 }, // 24h cache, 1h stale
+  mobile: { maxAge: 60 * 5, staleWhileRevalidate: 60 } // 5min cache, 1min stale
+};
+
 
 export const GET: RequestHandler = async ({ params, locals, request }) => {
   // Mobile detection
@@ -82,6 +87,9 @@ export const GET: RequestHandler = async ({ params, locals, request }) => {
         const videoStream = await fetch(videoUrl, {
           headers: { Range: `bytes=${start}-${end}` }
         });
+
+        const cacheSettings = isMobile ? CACHE_SETTINGS.mobile : CACHE_SETTINGS.desktop;
+        console.log('Using cache settings:', { isMobile, cacheSettings });
         
         if (!videoStream.ok) {
           throw error(500, 'Fehler beim Streaming des Videos');
@@ -99,7 +107,7 @@ export const GET: RequestHandler = async ({ params, locals, request }) => {
             'Access-Control-Allow-Origin': '*',
             'Access-Control-Allow-Methods': 'GET, HEAD',
             // Enable caching for video chunks
-            'Cache-Control': `max-age=${CACHE_MAX_AGE}, stale-while-revalidate=${STALE_WHILE_REVALIDATE}`,
+            'Cache-Control': `max-age=${cacheSettings.maxAge}, stale-while-revalidate=${cacheSettings.staleWhileRevalidate}`,
             'X-Content-Type-Options': 'nosniff'
           }
         });
@@ -129,7 +137,7 @@ export const GET: RequestHandler = async ({ params, locals, request }) => {
           'Accept-Ranges': 'bytes',
           'Content-Length': (initialEnd + 1).toString(),
           'Content-Type': contentType,
-          'Cache-Control': `max-age=${CACHE_MAX_AGE / 2}, stale-while-revalidate=${STALE_WHILE_REVALIDATE}`,
+          'Cache-Control': 'no-store', // Kein Caching für den initialen Request
           'X-Content-Type-Options': 'nosniff'
         }
       });
