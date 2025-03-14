@@ -81,6 +81,18 @@
     if (!video.hasAccess) return;
     selectedVideo = video;
     isVideoLoading = true;
+
+    // Warte einen Moment, bis das Video-Element gerendert ist
+    setTimeout(() => {
+      const videoPlayer = document.querySelector('.video-player-container');
+      if (videoPlayer) {
+        videoPlayer.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        }); 
+      }
+    }, 100);
+
     playerKey += 1;
   }
 
@@ -104,7 +116,7 @@
   {:else}
     <div class="space-y-8">
       {#if selectedVideo}
-        <div class="w-full bg-gray-900 rounded-lg overflow-hidden relative">
+        <div class="video-player-container w-full bg-gray-900 rounded-lg overflow-hidden relative">
           {#if isVideoLoading}
             <div 
               class="absolute inset-0 bg-gray-900/80 grid place-items-center z-20"
