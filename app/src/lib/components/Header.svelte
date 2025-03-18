@@ -15,6 +15,7 @@
   import MegaMenu from './navigation/MegaMenu.svelte';
   import OptimizedImage from './OptimizedImage.svelte';
   import ScrollButton from './ScrollButton.svelte';
+  import TranslationButton from './TranslationButton.svelte';
 
   export let data;
   let { user, navigation, pages, headerSettings, profile } = data;
@@ -276,6 +277,7 @@
           <!-- Right Side Items -->
           <div class="flex items-center space-x-8">
             <ScrollButton />
+            <TranslationButton />
 
             <HeaderAuth
               {isAuthenticated}

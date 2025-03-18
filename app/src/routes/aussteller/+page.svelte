@@ -38,21 +38,21 @@
       <div class="grid md:grid-cols-3 gap-8 mb-16">
         {#if ausstellerPage?.benefits}
           {#each ausstellerPage.benefits as benefit}
-            <div class="p-6 rounded-2xl  border border-gray-700 backdrop-blur text-center">
+            <div class="p-6 rounded-2xl  border border-green-400 backdrop-blur text-center">
               <h3 class="text-xl font-medium text-white mb-3">{benefit.title}</h3>
               <p class="text-gray-300">{benefit.description}</p>
             </div>
           {/each}
         {:else}
-          <div class="p-6 rounded-2xl border border-gray-700  backdrop-blur text-center">
+          <div class="p-6 rounded-2xl border border-green-400  backdrop-blur text-center">
             <h3 class="text-xl font-medium text-white mb-3">Direkte Zielgruppe</h3>
             <p class="text-gray-300">Erreiche motivierte DJs und Musikbegeisterte direkt vor Ort.</p>
           </div>
-          <div class="p-6 rounded-2xl border border-gray-700  backdrop-blur text-center">
+          <div class="p-6 rounded-2xl border border-green-400  backdrop-blur text-center">
             <h3 class="text-xl font-medium text-white mb-3">Präsentation</h3>
             <p class="text-gray-300">Eigener Stand und Präsentationsmöglichkeiten für deine Produkte.</p>
           </div>
-          <div class="p-6 rounded-2xl  border border-gray-700 backdrop-blur text-center">
+          <div class="p-6 rounded-2xl  border border-green-400 backdrop-blur text-center">
             <h3 class="text-xl font-medium text-white mb-3">Networking</h3>
             <p class="text-gray-300">Knüpfe wertvolle Kontakte in der DJ- und Musikbranche.</p>
           </div>
