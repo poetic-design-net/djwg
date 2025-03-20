@@ -152,7 +152,7 @@
       </CollapsibleSection>
 
    <!-- Newsletter Section -->
-   <CollapsibleSection title="Newsletter" initiallyOpen={false}>
+   <CollapsibleSection title="Newsletter & WhatsApp Channel" initiallyOpen={false}>
     <NewsletterSection 
       email={user.email} 
       firstName={user.raw_user_meta_data?.first_name || user.user_metadata?.first_name || ''} 

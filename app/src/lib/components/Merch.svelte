@@ -13,7 +13,6 @@
 
   // Aktive Bilder und Varianten für jedes Produkt
   let activeImageIndices: { [key: string]: number } = {};
-  let selectedVariants: { [key: string]: number } = {};
 
   $: {
     console.log('Merch products:', products);
@@ -30,9 +29,6 @@
     validProducts.forEach(product => {
       if (!(product._id in activeImageIndices)) {
         activeImageIndices[product._id] = 0;
-      }
-      if (!(product._id in selectedVariants)) {
-        selectedVariants[product._id] = 0;
       }
     });
   }
@@ -52,18 +48,14 @@
   function previousImage(productId: string, totalImages: number) {
     activeImageIndices[productId] = (activeImageIndices[productId] - 1 + totalImages) % totalImages;
   }
-
-  function selectVariant(productId: string, variantIndex: number) {
-    selectedVariants[productId] = variantIndex;
-  }
 </script>
 
 <section {id} class="relative overflow-hidden pt-36">
   <div class="container px-4 mx-auto {validProducts.length === 1 ? 'max-w-2xl' : ''}">
-    <div class="mb-20">
+    <div class="mb-20 max-w-2xl mx-auto text-center">
       <span class="inline-block mb-4 text-sm text-tourquis-500 font-medium tracking-tighter">{eyebrow}</span>
       <h2 class="font-heading mb-6 text-5xl md:text-6xl text-white tracking-tighter">{title}</h2>
-      <p class="text-lg text-gray-300 md:max-w-lg">{description}</p>
+      <p class="text-lg text-gray-300">{description}</p>
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 {validProducts.length <= 3 ? 'lg:grid-cols-' + validProducts.length : 'lg:grid-cols-3'} {validProducts.length === 4 ? 'xl:grid-cols-4' : ''} gap-8 max-w-7xl mx-auto">
@@ -119,8 +111,8 @@
                 <p class="text-gray-300 text-sm">{product.description || ''}</p>
                 {#if product.variants && product.variants.length > 0}
                   <p class="mt-2 text-lg font-semibold text-tourquis-500">
-                    {product.variants[selectedVariants[product._id]].price} 
-                    {product.variants[selectedVariants[product._id]].currency}
+                    {product.variants[0].price} 
+                    {product.variants[0].currency}
                   </p>
                 {/if}
               </div>
@@ -144,15 +136,14 @@
               <!-- Größenauswahl -->
               {#if product.variants && product.variants.length > 0}
                 <div class="mb-6">
-                  <label class="block text-sm font-medium text-gray-300 mb-2">Größe auswählen</label>
+                  <label class="block text-sm font-medium text-gray-300 mb-2">Verfügbare Größen</label>
                   <div class="flex flex-wrap gap-2">
                     {#each product.variants as variant, index}
-                      <button
-                        class="px-4 py-2 rounded-lg border {selectedVariants[product._id] === index ? 'border-tourquis-500 bg-tourquis-500/10 text-white' : 'border-gray-700 text-gray-300 hover:border-gray-500'}"
-                        on:click={() => selectVariant(product._id, index)}
+                      <span
+                        class="px-4 py-2 rounded-lg border border-gray-700 text-gray-300"
                       >
                         {variant.name}
-                      </button>
+                      </span>
                     {/each}
                   </div>
                 </div>
@@ -164,7 +155,7 @@
               {#if product.variants && product.variants.length > 0}
                 <a
                   class="inline-block w-full py-4 px-6 text-sm text-black font-medium bg-green-500 hover:bg-green-600 rounded-full transition duration-200"
-                  href={product.variants[selectedVariants[product._id]].shopUrl}
+                  href={product.shopUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                 >

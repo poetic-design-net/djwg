@@ -6,6 +6,7 @@ import { browser } from '$app/environment';
 
 export const DJ_LEVEL_1_ID = '4d2e1bf7-37e7-4226-9239-f8a60f608900';
 export const DJ_LEVEL_2_ID = '023cc4ab-9a20-45db-82d5-c248aacefe0a';
+export const WELCOME_BADGE_ID = 'b1055aa1-7b91-40c4-9d3e-9e965a0ce1c3';
 
 /**
  * Manages badge assignments in real-time based on profile completeness
@@ -25,6 +26,44 @@ export async function manageBadgesRealtime(
     });
 
     if (!userId || !supabase) return;
+    
+    // Prüfe und vergebe Welcome Badge
+    try {
+        const { data: welcomeBadge, error: welcomeBadgeError } = await supabase
+            .from('badges')
+            .select('*')
+            .eq('id', WELCOME_BADGE_ID)
+            .single();
+            
+        if (welcomeBadgeError) {
+            console.error('🎯 Badge Service: Error fetching welcome badge', welcomeBadgeError);
+            return;
+        }
+        
+        // Prüfe ob User bereits das Welcome Badge hat
+        const { data: existingWelcomeBadge } = await supabase
+            .from('user_badges')
+            .select('*')
+            .eq('user_id', userId)
+            .eq('badge_id', WELCOME_BADGE_ID)
+            .single();
+            
+        if (!existingWelcomeBadge) {
+            // Vergebe Welcome Badge
+            const { error: assignError } = await supabase
+                .from('user_badges')
+                .upsert({
+                    user_id: userId,
+                    badge_id: WELCOME_BADGE_ID,
+                    assigned_reason: 'Willkommen bei DJ Workshop Guide',
+                    assigned_at: new Date().toISOString()
+                });
+                
+            if (!assignError) badgeStore.addUserBadge(welcomeBadge, userId);
+        }
+    } catch (error) {
+        console.error('🎯 Badge Service: Error managing welcome badge:', error);
+    }
     
     try {
         // Get the DJ Level 1 badge definition

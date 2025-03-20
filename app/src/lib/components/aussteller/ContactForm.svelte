@@ -153,8 +153,8 @@
 
   <!-- Nachricht -->
   <div class="space-y-2">
-    <label for="message" class="block text-sm font-medium text-gray-300">Zusätzliche Informationen</label>
-    <p class="text-sm text-gray-400 mb-2">Hast du besondere Anforderungen oder Wünsche für deine Präsentation?</p>
+    <label for="message" class="block text-sm font-medium text-gray-300">Zusätzliche Informationen / Welche Artists bringst du mit? </label>
+    <p class="text-sm text-gray-400 mb-2">Hast du besondere Anforderungen, welche Artists brinst du mit oder Wünsche für deine Präsentation?</p>
     <div class="relative">
       <textarea 
         id="message"
