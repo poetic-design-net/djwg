@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { MenuItems } from '$lib/types/menu';
+  import { onMount } from 'svelte';
   import { buildNavigationHref } from '$lib/utils/navigation';
   import OptimizedImage from '$lib/components/OptimizedImage.svelte';
 
@@ -8,45 +9,40 @@
   export let onClick: (menu: string) => void;
   export let pages: Record<string, any> | undefined = undefined;
 
+  // Behandelt Klicks auf Menüpunkte
   function handleItemClick(menu: any) {
-    if (menu.type !== 'direct') {
+    // Immer zuerst das aktive Megamenü schließen
+    onClick('');
+    if (menu.type === 'direct') {
+    } else if (menu.type === 'megamenu') {
+      // Toggle Megamenü beim Klick
+      onClick(activeMenu === menu._id ? '' : menu._id);
+    } else {
       onClick(menu._id);
     }
   }
 
-  let openTimeout: NodeJS.Timeout;
-  let closeTimeout: NodeJS.Timeout;
-
-  // Behandelt beide Link-Typen: 'direct' oder 'megamenu'
-  function handleMouseEnter(menu: any) {
-    if (menu.type === 'direct' || menu.type === 'megamenu') {
-      if (closeTimeout) {
-        clearTimeout(closeTimeout);
+  // Schließt das Menü beim Klicken außerhalb
+  function handleClickOutside(event: MouseEvent) {
+    if (activeMenu) {
+      const target = event.target as HTMLElement;
+      const navElement = document.querySelector('nav');
+      if (navElement && !navElement.contains(target)) {
+        onClick('');
       }
-      openTimeout = setTimeout(() => {
-        onClick(menu._id);
-      }, 100);
-    } else {
-      onClick('');
     }
   }
 
-  function handleMouseLeave() {
-    if (openTimeout) {
-      clearTimeout(openTimeout);
-    }
-    closeTimeout = setTimeout(() => {
-      onClick('');
-    }, 300);
-  }
+  onMount(() => {
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  });
 </script>
 
 <nav class="flex items-center space-x-8">
   {#each menuItems as menu}
     <div
-      class="relative group"
-      on:mouseenter={() => handleMouseEnter(menu)}
-      on:mouseleave={handleMouseLeave}
+      class="relative"
     >
       {#if menu.type === 'direct'}
         {@const href = buildNavigationHref(menu, pages)}
@@ -55,7 +51,10 @@
           class="font-heading text-white font-medium hover:text-green-500 transition-colors duration-200 py-8 block"
           class:text-green-500={activeMenu === menu._id}
           target={href?.startsWith('http') ? '_blank' : undefined}
-          on:click={() => onClick('')}
+          on:click|preventDefault={(e) => {
+            handleItemClick(menu);
+            if (href) window.location.href = href;
+          }}
         >
           {menu.title}
         </a>
@@ -70,7 +69,7 @@
       {/if}
 
       {#if menu.type === 'megamenu' && activeMenu === menu._id}
-        <div class="absolute left-0 w-screen max-w-7xl bg-black/95 backdrop-blur-sm rounded-lg shadow-lg mt-2 p-8 grid grid-cols-12 gap-8">
+        <div class="absolute left-0 w-screen max-w-7xl bg-black/95 backdrop-blur-sm rounded-lg shadow-lg mt-2 p-8 grid grid-cols-12 gap-8 z-50">
           {#if menu.featured}
             <div class="col-span-4">
               <h3 class="text-xl font-heading font-medium text-white mb-4">{menu.featured.title}</h3>
