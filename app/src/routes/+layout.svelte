@@ -24,27 +24,7 @@
 
 	let isAuthToDashboardTransition = false;
 
-	$: {
-		console.log('Layout Component:', {
-			hasUser: !!data.user,
-			hasSession: !!data.session,
-			hasProfile: !!data.profile,
-			profile: data.profile,
-			isAuthenticated: data.user?.aud === 'authenticated',
-			isAuthToDashboardTransition
-		});
-	}
-
-	$: {
-		console.log('Layout Data:', {
-			hasUser: !!data.user,
-			hasProfile: !!data.profile,
-			profile: data.profile,
-			isAuthenticated: data.user?.aud === 'authenticated'
-		});
-	}
-
-	const defaultFooterSettings = {
+		const defaultFooterSettings = {
 		columns: [],
 		socialLinks: [],
 		bottomText: '© 2025 djworkshopgermany.de'

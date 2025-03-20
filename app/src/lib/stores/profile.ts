@@ -14,13 +14,18 @@ function createProfileStore() {
         return;
       }
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
+      try {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single();
 
-      set(profile);
+        if (error) return;
+        set(profile);
+      } catch (err) {
+        console.error('Error refreshing profile:', err);
+      }
     }
   };
 }
