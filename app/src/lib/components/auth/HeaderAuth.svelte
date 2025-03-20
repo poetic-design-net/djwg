@@ -1,48 +1,40 @@
 <script lang="ts">
-  import { onMount, getContext } from 'svelte';
+  import { getContext } from 'svelte';
   import { clickOutside } from '$lib/utils/clickOutside';
   import { fade, slide } from 'svelte/transition';
   import { goto } from '$app/navigation';
-  import OptimizedImage from '$lib/components/OptimizedImage.svelte';
   import OptimizedAvatar from '$lib/components/OptimizedAvatar.svelte';
-  import type { Profile } from '$lib/types/profile';
   import { profileStore } from '$lib/stores/profile';
   import { badgeStore } from '$lib/stores/badges';
+  import type { SupabaseClient } from '@supabase/supabase-js';
+  import type { Profile } from '$lib/types/profile';
 
   export let isAuthenticated: boolean;
   export let showAuthUI: boolean;
   export let onLogout: () => Promise<void>;
   export let isMobile = false;
-  export let user: any = null;
 
   let showDropdown = false;
   let loading = false;
 
-  const supabase = getContext('supabase');
+  const supabase = getContext<SupabaseClient>('supabase');
 
-  // Profil aus dem Store
-  $: if (user?.id && isAuthenticated) {
-    profileStore.refresh(supabase, user.id);
+  // Profil beim Initialisieren laden
+  async function initializeProfile() {
+    if (!isAuthenticated) return;
+    
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await profileStore.refresh(supabase, user.id);
+    }
+    
+    // Debug Ausgabe
+    console.log('ProfileStore nach Initialisierung:', $profileStore);
   }
 
-  // Konvertiere die Badge-Daten in das richtige Format für HeaderBadges
-  $: userBadges = $badgeStore.userBadges.map(badge => ({
-    _id: badge.badge_id,
-    name: badge.badge?.name || 'Badge',
-    description: badge.badge?.description,
-    style: badge.badge?.style || { variant: 'gold' },
-    isUnlocked: true
-  }));
-
-  // Kombiniere User-Daten mit Badge-Store
-  $: {
-    if (user?.id && isAuthenticated && $badgeStore.userBadges.length > 0) {
-      user = {
-        ...user,
-        badges: $badgeStore.userBadges
-      };
-      console.log('🎯 HeaderAuth: Updated user badges from store:', $badgeStore.userBadges);
-    }
+  // Bei Änderung des Auth-Status Profil aktualisieren
+  $: if (isAuthenticated) {
+    initializeProfile();
   }
 
   const handleLogoutClick = async () => {
@@ -86,7 +78,7 @@
           title="Dashboard"
         >
           <div class:opacity-50={loading}>
-            {#if $profileStore?.avatar_url}
+            {#if $profileStore && $profileStore.avatar_url}
               <OptimizedAvatar
                 image={$profileStore.avatar_url}
                 size="sm"
@@ -96,7 +88,6 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
             {/if}
-  
           </div>
           {#if loading}
             <div class="absolute inset-0 flex items-center justify-center">
@@ -114,7 +105,7 @@
             class="text-white hover:text-green-500 transition-colors duration-200 flex items-center space-x-2"
             title="Benutzermenü"
           >
-            {#if $profileStore?.avatar_url}
+            {#if $profileStore && $profileStore.avatar_url}
               <OptimizedAvatar
                 image={$profileStore.avatar_url}
                 size="sm"
