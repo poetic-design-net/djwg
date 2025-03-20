@@ -3,8 +3,15 @@
     <div class="absolute inset-0 mix-blend-overlay noise-filter"></div>
     <div class="relative">
       <h2 class="text-2xl font-medium text-white mb-6">Webmaster Kontakt</h2>
-      <p class="text-gray-400 mb-4">Brauchst du technische Unterstützung bei deinen eigenen Projekten, hast Ideen oder möchtest Fehler melden? </p> 
+      <p class="text-gray-400 mb-4">Möchtest du eine professionelle Website für dein Unternehmen oder persönliches Projekt? Ich helfe dir dabei, deine Ideen zum Leben zu erwecken!</p>
       <p class="text-gray-400 mb-2">Frederik:</p>
+      <ul class="list-disc pl-5 text-gray-400 mb-4">
+        <li>Individuelle Webseiten nach deinen Wünschen</li>
+        <li>Responsive Design für alle Geräte</li>
+        <li>Moderne und benutzerfreundliche Lösungen</li>
+        <li>Persönliche Beratung und Unterstützung</li>
+      </ul>
+      <p class="text-gray-400 mb-4">Kontaktiere mich noch heute für ein unverbindliches Erstgespräch und lass uns gemeinsam dein Webprojekt starten!</p>
       
       <div class="flex flex-col sm:flex-row gap-4">
         <a 

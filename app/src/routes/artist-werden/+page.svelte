@@ -73,8 +73,8 @@
               <p class="text-gray-300">Gestalte deine Workshops nach deinen Vorstellungen und bring deine eigenen Ideen ein.</p>
             </div>
             <div class="p-8 bg-black/40 border border-gray-800 rounded-3xl hover:border-green-500 transition-all duration-300">
-              <h3 class="text-2xl text-white mb-4">Vergütung</h3>
-              <p class="text-gray-300">Faire Vergütung für dein Engagement und deine Zeit. Profitiere von verschiedenen Verdienstmöglichkeiten.</p>
+              <h3 class="text-2xl text-white mb-4">Spaß an der Sache!</h3>
+              <p class="text-gray-300">Natürlich soll das ganze so viel Spaß bringen wie nur möglich!</p>
             </div>
           {/if}
         </div>

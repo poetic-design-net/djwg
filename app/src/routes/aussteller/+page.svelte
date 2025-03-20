@@ -44,15 +44,15 @@
             </div>
           {/each}
         {:else}
-          <div class="p-6 rounded-2xl border border-green-400  backdrop-blur text-center">
+          <div class="p-6 rounded-2xl border border-gray-700 hover:border-green-400  backdrop-blur text-center">
             <h3 class="text-xl font-medium text-white mb-3">Direkte Zielgruppe</h3>
             <p class="text-gray-300">Erreiche motivierte DJs und Musikbegeisterte direkt vor Ort.</p>
           </div>
-          <div class="p-6 rounded-2xl border border-green-400  backdrop-blur text-center">
+          <div class="p-6 rounded-2xl border border-gray-700 hover:border-green-400  backdrop-blur text-center">
             <h3 class="text-xl font-medium text-white mb-3">Präsentation</h3>
             <p class="text-gray-300">Eigener Stand und Präsentationsmöglichkeiten für deine Produkte.</p>
           </div>
-          <div class="p-6 rounded-2xl  border border-green-400 backdrop-blur text-center">
+          <div class="p-6 rounded-2xl  border border-gray-700 hover:border-green-400 backdrop-blur text-center">
             <h3 class="text-xl font-medium text-white mb-3">Networking</h3>
             <p class="text-gray-300">Knüpfe wertvolle Kontakte in der DJ- und Musikbranche.</p>
           </div>
@@ -72,7 +72,7 @@
 
         <div class="grid md:grid-cols-2 gap-8">
           {#if ausstellerPage?.exhibitorInfo}
-            <div class="p-8 rounded-2xl border border-gray-700   backdrop-blur">
+            <div class="p-8 rounded-2xl border border-gray-700 hover:border-green-400  backdrop-blur">
               <h3 class="text-xl font-medium text-white mb-4">{ausstellerPage.exhibitorInfo.title}</h3>
               <ul class="space-y-3 text-gray-300">
                 {#each ausstellerPage.exhibitorInfo.items as item}
@@ -81,7 +81,7 @@
               </ul>
             </div>
           {:else}
-            <div class="p-8 rounded-2xl border border-gray-700 backdrop-blur">
+            <div class="p-8 rounded-2xl border border-gray-700 hover:border-green-400 backdrop-blur">
               <h3 class="text-xl font-medium text-white mb-4">Ausstellerfläche</h3>
               <ul class="space-y-3 text-gray-300">
                 <li>• Professionell ausgestattete Standfläche</li>
@@ -94,7 +94,7 @@
           {/if}
 
           {#if ausstellerPage?.marketingInfo}
-            <div class="p-8 rounded-2xl border border-gray-700 backdrop-blur">
+            <div class="p-8 rounded-2xl border border-gray-700 hover:border-green-400 backdrop-blur">
               <h3 class="text-xl font-medium text-white mb-4">{ausstellerPage.marketingInfo.title}</h3>
               <ul class="space-y-3 text-gray-300">
                 {#each ausstellerPage.marketingInfo.items as item}
@@ -103,7 +103,7 @@
               </ul>
             </div>
           {:else}
-            <div class="p-8 rounded-2xl   backdrop-blur border-gray-700 border">
+            <div class="p-8 rounded-2xl   backdrop-blur border-gray-700 hover:border-green-400 border">
               <h3 class="text-xl font-medium text-white mb-4">Marketing & Promotion</h3>
               <ul class="space-y-3 text-gray-300">
                 <li>• Präsenz auf unserer Website</li>
@@ -114,11 +114,57 @@
             </div>
           {/if}
         </div>
+        </div>
+      </div>
+
+      <!-- Areas Section -->
+      <div class="my-20">
+        <div class="text-center mb-12">
+          <h2 class="text-3xl font-medium text-white mb-4">Unsere Areas</h2>
+          <p class="text-gray-300">Entdecke die verschiedenen Bereiche des DJ Workshops</p>
+        </div>
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <!-- Messe Area -->
+          <div class="p-8 rounded-2xl border border-gray-700 hover:border-green-400 backdrop-blur">
+            <h3 class="text-xl font-medium text-white mb-4">Messe Area</h3>
+            <p class="text-gray-300">Zentrale Ausstellungsfläche für Partner und Händler. Hier präsentieren sich die führenden Marken der DJ- und Musikindustrie.</p>
+          </div>
+
+          <!-- Mixing & Scratching Area -->
+          <div class="p-8 rounded-2xl border border-gray-700 hover:border-green-400 backdrop-blur">
+            <h3 class="text-xl font-medium text-white mb-4">Mixing & Scratching Area</h3>
+            <p class="text-gray-300">Interaktiver Bereich für Live-Performances und Workshops. Hier können DJs ihr Können zeigen und neue Techniken erlernen.</p>
+          </div>
+
+          <!-- Marketing & Social Media Area -->
+          <div class="p-8 rounded-2xl border border-gray-700 hover:border-green-400 backdrop-blur">
+            <h3 class="text-xl font-medium text-white mb-4">Marketing & Social Media Area</h3>
+            <p class="text-gray-300">Networking-Zone für Marketing und Social Media Strategien. Experten teilen ihr Wissen über digitale Präsenz und Branding.</p>
+          </div>
+
+          <!-- Producing Area -->
+          <div class="p-8 rounded-2xl border border-gray-700 hover:border-green-400 backdrop-blur">
+            <h3 class="text-xl font-medium text-white mb-4">Producing Area</h3>
+            <p class="text-gray-300">Kreativzone für Musikproduktion und Sound-Design. Hier entstehen neue Beats und Tracks mit modernster Technik.</p>
+          </div>
+
+          <!-- Panel & Show Area -->
+          <div class="p-8 rounded-2xl border border-gray-700 hover:border-green-400 backdrop-blur">
+            <h3 class="text-xl font-medium text-white mb-4">Panel & Show Area</h3>
+            <p class="text-gray-300">Bühne für Diskussionen, Präsentationen und Live-Shows. Hier treffen sich Experten und teilen ihre Erfahrungen.</p>
+          </div>
+
+          <!-- Flohmarkt Area -->
+          <div class="p-8 rounded-2xl border border-gray-700 hover:border-green-400 backdrop-blur">
+            <h3 class="text-xl font-medium text-white mb-4">Flohmarkt Area</h3>
+            <p class="text-gray-300">Marktplatz für gebrauchtes Equipment und Vinyl. Die perfekte Gelegenheit zum Stöbern und Entdecken von Schätzen.</p>
+          </div>
       </div>
     
 
       <!-- Pricing Section -->
-      <div class="mb-20">
+      <div class="my-20">
         <div class="text-center mb-12">
           <h2 class="text-3xl font-medium text-white mb-4">Unsere Ausstellerpakete</h2>
           <p class="text-gray-300 mb-8">Wähle das passende Paket für deine Präsentation auf dei DJ Workshop Germany</p>

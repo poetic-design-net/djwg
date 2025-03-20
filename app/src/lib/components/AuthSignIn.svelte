@@ -284,13 +284,13 @@
       <div class="px-4 pt-10 md:pb-40 max-w-lg mx-auto">
         <div class="flex flex-wrap items-center justify-between mb-36 -m-2">
           <div class="w-auto p-2">
-            <p class="text-sm text-gray-300">
+            <p class="text-sm text-green-500">
               <span>{isRegistering ? 'Schon ein Konto?' : 'Noch kein Konto?'}</span>
               <button
                 class="underline ml-1"
                 on:click={toggleAuthMode}
               >
-                {isRegistering ? 'Anmelden' : 'Registrieren'}
+               <span class="font-medium">{isRegistering ? 'Anmelden' : 'Registrieren'}</span> 
               </button>
             </p>
           </div>
