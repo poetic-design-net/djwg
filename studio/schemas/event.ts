@@ -45,6 +45,10 @@ export default defineType({
     {
       name: 'logos',
       title: 'Partner Logos'
+    },
+    {
+      name: 'areas',
+      title: 'Areas'
     }
   ],
   fields: [
@@ -184,6 +188,19 @@ export default defineType({
       group: 'features'
     }),
 
+    // Areas Tab
+    defineField({
+      name: 'areas',
+      title: 'Areas',
+      type: 'array',
+      of: [{
+        type: 'reference',
+        to: [{ type: 'area' }]
+      }],
+      group: 'areas',
+      description: 'Wähle die Areas für dieses Event aus'
+    }),
+
     // Location Tab
     defineField({
       name: 'location',
@@ -250,6 +267,12 @@ export default defineType({
           description: 'WhatsApp Link der Location'
         }
       ],
+      group: 'location'
+    }),
+    defineField({
+      name: 'externalLinks',
+      title: 'Externe Links',
+      type: 'externalLinks',
       group: 'location'
     }),
     defineField({

@@ -2,6 +2,7 @@ import blockContent from './blockContent'
 import award from './award'
 import ticket from './ticket'
 import pricingSection from './objects/pricingSection'
+import ausstellerPage from './documents/pages/ausstellerPage'
 import djCourse from './djCourse'
 import mediaUpload from './mediaUpload'
 import category from './category'
@@ -23,6 +24,9 @@ import badge from './badge'
 import video from './video'
 import videoCategory from './videoCategory'
 
+import area from './area' // Import für das neue Area-Schema
+import externalLinks from './objects/externalLinks' // Import für das neue ExternalLinks-Schema
+
 // Document Types
 import page from './documents/page'
 import eventPage from './documents/pages/eventPage'
@@ -34,7 +38,6 @@ import partnerPage from './documents/pages/partnerPage'
 import artistPage from './documents/pages/artistPage'
 import nextLevelDjs from './documents/pages/nextLevelDjs'
 import merchPage from './documents/pages/merchPage'
-import ausstellerPage from './documents/pages/ausstellerPage'
 
 // Object Types
 import seo from './objects/seo'
@@ -56,6 +59,7 @@ import merchSection from './objects/merchSection'
 export const schemaTypes = [
   // Documents
   mediaUpload,
+  area, // Area-Schema hinzufügen
   ticket,
   post,
   djCourse,
@@ -105,5 +109,6 @@ export const schemaTypes = [
   ticketsSection,
   pricingSection,
   socialMediaLink,
-  merchSection
+  merchSection,
+  externalLinks // ExternalLinks-Schema hinzufügen
 ]
