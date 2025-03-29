@@ -85,15 +85,7 @@ export const eventsQuery = groq`*[_type == "event"] | order(order asc) {
     website,
     instagram,
     facebook,
-    whatsapp,
-    externalLinks {
-      title,
-      links[] {
-        title,
-        url,
-        description
-      }
-    }
+    whatsapp
   },
   isLocationSecret,
   isArtistsSecret,
@@ -122,6 +114,14 @@ export const eventsQuery = groq`*[_type == "event"] | order(order asc) {
   },
   order,
   enableSectionNav,
+  externalLinks {
+    title,
+    links[] {
+      title,
+      url,
+      description
+    }
+  },
   seo {
     metaTitle,
     metaDescription,
@@ -212,14 +212,6 @@ export const eventQuery = groq`*[_type == "event" && slug.current == $slug][0] {
     instagram,
     facebook,
     whatsapp,
-    externalLinks {
-      title,
-      links[] {
-        title,
-        url,
-        description
-      }
-    }
   },
   isLocationSecret,
   isArtistsSecret,
@@ -248,6 +240,14 @@ export const eventQuery = groq`*[_type == "event" && slug.current == $slug][0] {
   },
   order,
   enableSectionNav,
+  externalLinks {
+    title,
+    links[] {
+      title,
+      url,
+      description
+    }
+  },
   seo {
     metaTitle,
     metaDescription,
@@ -410,6 +410,7 @@ export interface TransformedEvent {
   areas?: Area[];
   gallery?: SanityImageSource[];
   logos?: Logo[];
+  externalLinks?: ExternalLinks;
   locationDetails?: LocationDetails;
   isLocationSecret: boolean;
   isArtistsSecret: boolean;
