@@ -35,6 +35,8 @@
         <pre class="mt-8 text-left text-xs text-gray-500 bg-black/20 p-4 rounded-lg overflow-auto">
           Debug Info:
           Event Data: {JSON.stringify(event, null, 2)}
+          
+          Location Details: {JSON.stringify(event?.locationDetails, null, 2)}
         </pre>
       {/if}
     </div>

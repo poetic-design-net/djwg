@@ -47,6 +47,14 @@ interface SanityEvent {
     name: string;
     description: string;
     image: Image;
+    website?: string;
+    instagram?: string;
+    facebook?: string;
+    whatsapp?: string;
+    externalLinks?: {
+      title: string;
+      links: Array<{ title: string; url: string; description?: string }>;
+    };
   };
   hasOpenStage?: boolean;
   isOpenStageSecret?: boolean;

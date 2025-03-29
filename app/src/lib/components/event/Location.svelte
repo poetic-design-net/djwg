@@ -1,11 +1,14 @@
 <script lang="ts">
   import OptimizedImage from '$lib/components/OptimizedImage.svelte';
-  import type { LocationDetails } from '$lib/types/location';
+  import type { LocationDetails, ExternalLinks } from '$lib/types/location';
   import type { SanityImageSource } from '$lib/sanity/image';
   
   export let locationDetails: LocationDetails;
   export let locationUrl: string | undefined = undefined;
   export let isSecret: boolean = false;
+  export let externalLinks: ExternalLinks | undefined = undefined;
+
+  $: console.log('Location Details:', locationDetails);
 </script>
 
 <div class="py-20">
@@ -142,11 +145,11 @@
         </div>
       </div>
 
-      {#if locationDetails.externalLinks && locationDetails.externalLinks.links.length > 0}
+      {#if externalLinks && externalLinks.links.length > 0}
         <div class="mt-12 border-t border-gray-700 pt-8">
-          <h3 class="text-2xl text-white mb-6">{locationDetails.externalLinks.title}</h3>
+          <h3 class="text-2xl text-white mb-6">{externalLinks.title}</h3>
           <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {#each locationDetails.externalLinks.links as link}
+            {#each externalLinks.links as link}
               <a
                 href={link.url}
                 target="_blank"

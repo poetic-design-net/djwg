@@ -107,6 +107,7 @@
         locationDetails={event.locationDetails}
         locationUrl={event.locationUrl}
         isSecret={event.isLocationSecret}
+        externalLinks={event.externalLinks}
       />
     </div>
   {/if}
