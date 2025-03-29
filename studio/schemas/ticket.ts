@@ -1,9 +1,11 @@
 import { defineField, defineType } from 'sanity'
+import { TagIcon } from '@sanity/icons'
 
 export default defineType({
   name: 'ticket',
   title: 'Ticket',
   type: 'document',
+  icon: TagIcon,
   fields: [
     defineField({
       name: 'phase',
@@ -26,8 +28,39 @@ export default defineType({
     defineField({
       name: 'features',
       title: 'Features',
+      description: 'Liste der Features (optional mit zusätzlichen Infos)',
       type: 'array',
-      of: [{ type: 'string' }],
+      of: [{
+        type: 'object',
+        title: 'Feature',
+        name: 'feature',
+        fields: [
+          {
+            name: 'text',
+            title: 'Feature Text',
+            type: 'string',
+            validation: (Rule) => Rule.required()
+          },
+          {
+            name: 'info',
+            title: 'Zusätzliche Info',
+            description: 'Optionale zusätzliche Information zum Feature',
+            type: 'string'
+          }
+        ],
+        preview: {
+          select: {
+            title: 'text',
+            subtitle: 'info'
+          },
+          prepare({ title, subtitle }) {
+            return {
+              title,
+              subtitle: subtitle ? `Info: ${subtitle}` : 'Keine zusätzliche Info'
+            }
+          }
+        }
+      }],
       validation: (Rule) => Rule.required(),
     }),
     defineField({
@@ -64,7 +97,14 @@ export default defineType({
       name: 'url',
       title: 'Button URL',
       type: 'url',
-      description: 'Link for the ticket button (e.g. booking page)',
+      description: 'Link für den Ticket-Button (z.B. Buchungsseite)',
+    }),
+    defineField({
+      name: 'buttonText',
+      title: 'Button Text',
+      type: 'string',
+      description: 'Text für den CTA-Button',
+      initialValue: 'Jetzt buchen'
     }),
     defineField({
       name: 'event',
@@ -76,13 +116,15 @@ export default defineType({
   preview: {
     select: {
       title: 'title',
-      eventTitle: 'event.title'
+      eventTitle: 'event.title',
+      price: 'price',
+      currency: 'currency'
     },
     prepare(selection) {
-      const { title, eventTitle } = selection
+      const { title, eventTitle, price, currency } = selection
       return {
         title,
-        subtitle: eventTitle || 'Kein Event zugewiesen'
+        subtitle: `${eventTitle || 'Kein Event'} - ${price ? `${price} ${currency}` : 'Kein Preis'}`
       }
     },
   },

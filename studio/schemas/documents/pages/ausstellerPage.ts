@@ -11,6 +11,12 @@ export default defineType({
       type: 'string',
     },
     {
+      name: 'partnerTag',
+      title: 'Partner Tag',
+      description: 'Kleiner Text über dem Haupttitel (z.B. "Partner & Aussteller")',
+      type: 'string',
+    },
+    {
       name: 'description',
       title: 'Description',
       type: 'text',
@@ -25,8 +31,9 @@ export default defineType({
           {
             name: 'title',
             title: 'Title',
-            type: 'string'
-          },
+                type: 'string'
+              },
+
           {
             name: 'description',
             title: 'Description',
@@ -89,6 +96,21 @@ export default defineType({
       ]
     },
     {
+      name: 'areasSection',
+      title: 'Areas Section',
+      type: 'object',
+      fields: [
+        { name: 'title', title: 'Title', type: 'string' },
+        { name: 'description', title: 'Description', type: 'text' },
+        {
+          name: 'areas',
+          title: 'Areas',
+          type: 'array',
+          of: [{ type: 'reference', to: [{ type: 'area' }] }]
+        }
+      ]
+    },
+    {
       name: 'seo',
       title: 'SEO',
       type: 'object',
@@ -112,8 +134,8 @@ export default defineType({
       ]
     },
     {
-      name: 'pricingSection',
-      title: 'Pricing Section',
+      name: 'ticketSection', // Umbenannt
+      title: 'Ticket/Package Section', // Titel angepasst
       type: 'object',
       fields: [
         {
@@ -126,52 +148,83 @@ export default defineType({
           title: 'Description',
           type: 'text'
         },
+        // Entferne priceInfo, cards, addonsSection vollständig
         {
-          name: 'cards',
-          title: 'Pricing Cards',
+          name: 'tickets', // Neues Feld für Ticket-Referenzen
+          title: 'Tickets/Packages', // Titel angepasst
           type: 'array',
-          of: [{
-            type: 'object',
-            fields: [
-              {
-                name: 'title',
-                title: 'Title',
-                type: 'string'
-              },
-              {
-                name: 'price',
-                title: 'Price',
-                type: 'string'
-              },
-              {
-                name: 'description',
-                title: 'Description',
-                type: 'text'
-              },
-              {
-                name: 'features',
-                title: 'Features',
-                type: 'array',
-                of: [{
-                  type: 'object',
-                  fields: [
-                    {
-                      name: 'text',
-                      title: 'Feature Text',
-                      type: 'string'
-                    },
-                    {
-                      name: 'info',
-                      title: 'Feature Info',
-                      type: 'string'
-                    }
-                  ]
-                }]
-              }
-            ]
-          }]
+          of: [
+            {
+              type: 'reference',
+              to: [{ type: 'ticket' }] // Referenz auf das ticket-Schema
+            }
+          ]
+        },
+        {
+          name: 'addons',
+          title: 'Add-Ons',
+          description: 'Zusätzliche Optionen für Aussteller',
+          type: 'array',
+          of: [
+            {
+              type: 'object',
+              title: 'Add-On',
+              fields: [
+                {
+                  name: 'title',
+                  title: 'Title',
+                  type: 'string',
+                  validation: Rule => Rule.required()
+                },
+                {
+                  name: 'description',
+                  title: 'Description',
+                  type: 'string'
+                },
+                {
+                  name: 'price',
+                  title: 'Price',
+                  type: 'number',
+                  validation: Rule => Rule.required()
+                },
+                {
+                  name: 'currency',
+                  title: 'Currency',
+                  type: 'string',
+                  initialValue: 'EUR'
+                },
+                {
+                  name: 'info',
+                  title: 'Info Text',
+                  description: 'Text für den Info-Tooltip',
+                  type: 'string'
+                },
+                {
+                  name: 'forPackages',
+                  title: 'Für Pakete',
+                  description: 'Für welche Pakete ist dieses Add-On verfügbar',
+                  type: 'string'
+                }
+              ]
+            }
+          ]
         }
       ]
+    },
+    {
+      name: 'contactLink',
+      title: 'Contact Link',
+      type: 'object',
+      fields: [
+        { name: 'text', title: 'Link Text', type: 'string' },
+        { name: 'url', title: 'Link URL', type: 'string' } // Oder 'url' Typ, wenn externe Links erlaubt sind
+      ]
+    },
+    {
+      name: 'contactSeparatorText',
+      title: 'Contact Separator Text',
+      description: 'Text zwischen Link und Formular (z.B. "oder")',
+      type: 'string'
     },
     {
       name: 'contactForm',
