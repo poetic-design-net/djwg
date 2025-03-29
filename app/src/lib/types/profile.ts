@@ -1,17 +1,36 @@
 export interface Profile {
   id: string;
   username?: string;
+  first_name?: string;
+  last_name?: string;
   full_name?: string;
   email?: string;
   avatar_url?: string;
+  website?: string;
+  address_street?: string;
+  address_number?: string;
+  address_city?: string;
+  address_zip?: string;
+  address_country?: string;
+  phone?: string;
+  bio?: string;
+  company_name?: string;
+  position?: string;
+  social_links?: {
+    instagram?: string;
+    facebook?: string;
+    soundcloud?: string;
+  };
+  is_public: boolean;
   created_at?: string;
   auth_created_at?: string;
   auth_last_sign_in_at?: string;
   last_seen?: string | null;
-  role?: string;
 }
 
 export interface EnrichedProfile extends Profile {
+  created_at?: string;
+  last_sign_in_at?: string;
   auth_created_at?: string;
   auth_last_sign_in_at?: string;
 }
