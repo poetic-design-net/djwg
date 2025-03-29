@@ -63,7 +63,7 @@
         >
           {#if highlight.icon}
             <svg class="w-12 h-12 text-green-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d={highlight.icon}/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d={highlight.icon}/>
             </svg>
           {/if}
           <h4 class="text-xl text-white mb-2">{highlight.title}</h4>
