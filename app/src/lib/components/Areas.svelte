@@ -4,6 +4,7 @@
   export let areas: Area[] = [];
   export let title = 'Unsere Areas';
   export let subtitle = 'Entdecke die verschiedenen Bereiche des DJ Workshops';
+  export let showButton = false;
 </script>
 
 <div class="my-20">
@@ -19,7 +20,7 @@
           <div class="p-8 rounded-2xl border border-gray-700 hover:border-green-400 backdrop-blur flex flex-col">
             <h3 class="text-xl font-medium text-white mb-4">{area.title}</h3>
             <p class="text-gray-300 flex-grow">{area.description}</p>
-            {#if area.button?.text && area.button?.url}
+            {#if showButton && area.button?.text && area.button?.url}
             <a
               href={area.button.url}
               target="_blank"

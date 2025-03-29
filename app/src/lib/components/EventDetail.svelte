@@ -96,7 +96,7 @@
 
   {#if event.areas && event.areas.length > 0}
     <div id="areas" class="pb-20 bg-black/40">
-      <Areas areas={event.areas} />
+      <Areas areas={event.areas} showButton={true} />
     </div>
   {/if}
 
