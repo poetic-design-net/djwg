@@ -3,6 +3,9 @@ import type { PortableTextBlock } from '@portabletext/types';
 import type { SanityImageSource } from '../image';
 import type { SEO } from './content';
 import type { Logo } from '$lib/types/menu';
+import type { Area } from '$lib/types/area';
+import type { Feature, Ticket } from '$lib/types/ticket';
+import type { LocationDetails, ExternalLinks } from '$lib/types/location';
 
 export interface FAQ {
   _id: string;
@@ -14,6 +17,7 @@ export interface FAQ {
 export interface EventPage {
   title?: string;
   seo: SEO;
+  areas?: Area[];
 }
 
 export const eventPageQuery = groq`*[_type == "eventPage"][0] {
@@ -23,16 +27,31 @@ export const eventPageQuery = groq`*[_type == "eventPage"][0] {
     metaDescription,
     "ogImage": ogImage.asset->url
   },
+  "areas": *[_type == "area"] | order(order asc) {
+    _id,
+    _type,
+    title,
+    description,
+    button {
+      text,
+      url
+    }
+  },
   "tickets": *[_type == "ticket" && references(^._id)] | order(phase asc) {
     _id,
     phase,
     title,
     description,
-    features,
+    "features": features[] {
+      _type,
+      text,
+      info
+    },
     status,
     price,
     currency,
-    url
+    url,
+    buttonText
   }
 }`;
 
@@ -56,21 +75,50 @@ export const eventsQuery = groq`*[_type == "event"] | order(order asc) {
   features,
   highlights,
   gallery,
-  locationDetails,
+  locationDetails {
+    name,
+    description,
+    image {
+      asset->,
+      hotspot
+    },
+    website,
+    instagram,
+    facebook,
+    whatsapp,
+    externalLinks {
+      title,
+      links[] {
+        title,
+        url,
+        description
+      }
+    }
+  },
   isLocationSecret,
   isArtistsSecret,
-    artists[]-> {
-      _id,
-      name,
-      role,
-      description,
-      image {
-        asset->,
-        hotspot
-      },
-      socials,
-      isRevealed,
-      order
+  "areas": areas[]-> {
+    _id,
+    _type,
+    title,
+    description,
+    button {
+      text,
+      url
+    }
+  },
+  artists[]-> {
+    _id,
+    name,
+    role,
+    description,
+    image {
+      asset->,
+      hotspot
+    },
+    socials,
+    isRevealed,
+    order
   },
   order,
   enableSectionNav,
@@ -84,11 +132,16 @@ export const eventsQuery = groq`*[_type == "event"] | order(order asc) {
     phase,
     title,
     description,
-    features,
+    "features": features[] {
+      _type,
+      text,
+      info
+    },
     status,
     price,
     currency,
-    url
+    url,
+    buttonText
   }
 }`;
 
@@ -158,10 +211,28 @@ export const eventQuery = groq`*[_type == "event" && slug.current == $slug][0] {
     website,
     instagram,
     facebook,
-    whatsapp
+    whatsapp,
+    externalLinks {
+      title,
+      links[] {
+        title,
+        url,
+        description
+      }
+    }
   },
   isLocationSecret,
   isArtistsSecret,
+  "areas": areas[]-> {
+    _id,
+    _type,
+    title,
+    description,
+    button {
+      text,
+      url
+    }
+  },
   artists[]-> {
     _id,
     name,
@@ -198,11 +269,16 @@ export const eventQuery = groq`*[_type == "event" && slug.current == $slug][0] {
     phase,
     title,
     description,
-    features,
+    "features": features[] {
+      _type,
+      text,
+      info
+    },
     status,
     price,
     currency,
-    url
+    url,
+    buttonText
   }
 }`;
 
@@ -254,16 +330,9 @@ export interface SanityEvent {
     description: string;
     icon: string;
   }[];
+  areas?: Area[];
   gallery?: SanityImageSource[];
-  locationDetails?: {
-    name: string;
-    description: string;
-    image: SanityImageSource;
-    website?: string;
-    instagram?: string;
-    facebook?: string;
-    whatsapp?: string;
-  };
+  locationDetails?: LocationDetails;
   isLocationSecret: boolean;
   isArtistsSecret: boolean;
   artists?: Array<{
@@ -293,17 +362,7 @@ export interface SanityEvent {
       category: string;
     }>;
   };
-  tickets?: Array<{
-    _id: string;
-    phase: string;
-    title: string;
-    description: string;
-    features: string[];
-    status: 'completed' | 'current' | 'coming-soon';
-    price: number;
-    currency: string;
-    url?: string;
-  }>;
+  tickets?: Ticket[];
 }
 
 export interface TransformedEvent {
@@ -348,13 +407,10 @@ export interface TransformedEvent {
     description: string;
     icon: string;
   }[];
+  areas?: Area[];
   gallery?: SanityImageSource[];
   logos?: Logo[];
-  locationDetails?: {
-    name: string;
-    description: string;
-    image: SanityImageSource;
-  };
+  locationDetails?: LocationDetails;
   isLocationSecret: boolean;
   isArtistsSecret: boolean;
   artists?: Array<{
@@ -384,17 +440,7 @@ export interface TransformedEvent {
       category: string;
     }>;
   };
-  tickets?: Array<{
-    _id: string;
-    phase: string;
-    title: string;
-    description: string;
-    features: string[];
-    status: 'completed' | 'current' | 'coming-soon';
-    price: number;
-    currency: string;
-    url?: string;
-  }>;
+  tickets?: Ticket[];
 }
 
 export interface ScheduleItem {

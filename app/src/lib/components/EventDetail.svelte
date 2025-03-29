@@ -14,6 +14,7 @@
   import ArtistsSlider from './ArtistsSlider.svelte';
   import Pricing from './Pricing.svelte';
   import FAQ from './FAQ.svelte';
+  import Areas from './Areas.svelte';
   import SectionNav from './navigation/SectionNav.svelte';
   import StructuredEventData from './StructuredEventData.svelte';
   import type { Image } from '@sanity/types';
@@ -58,7 +59,8 @@
   $: sections = [
     { id: 'hero', label: 'Start' },
     { id: 'about', label: 'About' },
-    { id: 'tickets', label: 'Tickets' },  // Moved up to match template order
+    { id: 'tickets', label: 'Tickets' },
+    ...(event.areas && event.areas.length > 0 ? [{ id: 'areas', label: 'Areas' }] : []),
     ...(hasValidSchedule ? [{ id: 'schedule', label: 'Schedule' }] : []),
     ...(event.hasOpenStage ? [{ id: 'openstage', label: 'Open Stage' }] : []),
     ...(event.artists && event.artists.length > 0 ? [{ id: 'artists', label: 'Artists' }] : []),
@@ -87,8 +89,25 @@
   </div>
 
   {#if event.tickets}
-    <div id="tickets" class="py-20 pb-48 bg-black/40">
+    <div id="tickets" class="py-20 bg-black/40">
       <Pricing tickets={event.tickets} />
+    </div>
+  {/if}
+
+  {#if event.areas && event.areas.length > 0}
+    <div id="areas" class="pb-20 bg-black/40">
+      <Areas areas={event.areas} />
+    </div>
+  {/if}
+
+
+  {#if event.locationDetails}
+    <div id="location">
+      <Location
+        locationDetails={event.locationDetails}
+        locationUrl={event.locationUrl}
+        isSecret={event.isLocationSecret}
+      />
     </div>
   {/if}
 
@@ -136,15 +155,6 @@
     </div>
   {/if}
 
-  {#if event.locationDetails}
-    <div id="location">
-      <Location
-        locationDetails={event.locationDetails}
-        locationUrl={event.locationUrl}
-        isSecret={event.isLocationSecret}
-      />
-    </div>
-  {/if}
 
   {#if event.logos && event.logos.length > 0}
     <div id="logos" class="py-20 bg-black/40">

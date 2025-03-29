@@ -1,19 +1,9 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
+  import type { Ticket, Feature } from '$lib/types/ticket';
+  
   export let id: string | undefined = undefined;
   const dispatch = createEventDispatcher();
-
-  interface Ticket {
-    _id: string;
-    phase: string;
-    title: string;
-    description: string;
-    features: string[];
-    status: 'completed' | 'current' | 'coming-soon';
-    price: number;
-    currency: string;
-    url?: string;
-  }
 
   interface Event {
     _id: string;
@@ -68,6 +58,14 @@
       console.error('Error formatting date:', error);
       return '';
     }
+  }
+
+  // Hilfsfunktion, um den Feature-Text zu extrahieren
+  function getFeatureText(feature: Feature | string): string {
+    if (typeof feature === 'string') {
+      return feature;
+    }
+    return feature.text;
   }
 </script>
 <section {id} class="relative overflow-hidden py-24 md:py-36 ">
@@ -127,7 +125,7 @@
                     <path d="M7.5 10L9.16667 11.6667L12.5 8.33333" stroke={selectedTicket.status === 'completed' ? "#4B5563" : selectedTicket.status === 'current' ? "#33cc99" : "#4B5563"} stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                     <path d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5C5.85786 2.5 2.5 5.85786 2.5 10C2.5 14.1421 5.85786 17.5 10 17.5Z" stroke={selectedTicket.status === 'completed' ? "#4B5563" : selectedTicket.status === 'current' ? "#33cc99" : "#4B5563"} stroke-width="1.5"/>
                   </svg>
-                  <span class="{selectedTicket.status === 'completed' ? 'text-gray-600' : selectedTicket.status === 'coming-soon' ? 'text-gray-400' : 'text-gray-300'} text-sm">{feature}</span>
+                  <span class="{selectedTicket.status === 'completed' ? 'text-gray-600' : selectedTicket.status === 'coming-soon' ? 'text-gray-400' : 'text-gray-300'} text-sm">{getFeatureText(feature)}</span>
                 </li>
               {/each}
             </ul>
@@ -141,7 +139,7 @@
               </span>
             {:else if selectedTicket.status === 'current'}
               <a class="inline-block w-full py-4 px-6 text-sm  text-black font-medium bg-green-500 hover:bg-green-600 rounded-full transition duration-200" href={selectedTicket.url || '#tickets'}>
-                Zum Ticket
+                {selectedTicket.buttonText || 'Zum Ticket'}
               </a>
             {:else}
               <span class="inline-block w-full py-4 px-6 text-sm font-medium bg-gray-800 text-gray-400 rounded-full cursor-not-allowed">
@@ -181,7 +179,7 @@
                       <path d="M7.5 10L9.16667 11.6667L12.5 8.33333" stroke={ticket.status === 'completed' ? "#4B5563" : ticket.status === 'current' ? "#33cc99" : "#4B5563"} stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                       <path d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5C5.85786 2.5 2.5 5.85786 2.5 10C2.5 14.1421 5.85786 17.5 10 17.5Z" stroke={ticket.status === 'completed' ? "#4B5563" : ticket.status === 'current' ? "#33cc99" : "#4B5563"} stroke-width="1.5"/>
                     </svg>
-                    <span class="{ticket.status === 'completed' ? 'text-gray-600' : ticket.status === 'coming-soon' ? 'text-gray-400' : 'text-gray-300'} text-sm">{feature}</span>
+                    <span class="{ticket.status === 'completed' ? 'text-gray-600' : ticket.status === 'coming-soon' ? 'text-gray-400' : 'text-gray-300'} text-sm">{getFeatureText(feature)}</span>
                   </li>
                 {/each}
               </ul>
@@ -195,7 +193,7 @@
                 </span>
               {:else if ticket.status === 'current'}
                 <a class="inline-block w-full py-4 px-6 text-sm  text-black font-medium bg-green-500 hover:bg-green-600 rounded-full transition duration-200" href={ticket.url || '#tickets'}>
-                  Zum Ticket
+                  {ticket.buttonText || 'Zum Ticket'}
                 </a>
               {:else}
                 <span class="inline-block w-full py-4 px-6 text-sm font-medium bg-gray-800 text-gray-400 rounded-full cursor-not-allowed">

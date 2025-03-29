@@ -1,19 +1,21 @@
 import { client } from '$lib/sanity/client'
-import { ausstellerPageQuery } from '$lib/sanity/queries/aussteller'
+import { ausstellerPageQuery, ticketsQuery } from '$lib/sanity/queries/aussteller'
 import type { PageServerLoad } from './$types'
 
-export const load: PageServerLoad = async ({ url }) => {
-  // Default to German, allow switching to English via URL parameter
-  const lang = url.searchParams.get('lang') || 'de'
-  
-  const [ausstellerPage, settings] = await Promise.all([
-    client.fetch(ausstellerPageQuery, { language: lang }),
-    client.fetch(`*[_type == "siteSettings"][0]`)
+export const load: PageServerLoad = async () => {
+  const [ausstellerPage, settings, tickets] = await Promise.all([
+    client.fetch(ausstellerPageQuery),
+    client.fetch(`*[_type == "siteSettings"][0]`),
+    client.fetch(ticketsQuery)
   ])
+
+  // Die Areas werden bereits durch die ausstellerPageQuery geladen
+  // und sind in ausstellerPage.areasSection.areas verfügbar
 
   return {
     ausstellerPage,
-    settings
+    settings,
+    tickets
   }
 }
 

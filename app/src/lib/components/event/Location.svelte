@@ -1,18 +1,9 @@
 <script lang="ts">
   import OptimizedImage from '$lib/components/OptimizedImage.svelte';
+  import type { LocationDetails } from '$lib/types/location';
   import type { SanityImageSource } from '$lib/sanity/image';
-
-  interface TransformedLocationDetails {
-      name: string;
-      description: string;
-      image: SanityImageSource;
-      website?: string;
-      instagram?: string;
-      facebook?: string;
-      whatsapp?: string;
-    }
-
-  export let locationDetails: TransformedLocationDetails;
+  
+  export let locationDetails: LocationDetails;
   export let locationUrl: string | undefined = undefined;
   export let isSecret: boolean = false;
 </script>
@@ -150,6 +141,27 @@
           {/if}
         </div>
       </div>
+
+      {#if locationDetails.externalLinks && locationDetails.externalLinks.links.length > 0}
+        <div class="mt-12 border-t border-gray-700 pt-8">
+          <h3 class="text-2xl text-white mb-6">{locationDetails.externalLinks.title}</h3>
+          <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {#each locationDetails.externalLinks.links as link}
+              <a
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="p-4 rounded-lg border border-gray-700 hover:border-green-400 transition-colors duration-300"
+              >
+                <h4 class="text-lg font-medium text-white mb-2">{link.title}</h4>
+                {#if link.description}
+                  <p class="text-gray-400 text-sm">{link.description}</p>
+                {/if}
+              </a>
+            {/each}
+          </div>
+        </div>
+      {/if}
     </div>
   </div>
 </div>
