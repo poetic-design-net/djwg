@@ -22,16 +22,26 @@ export const load: PageServerLoad = async ({ locals }) => {
     throw redirect(303, '/');
   }
 
-  // Hole alle Benutzerprofile
+  // Hole alle Benutzerprofile mit den relevanten Feldern
   const { data: users, error: usersError } = await locals.supabase
     .from('profiles')
-    .select('*')
+    .select(`
+      id,
+      email,
+      username,
+      full_name,
+      avatar_url,
+      auth_created_at,
+      auth_last_sign_in_at
+    `)
     .order('email', { ascending: true });
 
   if (usersError) {
     console.error('Fehler beim Laden der Benutzer:', usersError);
     return {
-      users: [] as Profile[]
+      users: [],
+      badges: [],
+      userBadges: []
     };
   }
 
@@ -44,8 +54,9 @@ export const load: PageServerLoad = async ({ locals }) => {
   if (badgesError) {
     console.error('Fehler beim Laden der Badges:', badgesError);
     return {
-      users: (users || []) as Profile[],
-      badges: [] as Badge[]
+      users: users || [],
+      badges: [],
+      userBadges: []
     };
   }
 
@@ -57,16 +68,16 @@ export const load: PageServerLoad = async ({ locals }) => {
   if (userBadgesError) {
     console.error('Fehler beim Laden der User-Badges:', userBadgesError);
     return {
-      users: (users || []) as Profile[],
-      badges: (badges || []) as Badge[],
-      userBadges: [] as UserBadge[]
+      users: users || [],
+      badges: badges || [],
+      userBadges: []
     };
   }
 
   return {
-    users: (users || []) as Profile[],
-    badges: (badges || []) as Badge[],
-    userBadges: (userBadges || []) as UserBadge[]
+    users: users || [],
+    badges: badges || [],
+    userBadges: userBadges || []
   };
 };
 
@@ -98,30 +109,10 @@ export const actions = {
       const userId = formData.get('userId') as string;
       const badgeId = formData.get('badgeId') as string;
 
-      console.log('Badge entfernen:', { userId, badgeId });
-
       if (!userId || !badgeId) {
         return fail(400, { message: 'UserId und BadgeId sind erforderlich' });
       }
 
-      // Prüfe zuerst, ob das Badge existiert
-      const { data: existingBadge, error: checkError } = await locals.supabase
-        .from('user_badges')
-        .select('*')
-        .match({ user_id: userId, badge_id: badgeId })
-        .single();
-
-      if (checkError) {
-        console.error('Fehler beim Prüfen des Badges:', checkError);
-        return fail(500, { message: 'Fehler beim Prüfen des Badges', error: checkError });
-      }
-
-      if (!existingBadge) {
-        console.error('Badge nicht gefunden:', { userId, badgeId });
-        return fail(404, { message: 'Badge nicht gefunden' });
-      }
-
-      // Lösche das Badge
       const { error: deleteError } = await locals.supabase
         .from('user_badges')
         .delete()
@@ -132,20 +123,6 @@ export const actions = {
         return fail(500, { message: 'Fehler beim Entfernen des Badges', error: deleteError });
       }
 
-      // Validiere die Löschung
-      const { data: checkAfterDelete, error: validateError } = await locals.supabase
-        .from('user_badges')
-        .select('*')
-        .match({ user_id: userId, badge_id: badgeId });
-
-      if (validateError) {
-        console.error('Fehler beim Validieren der Löschung:', validateError);
-      } else if (checkAfterDelete && checkAfterDelete.length > 0) {
-        console.error('Badge wurde nicht korrekt gelöscht');
-        return fail(500, { message: 'Badge konnte nicht entfernt werden' });
-      }
-
-      console.log('Badge erfolgreich entfernt');
       return {
         success: true,
         message: 'Badge erfolgreich entfernt'

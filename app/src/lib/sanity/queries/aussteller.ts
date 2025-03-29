@@ -1,7 +1,7 @@
 import groq from 'groq'
 
 export const ausstellerPageQuery = groq`
-  *[_type == "ausstellerPage" && language == $language][0] {
+  *[_type == "ausstellerPage"][0] {
     title,
     description,
     benefits[] {
@@ -20,18 +20,23 @@ export const ausstellerPageQuery = groq`
       title,
       description
     },
-    pricingSection {
+    ticketSection {
       title,
       description,
-      cards[] {
+      tickets[] ->,
+      addons[] {
         title,
-        price,
         description,
-        features[] {
-          text,
-          info
-        }
+        price,
+        currency,
+        info,
+        forPackages
       }
+    },
+    areasSection {
+      title,
+      description,
+      areas[] ->
     },
     contactForm {
       title,
@@ -63,6 +68,20 @@ export const ausstellerPageQuery = groq`
       title,
       description,
       keywords
+    }
+  }
+`
+
+export const ticketsQuery = groq`
+  *[_type == "ticket" && references(*[_type == "ausstellerPage"][0]._id)] {
+    _id,
+    title,
+    price,
+    currency,
+    description,
+    features[] {
+      text,
+      info
     }
   }
 `

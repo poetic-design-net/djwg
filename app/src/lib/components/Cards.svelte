@@ -148,12 +148,12 @@
     >
       <!-- Cards Container -->
       <div 
-        class="flex transition-transform duration-500 ease-in-out mt-4"
+        class="flex transition-transform duration-500 ease-in-out mt-4 {events.length === 1 ? 'justify-center' : ''}"
         style="transform: translateX(-{currentIndex * (100 / cardsPerView)}%)"
       >
         {#each events as event, index}
           <div 
-            class="w-full sm:w-1/2 flex-shrink-0 p-4 transition-opacity duration-500"
+            class="{events.length === 1 ? 'w-full sm:w-1/2 max-w-2xl' : 'w-full sm:w-1/2'} flex-shrink-0 p-4 transition-opacity duration-500"
             class:opacity-100={!showSlider || (index >= currentIndex && index < currentIndex + cardsPerView)}
             class:opacity-0={showSlider && (index < currentIndex || index >= currentIndex + cardsPerView)}
           >
