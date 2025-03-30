@@ -141,30 +141,29 @@
               </svg>
               <span>Auf Google Maps öffnen</span>
             </a>
-          {/if}
-        </div>
-      </div>
-
-      {#if externalLinks && externalLinks.links.length > 0}
-        <div class="mt-12 border-t border-gray-700 pt-8">
-          <h3 class="text-2xl text-white mb-6">{externalLinks.title}</h3>
-          <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {#each externalLinks.links as link}
-              <a
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="p-4 rounded-lg border border-gray-700 hover:border-green-400 transition-colors duration-300"
-              >
-                <h4 class="text-lg font-medium text-white mb-2">{link.title}</h4>
-                {#if link.description}
-                  <p class="text-gray-400 text-sm">{link.description}</p>
-                {/if}
-              </a>
-            {/each}
+            {#if externalLinks && externalLinks.links.length > 0}
+            <div class="block-wrap gap-4 mt-8">
+              <h3 class="text-2xl text-white mb-6">{externalLinks.title}</h3>
+              <div class="grid grid-cols-2 sm:grid-cols-4 flex-wrap gap-4 mt-2">
+              {#each externalLinks.links as link}
+                <a
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="inline-flex items-center text-green-400 hover:text-green-300 transition-colors duration-300"
+                >
+         
+                
+                  <span>{link.title}</span>
+                </a>
+              {/each}
           </div>
         </div>
-      {/if}
+          {/if}
+          {/if}
+        </div>
+        
+      </div>
     </div>
   </div>
 </div>
