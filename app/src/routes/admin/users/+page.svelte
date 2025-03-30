@@ -12,22 +12,80 @@
     };
   
     let searchTerm = '';
+
+    function exportEmails() {
+      // Erstelle CSV-Inhalt mit Header
+      const csvContent = ['Email,Name,Username'].concat(
+        filteredUsers
+          .filter(user => user.email)
+          .map(user => [
+            user.email,
+            user.full_name || '',
+            user.username || ''
+          ].map(field => `"${(field || '').replace(/"/g, '""')}"`).join(','))
+      ).join('\n');
+
+      // Erstelle Blob und Download-Link
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      
+      link.setAttribute('href', url);
+      link.setAttribute('download', `benutzer-emails-${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      
+      link.click();
+      
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+
     let selectedBadges: Record<string, Badge | null> = {};
-    let sortField: keyof EnrichedProfile = 'email';
+    let sortField: keyof EnrichedProfile | 'badges' = 'email'; // Erweitert um 'badges'
     let sortDirection: 'asc' | 'desc' = 'asc';
     
+    $: userBadgeCounts = data.users.reduce((acc, user) => {
+      acc[user.id] = getUserBadges(user.id).length;
+      return acc;
+    }, {} as Record<string, number>);
+
     $: filteredUsers = data.users.filter(user => 
       user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.username?.toLowerCase().includes(searchTerm.toLowerCase())
     ).sort((a, b) => {
-      const aVal = (a[sortField] ?? '') as string;
-      const bVal = (b[sortField] ?? '') as string;
       const modifier = sortDirection === 'asc' ? 1 : -1;
-      return aVal.toString().localeCompare(bVal.toString()) * modifier;
+      if (sortField === 'badges') {
+        const countA = userBadgeCounts[a.id] || 0;
+        const countB = userBadgeCounts[b.id] || 0;
+        return (countA - countB) * modifier;
+      } else {
+        const aVal = (a[sortField as keyof EnrichedProfile] ?? '') as string | number | null | undefined;
+        const bVal = (b[sortField as keyof EnrichedProfile] ?? '') as string | number | null | undefined;
+
+        // Handle null or undefined values by treating them as empty strings or zero
+        const valA = aVal === null || aVal === undefined ? '' : aVal;
+        const valB = bVal === null || bVal === undefined ? '' : bVal;
+
+        // Ensure consistent comparison, convert numbers to strings if needed for localeCompare
+        const strA = typeof valA === 'number' ? valA.toString() : valA;
+        const strB = typeof valB === 'number' ? valB.toString() : valB;
+
+        // Perform comparison
+        if (typeof strA === 'string' && typeof strB === 'string') {
+          return strA.localeCompare(strB) * modifier;
+        } else if (typeof valA === 'number' && typeof valB === 'number') {
+          return (valA - valB) * modifier;
+        } else {
+          // Fallback for mixed types or other scenarios
+          return String(valA).localeCompare(String(valB)) * modifier;
+        }
+      }
     });
 
-    function toggleSort(field: keyof EnrichedProfile) {
+
+
+    function toggleSort(field: keyof EnrichedProfile | 'badges') {
       if (sortField === field) {
         sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
       } else {
@@ -118,6 +176,12 @@
 
   <div class="my-4 text font-medium text-gray-200">
     Insgesamt {data.users.length} Benutzer
+    <button 
+      on:click={exportEmails}
+      class="ml-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 text-sm"
+    >
+      Emails exportieren (CSV)
+    </button>
   </div>
 
   <div class="overflow-x-auto bg-white rounded-lg shadow">
@@ -214,7 +278,24 @@
               </span>
             </div>
           </th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Badges</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" on:click={() => toggleSort('badges')}>
+            <div class="flex items-center group">
+              <span>Badges</span>
+              <span class="ml-1 opacity-0 group-hover:opacity-50 {sortField === 'badges' ? 'opacity-100' : ''}">
+                {#if sortField === 'badges'}
+                  <svg class="w-4 h-4 inline-block" fill="currentColor" viewBox="0 0 20 20">
+                    <path d={sortDirection === 'asc' 
+                      ? "M3.293 12.293a1 1 0 011.414 0L10 17.586l5.293-5.293a1 1 0 111.414 1.414l-6 6a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414z"
+                      : "M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z"} />
+                  </svg>
+                {:else}
+                  <svg class="w-4 h-4 inline-block" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                  </svg>
+                {/if}
+              </span>
+            </div>
+          </th>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Badge Verwalten</th>
         </tr>
       </thead>
