@@ -11,6 +11,8 @@ interface ProfileField {
 export const REQUIRED_PROFILE_FIELDS: (keyof Profile)[] = [
   'first_name',
   'last_name',
+  'bio', // Biografie hinzugefügt
+  'avatar_url',
   'email',
   'address_street',
   'address_number',
@@ -54,8 +56,8 @@ export function getProfileFields(profile: Partial<Profile>, socialLinks: {
       { name: 'Vorname', value: profile?.first_name, category: 'basis', required: true },
       { name: 'Nachname', value: profile?.last_name, category: 'basis', required: true },
       { name: 'Username', value: profile?.username, category: 'basis', required: true },
-      { name: 'Profilbild', value: profile?.avatar_url, category: 'basis', required: false },
-      { name: 'Biografie', value: profile?.bio, category: 'basis', required: false }
+      { name: 'Profilbild', value: profile?.avatar_url, category: 'basis', required: true },
+      { name: 'Biografie', value: profile?.bio, category: 'basis', required: true } // Als erforderlich markiert
     ],
     'Kontaktdaten': [
       { name: 'Telefon', value: profile?.phone, category: 'kontakt', required: true },

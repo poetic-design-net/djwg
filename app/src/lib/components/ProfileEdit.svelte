@@ -1,10 +1,12 @@
 <script lang="ts">
   import { createEventDispatcher, getContext } from 'svelte';
+  import { invalidate } from '$app/navigation';
   import { toasts } from '$lib/stores/toast';
-  import { invalidateAll } from '$app/navigation';
+
   const dispatch = createEventDispatcher();
   import type { SupabaseClient } from '@supabase/supabase-js';
   import type { Profile, User, StandardUserMetadata } from '$lib/types/profile';
+  import { profileProgress } from '$lib/stores/profile-progress';
   import { badgeStore } from '$lib/stores/badges';
   import { 
     calculateProfileCompletion, 
@@ -23,34 +25,40 @@
   import FileUpload from './profile/FileUpload.svelte';
 
   export let user: User;
+  export let profile: Partial<Profile>;
   const supabase = getContext<SupabaseClient>('supabase');
   
   let loading = false;
   let error = '';
 
-  // Normalisiere die Benutzerdaten
-  const normalizedMetadata = normalizeUserMetadata(user);
-  
-  // Initialisiere das Profil mit den normalisierten Daten
-  let profile: Partial<Profile> = {
-    first_name: normalizedMetadata.first_name,
-    last_name: normalizedMetadata.last_name,
-    email: normalizedMetadata.email,
-    avatar_url: normalizedMetadata.avatar_url
-  };
-  
+  // Initialisiere das Profil mit normalisierten Daten, wenn keine existieren
+  $: if (!profile) {
+    const normalizedMetadata = normalizeUserMetadata(user);
+    profile = {
+      first_name: normalizedMetadata.first_name,
+      last_name: normalizedMetadata.last_name,
+      email: normalizedMetadata.email,
+      avatar_url: normalizedMetadata.avatar_url
+    };
+  }
+
   let showAddress = true;  // Standardmäßig aufgeklappt
   let showContact = true;  // Standardmäßig aufgeklappt
   
   // Social Media Links
-  let instagram = '';
-  let facebook = '';
-  let soundcloud = '';
+  let instagram = profile?.social_links?.instagram || '';
+  let facebook = profile?.social_links?.facebook || '';
+  let soundcloud = profile?.social_links?.soundcloud || '';
   
   // Social Media Aktivierungsstatus
-  let isInstagramEnabled = false;
-  let isFacebookEnabled = false;
-  let isSoundcloudEnabled = false;
+  let isInstagramEnabled = !!profile?.social_links?.instagram;
+  let isFacebookEnabled = !!profile?.social_links?.facebook;
+  let isSoundcloudEnabled = !!profile?.social_links?.soundcloud;
+
+  // Update Store bei jeder Änderung
+  $: if (profile) {
+    profileProgress.update(profile, { instagram, facebook, soundcloud });
+  }
 
   // Berechne Profilfortschritt
   $: completionPercentage = calculateProfileCompletion(
@@ -61,44 +69,24 @@
       soundcloud: isSoundcloudEnabled ? soundcloud : undefined
     }
   );
-  
-  // Initialisiere Social Media Links wenn Profil geladen wird
-  const initializeSocialLinks = (data: any) => {
-    if (data?.social_links) {
-      instagram = data.social_links.instagram || '';
-      isInstagramEnabled = !!data.social_links.instagram;
-      facebook = data.social_links.facebook || '';
-      isFacebookEnabled = !!data.social_links.facebook;
-      soundcloud = data.social_links.soundcloud || '';
-      isSoundcloudEnabled = !!data.social_links.soundcloud;
+
+  async function handleAvatarUpdate(event: CustomEvent) {
+    const updatedProfile = event.detail.profile;
+    if (updatedProfile) {
+      // Aktualisiere lokales Profil
+      profile = { ...profile, ...updatedProfile };
+      
+      // Aktualisiere den Store explizit
+      setTimeout(() => {
+        profileProgress.update(
+          profile,
+          profile.social_links || { instagram: '', facebook: '', soundcloud: '' }
+        );
+      }, 100);
+
+      await invalidate('app:profile');
     }
-  };
-  
-  // Lade das Profil beim Start
-  const loadProfile = async () => {
-    try {
-      const { data, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-        
-      if (profileError) throw profileError;
-      if (data) {
-        profile = {
-          ...profile,
-          ...data,
-          // Stelle sicher, dass die normalisierten Daten Vorrang haben
-          first_name: profile.first_name || data.first_name,
-          last_name: profile.last_name || data.last_name,
-          email: profile.email || data.email
-        };
-        initializeSocialLinks(data);
-      }
-    } catch (e: any) {
-      console.error('Fehler beim Laden des Profils:', e);
-    }
-  };
+  }
 
   const handleSubmit = async () => {
     loading = true;
@@ -116,11 +104,11 @@
         last_name: profile.last_name || '',
         email: profile.email || user.email,
         avatar_url: profile.avatar_url,
-        provider: normalizedMetadata.provider,
-        provider_id: normalizedMetadata.provider_id
+        provider: normalizeUserMetadata(user).provider,
+        provider_id: normalizeUserMetadata(user).provider_id
       };
 
-      const { data: authData, error: authError } = await supabase.auth.updateUser({
+      const { error: authError } = await supabase.auth.updateUser({
         email: profile.email || user.email,
         data: metadataUpdate
       });
@@ -144,7 +132,6 @@
         address_country: profile.address_country,
         phone: profile.phone,
         social_links: {
-          // Nur aktivierte Social Media Profile speichern
           ...(isInstagramEnabled && instagram ? { instagram } : {}),
           ...(isFacebookEnabled && facebook ? { facebook } : {}),
           ...(isSoundcloudEnabled && soundcloud ? { soundcloud } : {})
@@ -152,6 +139,7 @@
         is_public: profile.is_public ?? false
       };
 
+      // Update in der Datenbank
       const { error: profileError } = await supabase
         .from('profiles')
         .update(profileData)
@@ -159,48 +147,63 @@
 
       if (profileError) throw profileError;
 
-      // 3. Verwende die neue Echtzeit-Badge-Verwaltung
-      // Lade das aktualisierte Profil
+      // 3. Lade das aktualisierte Profil
       const { data: updatedProfile } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .single();
-        
-      // Prüfe und aktualisiere Badges in Echtzeit
-      await manageBadgesRealtime(supabase, user.id, updatedProfile);
-      
-      // Bestimme, ob ein Badge hinzugefügt wurde (für Toast-Nachricht)
-      const { data: badgeData } = await supabase
-        .from('badges')
-        .select('*')
-        .eq('slug', 'dj-level-1')
-        .single();
-        
-      const { data: existingBadge } = await supabase
-        .from('user_badges')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('badge_id', badgeData?.id)
-        .maybeSingle();
-        
-      const badgeAdded = !!existingBadge;
 
-      // Seite neu laden
-      await invalidateAll();
-
-      // Fenster schließen
-      dispatch('close');
-
-      // Toast anzeigen
-      setTimeout(() => {
-        toasts.success(
-          badgeAdded
-            ? '🎉 DJ Stufe 1 Badge freigeschaltet!'
-            : 'Profil erfolgreich aktualisiert!'
+      if (updatedProfile) {
+        // Update lokales Profil
+        profile = { ...profile, ...updatedProfile };
+        
+        // Explizit den Store aktualisieren mit dem neuen Profil
+        profileProgress.update(
+          profile,
+          {
+            instagram: profile.social_links?.instagram || '',
+            facebook: profile.social_links?.facebook || '',
+            soundcloud: profile.social_links?.soundcloud || ''
+          }
         );
-      }, 100);
 
+        // Prüfe Badges
+        await manageBadgesRealtime(supabase, user.id, updatedProfile);
+
+        // Badge-Check für Toast
+        const { data: badgeData } = await supabase
+          .from('badges')
+          .select('*')
+          .eq('slug', 'dj-level-1')
+          .single();
+          
+        const { data: existingBadge } = await supabase
+          .from('user_badges')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('badge_id', badgeData?.id)
+          .maybeSingle();
+          
+        const badgeAdded = !!existingBadge;
+
+        // Invalidiere Serverdaten
+        await invalidate('app:profile');
+
+        // Wichtig: Warte einen Moment, bis die Store-Änderungen propagiert sind
+        // bevor wir das Dialog-Fenster schließen
+        setTimeout(() => {
+          // Fenster schließen
+          dispatch('close');
+
+          // Toast anzeigen
+          toasts.success(
+            badgeAdded
+              ? '🎉 DJ Stufe 1 Badge freigeschaltet!'
+              : 'Profil erfolgreich aktualisiert!'
+          );
+        }, 200);
+      }
     } catch (e: any) {
       error = e?.message || 'Ein Fehler ist aufgetreten';
       toasts.error(error);
@@ -208,9 +211,6 @@
       loading = false;
     }
   };
-  
-  // Lade das Profil beim Komponenten-Mount
-  loadProfile();
 </script>
 
 <form on:submit|preventDefault={handleSubmit} class="space-y-6">
@@ -233,7 +233,7 @@
     avatarUrl={profile.avatar_url}
     firstName={profile.first_name || ''}
     lastName={profile.last_name || ''}
-    on:profileUpdated={loadProfile}
+    on:profileUpdated={handleAvatarUpdate}
   />
 
   <!-- Über mich -->

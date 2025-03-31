@@ -20,7 +20,7 @@
   import { onMount } from 'svelte';
 
   export let data;
-  const { user, onlineTalks, isAdmin, videos } = data;
+  const { user, profile, onlineTalks, isAdmin, videos } = data;
 
   let videosComponent: VideosSection;
   let showEditProfile = false;
@@ -104,9 +104,11 @@
     <div class="space-y-6">
       <!-- Profile Section -->
     
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        
+ <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
           <ProfileSection
             {user}
+            {profile}    
             onEdit={() => showEditProfile = true}
           />
           
@@ -139,13 +141,7 @@
         </MyFiles>
       </CollapsibleSection>
 
-          <!-- Support 
-          <CollapsibleSection title="Support" initiallyOpen={false}>
-            <Support />
-          </CollapsibleSection>-->
-
-     
-
+           
       <!-- Links & Resources -->
       <CollapsibleSection title="Links & Ressourcen" initiallyOpen={false}>
         <UsefulLinksSection {isAdmin} />
@@ -183,8 +179,10 @@
       <h2 class="text-2xl font-medium text-white mb-6">Profil bearbeiten</h2>
       <ProfileEdit
         {user}
-        on:close={() => {
+        {profile}
+        on:close={async () => {
           showEditProfile = false;
+          await invalidate('app:profile');
         }}
       />
     </div>
@@ -192,5 +190,3 @@
 {/if}
 
 <TooltipPortal />
-
-
