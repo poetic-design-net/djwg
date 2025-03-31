@@ -132,5 +132,73 @@ export const actions = {
       console.error('Unerwarteter Fehler beim Entfernen des Badges:', error);
       return fail(500, { message: 'Unerwarteter Fehler beim Entfernen des Badges', error });
     }
+  },
+
+  assignBulkBadges: async ({ request, locals }) => {
+    try {
+      const formData = await request.formData();
+      const userIds = JSON.parse(formData.get('userIds') as string) as string[];
+      const badgeId = formData.get('badgeId') as string;
+
+      if (!userIds?.length || !badgeId) {
+        return fail(400, { message: 'UserIds und BadgeId sind erforderlich' });
+      }
+
+      // Hole existierende Zuweisungen für diese Badge-ID
+      const { data: existingBadges } = await locals.supabase
+        .from('user_badges')
+        .select('user_id')
+        .eq('badge_id', badgeId)
+        .in('user_id', userIds);
+
+      // Filtere Benutzer, die das Badge bereits haben
+      const existingUserIds = new Set(existingBadges?.map(badge => badge.user_id) || []);
+      const newUserIds = userIds.filter(id => !existingUserIds.has(id));
+
+      if (newUserIds.length > 0) {
+        const { error } = await locals.supabase
+          .from('user_badges')
+          .insert(newUserIds.map(userId => ({
+            user_id: userId,
+            badge_id: badgeId
+          })));
+
+        if (error) {
+          return fail(500, { message: 'Fehler beim Zuweisen der Badges', error });
+        }
+      }
+
+      return { success: true };
+    } catch (error) {
+      return fail(500, { message: 'Unerwarteter Fehler beim Zuweisen der Badges', error });
+    }
+  },
+
+  removeBulkBadges: async ({ request, locals }) => {
+    try {
+      const formData = await request.formData();
+      const userIds = JSON.parse(formData.get('userIds') as string) as string[];
+      const badgeId = formData.get('badgeId') as string;
+
+      if (!userIds?.length || !badgeId) {
+        return fail(400, { message: 'UserIds und BadgeId sind erforderlich' });
+      }
+
+      const { error } = await locals.supabase
+        .from('user_badges')
+        .delete()
+        .eq('badge_id', badgeId)
+        .in('user_id', userIds);
+
+      if (error) {
+        console.error('Fehler beim Entfernen der Badges:', error);
+        return fail(500, { message: 'Fehler beim Entfernen der Badges', error });
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('Unerwarteter Fehler beim Entfernen der Badges:', error);
+      return fail(500, { message: 'Unerwarteter Fehler beim Entfernen der Badges', error });
+    }
   }
 };
