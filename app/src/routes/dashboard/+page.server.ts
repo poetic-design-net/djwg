@@ -14,7 +14,7 @@ interface AppLocals extends LoaderLocals {
     getUser(): Promise<User | null>;
 }
 
-export const load: PageServerLoad = async ({ locals }) => {
+export const load: PageServerLoad = async ({ locals, depends }) => {
     const typedLocals = locals as unknown as AppLocals;
 
     try {
@@ -32,6 +32,9 @@ export const load: PageServerLoad = async ({ locals }) => {
         }
 
         const isUserAdmin = isAdmin(user.email);
+
+        // Abhängigkeit für Profil-Updates deklarieren
+        depends('app:profile');
 
         // Fetch profile
         const { data: profile } = await typedLocals.supabase

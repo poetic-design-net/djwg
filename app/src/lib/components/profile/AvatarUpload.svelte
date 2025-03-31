@@ -16,10 +16,30 @@
   let success = false;
   let error = '';
 
+  // Upload Progress Tracking
+  let uploadPhase = 0; // 0 = Start, 1 = DB-Eintrag, 2 = Sanity Upload, 3 = Referenz-Update, 4 = Fertig
+  let uploadStage = '';
+  let currentFileName = '';
+  let currentProgress = 0;
+
+  // Hilfsfunktion zum Kürzen langer Dateinamen
+  function truncateFilename(filename: string, maxLength: number = 25): string {
+    if (filename.length <= maxLength) return filename;
+    const extension = filename.split('.').pop() || '';
+    const nameWithoutExt = filename.substring(0, filename.length - extension.length - 1);
+    if (extension.length + 4 >= maxLength) {
+      return filename.substring(0, maxLength - 3) + '...';
+    }
+    const truncatedLength = maxLength - extension.length - 4;
+    return nameWithoutExt.substring(0, truncatedLength) + '...' + '.' + extension;
+  }
+
   async function handleAvatarDelete() {
     loading = true;
     error = '';
     success = false;
+    uploadStage = 'Lösche Avatar...';
+    currentProgress = 50;
 
     try {
       const { data: updatedProfile, error: profileError } = await supabase
@@ -38,11 +58,19 @@
       avatarUrl = undefined;
       success = true;
       dispatch('profileUpdated', { profile: updatedProfile });
+      uploadStage = 'Avatar gelöscht!';
+      currentProgress = 100;
     } catch (err: any) {
       error = err?.message || 'Fehler beim Löschen des Avatars';
       console.error('Löschen Fehler:', err);
     } finally {
       loading = false;
+      setTimeout(() => {
+        if (success) {
+          uploadStage = '';
+          currentProgress = 0;
+        }
+      }, 2000);
     }
   }
 
@@ -51,16 +79,25 @@
     if (!input.files?.length) return;
     
     const file = input.files[0];
+    currentFileName = file.name;
+
     if (!file.type.startsWith('image/')) {
       error = 'Bitte nur Bilder hochladen';
       return;
     }
 
+    uploadPhase = 0;
+    currentProgress = 0;
     loading = true;
     error = '';
     success = false;
 
     try {
+      // Phase 1: DB-Eintrag erstellen
+      uploadStage = 'Erstelle Datenbank-Eintrag...';
+      uploadPhase = 1;
+      currentProgress = 25;
+
       const { data: uploadData, error: dbError } = await supabase
         .from('media_uploads')
         .insert({
@@ -82,7 +119,11 @@
       if (dbError) throw dbError;
       if (!uploadData) throw new Error('Keine Daten vom Upload erhalten');
 
-      console.log('Starte Sanity Upload...', { file, userId: user.id, uploadId: uploadData.id });
+      // Phase 2: Sanity Upload
+      uploadStage = 'Lade Bild hoch...';
+      uploadPhase = 2;
+      currentProgress = 50;
+
       const sanityResult = await uploadToSanity(
         file,
         user.id,
@@ -90,14 +131,12 @@
         firstName || lastName || user.email?.split('@')[0] || 'Unbekannter Benutzer',
         user.email
       );
-      console.log('Sanity Upload erfolgreich:', sanityResult);
 
-      // Aktualisiere den Eintrag mit den Sanity-Referenzen
-      console.log('Aktualisiere media_uploads...', {
-        sanityId: sanityResult.sanityId,
-        sanityAssetId: sanityResult.sanityAssetId,
-        url: sanityResult.url
-      });
+      // Phase 3: Referenzen aktualisieren
+      uploadStage = 'Aktualisiere Referenzen...';
+      uploadPhase = 3;
+      currentProgress = 75;
+
       const { error: updateError } = await supabase
         .from('media_uploads')
         .update({
@@ -111,33 +150,21 @@
         })
         .eq('id', uploadData.id);
 
-      if (updateError) {
-        console.error('Fehler beim Aktualisieren von media_uploads:', updateError);
-        throw updateError;
-      }
-      console.log('media_uploads erfolgreich aktualisiert');
+      if (updateError) throw updateError;
 
-      // Aktualisiere das Profil mit der neuen Avatar-URL
-      // Hole zuerst die aktuellen Profildaten
-      console.log('Hole aktuelle Profildaten...');
+      // Phase 4: Profil aktualisieren
+      uploadStage = 'Aktualisiere Profil...';
+      uploadPhase = 4;
+      currentProgress = 90;
+
       const { data: currentProfile, error: fetchError } = await supabase
         .from('profiles')
-        .select('first_name, last_name, avatar_url')
+        .select('*')
         .eq('id', user.id)
         .single();
 
-      if (fetchError) {
-        console.error('Fehler beim Abrufen der Profildaten:', fetchError);
-        throw fetchError;
-      }
-      console.log('Aktuelle Profildaten:', currentProfile);
+      if (fetchError) throw fetchError;
 
-      // Aktualisiere das Profil und behalte die bestehenden Namen bei
-      console.log('Aktualisiere Profil...', {
-        newAvatarUrl: sanityResult.url,
-        firstName: currentProfile.first_name,
-        lastName: currentProfile.last_name
-      });
       const { data: updatedProfile, error: profileError } = await supabase
         .from('profiles')
         .update({
@@ -149,20 +176,26 @@
         .select()
         .single();
 
-      if (profileError) {
-        console.error('Fehler beim Aktualisieren des Profils:', profileError);
-        throw profileError;
-      }
-      console.log('Profil erfolgreich aktualisiert:', updatedProfile);
+      if (profileError) throw profileError;
 
       avatarUrl = sanityResult.url;
       success = true;
+      currentProgress = 100;
+      uploadStage = 'Upload abgeschlossen!';
       dispatch('profileUpdated', { profile: updatedProfile });
     } catch (err: any) {
       error = err?.message || 'Fehler beim Upload';
       console.error('Upload Fehler:', err);
+      uploadPhase = 0;
     } finally {
       loading = false;
+      if (success) {
+        setTimeout(() => {
+          uploadStage = '';
+          currentProgress = 0;
+          uploadPhase = 0;
+        }, 2000);
+      }
     }
   }
 </script>
@@ -191,43 +224,59 @@
     
     {#if !avatarUrl}
       <label
-          for="avatar-upload"
-          class="relative cursor-pointer rounded-xl bg-gray-950 px-4 py-4 border border-gray-800 hover:border-green-500 transition-colors duration-200 flex items-center justify-center"
-        >
-          <input
-            id="avatar-upload"
-            name="avatar-upload"
-            type="file"
-            class="sr-only"
-            on:change={handleAvatarUpload}
-            accept="image/*"
-          />
-          <div class="space-y-1 text-center">
-            <svg
-              class="mx-auto h-12 w-12 text-gray-400"
-              stroke="currentColor"
-              fill="none"
-              viewBox="0 0 48 48"
-              aria-hidden="true"
-            >
-              <path
-                d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-            <div class="text-sm text-gray-400">
-              <span>Profilbild hochladen</span>
-              <span class="text-green-500 hover:text-green-400"> (max. 5MB)</span>
-            </div>
-            <p class="text-xs text-gray-500">
-              PNG, JPG, GIF
-            </p>
+        for="avatar-upload"
+        class="relative cursor-pointer rounded-xl bg-gray-950 px-4 py-4 border border-gray-800 hover:border-green-500 transition-colors duration-200 flex items-center justify-center"
+      >
+        <input
+          id="avatar-upload"
+          name="avatar-upload"
+          type="file"
+          class="sr-only"
+          on:change={handleAvatarUpload}
+          accept="image/*"
+        />
+        <div class="space-y-1 text-center">
+          <svg
+            class="mx-auto h-12 w-12 text-gray-400"
+            stroke="currentColor"
+            fill="none"
+            viewBox="0 0 48 48"
+            aria-hidden="true"
+          >
+            <path
+              d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+          <div class="text-sm text-gray-400">
+            <span>Profilbild hochladen</span>
+            <span class="text-green-500 hover:text-green-400"> (max. 5MB)</span>
           </div>
-        </label>
+          <p class="text-xs text-gray-500">
+            PNG, JPG, GIF
+          </p>
+        </div>
+      </label>
     {/if}
   </div>
+
+  {#if loading}
+    <div class="mt-4 space-y-2">
+      <div class="flex justify-between text-sm text-gray-400 mb-2">
+        <span class="truncate flex-1">Aktueller Vorgang: {truncateFilename(currentFileName)}</span>
+        <span class="ml-2 flex-shrink-0">{currentProgress}%</span>
+      </div>
+      <div class="text-xs text-gray-500 truncate">{uploadStage}</div>
+      <div class="w-full bg-gray-800 rounded-full h-2">
+        <div
+          class="bg-green-500 h-2 rounded-full transition-all duration-300"
+          style="width: {currentProgress}%"
+        />
+      </div>
+    </div>
+  {/if}
 
   {#if error}
     <p class="text-red-500 text-sm">{error}</p>

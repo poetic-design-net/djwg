@@ -1,15 +1,17 @@
 <script lang="ts">
   import { calculateProfileCompletion, normalizeUserMetadata } from '$lib/utils/profile-utils';
+  import { profileProgress } from '$lib/stores/profile-progress';
+  import { toasts } from '$lib/stores/toast';
   import OptimizedAvatar from '$lib/components/OptimizedAvatar.svelte';
   import AvatarUpload from '$lib/components/profile/AvatarUpload.svelte';
   import type { User, Profile } from '$lib/types/profile';
   import type { SupabaseClient } from '@supabase/supabase-js';
   import { getContext, createEventDispatcher } from 'svelte';
-  import { profileStore } from '$lib/stores/profile';
-
+ 
   const dispatch = createEventDispatcher();
 
   export let user: User;
+  export let profile: Profile | null;
   export let onEdit: () => void;
 
   let isSocialExpanded = false;
@@ -18,23 +20,40 @@
 
   const supabase = getContext<SupabaseClient>('supabase');
 
-  // Funktion zum Dispatchen des profileUpdated Events
-  function handleProfileUpdate() {
-    profileStore.refresh(supabase, user.id);
-    dispatch('profileUpdated');
-  }
-  
   // Normalisiere die Benutzerdaten
   $: normalizedMetadata = normalizeUserMetadata(user);
-  $: firstName = normalizedMetadata.first_name || $profileStore?.first_name || '';
-  $: lastName = normalizedMetadata.last_name || $profileStore?.last_name || '';
+  $: firstName = normalizedMetadata.first_name || profile?.first_name || '';
+  $: lastName = normalizedMetadata.last_name || profile?.last_name || '';
 
   // Extrahiere Avatar URL mit Fallback-Logik
-  $: displayAvatar = $profileStore?.avatar_url || '';
-  $: completionPercentage = calculateProfileCompletion(
-    $profileStore || {},
-    $profileStore?.social_links || { instagram: '', facebook: '', soundcloud: '' }
-  );
+  $: displayAvatar = profile?.avatar_url || '';
+  
+  // Aktualisiere den Store bei Profiländerungen
+  $: if (profile) {
+    profileProgress.update(
+      profile,
+      profile.social_links || { instagram: '', facebook: '', soundcloud: '' }
+    );
+  }
+
+  // Verwende den Store für den Fortschritt
+  $: completionPercentage = $profileProgress.percentage;
+
+  // Handler für Avatar-Updates
+  function handleProfileUpdate(event: CustomEvent) {
+    if (event.detail?.profile) {
+      const updatedProfile = event.detail.profile as Profile;
+      profile = updatedProfile;
+      
+      // Aktualisiere Store und Progress
+      setTimeout(() => {
+        profileProgress.update(
+          updatedProfile,
+          updatedProfile.social_links || { instagram: '', facebook: '', soundcloud: '' }
+        );
+      }, 100);
+    }
+  }
 </script>
 
 <div class="relative rounded-3xl p-8 border border-gray-800 overflow-hidden">
@@ -85,7 +104,7 @@
       </div>
 
       <!-- Username -->
-      {#if $profileStore?.username}
+      {#if profile?.username}
         <div class="flex items-center space-x-4">
           <div class="bg-gray-950 rounded-full p-4">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -94,7 +113,7 @@
           </div>
           <div>
             <p class="text-gray-400">Username</p>
-            <p class="text-white font-medium">@{$profileStore.username}</p>
+            <p class="text-white font-medium">@{profile.username}</p>
           </div>
         </div>
       {/if}
@@ -140,7 +159,7 @@
           </div>
 
           <!-- Bio -->
-          {#if $profileStore?.bio}
+          {#if profile?.bio}
             <div class="flex items-center space-x-4">
               <div class="bg-gray-950 rounded-full p-4">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -149,7 +168,7 @@
               </div>
               <div>
                 <p class="text-gray-400">Bio</p>
-                <p class="text-white font-medium">{$profileStore.bio}</p>
+                <p class="text-white font-medium">{profile.bio}</p>
               </div>
             </div>
           {/if}
@@ -178,7 +197,7 @@
       {#if isAdditionalInfoExpanded}
         <div class="space-y-4 pl-16 mt-4">
           <!-- Social Links -->
-          {#if $profileStore?.social_links}
+          {#if profile?.social_links}
             <div class="flex items-center space-x-4">
               <button 
                 class="bg-gray-950 rounded-full p-4 hover:bg-gray-900 transition-colors duration-200" 
@@ -202,18 +221,18 @@
                   class:opacity-0={!isSocialExpanded}
                   class:overflow-hidden={!isSocialExpanded}
                 >
-                  {#if $profileStore.social_links.instagram}
-                    <a href={$profileStore.social_links.instagram} target="_blank" class="block text-green-500 hover:text-green-400">
+                  {#if profile.social_links.instagram}
+                    <a href={profile.social_links.instagram} target="_blank" class="block text-green-500 hover:text-green-400">
                       Instagram
                     </a>
                   {/if}
-                  {#if $profileStore.social_links.facebook}
-                    <a href={$profileStore.social_links.facebook} target="_blank" class="block text-green-500 hover:text-green-400">
+                  {#if profile.social_links.facebook}
+                    <a href={profile.social_links.facebook} target="_blank" class="block text-green-500 hover:text-green-400">
                       Facebook
                     </a>
                   {/if}
-                  {#if $profileStore.social_links.soundcloud}
-                    <a href={$profileStore.social_links.soundcloud} target="_blank" class="block text-green-500 hover:text-green-400">
+                  {#if profile.social_links.soundcloud}
+                    <a href={profile.social_links.soundcloud} target="_blank" class="block text-green-500 hover:text-green-400">
                       Soundcloud
                     </a>
                   {/if}
@@ -223,7 +242,7 @@
           {/if}
 
           <!-- Website -->
-          {#if $profileStore?.website}
+          {#if profile?.website}
             <div class="flex items-center space-x-4">
               <div class="bg-gray-950 rounded-full p-4">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -232,8 +251,8 @@
               </div>
               <div>
                 <p class="text-gray-400">Website</p>
-                <a href={$profileStore.website} target="_blank" class="text-green-500 hover:text-green-400 font-medium">
-                  {$profileStore.website}
+                <a href={profile.website} target="_blank" class="text-green-500 hover:text-green-400 font-medium">
+                  {profile.website}
                 </a>
               </div>
             </div>
@@ -256,5 +275,3 @@
     </div>
   </div>
 </div>
-
-
