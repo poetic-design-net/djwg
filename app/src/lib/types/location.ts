@@ -1,4 +1,5 @@
 import type { SanityImageSource } from '$lib/sanity/image';
+import type { PortableTextBlock } from '@portabletext/types';
 
 export interface ExternalLink {
   title: string;
@@ -13,7 +14,7 @@ export interface ExternalLinks {
 
 export interface LocationDetails {
   name: string;
-  description: string;
+  description: PortableTextBlock[];
   image: SanityImageSource;
   website?: string;
   instagram?: string;

@@ -1,6 +1,7 @@
 <script lang="ts">
   import OptimizedImage from '$lib/components/OptimizedImage.svelte';
   import type { LocationDetails, ExternalLinks } from '$lib/types/location';
+  import PortableTextContent from '$lib/components/PortableTextContent.svelte';
   import type { SanityImageSource } from '$lib/sanity/image';
   
   export let locationDetails: LocationDetails;
@@ -35,7 +36,7 @@
         </div>
         <div class="flex flex-col justify-center">
           <h3 class="text-3xl text-white mb-4">{locationDetails.name}</h3>
-          <p class="text-gray-300 mb-6">{locationDetails.description}</p>
+          <PortableTextContent value={locationDetails.description} className="text-gray-200 mb-6" />
           
           <div class="flex flex-wrap gap-4 mb-6">
             {#if locationDetails.website}
