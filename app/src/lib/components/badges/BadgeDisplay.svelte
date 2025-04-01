@@ -104,7 +104,7 @@
   {#if unlockedBadges.length > 0}
     <div class="space-y-4">
       <h2 class="text-xl font-semibold text-white">Freigeschaltete Badges</h2>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {#each unlockedBadges as badge (badge.id)}
           <BadgeCard {badge} on:openVideos={handleOpenVideos} />
         {/each}
@@ -116,7 +116,7 @@
   {#if lockedBadges.length > 0}
     <div class="space-y-4">
       <h2 class="text-xl font-semibold text-white">Verfügbare Badges</h2>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {#each lockedBadges as badge (badge.id)}
           <BadgeCard {badge} locked={true} on:openVideos={handleOpenVideos} />
         {/each}
