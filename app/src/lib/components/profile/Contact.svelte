@@ -39,13 +39,13 @@
   {#if showContact}
     <div class="space-y-4 animate-fadeIn">
       <div>
-        <label for="website" class="block text-sm font-medium text-gray-400 mb-2">Website</label>
+        <label for="website" class="block text-sm font-medium text-gray-400 mb-2">Deine Website</label>
         <input
-          type="url"
+          type="text"
           id="website"
           bind:value={profile.website}
           class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500"
-          placeholder="https://"
+          placeholder="www.deine-website.de"
         />
       </div>
       <div>
@@ -58,9 +58,9 @@
         />
       </div>
 
-      <!-- Social Media Section -->
+      <!-- Social Media & Website Section -->
       <div class="border-t border-gray-800 pt-4 mt-6">
-        <h4 class="text-sm font-medium text-gray-400 mb-4">Social Media Profile</h4>
+        <h4 class="text-sm font-medium text-gray-400 mb-4">Social Media & Website</h4>
         <div class="space-y-6">
           <!-- Instagram -->
           <div>
@@ -81,7 +81,7 @@
                 id="instagram"
                 bind:value={instagram}
                 class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 mt-2"
-                placeholder="@username"
+                placeholder="Nur dein Username, z.B.: djname"
               />
             {/if}
           </div>
@@ -105,7 +105,7 @@
                 id="facebook"
                 bind:value={facebook}
                 class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 mt-2"
-                placeholder="facebook.com/username"
+                placeholder="Nur dein Username, z.B.: djname"
               />
             {/if}
           </div>
@@ -129,10 +129,11 @@
                 id="soundcloud"
                 bind:value={soundcloud}
                 class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 mt-2"
-                placeholder="soundcloud.com/username"
+                placeholder="Nur dein Username, z.B.: djname"
               />
             {/if}
           </div>
+
         </div>
       </div>
     </div>

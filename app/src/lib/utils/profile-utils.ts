@@ -11,15 +11,11 @@ interface ProfileField {
 export const REQUIRED_PROFILE_FIELDS: (keyof Profile)[] = [
   'first_name',
   'last_name',
-  'bio', // Biografie hinzugefügt
+  'username', // Username ist implizit required durch Generierung/Eingabe
   'avatar_url',
   'email',
-  'address_street',
-  'address_number',
-  'address_city',
-  'address_zip',
-  'address_country',
-  'phone'
+  'phone',
+  'address_city' // Wohnort wieder hinzugefügt
 ];
 
 export function normalizeUserMetadata(user: any): StandardUserMetadata {
@@ -57,17 +53,14 @@ export function getProfileFields(profile: Partial<Profile>, socialLinks: {
       { name: 'Nachname', value: profile?.last_name, category: 'basis', required: true },
       { name: 'Username', value: profile?.username, category: 'basis', required: true },
       { name: 'Profilbild', value: profile?.avatar_url, category: 'basis', required: true },
-      { name: 'Biografie', value: profile?.bio, category: 'basis', required: true } // Als erforderlich markiert
+      { name: 'Biografie', value: profile?.bio, category: 'basis', required: false } // Optional
     ],
     'Kontaktdaten': [
       { name: 'Telefon', value: profile?.phone, category: 'kontakt', required: true },
-      { name: 'Straße', value: profile?.address_street, category: 'kontakt', required: true },
-      { name: 'Stadt', value: profile?.address_city, category: 'kontakt', required: true },
-      { name: 'PLZ', value: profile?.address_zip, category: 'kontakt', required: true },
-      { name: 'Land', value: profile?.address_country, category: 'kontakt', required: true }
+      { name: 'Wohnort', value: profile?.address_city, category: 'kontakt', required: true } // Wieder erforderlich
     ],
     'Social Media': [
-      { name: 'Instagram', value: socialLinks?.instagram, category: 'social', required: false },
+      { name: 'Instagram', value: socialLinks?.instagram, category: 'social', required: true },
       { name: 'Facebook', value: socialLinks?.facebook, category: 'social', required: false },
       { name: 'Soundcloud', value: socialLinks?.soundcloud, category: 'social', required: false }
     ]
@@ -76,38 +69,31 @@ export function getProfileFields(profile: Partial<Profile>, socialLinks: {
 
 export function isProfileComplete(profile: Profile | null): boolean {
   if (!profile) return false;
-  return REQUIRED_PROFILE_FIELDS.every(field => !!profile[field]);
+  
+  // Prüfe die Basis-Felder
+  const hasRequiredFields = REQUIRED_PROFILE_FIELDS.every(field => !!profile[field]);
+  
+  return hasRequiredFields;
 }
 
 export function calculateProfileCompletion(profile: Partial<Profile>, socialLinks: {
   instagram?: string;
   facebook?: string;
   soundcloud?: string;
-}) {
+}): number {
   const fields = [
-    profile?.first_name,
-    profile?.last_name,
-    profile?.username,
-    profile?.avatar_url,
-    profile?.bio,
-    profile?.phone,
-    profile?.address_street,
-    profile?.address_city,
-    profile?.address_zip,
-    profile?.address_country
+    { value: profile?.first_name, required: true },
+    { value: profile?.last_name, required: true },
+    { value: profile?.username, required: true },
+    { value: profile?.avatar_url, required: true },
+    { value: profile?.bio, required: true },
+    { value: profile?.phone, required: true },
+    { value: profile?.address_city, required: true } // Wieder erforderlich
   ];
 
-  // Nur vorhandene Social Media Links zählen
-  const activeSocialFields = Object.values(socialLinks).filter(link => link !== undefined && link !== '');
-
-  // Basis-Felder (80% des Gesamtprozentsatzes)
-  const filledFields = fields.filter(field => !!field).length;
-  const basePercentage = (filledFields / fields.length) * 80;
-
-  // Wenn mindestens ein Social Media Profil aktiv ist, vergebe volle 20%
-  const socialPercentage = activeSocialFields.length > 0 ? 20 : 0;
-
-  return Math.min(100, Math.round(basePercentage + socialPercentage));
+  const requiredFields = fields.filter(field => field.required);
+  const filledRequiredFields = requiredFields.filter(field => !!field.value);
+  return Math.round((filledRequiredFields.length / requiredFields.length) * 100);
 }
 
 export function calculateCategoryCompletion(fields: ProfileField[]): number {
@@ -134,9 +120,9 @@ export function getNextRequiredField(profileFields: { [key: string]: ProfileFiel
 
 export function generateUsername(firstName: string, lastName: string): string {
   return `${firstName.toLowerCase()}-${lastName.toLowerCase()}`
-    .replace(/[^a-z0-9-]/g, '') // Entferne alle nicht-alphanumerischen Zeichen außer Bindestriche
-    .replace(/-+/g, '-') // Ersetze mehrere aufeinanderfolgende Bindestriche durch einen
-    .replace(/^-|-$/g, ''); // Entferne Bindestriche am Anfang und Ende
+    .replace(/[^a-z0-9-]/g, '')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
 }
 
 export async function checkAndAssignDJBadge(

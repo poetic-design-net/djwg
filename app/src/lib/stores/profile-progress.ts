@@ -21,31 +21,19 @@ interface RequiredField {
     'last_name' | 
     'username' | 
     'bio' | 
-    'avatar_url' | 
-    'address_street' | 
-    'address_number' | 
-    'address_city' | 
-    'address_zip' | 
-    'address_country' | 
-    'website' | 
-    'phone'
-  >;
+    'avatar_url' |
+     'phone' |
+     'address_city' // Hinzufügen von address_city zum Typ
+   >;
   label: string;
 }
 
-// Helper function to calculate which fields are required
 const requiredFields: RequiredField[] = [
   { key: 'first_name', label: 'Basis-Informationen: Vorname' },
   { key: 'last_name', label: 'Basis-Informationen: Nachname' },
   { key: 'username', label: 'Basis-Informationen: Username' },
   { key: 'bio', label: 'Über mich: Bio' },
   { key: 'avatar_url', label: 'Basis-Informationen: Profilbild' },
-  { key: 'address_street', label: 'Adresse: Straße' },
-  { key: 'address_number', label: 'Adresse: Hausnummer' },
-  { key: 'address_city', label: 'Adresse: Stadt' },
-  { key: 'address_zip', label: 'Adresse: PLZ' },
-  { key: 'address_country', label: 'Adresse: Land' },
-  { key: 'website', label: 'Kontakt: Website' },
   { key: 'phone', label: 'Kontakt: Telefon' }
 ];
 
@@ -59,22 +47,17 @@ export function calculateProfileCompletion(
   if (!profile) return 0;
 
   let fieldsCompleted = 0;
-  let totalFields = requiredFields.length;
+  const actualRequiredFields: RequiredField[] = [
+    { key: 'first_name', label: 'Basis-Informationen: Vorname' },
+    { key: 'last_name', label: 'Basis-Informationen: Nachname' },
+    { key: 'username', label: 'Basis-Informationen: Username' },
+    { key: 'avatar_url', label: 'Basis-Informationen: Profilbild' },
+    { key: 'phone', label: 'Kontakt: Telefon' },
+    { key: 'address_city', label: 'Adresse: Stadt' } // Wieder hinzugefügt
+  ];
 
-  // Check required fields
-  for (const field of requiredFields) {
-    if (profile[field.key]) {
-      fieldsCompleted++;
-    }
-  }
-
-  // Add social media fields
-  totalFields += 3; // Add Instagram, Facebook, SoundCloud
-  if (socialLinks.instagram) fieldsCompleted++;
-  if (socialLinks.facebook) fieldsCompleted++;
-  if (socialLinks.soundcloud) fieldsCompleted++;
-
-  return Math.round((fieldsCompleted / totalFields) * 100);
+  fieldsCompleted = actualRequiredFields.filter(field => !!profile[field.key]).length;
+  return Math.round((fieldsCompleted / actualRequiredFields.length) * 100);
 }
 
 // Find the next missing field
@@ -82,18 +65,20 @@ function findNextMissingField(
   profile: Partial<Profile>,
   socialLinks: Partial<SocialLinks>
 ): string | null {
-  // Check required fields first
-  for (const field of requiredFields) {
+  const actualRequiredFields: RequiredField[] = [
+    { key: 'first_name', label: 'Basis-Informationen: Vorname' },
+    { key: 'last_name', label: 'Basis-Informationen: Nachname' },
+    { key: 'username', label: 'Basis-Informationen: Username' },
+    { key: 'avatar_url', label: 'Basis-Informationen: Profilbild' },
+    { key: 'phone', label: 'Kontakt: Telefon' },
+    { key: 'address_city', label: 'Adresse: Stadt' } // Wieder hinzugefügt
+  ];
+
+  for (const field of actualRequiredFields) {
     if (!profile[field.key]) {
       return field.label;
     }
   }
-
-  // Check social links
-  if (!socialLinks.instagram) return 'Kontakt: Instagram';
-  if (!socialLinks.facebook) return 'Kontakt: Facebook';
-  if (!socialLinks.soundcloud) return 'Kontakt: SoundCloud';
-
   return null;
 }
 
@@ -103,7 +88,7 @@ const createProfileProgressStore = () => {
     percentage: 0,
     nextRequiredField: null,
     fieldsCompleted: 0,
-    totalFields: requiredFields.length + 3, // +3 for social media
+    totalFields: 6, // Jetzt 6 Pflichtfelder
     lastPercentage: 0
   };
 
@@ -118,15 +103,15 @@ const createProfileProgressStore = () => {
       const percentage = calculateProfileCompletion(profile, socialLinks);
       const nextRequiredField = findNextMissingField(profile, socialLinks);
       
-      // Count completed fields
-      let fieldsCompleted = 0;
-      for (const field of requiredFields) {
-        if (profile[field.key]) fieldsCompleted++;
-      }
-      if (socialLinks.instagram) fieldsCompleted++;
-      if (socialLinks.facebook) fieldsCompleted++;
-      if (socialLinks.soundcloud) fieldsCompleted++;
-      
+      const actualRequiredFields: RequiredField[] = [
+        { key: 'first_name', label: 'Basis-Informationen: Vorname' },
+        { key: 'last_name', label: 'Basis-Informationen: Nachname' },
+        { key: 'username', label: 'Basis-Informationen: Username' },
+        { key: 'avatar_url', label: 'Basis-Informationen: Profilbild' },
+        { key: 'phone', label: 'Kontakt: Telefon' },
+        { key: 'address_city', label: 'Adresse: Stadt' } // Wieder hinzugefügt
+      ];
+      const fieldsCompleted = actualRequiredFields.filter(field => !!profile[field.key]).length;
       const newPercentage = calculateProfileCompletion(profile, socialLinks);
       const lastPercentage = initialState.lastPercentage;
       
@@ -148,7 +133,7 @@ const createProfileProgressStore = () => {
         percentage: newPercentage,
         nextRequiredField,
         fieldsCompleted,
-        totalFields: requiredFields.length + 3,
+        totalFields: actualRequiredFields.length,
         lastPercentage: newPercentage
       });
     },

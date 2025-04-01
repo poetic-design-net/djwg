@@ -1,5 +1,6 @@
 <script lang="ts">
   import { calculateProfileCompletion, normalizeUserMetadata } from '$lib/utils/profile-utils';
+  import { generateSocialMediaLinks } from '$lib/utils/social-media-utils';
   import { profileProgress } from '$lib/stores/profile-progress';
   import { toasts } from '$lib/stores/toast';
   import OptimizedAvatar from '$lib/components/OptimizedAvatar.svelte';
@@ -222,17 +223,17 @@
                   class:overflow-hidden={!isSocialExpanded}
                 >
                   {#if profile.social_links.instagram}
-                    <a href={profile.social_links.instagram} target="_blank" class="block text-green-500 hover:text-green-400">
+                    <a href={generateSocialMediaLinks(profile.social_links.instagram, 'instagram')} target="_blank" class="block text-green-500 hover:text-green-400">
                       Instagram
                     </a>
                   {/if}
                   {#if profile.social_links.facebook}
-                    <a href={profile.social_links.facebook} target="_blank" class="block text-green-500 hover:text-green-400">
+                    <a href={generateSocialMediaLinks(profile.social_links.facebook, 'facebook')} target="_blank" class="block text-green-500 hover:text-green-400">
                       Facebook
                     </a>
                   {/if}
                   {#if profile.social_links.soundcloud}
-                    <a href={profile.social_links.soundcloud} target="_blank" class="block text-green-500 hover:text-green-400">
+                    <a href={generateSocialMediaLinks(profile.social_links.soundcloud, 'soundcloud')} target="_blank" class="block text-green-500 hover:text-green-400">
                       Soundcloud
                     </a>
                   {/if}
