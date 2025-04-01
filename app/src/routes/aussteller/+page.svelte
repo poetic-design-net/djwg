@@ -4,6 +4,7 @@
   import ContactForm from '$lib/components/aussteller/ContactForm.svelte';
   import Pricing from '$lib/components/Pricing.svelte';
   import type { Ticket } from '$lib/types/ticket';
+  import Areas from '$lib/components/Areas.svelte';
   import type { Area } from '$lib/types/area'; // Platzhalter, muss evtl. angepasst werden // Ticket und Area Typen importieren
 
 
@@ -129,31 +130,10 @@
       </div> 
 
       <!-- Areas Section -->
-      <div class="my-20">
-        <div class="text-center mb-12">
-          <h2 class="text-3xl font-medium text-white mb-4">Unsere Areas</h2>
-          <p class="text-gray-300">Entdecke die verschiedenen Bereiche des DJ Workshops</p>
-        </div>
-
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {#if areas && areas.length > 0}
-            {#each areas as area (area._id)}
-              <!-- Messe Area -->
-              <div class="p-8 rounded-2xl border border-gray-700 hover:border-green-400 backdrop-blur flex flex-col">
-                <h3 class="text-xl font-medium text-white mb-4">{area.title}</h3>
-                <p class="text-gray-300 flex-grow">{area.description}</p>
-                {#if area.button?.text && area.button?.url}
-                  <a
-                    href={area.button.url}
-                    target="_blank"
-                    class="mt-4 w-full px-6 py-3 text-center font-medium tracking-2xl border border-green-400 bg-green-400 hover:bg-green-500 text-black rounded-full transition duration-300"
-                  >
-                    {area.button.text}
-                  </a>
-                {/if}
-              </div>
-            {/each}
-          {/if}
+      <div class="pb-20 bg-black/40">
+        {#if areas && areas.length > 0}
+          <Areas {areas} showButton={false} />
+        {/if}
         </div>
     
       <!-- Pricing Section -->
