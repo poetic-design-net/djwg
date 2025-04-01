@@ -15,10 +15,6 @@
   export let profile: Profile | null;
   export let onEdit: () => void;
 
-  let isSocialExpanded = false;
-  let isBasicInfoExpanded = false;
-  let isAdditionalInfoExpanded = false;
-
   const supabase = getContext<SupabaseClient>('supabase');
 
   // Normalisiere die Benutzerdaten
@@ -57,9 +53,9 @@
   }
 </script>
 
-<div class="relative rounded-3xl p-8 border border-gray-800 overflow-hidden">
-  <div class="absolute inset-0 mix-blend-overlay "></div>
-  <div class="relative">
+<div class="relative rounded-3xl p-8 border border-gray-800 overflow-hidden h-full min-h-full flex flex-col">
+  <div class="absolute inset-0 mix-blend-overlay"></div>
+  <div class="relative flex-grow flex flex-col">
     <div class="flex justify-between items-start mb-6">
       <h2 class="text-2xl font-medium text-white">Profile Information</h2>
       <button
@@ -119,128 +115,81 @@
         </div>
       {/if}
 
-      <!-- Basic Info Section -->
-      <div class="flex items-center space-x-4">
-        <button 
-          class="bg-gray-950 rounded-full p-4 hover:bg-gray-900 transition-colors duration-200" 
-          on:click={() => isBasicInfoExpanded = !isBasicInfoExpanded}
-          aria-expanded={isBasicInfoExpanded}
-          aria-label="Basis-Informationen anzeigen/ausblenden"
-        >
-          <div class="transform transition-transform duration-200" class:rotate-180={!isBasicInfoExpanded}>
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </div>
-        </button>
-        <div class="flex-1">
-          <p class="text-gray-400">Basis-Informationen <span class="text-sm">(klicken zum Auf-/Zuklappen)</span></p>
-        </div>
+      <div class="mt-6 mb-4">
+        <h3 class="text-gray-400 text-lg">Basis-Informationen</h3>
       </div>
 
-      {#if isBasicInfoExpanded}
-        <div class="space-y-4 pl-16 mt-4">
-          <!-- Name -->
+      <div class="space-y-4 mt-4">
+        <!-- Name -->
+        <div class="flex items-center space-x-4">
+          <div class="bg-gray-950 rounded-full p-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div>
+            <p class="text-gray-400">Name</p>
+            <p class="text-white font-medium">
+              {#if firstName || lastName}
+                {firstName} {lastName}
+              {:else}
+                Nicht angegeben
+              {/if}
+            </p>
+          </div>
+        </div>
+
+        <!-- Bio -->
+        {#if profile?.bio}
           <div class="flex items-center space-x-4">
             <div class="bg-gray-950 rounded-full p-4">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
               </svg>
             </div>
             <div>
-              <p class="text-gray-400">Name</p>
-              <p class="text-white font-medium">
-                {#if firstName || lastName}
-                  {firstName} {lastName}
-                {:else}
-                  Nicht angegeben
-                {/if}
-              </p>
+              <p class="text-gray-400">Bio</p>
+              <p class="text-white font-medium">{profile.bio}</p>
             </div>
           </div>
-
-          <!-- Bio -->
-          {#if profile?.bio}
-            <div class="flex items-center space-x-4">
-              <div class="bg-gray-950 rounded-full p-4">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
-                </svg>
-              </div>
-              <div>
-                <p class="text-gray-400">Bio</p>
-                <p class="text-white font-medium">{profile.bio}</p>
-              </div>
-            </div>
-          {/if}
-        </div>
-      {/if}
-
-      <!-- Additional Info Section -->
-      <div class="flex items-center space-x-4 mt-4">
-        <button 
-          class="bg-gray-950 rounded-full p-4 hover:bg-gray-900 transition-colors duration-200" 
-          on:click={() => isAdditionalInfoExpanded = !isAdditionalInfoExpanded}
-          aria-expanded={isAdditionalInfoExpanded}
-          aria-label="Weitere Informationen anzeigen/ausblenden"
-        >
-          <div class="transform transition-transform duration-200" class:rotate-180={!isAdditionalInfoExpanded}>
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </div>
-        </button>
-        <div class="flex-1">
-          <p class="text-gray-400">Weitere Informationen <span class="text-sm">(klicken zum Auf-/Zuklappen)</span></p>
-        </div>
+        {/if}
       </div>
 
-      {#if isAdditionalInfoExpanded}
-        <div class="space-y-4 pl-16 mt-4">
-          <!-- Social Links -->
-          {#if profile?.social_links}
-            <div class="flex items-center space-x-4">
-              <button 
-                class="bg-gray-950 rounded-full p-4 hover:bg-gray-900 transition-colors duration-200" 
-                on:click={() => isSocialExpanded = !isSocialExpanded}
-                aria-expanded={isSocialExpanded}
-                aria-label="Social Media Links anzeigen/ausblenden"
-              >
-                <div class="transform transition-transform duration-200" class:rotate-180={!isSocialExpanded}>
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-              </button>
-              <div class="flex-1">
-                <p class="text-gray-400 mb-2">Social Media <span class="text-sm">(klicken zum Auf-/Zuklappen)</span></p>
-                <div 
-                  class="space-y-2 transition-all duration-300"
-                  class:h-auto={isSocialExpanded}
-                  class:h-0={!isSocialExpanded}
-                  class:opacity-100={isSocialExpanded}
-                  class:opacity-0={!isSocialExpanded}
-                  class:overflow-hidden={!isSocialExpanded}
-                >
-                  {#if profile.social_links.instagram}
-                    <a href={generateSocialMediaLinks(profile.social_links.instagram, 'instagram')} target="_blank" class="block text-green-500 hover:text-green-400">
-                      Instagram
-                    </a>
-                  {/if}
-                  {#if profile.social_links.facebook}
-                    <a href={generateSocialMediaLinks(profile.social_links.facebook, 'facebook')} target="_blank" class="block text-green-500 hover:text-green-400">
-                      Facebook
-                    </a>
-                  {/if}
-                  {#if profile.social_links.soundcloud}
-                    <a href={generateSocialMediaLinks(profile.social_links.soundcloud, 'soundcloud')} target="_blank" class="block text-green-500 hover:text-green-400">
-                      Soundcloud
-                    </a>
-                  {/if}
-                </div>
+      <div class="mt-6 mb-4">
+        <h3 class="text-gray-400 text-lg">Weitere Informationen</h3>
+      </div>
+
+      <div class="space-y-4 mt-4">
+        <!-- Social Links -->
+        {#if profile?.social_links}
+          <div class="flex items-center space-x-4">
+            <div class="bg-gray-950 rounded-full p-4">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+              </svg>
+            </div>
+            <div class="flex-1">
+              <p class="text-gray-400 mb-2">Social Media</p>
+              <div class="space-y-2">
+                {#if profile.social_links.instagram}
+                  <a href={generateSocialMediaLinks(profile.social_links.instagram, 'instagram')} target="_blank" class="block text-green-500 hover:text-green-400">
+                    Instagram
+                  </a>
+                {/if}
+                {#if profile.social_links.facebook}
+                  <a href={generateSocialMediaLinks(profile.social_links.facebook, 'facebook')} target="_blank" class="block text-green-500 hover:text-green-400">
+                    Facebook
+                  </a>
+                {/if}
+                {#if profile.social_links.soundcloud}
+                  <a href={generateSocialMediaLinks(profile.social_links.soundcloud, 'soundcloud')} target="_blank" class="block text-green-500 hover:text-green-400">
+                    Soundcloud
+                  </a>
+                {/if}
               </div>
             </div>
-          {/if}
+          </div>
+        {/if}
 
           <!-- Website -->
           {#if profile?.website}
@@ -272,7 +221,6 @@
             </div>
           </div>
         </div>
-      {/if}
-    </div>
+      </div>
   </div>
 </div>

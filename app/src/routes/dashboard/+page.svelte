@@ -105,15 +105,17 @@
       <!-- Profile Section -->
     
         
- <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+ <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
+          <div class="md:col-span-4">
           <ProfileSection
             {user}
             {profile}    
             onEdit={() => showEditProfile = true}
           />
+          </div>
           
           <!-- Badges Section -->
-          <div class="relative rounded-xl p-6 border border-gray-800 overflow-hidden">
+          <div class="relative rounded-xl p-6 border border-gray-800 overflow-hidden md:col-span-8">
             <div class="absolute inset-0 mix-blend-overlay noise-filter"></div>
             <div class="relative">
               <h3 class="text-xl font-medium text-white mb-4">Deine Badges</h3>
