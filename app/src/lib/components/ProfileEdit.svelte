@@ -124,12 +124,8 @@
         username: profile.username,
         avatar_url: profile.avatar_url,
         bio: profile.bio,
-        website: profile.website,
-        address_street: profile.address_street,
-        address_number: profile.address_number,
         address_city: profile.address_city,
-        address_zip: profile.address_zip,
-        address_country: profile.address_country,
+        website: profile.website,
         phone: profile.phone,
         social_links: {
           ...(isInstagramEnabled && instagram ? { instagram } : {}),

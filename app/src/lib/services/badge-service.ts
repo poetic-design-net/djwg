@@ -125,7 +125,7 @@ export async function manageBadgesRealtime(
                 badgeStore.addUserBadge(badge, userId);
             }
         } 
-        // If profile is incomplete but user has Level 1 badge, remove it and Level 2
+        // If profile is incomplete but user has Level 1 badge, remove it
         else if (!shouldHaveBadge && hasBadge) {
             // Entferne Level 1
             const { error: removeError } = await supabase
@@ -144,22 +144,11 @@ export async function manageBadgesRealtime(
             } else {
                 console.log('🎯 Badge Service: Level 1 badge removed');
                 badgeStore.removeUserBadge(DJ_LEVEL_1_ID);
-
-                // Wenn Level 1 entfernt wird, muss auch Level 2 entfernt werden
-                const { error: removeLevel2Error } = await supabase
-                    .from('user_badges')
-                    .delete()
-                    .eq('user_id', userId)
-                    .eq('badge_id', DJ_LEVEL_2_ID);
-
-                if (!removeLevel2Error) {
-                    console.log('🎯 Badge Service: Level 2 badge removed');
-                    badgeStore.removeUserBadge(DJ_LEVEL_2_ID);
-                }
+                // Level 2 Badge wird NICHT mehr automatisch entfernt
             }
         }
 
-        // Prüfe Level 2 nur, wenn Level 1 vorhanden ist
+        // Prüfe Level 2 nur, wenn Level 1 vorhanden ist (optional, kann entfernt werden, wenn Level 2 komplett unabhängig sein soll)
         if (hasBadge) {
             const { data: level2Badge } = await supabase
                 .from('user_badges')

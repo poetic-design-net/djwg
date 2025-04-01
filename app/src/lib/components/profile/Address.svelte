@@ -25,56 +25,19 @@
         clip-rule="evenodd"
       />
     </svg>
-    <h3 class="text-lg font-medium">Adresse {showAddress ? 'ausblenden' : 'anzeigen'}</h3>
+    <h3 class="text-lg font-medium">Wohnort {showAddress ? 'ausblenden' : 'anzeigen'}</h3>
   </button>
 
   {#if showAddress}
     <div class="space-y-4 animate-fadeIn">
       <div>
-        <label for="street" class="block text-sm font-medium text-gray-400 mb-2">Straße</label>
+        <label for="city" class="block text-sm font-medium text-gray-400 mb-2">Stadt</label>
         <input
           type="text"
-          id="street"
-          bind:value={profile.address_street}
+          id="city"
+          bind:value={profile.address_city}
           class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500"
-        />
-      </div>
-      <div>
-        <label for="number" class="block text-sm font-medium text-gray-400 mb-2">Hausnummer</label>
-        <input
-          type="text"
-          id="number"
-          bind:value={profile.address_number}
-          class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500"
-        />
-      </div>
-      <div class="grid grid-cols-3 gap-4">
-        <div class="col-span-1">
-          <label for="zip" class="block text-sm font-medium text-gray-400 mb-2">PLZ</label>
-          <input
-            type="text"
-            id="zip"
-            bind:value={profile.address_zip}
-            class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500"
-          />
-        </div>
-        <div class="col-span-2">
-          <label for="city" class="block text-sm font-medium text-gray-400 mb-2">Stadt</label>
-          <input
-            type="text"
-            id="city"
-            bind:value={profile.address_city}
-            class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500"
-          />
-        </div>
-      </div>
-      <div>
-        <label for="country" class="block text-sm font-medium text-gray-400 mb-2">Land</label>
-        <input
-          type="text"
-          id="country"
-          bind:value={profile.address_country}
-          class="w-full px-4 py-2 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500"
+          placeholder="Dein Wohnort"
         />
       </div>
     </div>
