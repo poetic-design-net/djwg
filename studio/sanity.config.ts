@@ -4,6 +4,7 @@ import {structureTool} from 'sanity/structure'
 import {presentationTool} from 'sanity/presentation'
 import {media} from 'sanity-plugin-media'
 import {assist} from '@sanity/assist'
+import {simplerColorInput} from 'sanity-plugin-simpler-color-input'
 import {documentInternationalization} from '@sanity/document-internationalization'
 import generateTailwindPlugin from './documentActions/generateTailwind'
 
@@ -33,6 +34,7 @@ const config = defineConfig({
     generateTailwindPlugin,
     media(),
     assist(),
+    simplerColorInput(),
     documentInternationalization({
       supportedLanguages: [
         {id: 'de', title: 'Deutsch'},
