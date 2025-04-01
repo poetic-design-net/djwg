@@ -3,7 +3,7 @@
   import PortableTextContent from '$lib/components/PortableTextContent.svelte';
   import type { PortableTextBlock } from '@portabletext/types';
 
-  export let description: PortableTextBlock[];
+  export let description: PortableTextBlock[] | string = [];
   export let features: string[] = [];
   export let highlights: {
     title: string;
@@ -11,38 +11,38 @@
     icon: string;
   }[] = [];
 
-  const maxWords = 15; // Kürzere Wortanzahl für Highlights
   let expandedHighlights: Record<number, boolean> = {};
+  let contentRefs: HTMLElement[] = [];
 
-  function getDisplayText(text: string, index: number): string {
-    const words = text.split(/\s+/);
-    const hasMore = words.length > maxWords;
-    return hasMore && !expandedHighlights[index]
-      ? words.slice(0, maxWords).join(' ') + '...'
-      : text;
-  }
-
-  function hasMore(text: string): boolean {
-    return text.split(/\s+/).length > maxWords;
+  function hasOverflow(element: HTMLElement | null): boolean {
+    if (!element) return false;
+    return element.scrollHeight > 100; // 100px ist die max-height
   }
 
   function handleExpandClick(index: number) {
     expandedHighlights = {
       ...expandedHighlights,
-      [index]: !expandedHighlights[index]
+      [index]: !expandedHighlights[index],
     };
   }
+
 </script>
 
 <div class="container mx-auto px-4 py-20">
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-16">
+  <div class="grid grid-cols-1 md:grid-cols-12 gap-16">
     <!-- Left Column -->
-    <div>
+    <div class="md:col-span-8 md:sticky md:top-24 md:self-start">
       <h2 class="text-4xl text-white mb-6">Über das Event</h2>
-      <PortableTextContent value={description} className="text-gray-300" />
+      {#if typeof description === 'string'}
+        <div class="text-gray-300">
+          {description}
+        </div>
+      {:else}
+        <PortableTextContent value={description} className="text-gray-300" />
+      {/if}
 
       {#if features.length > 0}
-        <h3 class="text-2xl text-white mb-4">Was dich erwartet</h3>
+        <h3 class="text-2xl text-white mt-8 mb-4">Was dich erwartet</h3>
         <ul class="space-y-4">
           {#each features as feature}
             <li class="flex items-start">
@@ -57,7 +57,7 @@
     </div>
 
     <!-- Right Column -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+    <div class="md:col-span-4 grid grid-cols-1 gap-4 auto-rows-fr">
       {#each highlights as highlight, i}
         <div
           class="p-6 bg-black/40 border border-gray-800 rounded-3xl hover:border-green-500 transition-all duration-300"
@@ -71,36 +71,40 @@
           <h4 class="text-xl text-white mb-2">{highlight.title}</h4>
           
           <div class="relative text-gray-300">
-           {#if hasMore(highlight.description)}
-             <div
-               class="cursor-pointer hover:text-gray-200 transition-colors duration-200"
-               on:click={() => handleExpandClick(i)}
-               role="button"
-               tabindex="0"
-             >
-               <div class="overflow-hidden">
-                 {#key expandedHighlights[i]}
-                   <p transition:slide|local={{duration: 0, axis: 'y', easing: t => t}}>
-                     {expandedHighlights[i] ? highlight.description : getDisplayText(highlight.description, i)}
-                   </p>
-                 {/key}
-               </div>
-               <div class="flex items-center gap-1 mt-2 text-green-500 hover:text-green-400 text-sm transition-colors duration-200">
-                 <span>{expandedHighlights[i] ? 'Weniger anzeigen' : 'Mehr anzeigen'}</span>
-                 <svg
-                   class="w-4 h-4 transition-transform duration-200"
-                   class:rotate-180={expandedHighlights[i]}
-                   fill="none"
-                   stroke="currentColor"
-                   viewBox="0 0 24 24"
-                 >
-                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                 </svg>
-               </div>
-             </div>
-           {:else}
-             <p>{highlight.description}</p>
-           {/if}
+            <div
+              class="overflow-hidden"
+              class:max-h-[100px]={!expandedHighlights[i]}
+              class:max-h-none={expandedHighlights[i]}
+              class:transition-all={true}
+              class:duration-300={true}
+              bind:this={contentRefs[i]}
+            >
+              <p>{highlight.description}</p>
+            </div>
+            
+            {#if hasOverflow(contentRefs[i])}
+              <div
+                class="flex items-center gap-1 mt-2 text-green-500 hover:text-green-400 text-sm transition-colors duration-200 cursor-pointer"
+                on:click={() => handleExpandClick(i)}
+                on:keydown={(e) => e.key === 'Enter' && handleExpandClick(i)}
+                role="button"
+                tabindex="0"
+              >
+                <span>{expandedHighlights[i] ? 'Weniger anzeigen' : 'Mehr anzeigen'}</span>
+                <svg
+                  class="w-4 h-4 transition-transform duration-200"
+                  class:rotate-180={expandedHighlights[i]}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path 
+                    stroke-linecap="round" 
+                    stroke-linejoin="round" 
+                    stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            {/if}
           </div>
         </div>
       {/each}
