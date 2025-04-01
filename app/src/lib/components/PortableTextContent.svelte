@@ -16,7 +16,7 @@
 </script>
 
 {#if value}
-  <div class="prose prose-invert prose-xl max-w-none [&>strong]:font-normal [&>em]:italic [&>a]:text-blue-500 hover:[&>a]:underline">
+  <div class="prose prose-invert prose-xl max-w-none [&>*]:text-inherit [&>strong]:font-normal [&>em]:italic [&>a]:text-blue-500 hover:[&>a]:underline {className}">
     <PortableText {value} {components} />
   </div>
 {/if}
