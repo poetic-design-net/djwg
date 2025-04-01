@@ -232,7 +232,7 @@ export default defineType({
         {
           name: 'description',
           title: 'Description',
-          type: 'text'
+          type: 'blockContent'
         },
         {
           name: 'image',
