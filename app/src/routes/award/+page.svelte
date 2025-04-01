@@ -2,6 +2,7 @@
   import type { PageData } from './$types';
   import type { Award } from '$lib/types/award';
   import type { SanityImageSource } from '$lib/sanity/image';
+  import type { PortableTextBlock } from '@portabletext/types';
   import HeroStart from '$lib/components/hero/start.svelte';
   import ArtistsSlider from '$lib/components/ArtistsSlider.svelte';
   import EvaluationCriteria from '$lib/components/award/EvaluationCriteria.svelte';
@@ -13,6 +14,18 @@
   $: ({ award } = data);
   $: console.log('Award data in component:', award);
   $: heroBackgroundImages = award?.hero?.backgroundImages as SanityImageSource[] || [];
+  
+  // Konvertierung der readonly Arrays zu regulären Arrays
+  $: evaluationCriteria = award?.evaluationCriteria ? [...award.evaluationCriteria] : [];
+  $: artists = award?.artistsSection?.artists ? [...award.artistsSection.artists] : [];
+  $: introText = award?.introText ? [...award.introText] as PortableTextBlock[] : [];
+  
+  // Button-Typen verarbeiten
+  $: primaryButton = award?.hero?.primaryButton as { text: string; link: string };
+  $: secondaryButton = award?.hero?.secondaryButton as { text: string; link: string };
+  
+  // Optionale Buttons überprüfen
+  $: buttonsValid = primaryButton?.text && primaryButton?.link && secondaryButton?.text && secondaryButton?.link;
 </script>
 
 {#if award !== null}
@@ -22,8 +35,8 @@
       subtitle={award.hero.subheading}
       eyebrow={award.hero.eyebrow}
       backgroundImages={heroBackgroundImages}
-      primaryButton={award.hero.primaryButton}
-      secondaryButton={award.hero.secondaryButton}
+      primaryButton={primaryButton}
+      secondaryButton={secondaryButton}
     />
   {/if}
 
@@ -31,9 +44,9 @@
     <div class="bg-black">
       <div class="container mx-auto px-4 py-24">
         <div class="max-w-4xl mx-auto">
-          <h2 class="text-4xl lg:text-5xl font-medium mb-12 text-gray-200">Deine Chance, die Bühne zu erobern</h2>
-          <div class="prose prose-lg text-lg mx-auto prose-headings:font-medium prose-headings:text-gray-100 prose-p:text-gray-200">
-            <PortableTextContent value={award.introText} />
+          <h2 class="text-4xl lg:text-5xl font-medium mb-12 text-gray-50">Deine Chance, die Bühne zu erobern</h2>
+          <div class="text-gray-200">
+            <PortableTextContent value={introText} />
           </div>
           <div class="mt-12 flex justify-center gap-6">
             <a
@@ -55,7 +68,7 @@
   {/if}
 
   {#if award.ticket}
-    <div id="ticket" class="bg-black">
+    <div id="ticket" class="bg-black max-w-2xl mx-auto">
       <Pricing
         selectedTicket={award.ticket}
         title="Sichere dir dein Ticket"
@@ -72,7 +85,7 @@
         liveBattleTitle={award.liveBattleTitle}
         preselectionCriteria={award.preselectionCriteria}
         totalProgressBar={award.totalProgressBar}
-        evaluationCriteria={award.evaluationCriteria}
+        evaluationCriteria={evaluationCriteria}
       />
     </div>
   {/if}
@@ -80,7 +93,7 @@
   {#if award.artistsSection?.artists && award.artistsSection.artists.length > 0}
     <div class="bg-black py-24">
       <ArtistsSlider
-        artists={award.artistsSection.artists}
+        artists={artists}
         isLineupRevealed={award.artistsSection.isLineupRevealed}
         title={award.artistsSection.title}
         subtitle={award.artistsSection.subtitle}
