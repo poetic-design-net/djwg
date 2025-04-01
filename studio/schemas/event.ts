@@ -90,7 +90,7 @@ export default defineType({
     defineField({
       name: 'description',
       title: 'Description',
-      type: 'text',
+      type: 'blockContent', // Geändert von 'text' zu 'blockContent'
       validation: Rule => Rule.required(),
       group: 'details'
     }),

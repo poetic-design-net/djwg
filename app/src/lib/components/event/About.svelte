@@ -1,7 +1,9 @@
 <script lang="ts">
   import { fade, slide } from 'svelte/transition';
+  import PortableTextContent from '$lib/components/PortableTextContent.svelte';
+  import type { PortableTextBlock } from '@portabletext/types';
 
-  export let description: string;
+  export let description: PortableTextBlock[];
   export let features: string[] = [];
   export let highlights: {
     title: string;
@@ -37,7 +39,7 @@
     <!-- Left Column -->
     <div>
       <h2 class="text-4xl text-white mb-6">Über das Event</h2>
-      <p class="text-gray-300 mb-8">{description}</p>
+      <PortableTextContent value={description} className="text-gray-300" />
 
       {#if features.length > 0}
         <h3 class="text-2xl text-white mb-4">Was dich erwartet</h3>
