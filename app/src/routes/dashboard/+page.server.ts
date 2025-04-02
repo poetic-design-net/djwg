@@ -4,6 +4,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { isAdmin } from '$lib/config/admin.server';
 import { client } from '$lib/sanity/client';
 import { onlineTalksQuery } from '$lib/sanity/queries/onlineTalks';
+import { getAward } from '$lib/sanity/queries/award';
 import { videosQuery, type Video } from '$lib/sanity/queries/videos';
 import type { User, Profile } from '$lib/types/profile';
 import type { LoaderLocals } from '@sanity/svelte-loader';
@@ -48,6 +49,9 @@ export const load: PageServerLoad = async ({ locals, depends }) => {
 
         // Fetch online talks
         const onlineTalks = await client.fetch(onlineTalksQuery);
+        
+        // Fetch award data
+        const award = await getAward();
 
         // Fetch videos from Sanity with initial data
         const rawVideos = await typedLocals.loadQuery<Video[]>(videosQuery);
@@ -67,6 +71,7 @@ export const load: PageServerLoad = async ({ locals, depends }) => {
             },
             session,
             onlineTalks,
+            award: award.data,
             isAdmin: isUserAdmin,
             profile,
             videos: {

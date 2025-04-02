@@ -2,7 +2,7 @@
  <div class="relative rounded-3xl p-8 border border-gray-800/40 overflow-hidden">
     <div class="absolute inset-0 mix-blend-overlay noise-filter"></div>
     <div class="relative">
-      <h2 class="text-2xl font-medium text-white mb-6">Webmaster Kontakt</h2>
+      <h2 class="text-2xl font-medium text-white mb-6">Kontakt</h2>
       <p class="text-gray-400 mb-4">Möchtest du eine professionelle Website für dein Unternehmen oder persönliches Projekt? Ich helfe dir dabei, deine Ideen zum Leben zu erwecken!</p>
       <p class="text-gray-400 mb-2">Frederik:</p>
       <ul class="list-disc pl-5 text-gray-400 mb-4">

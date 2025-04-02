@@ -1,4 +1,5 @@
 import blockContent from './blockContent'
+import awardUpload from './awardUpload'
 import award from './award'
 import ticket from './ticket'
 import pricingSection from './objects/pricingSection'
@@ -59,6 +60,7 @@ import merchSection from './objects/merchSection'
 export const schemaTypes = [
   // Documents
   mediaUpload,
+  awardUpload,
   area, // Area-Schema hinzufügen
   ticket,
   post,
