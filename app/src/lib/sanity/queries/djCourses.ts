@@ -1,23 +1,28 @@
 import groq from 'groq';
-import type { PortableTextBlock } from '@portabletext/types';
+import type { Image } from '@sanity/types';
 
 export interface DJCourse {
   _id: string;
+  _type: 'djCourse';
   title: string;
   description?: string;
-  level: 'beginner' | 'intermediate' | 'advanced';
-  prerequisites?: string[];
+  slug: {
+    current: string;
+  };
+  coverImage?: {
+    _type: 'image';
+    asset: {
+      _type: 'reference';
+      _ref: string;
+    };
+  } & Image;
   chapters: Array<{
     title: string;
     lessons: Array<{
       title: string;
       description?: string;
       videoUrl: string;
-      duration: string;
-      chapters?: Array<{
-        title: string;
-        timestamp: number;
-      }>;
+      duration?: string;
       resources?: Array<{
         title: string;
         fileUrl: string;
@@ -26,56 +31,52 @@ export interface DJCourse {
   }>;
 }
 
-export const djCourseQuery = groq`
-  *[_type == "djCourse"] {
-    _id,
+export const djCourseQuery = groq`*[_type == "djCourse"] {
+  _id,
+  _type,
+  title,
+  description,
+  slug,
+  coverImage {
+    ...,
+    asset->
+  },
+  chapters[] {
     title,
-    description,
-    level,
-    prerequisites,
-    chapters[] {
+    lessons[] {
       title,
-      lessons[] {
+      description,
+      videoUrl,
+      duration,
+      resources[] {
         title,
-        description,
-        videoUrl,
-        duration,
-        chapters[] {
-          title,
-          timestamp
-        },
-        resources[] {
-          title,
-          "fileUrl": file.asset->url
-        }
+        fileUrl
       }
     }
   }
-`;
+}`;
 
-export const djCourseByIdQuery = groq`
-  *[_type == "djCourse" && _id == $id][0] {
-    _id,
+export const djCourseBySlugQuery = groq`*[_type == "djCourse" && slug.current == $slug][0] {
+  _id,
+  _type,
+  title,
+  description,
+  slug,
+  coverImage {
+    ...,
+    asset->
+  },
+  chapters[] {
     title,
-    description,
-    level,
-    prerequisites,
-    chapters[] {
+    lessons[] {
       title,
-      lessons[] {
+      description,
+      videoUrl,
+      duration,
+      resources[] {
         title,
-        description,
-        videoUrl,
-        duration,
-        chapters[] {
-          title,
-          timestamp
-        },
-        resources[] {
-          title,
-          "fileUrl": file.asset->url
-        }
+        fileUrl
       }
     }
   }
-`;
+}`;

@@ -6,22 +6,31 @@ import type { NextLevelDjsPage } from '$lib/sanity/queries/nextLevelDjs';
 import type { PageServerLoad } from './$types';
 import { error } from '@sveltejs/kit';
 
-export const load: PageServerLoad = async ({ locals }) => {
+export const load: PageServerLoad = async ({ locals, params }) => {
   try {
-    // Lade alle Kurse
-    const courses = await client.fetch<DJCourse[]>(djCourseQuery);
+    // Lade den spezifischen Kurs basierend auf dem Slug
+    const course = await client.fetch<DJCourse>(
+      `*[_type == "djCourse" && slug.current == $slug][0]`,
+      { slug: params.slug }
+    );
+
+    if (!course) {
+      throw error(404, {
+        message: 'Kurs nicht gefunden'
+      });
+    }
 
     // Lade die allgemeinen Seiteneinstellungen
     const pageData = await client.fetch<NextLevelDjsPage>(nextLevelDjsQuery);
 
     return {
-      courses,
+      course,
       pageData
     };
   } catch (err) {
-    console.error('Error loading courses:', err);
+    console.error('Error loading course:', err);
     throw error(500, {
-      message: 'Fehler beim Laden der Kurse'
+      message: 'Fehler beim Laden des Kurses'
     });
   }
 };
