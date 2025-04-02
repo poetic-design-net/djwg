@@ -205,7 +205,7 @@
       </CollapsibleSection>
 
       <!-- Online Talks Section -->
-      <CollapsibleSection title="Online Talks" initiallyOpen={true}>
+      <CollapsibleSection title="Online Talks" initiallyOpen={false}>
         <OnlineTalkSection {onlineTalks} />
       </CollapsibleSection>
 
