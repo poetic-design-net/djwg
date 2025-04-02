@@ -153,7 +153,7 @@
 </script>
 
 <div class="space-y-6 p-4 bg-gray-950/90 rounded-xl border border-gray-800/60 backdrop-blur">
-  <h2 class="text-xl font-semibold text-green-400 mb-4">Community Feed</h2>
+ 
 
   <!-- Post erstellen -->
   {#if canPost}
