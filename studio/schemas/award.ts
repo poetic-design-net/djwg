@@ -262,6 +262,42 @@ export default defineType({
           ]
         })
       ]
+    }),
+    defineField({
+      name: 'dashboard',
+      title: 'Dashboard Einstellungen',
+      type: 'object',
+      fields: [
+        defineField({
+          name: 'processInfo',
+          title: 'Prozess Information',
+          type: 'array',
+          of: [{ type: 'block' }],
+          description: 'Informationen über den Ablauf des Award-Prozesses'
+        }),
+        defineField({
+          name: 'surveyUrl',
+          title: 'Google Formular URL',
+          type: 'url',
+          description: 'URL zum Google Formular für Award-Einreichungen'
+        }),
+        defineField({
+          name: 'submissionStart',
+          title: 'Einreichungsbeginn',
+          type: 'datetime'
+        }),
+        defineField({
+          name: 'submissionEnd',
+          title: 'Einreichungsende',
+          type: 'datetime'
+        }),
+        defineField({
+          name: 'isActive',
+          title: 'Award aktiv',
+          type: 'boolean',
+          initialValue: false
+        })
+      ]
     })
   ]
 })

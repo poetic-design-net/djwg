@@ -174,7 +174,7 @@
 {/if}
 
 <div class="space-y-4">
-  <h3 class="text-lg font-medium text-white">Meine Dateien</h3>
+
 
   <slot {handleUploadComplete} />
 

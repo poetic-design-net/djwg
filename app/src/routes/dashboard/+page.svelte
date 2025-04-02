@@ -1,6 +1,7 @@
 <script lang="ts">
   import { getContext } from 'svelte';
   import type { SupabaseClient } from '@supabase/supabase-js';
+  import type { User, Profile } from '$lib/types/profile';
   import { goto } from '$app/navigation';
   import { invalidate, invalidateAll } from '$app/navigation';
   import ProfileSection from '$lib/components/dashboard/ProfileSection.svelte';
@@ -19,15 +20,58 @@
   import TooltipPortal from '$lib/components/TooltipPortal.svelte';
   import SocialFeed from '$lib/components/dashboard/SocialFeed.svelte';
   import { onMount } from 'svelte';
+  import Award from '$lib/components/dashboard/Award.svelte';
 
-  export let data;
-  const { user, profile, onlineTalks, isAdmin, videos } = data;
+  interface OnlineTalk {
+    _id: string;
+    title: string;
+    date: string;
+    link: string;
+    password: string;
+    visibleFromHours: number;
+  }
 
-  let videosComponent: VideosSection;
-  let showEditProfile = false;
+  interface DashboardData {
+    processInfo: any[];
+    surveyUrl: string;
+    submissionStart: string;
+    submissionEnd: string;
+    isActive: boolean;
+  }
 
-  const supabase = getContext<SupabaseClient>('supabase');
+  interface Badge {
+    badge_id: string;
+  }
+
+  interface PageData {
+    user: User & {
+      badges?: Badge[];
+    };
+    profile: Profile;
+    onlineTalks: OnlineTalk[];
+    isAdmin: boolean;
+    videos: Record<string, any>;
+    award: { dashboard: DashboardData } | null;
+  }
+
+  const AWARD_BADGE_ID = 'fc005104-5c29-44bc-b05f-1f5e5ef817a1';
+
+  export let data: PageData;
+
+  const hasAwardBadge = (user: PageData['user']) => {
+    return user.badges?.some((badge: Badge) => badge.badge_id === AWARD_BADGE_ID) || false;
+  };
+
+  function canShowAward(user: PageData['user'], award: PageData['award']): boolean {
+    return hasAwardBadge(user) && award !== null && award.dashboard && award.dashboard.isActive;
+  };
+
   let loading = false;
+  let showEditProfile = false;
+  let videosComponent: VideosSection;
+  const supabase = getContext<SupabaseClient>('supabase');
+
+  const { user, profile, onlineTalks, isAdmin, videos, award } = data;
 
   const handleLogout = async () => {
     if (loading) return;
@@ -125,8 +169,22 @@
           </div>
         </div>
 
-      <!-- Social Feed Section -->
-      <CollapsibleSection title="Community Feed" initiallyOpen={true}>
+     
+
+      <!-- Videos Section -->
+      <VideosSection {videos} {user} bind:this={videosComponent} />
+
+      <!-- Award Section -->
+      {#if canShowAward(user, award)}
+        <CollapsibleSection title="DJ Award" initiallyOpen={false}>
+          {#if award}
+            <Award user={user} award={award} />
+          {/if}
+        </CollapsibleSection>
+      {/if}
+
+       <!-- Social Feed Section -->
+       <CollapsibleSection title="Community Feed" initiallyOpen={false}>
         {#if isAdmin}
           <SocialFeed {user} {profile} />
         {:else}
@@ -146,16 +204,13 @@
         {/if}
       </CollapsibleSection>
 
-      <!-- Videos Section -->
-      <VideosSection {videos} {user} bind:this={videosComponent} />
-
       <!-- Online Talks Section -->
       <CollapsibleSection title="Online Talks" initiallyOpen={true}>
         <OnlineTalkSection {onlineTalks} />
       </CollapsibleSection>
 
       <!-- Media Section -->
-      <CollapsibleSection title="Deine Uploads" initiallyOpen={false}>
+      <CollapsibleSection title="Meine Uploads" initiallyOpen={false}>
         <MyFiles {user} let:handleUploadComplete>
           <MediaUploader 
             {user} 

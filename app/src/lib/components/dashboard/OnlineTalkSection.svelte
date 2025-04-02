@@ -55,7 +55,7 @@ import Support from "./Support.svelte";
 <div class="relative rounded-3xl p-8 border border-gray-800/40 overflow-hidden h-full">
   <div class="absolute inset-0 mix-blend-overlay "></div>
   <div class="relative flex flex-col h-full">
-    <h2 class="text-2xl font-medium text-white mb-6">Online Talk</h2>
+
     
     <!-- Online Talk Access -->
     <div class="mb-8">
@@ -113,18 +113,18 @@ import Support from "./Support.svelte";
         <p class="text-gray-400 mb-4">
           Hilf uns dabei, die DJ Community weiter zu fördern und neue Workshops anzubieten.
         </p>
-        <div class="space-y-4">
+        <div class="flex flex-col sm:flex-row gap-4">
           <a 
             href="https://buymeacoffee.com/djworkshopgermany"
             target="_blank"
-            class="block px-6 py-3 text-sm font-medium text-black bg-green-500 hover:bg-green-400 rounded-xl text-center transition duration-300"
+            class="px-6 py-3 text-sm font-medium text-black bg-green-500 hover:bg-green-400 rounded-xl text-center transition duration-300"
           >
             Buy me a Coffee ☕
           </a>
           <a 
             href="https://gofund.me/b30d051e"
             target="_blank"
-            class="block px-6 py-3 text-sm font-medium text-white bg-purple-600 hover:bg-purple-500 rounded-xl text-center transition duration-300"
+            class="px-6 py-3 text-sm font-medium text-white bg-purple-600 hover:bg-purple-500 rounded-xl text-center transition duration-300"
           >
             GoFundMe Kampagne 🎵
           </a>

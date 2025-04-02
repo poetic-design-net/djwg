@@ -121,3 +121,94 @@ export async function uploadToSanity(
     throw new Error(`Sanity Upload Fehler: ${errorMessage}`);
   }
 }
+
+export async function uploadToAward(
+  file: File,
+  userId: string,
+  supabaseId: string,
+  userName: string,
+  userEmail?: string
+): Promise<UploadResult> {
+  try {
+    // 1. Lade die Datei als Asset hoch
+    const assetType = file.type.startsWith('image/') ? 'image' : 'file';
+    const asset = await uploadClient.assets.upload(assetType, file);
+
+    // 2. Erstelle das awardUpload Dokument
+    const doc = await uploadClient.create({
+      _type: 'awardUpload',
+      // User Informationen
+      userId: userId,
+      userName: userName,
+      userEmail: userEmail,
+      supabaseId: supabaseId,
+
+      // File Informationen
+      originalFilename: file.name,
+      fileType: file.type,
+      fileSize: file.size,
+      status: 'pending',
+
+      // Upload Details
+      uploadedAt: new Date().toISOString(),
+      lastModified: new Date().toISOString(),
+
+      // Erweiterte Metadaten
+      metadata: {
+        mimeType: file.type,
+        lastModified: new Date(file.lastModified).toISOString(),
+        fileExtension: file.name.split('.').pop()?.toLowerCase(),
+        uploadSource: 'award_dashboard',
+        originalSize: file.size,
+        dimensions: file.type.startsWith('image/') ? {
+          width: null,
+          height: null
+        } : undefined
+      },
+
+      // Asset-Referenz
+      asset: {
+        type: file.type.startsWith('image/') ? 'image' : 'file',
+        image: file.type.startsWith('image/') ? {
+          _type: 'image',
+          asset: {
+            _type: 'reference',
+            _ref: asset._id
+          }
+        } : undefined,
+        file: !file.type.startsWith('image/') ? {
+          _type: 'file',
+          asset: {
+            _type: 'reference',
+            _ref: asset._id
+          }
+        } : undefined
+      },
+
+      // Award-spezifische Felder
+      awardCategory: '',
+      juryRating: 0,
+      juryComments: '',
+      isWinner: false
+    });
+
+    // 3. Bereite das Ergebnis vor
+    let url;
+    if (assetType === 'image') {
+      url = builder.image(asset._id).url();
+    } else {
+      url = `${process.env.SANITY_PROJECT_URL || 'https://cdn.sanity.io'}/files/${process.env.SANITY_PROJECT_ID}/production/${asset._id.replace('file-', '')}`;
+    }
+
+    return {
+      sanityId: doc._id,
+      sanityAssetId: asset._id,
+      url: url
+    };
+
+  } catch (error) {
+    console.error('Fehler beim Upload zu Sanity Award:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unbekannter Fehler';
+    throw new Error(`Sanity Award Upload Fehler: ${errorMessage}`);
+  }
+}
