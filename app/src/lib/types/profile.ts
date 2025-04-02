@@ -1,68 +1,62 @@
+export interface UserMetadata {
+  first_name?: string;
+  last_name?: string;
+  name?: string;
+  full_name?: string;
+  picture?: string;
+  avatar_url?: string;
+  provider?: string;
+  provider_id?: string;
+  email_verified?: boolean;
+  phone_verified?: boolean;
+  isAdmin?: string;
+}
+
+// Erweitere die Basis-User-Schnittstelle
+export interface User {
+  id: string;
+  email: string;
+  badges?: Array<{ badge_id: string }>;
+  raw_user_meta_data?: UserMetadata;
+  user_metadata?: {
+    first_name?: string;
+    last_name?: string;
+    name?: string;
+    isAdmin?: string;
+  };
+  app_metadata: {
+    provider?: string;
+    [key: string]: any;
+  };
+  created_at: string;
+}
+
 export interface Profile {
   id: string;
   username?: string;
-  first_name?: string;
-  last_name?: string;
   full_name?: string;
-  email?: string;
   avatar_url?: string;
   website?: string;
-  address_street?: string;
-  address_number?: string;
-  address_city?: string;
-  address_zip?: string;
-  address_country?: string;
-  phone?: string;
   bio?: string;
-  company_name?: string;
-  position?: string;
   social_links?: {
     instagram?: string;
     facebook?: string;
     soundcloud?: string;
   };
-  is_public: boolean;
+  last_badge_check?: string;
+  first_name?: string;
+  last_name?: string;
+  badges?: Array<{ badge_id: string }>;
   created_at?: string;
-  auth_created_at?: string;
-  auth_last_sign_in_at?: string;
-  last_seen?: string | null;
+  updated_at?: string;
 }
 
-export interface EnrichedProfile extends Profile {
-  created_at?: string;
-  last_sign_in_at?: string;
-  auth_created_at?: string;
-  auth_last_sign_in_at?: string;
+// Typ für die erweiterte Benutzerrolle
+export interface ExtendedUser extends User {
+  isAdmin?: boolean;
 }
 
-export interface StandardUserMetadata {
-  first_name: string;
-  last_name: string;
-  email: string;
-  avatar_url?: string;
-  provider?: string;
-  provider_id?: string;
-}
-
-export interface User {
-  id: string;
-  email: string;
-  created_at: string;
-  user_metadata?: StandardUserMetadata;
-  raw_user_meta_data?: {
-    first_name?: string;
-    last_name?: string;
-    name?: string;
-    full_name?: string;
-    picture?: string;
-    avatar_url?: string;
-    provider?: string;
-    provider_id?: string;
-    email_verified?: boolean;
-    phone_verified?: boolean;
-  };
-  badges?: Array<{
-    badge_id: string;
-    [key: string]: any;
-  }>;
+// Helper-Funktion zum Überprüfen des Admin-Status
+export function isAdmin(user: User): boolean {
+  return user.raw_user_meta_data?.isAdmin === 'true' || user.user_metadata?.isAdmin === 'true';
 }

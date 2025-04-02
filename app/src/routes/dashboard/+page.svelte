@@ -17,6 +17,7 @@
   import Support from '$lib/components/dashboard/Support.svelte';
   import InfoIcon from '$lib/components/InfoIcon.svelte';
   import TooltipPortal from '$lib/components/TooltipPortal.svelte';
+  import SocialFeed from '$lib/components/dashboard/SocialFeed.svelte';
   import { onMount } from 'svelte';
 
   export let data;
@@ -124,6 +125,26 @@
           </div>
         </div>
 
+      <!-- Social Feed Section -->
+      <CollapsibleSection title="Community Feed" initiallyOpen={true}>
+        {#if isAdmin}
+          <SocialFeed {user} {profile} />
+        {:else}
+          <div class="text-center py-8 space-y-4">
+            <div class="bg-gray-800/70 rounded-lg p-6 border border-gray-700/50">
+              <h3 class="text-xl font-medium text-white mb-3">Coming Soon!</h3>
+              <p class="text-gray-400">Der Community Feed befindet sich derzeit in der Beta-Phase und wird bald für alle Mitglieder verfügbar sein.</p>
+              <div class="mt-4 flex justify-center">
+                <InfoIcon
+                  variant="light"
+                  text="Werde Teil der Beta und erhalte frühzeitigen Zugang zu neuen Features! Kontaktiere uns für mehr Informationen."
+                  position="bottom"
+                />
+              </div>
+            </div>
+          </div>
+        {/if}
+      </CollapsibleSection>
 
       <!-- Videos Section -->
       <VideosSection {videos} {user} bind:this={videosComponent} />
