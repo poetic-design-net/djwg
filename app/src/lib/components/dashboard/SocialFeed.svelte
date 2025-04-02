@@ -8,6 +8,7 @@
   import { DJ_LEVEL_1_ID } from '$lib/services/badge-service';
   import { SocialFeedService } from '$lib/services/social-feed-service';
   import { toasts } from '$lib/stores/toast';
+  import { formatTextWithLinks } from '$lib/utils/format-text';
 
   export let user: User;
   export let profile: Profile | null;
@@ -215,7 +216,9 @@
               {/if}
             </div>
           </div>
-          <p class="text-white mb-4 text-lg whitespace-pre-wrap px-2">{post.content}</p>
+          <p class="text-white mb-4 text-lg whitespace-pre-wrap px-2">
+            {@html formatTextWithLinks(post.content)}
+          </p>
           <div class="flex items-center space-x-4 text-gray-400 mb-4">
             <button 
               on:click={() => handleLike(post.id)} 
@@ -252,7 +255,24 @@
             {#each post.post_comments as comment}
               <div class="group bg-gray-950/50 p-3 rounded-lg border border-gray-800/40 shadow-inner">
                 <div class="flex items-center justify-between mb-1">
-                  <span class="font-medium text-green-400">{comment.profiles?.username || 'Anonym'}</span>
+                  <div class="flex items-center space-x-3">
+                    {#if post.profiles?.avatar_url}
+                      <img
+                        src={post.profiles.avatar_url}
+                        alt="Avatar"
+                        class="w-10 h-10 rounded-full object-cover border-2 border-green-500/20"
+                      />
+                    {:else}
+                      <div class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center border-2 border-green-500/20">
+                        <span class="text-sm text-green-400 font-medium">
+                          {(post.profiles?.username || 'A')[0].toUpperCase()}
+                        </span>
+                      </div>
+                    {/if}
+                    <span class="font-medium text-green-400">
+                      {post.profiles?.username || 'Anonym'}
+                    </span>
+                  </div>
                   <div class="flex items-center space-x-2">
                     <span class="text-xs text-gray-300">
                       {new Date(comment.created_at).toLocaleString('de-DE')}
@@ -270,7 +290,9 @@
                     {/if}
                   </div>
                 </div>
-                <p class="text-gray-300 text-sm pl-1">{comment.content}</p>
+                <p class="text-gray-300 pl-1">
+                  {@html formatTextWithLinks(comment.content)}
+                </p>
               </div>
             {/each}
 
