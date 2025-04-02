@@ -34,6 +34,16 @@
     return contentUserId === user.id || isAdmin(user);
   }
 
+  function formatDateTime(isoString: string): string {
+    return new Date(isoString).toLocaleString('de-DE', {
+      day: 'numeric',
+      month: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
   // Prüfe, ob der Benutzer das erforderliche Badge hat oder Admin ist
   $: {
     try {
@@ -185,7 +195,7 @@
               {#if post.profiles?.avatar_url}
                 <img
                   src={post.profiles.avatar_url}
-                  alt="Avatar"
+                  alt={post.profiles.username}
                   class="w-10 h-10 rounded-full object-cover border-2 border-green-500/20"
                 />
               {:else}
@@ -195,26 +205,26 @@
                   </span>
                 </div>
               {/if}
-              <span class="font-medium text-green-400">
-                {post.profiles?.username || 'Anonym'}
-              </span>
+              <div class="flex flex-col">
+                <span class="font-medium text-green-400">
+                  {post.profiles?.username || 'Anonym'}
+                </span>
+                <span class="text-xs text-gray-300">
+                  {formatDateTime(post.created_at)}
+                </span>
+              </div>
             </div>
-            <div class="flex items-center space-x-4">
-              <span class="text-xs text-gray-300">
-                {new Date(post.created_at).toLocaleString('de-DE')}
-              </span>
-              {#if isOwnContent(post.user_id)}
-                <button 
-                  on:click={() => handleDeletePost(post.id)}
-                  class="text-gray-500 hover:text-red-500 transition-colors"
-                  title="Post löschen"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" />
-                  </svg>
-                </button>
-              {/if}
-            </div>
+            {#if isOwnContent(post.user_id)}
+              <button 
+                on:click={() => handleDeletePost(post.id)}
+                class="text-gray-300 hover:text-red-500 transition-colors"
+                title="Post löschen"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" />
+                </svg>
+              </button>
+            {/if}
           </div>
           <p class="text-white mb-4 text-lg whitespace-pre-wrap px-2">
             {@html formatTextWithLinks(post.content)}
@@ -254,45 +264,48 @@
           <div class="mt-4 pt-4 border-t border-gray-800/60 space-y-3">
             {#each post.post_comments as comment}
               <div class="group bg-gray-950/50 p-3 rounded-lg border border-gray-800/40 shadow-inner">
-                <div class="flex items-center justify-between mb-1">
-                  <div class="flex items-center space-x-3">
-                    {#if post.profiles?.avatar_url}
-                      <img
-                        src={post.profiles.avatar_url}
-                        alt="Avatar"
-                        class="w-10 h-10 rounded-full object-cover border-2 border-green-500/20"
+                <div class="flex items-start justify-between gap-3 relative">
+                  <div class="flex items-start gap-3">
+                    {#if comment.profiles?.avatar_url} 
+                      <img 
+                        src={comment.profiles.avatar_url}
+                        alt={comment.profiles.username}
+                        class="w-8 h-8 rounded-full object-cover border border-green-500/20 mt-0.5"
                       />
                     {:else}
-                      <div class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center border-2 border-green-500/20">
+                      <div class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center border border-green-500/20 mt-0.5">
                         <span class="text-sm text-green-400 font-medium">
-                          {(post.profiles?.username || 'A')[0].toUpperCase()}
+                          {(comment.profiles?.username || 'A')[0].toUpperCase()}
                         </span>
                       </div>
                     {/if}
-                    <span class="font-medium text-green-400">
-                      {post.profiles?.username || 'Anonym'}
-                    </span>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-baseline">
+                        <span class="font-medium text-green-400">
+                          {comment.profiles?.username || 'Anonym'}
+                        </span>
+                      </div>
+                      <p class="text-gray-300 mt-1">
+                        {@html formatTextWithLinks(comment.content)}
+                      </p>
+                    </div>
                   </div>
-                  <div class="flex items-center space-x-2">
-                    <span class="text-xs text-gray-300">
-                      {new Date(comment.created_at).toLocaleString('de-DE')}
-                    </span>
-                    {#if isOwnContent(comment.user_id)}
-                      <button 
-                        on:click={() => handleDeleteComment(comment.id)}
-                        class="text-gray-600 opacity-0 group-hover:opacity-100 hover:text-red-500 transition-all"
-                        title="Kommentar löschen"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                          <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" />
-                        </svg>
-                      </button>
-                    {/if}
-                  </div>
+                  <span class="text-xs text-gray-300 whitespace-nowrap flex-shrink-0 ml-4">
+                    {formatDateTime(comment.created_at)}
+                  </span>
+                  {#if isOwnContent(comment.user_id)}
+                    <button 
+                      on:click={() => handleDeleteComment(comment.id)}
+                      class="absolute top-0 right-0 -mt-1 -mr-1 text-gray-600 opacity-0 group-hover:opacity-100 hover:text-red-500 transition-all p-1 bg-gray-900/80 rounded-full"
+                      title="Kommentar löschen"
+                      style="transform: translate(25%, -25%)"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" />
+                      </svg>
+                    </button>
+                  {/if}
                 </div>
-                <p class="text-gray-300 pl-1">
-                  {@html formatTextWithLinks(comment.content)}
-                </p>
               </div>
             {/each}
 

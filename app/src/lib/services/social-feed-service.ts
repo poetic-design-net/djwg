@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { DatabasePost, NormalizedPost } from '$lib/types/social';
+import type { RawDatabasePost, NormalizedPost } from '$lib/types/social';
 import { normalizePost } from '$lib/types/social';
 
 export class SocialFeedService {
@@ -9,11 +9,28 @@ export class SocialFeedService {
     try {
       console.log('🔍 Fetching posts...');
       
+      // Teste zuerst nur die Basis-Tabelle
+      const { data: testData, error: testError } = await this.supabase
+        .from('posts')
+        .select('*');
+
+      if (testError) {
+        console.error('🔥 Error in test query:', testError);
+        throw testError;
+      }
+
+      console.log('✅ Found posts:', testData?.length || 0);
+      
+      // Hauptabfrage mit allen benötigten Feldern
       const { data, error } = await this.supabase
         .from('posts')
         .select(`
-          *,
-          profiles:user_id (
+          id,
+          user_id,
+          content,
+          created_at,
+          updated_at,
+          profiles (
             username,
             avatar_url
           ),
@@ -25,8 +42,9 @@ export class SocialFeedService {
             content,
             created_at,
             user_id,
-            profiles:user_id (
-              username
+            profiles (
+              username,
+              avatar_url
             )
           )
         `)
@@ -37,7 +55,14 @@ export class SocialFeedService {
         throw error;
       }
 
-      return (data || []).map(post => normalizePost(post as DatabasePost));
+      console.log('✅ Full query successful, processing data...');
+      console.log('📦 Raw data example:', JSON.stringify(data?.[0], null, 2));
+
+      // Normalisiere die Daten
+      const normalizedPosts = (data || []).map(post => normalizePost(post as RawDatabasePost));
+      console.log('✅ Normalized first post:', JSON.stringify(normalizedPosts[0], null, 2));
+
+      return normalizedPosts;
     } catch (error) {
       console.error('🔥 Unexpected error in getPosts:', error);
       throw error;
@@ -48,15 +73,17 @@ export class SocialFeedService {
     try {
       console.log('📝 Creating post...', { userId });
       
-      const { error } = await this.supabase
+      const { data, error } = await this.supabase
         .from('posts')
         .insert({
           user_id: userId,
           content: content
-        });
+        })
+        .select()
+        .single();
 
       if (error) throw error;
-      console.log('✅ Post created successfully');
+      console.log('✅ Post created:', { postId: data?.id });
     } catch (error) {
       console.error('🔥 Error creating post:', error);
       throw error;
@@ -92,7 +119,7 @@ export class SocialFeedService {
         .eq('user_id', userId);
 
       if (error) throw error;
-      console.log('✅ Comment deleted successfully');
+      console.log('✅ Comment deleted');
     } catch (error) {
       console.error('🔥 Error deleting comment:', error);
       throw error;
@@ -120,6 +147,7 @@ export class SocialFeedService {
           .eq('user_id', userId);
 
         if (error) throw error;
+        console.log('✅ Like removed');
       } else {
         const { error } = await this.supabase
           .from('post_likes')
@@ -129,9 +157,8 @@ export class SocialFeedService {
           });
 
         if (error) throw error;
+        console.log('✅ Like added');
       }
-
-      console.log('✅ Like toggled successfully');
     } catch (error) {
       console.error('🔥 Error in toggleLike:', error);
       throw error;
@@ -170,7 +197,10 @@ export class SocialFeedService {
           schema: 'public',
           table: 'posts'
         },
-        () => callback()
+        (payload) => {
+          console.log('📢 Posts change detected:', payload.eventType);
+          callback();
+        }
       )
       .on(
         'postgres_changes',
@@ -179,7 +209,10 @@ export class SocialFeedService {
           schema: 'public',
           table: 'post_likes'
         },
-        () => callback()
+        (payload) => {
+          console.log('📢 Likes change detected:', payload.eventType);
+          callback();
+        }
       )
       .on(
         'postgres_changes',
@@ -188,7 +221,10 @@ export class SocialFeedService {
           schema: 'public',
           table: 'post_comments'
         },
-        () => callback()
+        (payload) => {
+          console.log('📢 Comments change detected:', payload.eventType);
+          callback();
+        }
       )
       .subscribe();
   }

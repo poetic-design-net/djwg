@@ -1,8 +1,34 @@
+// Basis-Typen für die Datenbank-Antworten
 export interface PostProfile {
   username?: string;
   avatar_url?: string;
 }
 
+export interface RawPostLike {
+  user_id: string;
+}
+
+export interface RawPostComment {
+  id: string;
+  content: string;
+  created_at: string;
+  user_id: string;
+  profiles: PostProfile;  // Einzelnes Objekt, kein Array
+}
+
+// Rohdaten aus der Datenbank
+export interface RawDatabasePost {
+  id: string;
+  user_id: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+  profiles: PostProfile;  // Einzelnes Objekt, kein Array
+  post_likes: RawPostLike[];
+  post_comments: RawPostComment[];
+}
+
+// Normalisierte Typen für die Anwendung
 export interface PostLike {
   post_id: string;
   user_id: string;
@@ -16,48 +42,33 @@ export interface PostComment {
   content: string;
   created_at: string;
   updated_at: string;
-  profiles?: PostProfile | null;
+  profiles: PostProfile;  // Immer verfügbar nach Normalisierung
 }
 
-// Basis-Post-Interface
-export interface BasePost {
+export interface NormalizedPost {
   id: string;
   user_id: string;
   content: string;
   created_at: string;
   updated_at: string;
-}
-
-// Interface für Posts wie sie in der Datenbank sind
-export interface DatabasePost extends BasePost {
-  profiles?: PostProfile | null;
-  post_likes?: PostLike[] | null;
-  post_comments?: PostComment[] | null;
-}
-
-// Interface für normalisierte Posts in der Anwendung
-export interface NormalizedPost extends BasePost {
-  profiles: PostProfile;  // Immer ein Objekt, auch wenn leer
-  post_likes: PostLike[];  // Immer ein Array, auch wenn leer
-  post_comments: PostComment[];  // Immer ein Array, auch wenn leer
-}
-
-// Typ-Guard um zu prüfen ob ein Post normalisiert ist
-export function isNormalizedPost(post: DatabasePost | NormalizedPost): post is NormalizedPost {
-  return post.profiles !== null && 
-         post.profiles !== undefined && 
-         Array.isArray(post.post_likes) &&
-         Array.isArray(post.post_comments);
+  profiles: PostProfile;  // Immer verfügbar nach Normalisierung
+  post_likes: PostLike[];
+  post_comments: PostComment[];
 }
 
 // Hilfsfunktion zum Normalisieren eines Posts
-export function normalizePost(post: DatabasePost): NormalizedPost {
+export function normalizePost(post: RawDatabasePost): NormalizedPost {
   return {
     ...post,
-    profiles: post.profiles || { username: 'Anonym' },
-    post_likes: post.post_likes || [],
+    post_likes: (post.post_likes || []).map(like => ({
+      post_id: post.id,
+      user_id: like.user_id,
+      created_at: post.created_at // Verwende Post-Datum als Fallback
+    })),
     post_comments: (post.post_comments || []).map(comment => ({
       ...comment,
+      post_id: post.id,
+      updated_at: comment.created_at,
       profiles: comment.profiles || { username: 'Anonym' }
     }))
   };
