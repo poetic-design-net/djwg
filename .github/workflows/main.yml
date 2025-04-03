@@ -1,0 +1,20 @@
+name: Profile Synchronization
+
+on:
+  schedule:
+    # Läuft täglich um 3:00 UTC
+    - cron: '0 3 * * *'
+  # Optional: Ermöglicht manuelles Auslösen des Workflows
+  workflow_dispatch:
+
+jobs:
+  sync-profiles:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Invoke Supabase Edge Function
+        run: |
+          curl -X POST https://aepldzxlrxkhcekptckz.supabase.co/functions/v1/sync-profiles \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}"
+      - name: Log completion
+        run: echo "Profile sync job completed at $(date)"
