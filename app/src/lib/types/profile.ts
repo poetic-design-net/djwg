@@ -60,3 +60,18 @@ export interface ExtendedUser extends User {
 export function isAdmin(user: User): boolean {
   return user.raw_user_meta_data?.isAdmin === 'true' || user.user_metadata?.isAdmin === 'true';
 }
+
+// Neuer Typ für die Admin-Benutzerliste, der Profile erweitert
+export interface EnrichedProfile extends Profile {
+  email?: string;
+  auth_created_at?: string;
+  auth_last_sign_in_at?: string;
+
+  // Neue DJ-spezifische Felder
+  phone?: string;
+  travel_group_size?: number;
+  travel_group_ages?: string;
+  visited_clubs?: string[];
+  biography?: string;
+  video_mix_url?: string;
+}

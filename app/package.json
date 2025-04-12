@@ -13,6 +13,9 @@
 		"create-theme": "tsx scripts/createThemeSettings.ts"
 	},
 	"dependencies": {
+		"@fullcalendar/core": "^6.1.17",
+		"@fullcalendar/daygrid": "^6.1.17",
+		"@fullcalendar/interaction": "^6.1.17",
 		"@sanity/client": "^6.15.4",
 		"@sanity/image-url": "^1.0.2",
 		"@sanity/svelte-loader": "^1.11.1",
@@ -27,6 +30,7 @@
 		"@types/nodemailer": "^6.4.17",
 		"@vercel/analytics": "^1.4.1",
 		"clsx": "^2.1.1",
+		"date-fns": "^4.1.0",
 		"groq": "^3.33.0",
 		"heroicons-svelte": "^2.0.2",
 		"nodemailer": "^6.10.0",
@@ -44,6 +48,7 @@
 		"@sveltejs/vite-plugin-svelte": "^3.1.1",
 		"@tailwindcss/aspect-ratio": "^0.4.2",
 		"@tailwindcss/typography": "^0.5.16",
+		"@types/date-fns": "^2.6.3",
 		"@typescript-eslint/eslint-plugin": "^6.21.0",
 		"@typescript-eslint/parser": "^6.21.0",
 		"autoprefixer": "^10.4.20",
