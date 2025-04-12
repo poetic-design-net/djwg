@@ -61,6 +61,12 @@ export function isAdmin(user: User): boolean {
   return user.raw_user_meta_data?.isAdmin === 'true' || user.user_metadata?.isAdmin === 'true';
 }
 
+// Mix Interface für DJ Mixes
+export interface DjMix {
+  title: string;
+  url: string;
+}
+
 // Neuer Typ für die Admin-Benutzerliste, der Profile erweitert
 export interface EnrichedProfile extends Profile {
   email?: string;
@@ -73,5 +79,5 @@ export interface EnrichedProfile extends Profile {
   travel_group_ages?: string;
   visited_clubs?: string[];
   biography?: string;
-  video_mix_url?: string;
+  mixes?: DjMix[]; // Ersetzt video_mix_url
 }

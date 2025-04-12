@@ -1,7 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import type { EnrichedProfile } from '$lib/types/profile';
-  import VideoMixLink from './VideoMixLink.svelte';
 
   export let dj: EnrichedProfile;
   export let show = false;
@@ -159,7 +158,7 @@
                   type="text"
                   id="clubName"
                   bind:value={clubDetails.name}
-                  class="w-full bg-gray-700 border border-gray-700 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  class="w-full bg-gray-900/80 border border-gray-700/50 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   required
                 />
               </div>
@@ -171,7 +170,7 @@
                   type="email"
                   id="clubEmail"
                   bind:value={clubDetails.email}
-                  class="w-full bg-gray-700 border border-gray-700 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  class="w-full bg-gray-900/80 border border-gray-700/50 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   required
                 />
               </div>
@@ -183,7 +182,7 @@
                   type="date"
                   id="startDate"
                   bind:value={clubDetails.startDate}
-                  class="w-full bg-gray-700 border border-gray-700 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  class="w-full bg-gray-900/80 border border-gray-700/50 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   required
                 />
               </div>
@@ -194,7 +193,7 @@
                   type="date"
                   id="endDate"
                   bind:value={clubDetails.endDate}
-                  class="w-full bg-gray-700 border border-gray-700 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  class="w-full bg-gray-900/80 border border-gray-700/50 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   required
                 />
               </div>
@@ -209,7 +208,7 @@
                   type="text"
                   id="location"
                   bind:value={clubDetails.location}
-                  class="w-full bg-gray-700 border border-gray-700 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  class="w-full bg-gray-900/80 border border-gray-700/50 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 />
               </div>
 
@@ -220,7 +219,7 @@
                   type="text"
                   id="capacity"
                   bind:value={clubDetails.capacity}
-                  class="w-full bg-gray-700 border border-gray-700 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  class="w-full bg-gray-900/80 border border-gray-700/50 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 />
               </div>
 
@@ -231,7 +230,7 @@
                   type="text"
                   id="genre"
                   bind:value={clubDetails.genre}
-                  class="w-full bg-gray-700 border border-gray-700 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  class="w-full bg-gray-900/80 border border-gray-700/50 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 />
               </div>
             </div>
@@ -250,7 +249,7 @@
                   id="additionalMessage"
                   bind:value={clubDetails.additionalMessage}
                   rows="4"
-                  class="w-full bg-gray-700 border border-gray-700 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  class="w-full bg-gray-900/80 border border-gray-700/50 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   placeholder="Fügen Sie weitere Details oder Informationen hinzu..."
                 />
               </div>
@@ -294,7 +293,7 @@
               {#if dj.website}
                 <div class="text-gray-200">
                   <span class="font-medium">Website:</span>
-                  <a href={dj.website} target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:text-indigo-300">{dj.website}</a>
+                  <a href={dj.website} target="_blank" rel="noopener noreferrer" class="text-green-400 hover:text-green-300">{dj.website}</a>
                 </div>
               {/if}
             </div>
@@ -310,17 +309,17 @@
                      href={`https://instagram.com/${dj.social_links.instagram}`}
                      target="_blank"
                      rel="noopener noreferrer"
-                     class="text-indigo-400 hover:text-indigo-300 transition-colors"
+                     class="text-green-400 hover:text-green-300 transition-colors"
                    >
                      Instagram
                    </a>
                  {/if}
-                {#if dj.social_links.facebook}
+               {#if dj.social_links.facebook}
                    <a
                      href={`https://facebook.com/${dj.social_links.facebook}`}
                      target="_blank"
                      rel="noopener noreferrer"
-                     class="text-indigo-400 hover:text-indigo-300 transition-colors"
+                     class="text-green-400 hover:text-green-300 transition-colors"
                    >
                      Facebook
                    </a>
@@ -330,7 +329,7 @@
                      href={`https://soundcloud.com/${dj.social_links.soundcloud}`}
                      target="_blank"
                      rel="noopener noreferrer"
-                     class="text-indigo-400 hover:text-indigo-300 transition-colors"
+                     class="text-green-400 hover:text-green-300 transition-colors"
                    >
                      SoundCloud
                    </a>
@@ -339,10 +338,32 @@
             </div>
           {/if}
 
-          <!-- Video-Mix -->
-          <div class="border-t border-gray-800 pt-6">
-            <VideoMixLink {dj} />
-          </div>
+          <!-- Vorhandene Mixes anzeigen -->
+          {#if dj.mixes && dj.mixes.length > 0}
+            <div class="border-t border-gray-800 pt-6">
+              <h4 class="text-sm font-medium text-gray-200 mb-4">DJ Mixes</h4>
+              <div class="space-y-3">
+                {#each dj.mixes as mix}
+                  <div class="bg-gray-800/50 rounded-lg p-4 border border-gray-700/50">
+                    <div class="text-white mb-2">{mix.title}</div>
+                    {#if mix.url}
+                      <a
+                        href={mix.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="inline-flex items-center text-green-400 hover:text-green-300"
+                      >
+                        <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
+                        </svg>
+                        Mix anhören
+                      </a>
+                    {/if}
+                  </div>
+                {/each}
+              </div>
+            </div>
+          {/if}
         </div>
       </div>
 
@@ -359,7 +380,7 @@
         {:else}
           <button
             type="button"
-            class="w-full inline-flex justify-center items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-500 rounded-lg transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            class="w-full inline-flex justify-center items-center px-6 py-3 text-sm font-medium text-white bg-green-600 hover:bg-green-500 rounded-full transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
             on:click={sendRequest}
             disabled={requesting || !dj.email || !clubDetails.name || !clubDetails.email || !clubDetails.startDate || !clubDetails.endDate}
           >
