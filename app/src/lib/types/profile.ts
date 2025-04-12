@@ -73,11 +73,19 @@ export interface EnrichedProfile extends Profile {
   auth_created_at?: string;
   auth_last_sign_in_at?: string;
 
+  // Supabase User Metadaten
+  raw_user_meta_data?: UserMetadata & {
+    username?: string;
+  };
+  user_metadata?: {
+    username?: string;
+  };
+
   // Neue DJ-spezifische Felder
   phone?: string;
   travel_group_size?: number;
   travel_group_ages?: string;
   visited_clubs?: string[];
   biography?: string;
-  mixes?: DjMix[]; // Ersetzt video_mix_url
+  mixes?: DjMix[];
 }

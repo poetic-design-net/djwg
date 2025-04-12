@@ -48,6 +48,7 @@ export const load: PageServerLoad = async ({ locals, cookies }) => {
       .from('profiles')
       .select(`
         id,
+        username,
         full_name,
         email,
         avatar_url,
@@ -77,6 +78,7 @@ export const load: PageServerLoad = async ({ locals, cookies }) => {
       // Füge das Badge hinzu
       badges: [{ badge_id: DJ_URLAUB_BADGE_ID }],
       // Stelle sicher, dass optionale Felder einen Standardwert haben
+      username: profile.username || '',
       full_name: profile.full_name || '',
       email: profile.email || '',
       avatar_url: profile.avatar_url || '',
