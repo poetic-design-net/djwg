@@ -35,10 +35,10 @@
 {#if !data.isAuthenticated}
   <PasswordProtection {error} />
 {:else}
-  <div class="container mx-auto px-4 py-8 max-w-7xl">
-    <div class="prose prose-invert max-w-none mb-8">
-      <h1>Club Manager Dashboard</h1>
-      <p class="text-gray-400">
+  <div class="container mx-auto px-4 py-12 max-w-7xl">
+    <div class="max-w-none mb-12">
+      <h1 class="text-4xl font-medium text-white mb-4">Club Manager Dashboard</h1>
+      <p class="text-lg text-gray-400">
         Willkommen im Club Manager Bereich. Hier kannst du die Verfügbarkeiten aller DJs einsehen und verwalten.
       </p>
     </div>
@@ -50,10 +50,13 @@
       </div>
 
       <!-- Seitenleiste: DJ-Liste -->
-      <div class="lg:w-80 flex-shrink-0 space-y-6">
-        <div class="bg-gray-900/50 rounded-xl p-6 border border-gray-800/60">
-          <h3 class="text-lg font-medium text-white mb-4">DJ Übersicht</h3>
-          <div class="space-y-4">
+      <div class="lg:w-80 flex-shrink-0">
+        <div class="sticky top-24 bg-gray-900/50 rounded-xl p-6 border border-gray-800/60 space-y-6">
+          <div class="border-b border-gray-800/60 pb-4 mb-6">
+            <h2 class="text-xl font-semibold text-white">DJ Übersicht</h2>
+            <p class="text-sm text-gray-400 mt-1">Aktuelle Verfügbarkeiten</p>
+          </div>
+          <div class="space-y-3">
             {#each data.djs as dj}
               <div 
                 class="bg-gray-800/70 rounded-lg p-4 border border-gray-700/50 cursor-pointer hover:bg-gray-800 transition-colors"
