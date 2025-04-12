@@ -2,6 +2,7 @@ import { redirect } from '@sveltejs/kit';
 import type { RequestEvent } from '@sveltejs/kit';
 import type { PostgrestError, User, SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '$lib/supabase';
+import { subscribeEmailToMailchimp } from '$lib/services/newsletter';
 
 const MAX_RETRIES = 3;
 const INITIAL_RETRY_DELAY = 1000; // 1 second
@@ -141,7 +142,6 @@ async function validateUser(event: RequestEvent): Promise<User> {
 
   return user;
 }
-
 export const GET = async (event: RequestEvent) => {
   const supabase = event.locals.supabase as SupabaseClient<Database>;
 
@@ -149,6 +149,7 @@ export const GET = async (event: RequestEvent) => {
     // Parameter validieren
     const code = event.url.searchParams.get('code');
     const next = event.url.searchParams.get('next') ?? '/';
+    const state = event.url.searchParams.get('state');
 
     if (!code) {
       throw redirect(303, '/auth?error=no_code');
@@ -177,6 +178,23 @@ export const GET = async (event: RequestEvent) => {
       // Fehler werden bereits von Sentry erfasst
     });
 
+    // Newsletter-Anmeldung verarbeiten, wenn der state-Parameter vorhanden ist
+    if (state && user.email) {
+      try {
+        const stateData = JSON.parse(state);
+        if (stateData.subscribeToNewsletter) {
+          // Newsletter-Anmeldung im Hintergrund durchführen (non-blocking)
+          subscribeEmailToMailchimp(user.email).catch((error) => {
+            console.error('Newsletter-Anmeldung fehlgeschlagen:', error);
+            // Fehler werden bereits von Sentry erfasst
+          });
+        }
+      } catch (error) {
+        console.error('Fehler beim Parsen des state-Parameters:', error);
+      }
+    }
+
+    throw redirect(303, next);
     throw redirect(303, next);
   } catch (err) {
     if (err instanceof Response && err.status === 303) {

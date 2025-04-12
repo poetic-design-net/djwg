@@ -5,6 +5,7 @@
   import { goto } from '$app/navigation';
   import { getContext, onMount } from 'svelte';
   import { toasts } from '$lib/stores/toast';
+  import { subscribeEmailToMailchimp } from '$lib/services/newsletter';
   import type { AuthPageData } from '../../routes/auth/+page';
   import type { SupabaseClient, AuthError } from '@supabase/supabase-js';
   
@@ -19,6 +20,7 @@
   let loading = false;
   let errorMsg = '';
   let showPassword = false;
+  let subscribeToNewsletter = false;
   let isRegistering = false;
   let isCheckingAuth = true;
   let mounted = false;
@@ -207,6 +209,14 @@
       if (success) {
         errorMsg = 'Überprüfe Deine E-Mail für den Bestätigungslink.';
         toasts.success('Registrierung erfolgreich. Bitte überprüfe Deine E-Mail.');
+        if (subscribeToNewsletter) {
+          try {
+            await subscribeEmailToMailchimp(email);
+            console.log('Für Newsletter angemeldet');
+          } catch (e) {
+            console.error('Newsletter Anmeldung fehlgeschlagen:', e);
+          }
+        }
       }
     } catch (error) {
       errorMsg = 'Ein unerwarteter Fehler ist aufgetreten';
@@ -230,6 +240,12 @@
         return;
       }
 
+      // Speichern des Newsletter-Status für die Weiterverarbeitung nach der Anmeldung
+      const wantsNewsletter = subscribeToNewsletter;
+      
+      // Speichern der E-Mail-Adresse, falls sie bereits eingegeben wurde
+      const userEmail = email;
+
       let success = false;
       while (!success && retryCount <= MAX_RETRIES) {
         const { error } = await supabase.auth.signInWithOAuth({
@@ -238,7 +254,11 @@
             redirectTo: `${browser ? location.origin : ''}/auth/callback?next=${encodeURIComponent(next)}`,
             queryParams: {
               access_type: 'offline',
-              prompt: 'consent'
+              prompt: 'consent',
+              // Übergeben des Newsletter-Status als State-Parameter
+              state: JSON.stringify({ 
+                subscribeToNewsletter: wantsNewsletter 
+              })
             }
           }
         });
@@ -250,6 +270,17 @@
         }
 
         success = true;
+        
+        // Wenn der Benutzer den Newsletter abonnieren möchte und wir im Registrierungsmodus sind
+        if (isRegistering && wantsNewsletter && userEmail) {
+          try {
+            // Versuchen, die E-Mail für den Newsletter anzumelden
+            await subscribeEmailToMailchimp(userEmail);
+            console.log('Für Newsletter angemeldet (Google Auth)');
+          } catch (e) {
+            console.error('Newsletter Anmeldung fehlgeschlagen (Google Auth):', e);
+          }
+        }
       }
     } catch (error) {
       errorMsg = 'Ein unerwarteter Fehler ist aufgetreten';
@@ -365,6 +396,36 @@
               >
             {/if}
           </div>
+
+          {#if isRegistering}
+            <div class="mb-6 flex items-center">
+              <div class="relative flex items-center">
+                <input
+                  id="newsletter"
+                  type="checkbox"
+                  bind:checked={subscribeToNewsletter}
+                  disabled={loading}
+                  class="sr-only peer"
+                />
+                <div
+                  class="w-5 h-5 border border-gray-500 rounded peer-checked:bg-green-400 peer-checked:border-green-400 transition-all duration-200 flex items-center justify-center cursor-pointer"
+                  on:click={() => {
+                    if (!loading) {
+                      subscribeToNewsletter = !subscribeToNewsletter;
+                    }
+                  }}
+                >
+                  {#if subscribeToNewsletter}
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-black" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                    </svg>
+                  {/if}
+                </div>
+                <label for="newsletter" class="ml-3 text-gray-300 cursor-pointer select-none">Für den Newsletter anmelden und Videos freischalten</label>
+              </div>
+            </div>
+          {/if}
+
           <button
             class="block w-full mb-6 px-14 py-4 text-center font-medium tracking-2xl border-2 border-green-400 bg-green-400 hover:bg-green-500 text-black focus:ring-4 focus:ring-green-500 focus:ring-opacity-40 rounded-full transition duration-300 disabled:opacity-50"
             on:click={isRegistering ? handleSignUp : handleSignIn}

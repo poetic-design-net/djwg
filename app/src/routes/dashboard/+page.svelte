@@ -21,6 +21,8 @@
   import SocialFeed from '$lib/components/dashboard/SocialFeed.svelte';
   import { onMount } from 'svelte';
   import Award from '$lib/components/dashboard/Award.svelte';
+  import DjHoliday from '$lib/components/dashboard/DjHoliday.svelte';
+  import Notifications from '$lib/components/dashboard/Notifications.svelte';
 
   interface OnlineTalk {
     _id: string;
@@ -55,6 +57,7 @@
   }
 
   const AWARD_BADGE_ID = 'fc005104-5c29-44bc-b05f-1f5e5ef817a1';
+  const DJ_URLAUB_BADGE_ID = '551d9015-aa13-4117-8776-b59f1aaade9b';
 
   export let data: PageData;
 
@@ -75,7 +78,6 @@
 
   const handleLogout = async () => {
     if (loading) return;
-    
     loading = true;
     try {
       const { error } = await supabase.auth.signOut();
@@ -104,72 +106,74 @@
 
 <div class="min-h-screen bg-black py-12 px-4 sm:px-6 lg:px-8">
   <div class="max-w-7xl mx-auto">
-   <!-- Dashboard Header with better mobile responsiveness -->
-<div class="mb-8 flex flex-col sm:flex-row justify-between gap-4 sm:items-center">
-  <div>
-    <h1 class="text-3xl sm:text-4xl font-medium text-white mb-2">Dashboard</h1>
-    <p class="text-gray-400">Dein Bereich zum Lernen und Verwalten</p>
-  </div>
-  
-  <div class="flex flex-wrap justify-end items-center gap-2 sm:gap-3">
-    <a
-      href="https://buymeacoffee.com/djworkshopgermany"
-      target="_blank"
-      class="relative text-center justify-center flex flex-1 sm:flex-none px-4 sm:px-6 py-2 text-sm font-medium text-black bg-green-500 hover:bg-green-400 rounded-full transition duration-300 items-center gap-2"
-    >
-      <span>☕</span>
-      <span>Support</span>
-      <InfoIcon
-        variant="light"
-        size="sm"
-        text="Mit dem Preis einer Tasse Kaffee (2,50€) unterstützt du uns dabei, noch mehr coole Features und Workshops für die DJ-Community anzubieten! 🙌"
-        position="bottom" 
-      />
-    </a>
-    
-    {#if isAdmin}
-      <a
-        href="/admin/users"
-        class="flex-1 sm:flex-none text-center px-4 sm:px-6 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-full transition duration-300"
-      >
-        <span>User</span>
-      </a>
-    {/if}
-    
-    <button
-      on:click={handleLogout}
-      disabled={loading}
-      class="flex-1 sm:flex-none text-center px-4 sm:px-6 py-2 text-sm font-medium text-white bg-gray-600 hover:bg-red-700 rounded-full transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-    >
-      {loading ? 'Abmelden...' : 'Logout'}
-    </button>
-  </div>
-</div>
+    <div class="mb-8 flex flex-col sm:flex-row justify-between gap-4 sm:items-center">
+      <div>
+        <h1 class="text-3xl sm:text-4xl font-medium text-white mb-2">Dashboard</h1>
+        <p class="text-gray-400">Dein Bereich zum Lernen und Verwalten</p>
+      </div>
+      
+      <div class="flex flex-wrap justify-end items-center gap-2 sm:gap-3">
+        <a
+          href="https://buymeacoffee.com/djworkshopgermany"
+          target="_blank"
+          class="relative text-center justify-center flex flex-1 sm:flex-none px-4 sm:px-6 py-2 text-sm font-medium text-black bg-green-500 hover:bg-green-400 rounded-full transition duration-300 items-center gap-2"
+        >
+          <span>☕</span>
+          <span>Support</span>
+          <InfoIcon
+            variant="light"
+            size="sm"
+            text="Mit dem Preis einer Tasse Kaffee (2,50€) unterstützt du uns dabei, noch mehr coole Features und Workshops für die DJ-Community anzubieten! 🙌"
+            position="bottom" 
+          />
+        </a>
+        
+        {#if isAdmin}
+          <a
+            href="/admin/users"
+            class="flex-1 sm:flex-none text-center px-4 sm:px-6 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-full transition duration-300"
+          >
+            <span>User</span>
+          </a>
+        {/if}
+        
+        <button
+          on:click={handleLogout}
+          disabled={loading}
+          class="flex-1 sm:flex-none text-center px-4 sm:px-6 py-2 text-sm font-medium text-white bg-gray-600 hover:bg-red-700 rounded-full transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {loading ? 'Abmelden...' : 'Logout'}
+        </button>
+      </div>
+    </div>
 
     <div class="space-y-6">
-      <!-- Profile Section -->
-    
-        
- <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
-          <div class="md:col-span-4">
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
+
+       <!-- Benachrichtigungen -->
+       <div class="md:col-span-12">
+        <Notifications {user} />
+      </div>
+
+        <div class="md:col-span-4">
           <ProfileSection
             {user}
             {profile}    
             onEdit={() => showEditProfile = true}
           />
-          </div>
-          
-          <!-- Badges Section -->
-          <div class="relative rounded-xl p-6 border border-gray-800 overflow-hidden md:col-span-8">
-            <div class="absolute inset-0 mix-blend-overlay noise-filter"></div>
-            <div class="relative">
-              <h3 class="text-xl font-medium text-white mb-4">Deine Badges</h3>
-              <BadgeDisplay {user} on:openVideos={handleOpenVideos} />
-            </div>
+        </div>
+        
+ 
+
+        <!-- Badges Section -->
+        <div class="relative rounded-xl p-6 border border-gray-800 overflow-hidden md:col-span-8">
+          <div class="absolute inset-0 mix-blend-overlay noise-filter"></div>
+          <div class="relative">
+            <h3 class="text-xl font-medium text-white mb-4">Deine Badges</h3>
+            <BadgeDisplay {user} on:openVideos={handleOpenVideos} />
           </div>
         </div>
-
-     
+      </div>
 
       <!-- Videos Section -->
       <VideosSection {videos} {user} bind:this={videosComponent} />
@@ -183,8 +187,13 @@
         </CollapsibleSection>
       {/if}
 
-       <!-- Social Feed Section -->
-       <CollapsibleSection title="Community Feed" initiallyOpen={false}>
+      <!-- DJ Urlaub Section -->
+      <CollapsibleSection title="DJ Urlaub" initiallyOpen={false}>
+        <DjHoliday {user} />
+      </CollapsibleSection>
+
+      <!-- Social Feed Section -->
+      <CollapsibleSection title="Community Feed" initiallyOpen={false}>
         {#if isAdmin}
           <SocialFeed {user} {profile} />
         {:else}
@@ -218,27 +227,24 @@
           />
         </MyFiles>
       </CollapsibleSection>
-
            
       <!-- Links & Resources -->
       <CollapsibleSection title="Links & Ressourcen" initiallyOpen={false}>
         <UsefulLinksSection {isAdmin} />
       </CollapsibleSection>
 
-   <!-- Newsletter Section -->
-   <CollapsibleSection title="Newsletter & WhatsApp Channel" initiallyOpen={false}>
-    <NewsletterSection 
-      email={user.email} 
-      firstName={user.raw_user_meta_data?.first_name || user.user_metadata?.first_name || ''} 
-      lastName={user.raw_user_meta_data?.last_name || user.user_metadata?.last_name || ''} 
-    />
-  </CollapsibleSection>
+      <!-- Newsletter Section -->
+      <CollapsibleSection title="Newsletter & WhatsApp Channel" initiallyOpen={false}>
+        <NewsletterSection 
+          email={user.email} 
+          firstName={user.raw_user_meta_data?.first_name || user.user_metadata?.first_name || ''} 
+          lastName={user.raw_user_meta_data?.last_name || user.user_metadata?.last_name || ''} 
+        />
+      </CollapsibleSection>
 
-  
-        <CollapsibleSection title="Webmaster" initiallyOpen={false}>
-          <WebMaster />
-        </CollapsibleSection>
-   
+      <CollapsibleSection title="Webmaster" initiallyOpen={false}>
+        <WebMaster />
+      </CollapsibleSection>
     </div>
   </div>
 </div>

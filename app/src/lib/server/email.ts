@@ -2,11 +2,15 @@ import nodemailer from 'nodemailer';
 import type { SendMailOptions } from 'nodemailer';
 
 export interface EmailData {
-  name: string;
-  email: string;
-  message: string;
+  name?: string;
+  email?: string;
+  message?: string;
   subject?: string;
   formType?: 'contact' | 'artist' | 'partner';
+  // Neue Felder für direkte E-Mails
+  to?: string;
+  html?: string;
+  text?: string;
 }
 
 interface EmailResponse {
@@ -25,7 +29,7 @@ const FORM_CONFIGS = {
 
 // Validiere die Umgebungsvariablen beim Start
 function validateEnvVariables(): void {
-  const requiredVars = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS', 'FROM_EMAIL', 'TO_EMAIL'];
+  const requiredVars = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS', 'FROM_EMAIL'];
   const missing = requiredVars.filter(varName => !process.env[varName]);
   
   if (missing.length > 0) {
@@ -55,8 +59,20 @@ function createTransporter() {
 
 // Erstelle die E-Mail-Optionen
 function createMailOptions(data: EmailData): SendMailOptions {
+  // Wenn HTML und Empfänger direkt angegeben sind, verwende diese
+  if (data.to && (data.html || data.text)) {
+    return {
+      from: process.env.FROM_EMAIL,
+      to: data.to,
+      subject: data.subject || 'Nachricht von DJWG',
+      ...(data.html && { html: data.html }),
+      ...(data.text && { text: data.text })
+    };
+  }
+
+  // Andernfalls verarbeite als Formular-E-Mail
   const { name, email, message, formType = 'contact' } = data;
-  const subject = FORM_CONFIGS[formType].subject;
+  const subject = data.subject || FORM_CONFIGS[formType].subject;
   
   const messageText = `
 ${subject}
@@ -71,7 +87,7 @@ ${message}
 <p><strong>Von:</strong> ${name} &lt;${email}&gt;</p>
 <p><strong>E-Mail:</strong> ${email}</p>
 <p><strong>Nachricht:</strong></p>
-<p>${message.replace(/\n/g, '<br>')}</p>
+<p>${message?.replace(/\n/g, '<br>')}</p>
   `.trim();
 
   return {
@@ -80,11 +96,13 @@ ${message}
     subject,
     text: messageText,
     html: messageHtml,
-    replyTo: `"${name}" <${email}>`,
-    headers: {
-      'Reply-To': `"${name}" <${email}>`,
-      'X-Original-From': `"${name}" <${email}>`
-    }
+    ...(email && { replyTo: `"${name}" <${email}>` }),
+    ...(email && {
+      headers: {
+        'Reply-To': `"${name}" <${email}>`,
+        'X-Original-From': `"${name}" <${email}>`
+      }
+    })
   };
 }
 
