@@ -3,7 +3,8 @@ import type { PageServerLoad } from './$types';
 import type { Profile } from '$lib/types/profile';
 import type { Badge, UserBadge } from '$lib/types/badge';
 
-export const load: PageServerLoad = async ({ locals }) => {
+export const load: PageServerLoad = async ({ locals, setHeaders }) => {
+  setHeaders({ 'Cache-Control': 'no-cache, no-store, must-revalidate' });
   const session = await locals.supabase.auth.getSession();
   
   if (!session.data.session?.user) {
@@ -34,7 +35,7 @@ export const load: PageServerLoad = async ({ locals }) => {
       auth_created_at,
       auth_last_sign_in_at
     `)
-    .order('email', { ascending: true });
+    .order('auth_created_at', { ascending: false }); // Neueste Benutzer zuerst
 
   if (usersError) {
     console.error('Fehler beim Laden der Benutzer:', usersError);

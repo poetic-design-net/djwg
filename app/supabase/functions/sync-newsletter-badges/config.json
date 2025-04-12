@@ -1,0 +1,18 @@
+{
+  "schedule": {
+    "executionTime": "02:00",
+    "timezone": "Europe/Berlin"
+  },
+  "api": {
+    "endpoint": "/api/sync-newsletter-badges",
+    "baseUrl": "https://api.djwg.de",
+    "timeout": 30000
+  },
+  "security": {
+    "adminToken": "SUPABASE_SERVICE_ROLE_KEY"
+  },
+  "logging": {
+    "level": "info",
+    "retention": "7d"
+  }
+}

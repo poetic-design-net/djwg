@@ -1,12 +1,13 @@
 <script lang="ts">
     import { toasts } from '$lib/stores/toast';
-    import type { EnrichedProfile } from '$lib/types/profile';
+    import type { EnrichedProfile } from '$lib/types/profile'; // Zurück zu EnrichedProfile
     import type { Badge, UserBadge } from '$lib/types/badge';
     import { enhance } from '$app/forms';
     import { invalidateAll } from '$app/navigation';
+    import SyncNewsletterBadges from '$lib/components/badges/SyncNewsletterBadges.svelte';
   
-    export let data: { 
-      users: EnrichedProfile[],
+    export let data: {
+      users: EnrichedProfile[], // Zurück zu EnrichedProfile
       badges: Badge[],
       userBadges: UserBadge[]
     };
@@ -45,7 +46,7 @@
     }
 
     let selectedBadges: Record<string, Badge | null> = {};
-    let sortField: keyof EnrichedProfile | 'badges' = 'email'; // Erweitert um 'badges'
+    let sortField: keyof EnrichedProfile | 'badges' = 'email'; // Zurück zu EnrichedProfile
     let sortDirection: 'asc' | 'desc' = 'asc';
     
     $: userBadgeCounts = data.users.reduce((acc, user) => {
@@ -71,8 +72,8 @@
         const countB = userBadgeCounts[b.id] || 0;
         return (countA - countB) * modifier;
       } else {
-        const aVal = (a[sortField as keyof EnrichedProfile] ?? '') as string | number | null | undefined;
-        const bVal = (b[sortField as keyof EnrichedProfile] ?? '') as string | number | null | undefined;
+        const aVal = (a[sortField as keyof EnrichedProfile] ?? '') as string | number | null | undefined; // Zurück zu EnrichedProfile
+        const bVal = (b[sortField as keyof EnrichedProfile] ?? '') as string | number | null | undefined; // Zurück zu EnrichedProfile
 
         // Handle null or undefined values by treating them as empty strings or zero
         const valA = aVal === null || aVal === undefined ? '' : aVal;
@@ -96,7 +97,7 @@
 
 
 
-    function toggleSort(field: keyof EnrichedProfile | 'badges') {
+    function toggleSort(field: keyof EnrichedProfile | 'badges') { // Zurück zu EnrichedProfile
       if (sortField === field) {
         sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
       } else {
@@ -249,6 +250,7 @@
         {/each}
       </select>
     </div>
+
   </div>
 
   <div class="my-4 text font-medium text-gray-200">
@@ -311,7 +313,7 @@
     </div>
   {/if}
 
-  <div class="my-4 text font-medium text-gray-200">
+  <div class="my-4 text font-medium flex space-x-4 items-center text-gray-200">
     Insgesamt {data.users.length} Benutzer
     <button 
       on:click={exportEmails}
@@ -319,117 +321,140 @@
     >
       Emails exportieren (CSV)
     </button>
+           <!-- Hier wird die separate Komponente eingebunden -->
+           <div>
+            <SyncNewsletterBadges />
+          </div>
   </div>
 
   <div class="overflow-x-auto bg-white rounded-lg shadow">
     <table class="min-w-full table-auto">
-      <thead class="bg-gray-50">
-        <tr>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            <div class="flex items-center">
-              <input
-                type="checkbox"
-                checked={selectedUserIds.length === filteredUsers.length}
-                on:change={toggleAllUsers}
-                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
-              />
-            </div>
-          </th>
+      <!-- Table headers fixed structure -->
+<thead class="bg-gray-50">
+  <tr>
+    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+      <div class="flex items-center">
+        <input
+          type="checkbox"
+          checked={selectedUserIds.length === filteredUsers.length}
+          on:change={toggleAllUsers}
+          class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
+        />
+      </div>
+    </th>
 
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" on:click={() => toggleSort('full_name')}>
-            <div class="flex items-center group">
-              <span>Name</span>
-              <span class="ml-1 opacity-0 group-hover:opacity-50 {sortField === 'full_name' ? 'opacity-100' : ''}">
-                {#if sortField === 'full_name'}
-                  <svg class="w-4 h-4 inline-block" fill="currentColor" viewBox="0 0 20 20">
-                    <path d={sortDirection === 'asc' 
-                      ? "M3.293 12.293a1 1 0 011.414 0L10 17.586l5.293-5.293a1 1 0 111.414 1.414l-6 6a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414z"
-                      : "M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z"} />
-                  </svg>
-                {:else}
-                  <svg class="w-4 h-4 inline-block" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
-                  </svg>
-                {/if}
-              </span>
-            </div>
-          </th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" on:click={() => toggleSort('email')}>
-            <div class="flex items-center group">
-              <span>Email</span>
-              <span class="ml-1 opacity-0 group-hover:opacity-50 {sortField === 'email' ? 'opacity-100' : ''}">
-                {#if sortField === 'email'}
-                  <svg class="w-4 h-4 inline-block" fill="currentColor" viewBox="0 0 20 20">
-                    <path d={sortDirection === 'asc' 
-                      ? "M3.293 12.293a1 1 0 011.414 0L10 17.586l5.293-5.293a1 1 0 111.414 1.414l-6 6a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414z"
-                      : "M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z"} />
-                  </svg>
-                {:else}
-                  <svg class="w-4 h-4 inline-block" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
-                  </svg>
-                {/if}
-              </span>
-            </div>
-          </th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" on:click={() => toggleSort('username')}>
-            <div class="flex items-center group">
-              <span>Username</span>
-              <span class="ml-1 opacity-0 group-hover:opacity-50 {sortField === 'username' ? 'opacity-100' : ''}">
-                {#if sortField === 'username'}
-                  <svg class="w-4 h-4 inline-block" fill="currentColor" viewBox="0 0 20 20">
-                    <path d={sortDirection === 'asc' 
-                      ? "M3.293 12.293a1 1 0 011.414 0L10 17.586l5.293-5.293a1 1 0 111.414 1.414l-6 6a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414z"
-                      : "M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z"} />
-                  </svg>
-                {:else}
-                  <svg class="w-4 h-4 inline-block" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
-                  </svg>
-                {/if}
-              </span>
-            </div>
-          </th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" on:click={() => toggleSort('auth_created_at')}>
-            <div class="flex items-center justify-between group">
-              <span>Benutzerinfo</span>
-              <span class="ml-1 opacity-0 group-hover:opacity-50 {sortField === 'auth_created_at' ? 'opacity-100' : ''}">
-                {#if sortField === 'auth_created_at'}
-                  <svg class="w-4 h-4 inline-block" fill="currentColor" viewBox="0 0 20 20">
-                    <path d={sortDirection === 'asc' 
-                      ? "M3.293 12.293a1 1 0 011.414 0L10 17.586l5.293-5.293a1 1 0 111.414 1.414l-6 6a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414z"
-                      : "M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z"} />
-                  </svg>
-                {:else}
-                  <svg class="w-4 h-4 inline-block" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
-                  </svg>
-                {/if}
-              </span>
-            </div>
-          </th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" on:click={() => toggleSort('badges')}>
-            <div class="flex items-center group">
-              <span>Badges</span>
-              <span class="ml-1 opacity-0 group-hover:opacity-50 {sortField === 'badges' ? 'opacity-100' : ''}">
-                {#if sortField === 'badges'}
-                  <svg class="w-4 h-4 inline-block" fill="currentColor" viewBox="0 0 20 20">
-                    <path d={sortDirection === 'asc' 
-                      ? "M3.293 12.293a1 1 0 011.414 0L10 17.586l5.293-5.293a1 1 0 111.414 1.414l-6 6a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414z"
-                      : "M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z"} />
-                  </svg>
-                {:else}
-                  <svg class="w-4 h-4 inline-block" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
-                  </svg>
-                {/if}
-              </span>
-            </div>
-          </th>
-          
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Badge Verwalten</th>
-        </tr>
-      </thead>
+    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" on:click={() => toggleSort('full_name')}>
+      <div class="flex items-center group">
+        <span>Name</span>
+        <span class="ml-1 opacity-0 group-hover:opacity-50 {sortField === 'full_name' ? 'opacity-100' : ''}">
+          {#if sortField === 'full_name'}
+            <svg class="w-4 h-4 inline-block" fill="currentColor" viewBox="0 0 20 20">
+              <path d={sortDirection === 'asc' 
+                ? "M3.293 12.293a1 1 0 011.414 0L10 17.586l5.293-5.293a1 1 0 111.414 1.414l-6 6a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414z"
+                : "M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z"} />
+            </svg>
+          {:else}
+            <svg class="w-4 h-4 inline-block" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+            </svg>
+          {/if}
+        </span>
+      </div>
+    </th>
+    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" on:click={() => toggleSort('email')}>
+      <div class="flex items-center group">
+        <span>Email</span>
+        <span class="ml-1 opacity-0 group-hover:opacity-50 {sortField === 'email' ? 'opacity-100' : ''}">
+          {#if sortField === 'email'}
+            <svg class="w-4 h-4 inline-block" fill="currentColor" viewBox="0 0 20 20">
+              <path d={sortDirection === 'asc' 
+                ? "M3.293 12.293a1 1 0 011.414 0L10 17.586l5.293-5.293a1 1 0 111.414 1.414l-6 6a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414z"
+                : "M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z"} />
+            </svg>
+          {:else}
+            <svg class="w-4 h-4 inline-block" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+            </svg>
+          {/if}
+        </span>
+      </div>
+    </th>
+    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" on:click={() => toggleSort('username')}>
+      <div class="flex items-center group">
+        <span>Username</span>
+        <span class="ml-1 opacity-0 group-hover:opacity-50 {sortField === 'username' ? 'opacity-100' : ''}">
+          {#if sortField === 'username'}
+            <svg class="w-4 h-4 inline-block" fill="currentColor" viewBox="0 0 20 20">
+              <path d={sortDirection === 'asc' 
+                ? "M3.293 12.293a1 1 0 011.414 0L10 17.586l5.293-5.293a1 1 0 111.414 1.414l-6 6a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414z"
+                : "M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z"} />
+            </svg>
+          {:else}
+            <svg class="w-4 h-4 inline-block" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+            </svg>
+          {/if}
+        </span>
+      </div>
+    </th>
+    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" on:click={() => toggleSort('auth_created_at')}>
+      <div class="flex items-center group">
+        <span>Registriert am</span>
+        <span class="ml-1 opacity-0 group-hover:opacity-50 {sortField === 'auth_created_at' ? 'opacity-100' : ''}">
+          {#if sortField === 'auth_created_at'}
+            <svg class="w-4 h-4 inline-block" fill="currentColor" viewBox="0 0 20 20">
+              <path d={sortDirection === 'asc'
+                ? "M3.293 12.293a1 1 0 011.414 0L10 17.586l5.293-5.293a1 1 0 111.414 1.414l-6 6a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414z"
+                : "M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z"} />
+            </svg>
+          {:else}
+            <svg class="w-4 h-4 inline-block" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+            </svg>
+          {/if}
+        </span>
+      </div>
+    </th>
+    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" on:click={() => toggleSort('auth_last_sign_in_at')}>
+      <div class="flex items-center group">
+        <span>Letzter Login</span>
+        <span class="ml-1 opacity-0 group-hover:opacity-50 {sortField === 'auth_last_sign_in_at' ? 'opacity-100' : ''}">
+          {#if sortField === 'auth_last_sign_in_at'}
+            <svg class="w-4 h-4 inline-block" fill="currentColor" viewBox="0 0 20 20">
+              <path d={sortDirection === 'asc'
+                ? "M3.293 12.293a1 1 0 011.414 0L10 17.586l5.293-5.293a1 1 0 111.414 1.414l-6 6a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414z"
+                : "M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z"} />
+            </svg>
+          {:else}
+            <svg class="w-4 h-4 inline-block" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+            </svg>
+          {/if}
+        </span>
+      </div>
+    </th>
+    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" on:click={() => toggleSort('badges')}>
+      <div class="flex items-center group">
+        <span>Badges</span>
+        <span class="ml-1 opacity-0 group-hover:opacity-50 {sortField === 'badges' ? 'opacity-100' : ''}">
+          {#if sortField === 'badges'}
+            <svg class="w-4 h-4 inline-block" fill="currentColor" viewBox="0 0 20 20">
+              <path d={sortDirection === 'asc' 
+                ? "M3.293 12.293a1 1 0 011.414 0L10 17.586l5.293-5.293a1 1 0 111.414 1.414l-6 6a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414z"
+                : "M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z"} />
+            </svg>
+          {:else}
+            <svg class="w-4 h-4 inline-block" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+            </svg>
+          {/if}
+        </span>
+      </div>
+    </th>
+    
+    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Badge Verwalten</th>
+  </tr>
+</thead>
       <tbody class="bg-white divide-y divide-gray-200">
         {#each filteredUsers as user}
           <tr class="hover:bg-gray-50">
@@ -480,14 +505,10 @@
               </span>
             </td>
             <td class="px-6 py-4 text-sm text-gray-500">
-            <div class="space-y-1">
-              <div class="flex items-center gap-2">
-                <span class="text-xs text-gray-400">Registriert:</span>   {formatDate(user.auth_created_at)}
-                </div>
-                <div class="flex items-center gap-2">
-                <span class="text-xs text-gray-400">Letzter Login:</span>   {formatDate(user.auth_last_sign_in_at)}
-              </div>
-            </div>
+              {formatDate(user.auth_created_at)}
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-500">
+              {formatDate(user.auth_last_sign_in_at)}
             </td>
             <td class="px-6 py-4">
               <div class="flex flex-wrap gap-2">

@@ -1,0 +1,22 @@
+
+[2025-04-11T15:36:29.362Z]
+Club Manager: Load Start
+{
+  "timestamp": "2025-04-11T15:36:29.362Z"
+}
+----------------------------------------
+
+[2025-04-11T15:36:29.362Z]
+Club Manager: Checking tables access
+No data
+----------------------------------------
+
+[2025-04-11T15:36:29.414Z]
+Club Manager: Tables access error
+{
+  "code": "PGRST100",
+  "details": "unexpected '(' expecting letter, digit, \"-\", \"->>\", \"->\", \"::\", \".\", \")\", \",\" or end of input",
+  "hint": null,
+  "message": "\"failed to parse select parameter (count(*))\" (line 1, column 6)"
+}
+----------------------------------------
