@@ -33,6 +33,33 @@
   let error: string | null = null;
   let calendar: Calendar | undefined;
   let calendarEl: HTMLElement;
+
+  function getEventHtml(dj: EnrichedProfile): string {
+    const avatarHtml = dj.avatar_url
+      ? `<img src="${dj.avatar_url}" alt="${dj.full_name || 'DJ'}" class="dj-avatar" />`
+      : `<div class="dj-avatar-placeholder">
+          <svg viewBox="0 0 24 24" fill="currentColor" class="w-full h-full">
+            <path d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-6.627 0-12 4.373-12 9.777 0 1.223.993 2.223 2.217 2.223h19.566A2.22 2.22 0 0024 23.777C24 18.373 18.627 14 12 14z"/>
+          </svg>
+        </div>`;
+
+    // Priorisiere username, dann full_name
+    let displayName = dj.username || dj.full_name || '';
+
+    if (!displayName && dj.email) {
+      displayName = dj.email.split('@')[0];
+    }
+    if (!displayName) {
+      displayName = 'DJ';
+    }
+    
+    return `
+      <div class="flex items-center gap-2">
+        ${avatarHtml}
+        <span class="dj-name">@${displayName}</span>
+      </div>
+    `;
+  }
   let selectedStatus = 'all';
   let selectedDj: EnrichedProfile | null = null;
   let showModal = false;
@@ -97,8 +124,9 @@
         while (currentDate <= endDate) {
           events.push({
             id: `${availability.id}-${currentDate.toISOString().split('T')[0]}`,
-            title: `${dj.full_name || dj.email || 'Unbek. DJ'}`,
+            title: '',
             start: currentDate.toISOString().split('T')[0],
+            html: true,
             allDay: true,
             backgroundColor: statusInfo?.color || '#888888',
             borderColor: 'transparent',
@@ -153,10 +181,14 @@
       eventClick: handleEventClick,
       height: 'auto',
       dayMaxEvents: true,
-      eventDidMount: (info) => {
-        const availability = info.event.extendedProps.availability;
+      eventContent: (info) => {
         const dj = info.event.extendedProps.dj;
-        info.el.title = `${dj.full_name || dj.email}\nVom ${formatDate(availability.start_date)} bis ${formatDate(availability.end_date)}`;
+        const availability = info.event.extendedProps.availability;
+        const el = document.createElement('div');
+        el.className = 'flex items-center px-2 w-full h-full';
+        el.innerHTML = getEventHtml(dj);
+        el.title = `${dj.full_name || dj.email}\nVom ${formatDate(availability.start_date)} bis ${formatDate(availability.end_date)}`;
+        return { domNodes: [el] };
       }
     });
 
@@ -290,11 +322,20 @@
   :global(.fc-col-header-cell-cushion) {
     @apply text-gray-300;
   }
-  
   :global(.fc-event) {
-    padding: 4px 8px;
+    padding: 2px 4px;
     margin: 1px 0;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    height: 40px; /* Angepasst an 32px Avatar */
+    background: theme('colors.gray.800/30') !important;
   }
+
+  :global(.fc-event:hover) {
+    transform: scale(1.02);
+    opacity: 0.9;
+  }
+
 
   :global(.fc-daygrid-event-harness) {
     margin: 2px 0;
@@ -382,5 +423,36 @@
     flex: 1;
     display: flex;
     justify-content: flex-end;
+  }
+  :global(.dj-avatar), :global(.dj-avatar-placeholder) {
+    width: 32px; /* Vergrößert */
+    height: 32px; /* Vergrößert */
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  :global(.dj-avatar-placeholder) {
+    background: theme('colors.gray.700');
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px; /* Angepasst an Größe */
+    color: theme('colors.gray.500');
+  }
+
+  :global(.dj-name) {
+    font-size: 12px;
+    font-weight: 500;
+    color: theme('colors.gray.100');
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100px;
+  }
+
+  :global(.fc-daygrid-event) {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
   }
 </style>
