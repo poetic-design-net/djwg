@@ -167,36 +167,39 @@
   }
 
   function initializeCalendar() {
-    if (!browser || !calendarEl || calendar) return;
-    
-    calendar = new Calendar(calendarEl, {
-      plugins: [dayGridPlugin, interactionPlugin],
-      initialView: 'dayGridMonth',
-      locale: 'de',
-      headerToolbar: {
-        left: 'prev,next',
-        center: 'title',
-        right: ''
-      },
-      fixedWeekCount: false,
-      eventClick: handleEventClick,
-      height: 'auto',
-      dayMaxEvents: true,
-      firstDay: 1, // Start with Monday
-      eventContent: (info) => {
-        const dj = info.event.extendedProps.dj;
-        const availability = info.event.extendedProps.availability;
-        const el = document.createElement('div');
-        el.className = 'flex items-center px-2 w-full h-full';
-        el.innerHTML = getEventHtml(dj);
-        el.title = `${dj.full_name || dj.email}\nVom ${formatDate(availability.start_date)} bis ${formatDate(availability.end_date)}`;
-        return { domNodes: [el] };
-      }
-    });
+  if (!browser || !calendarEl || calendar) return;
+  
+  calendar = new Calendar(calendarEl, {
+    plugins: [dayGridPlugin, interactionPlugin],
+    initialView: 'dayGridMonth',
+    locale: 'de',
+    headerToolbar: {
+      left: 'prev,next',
+      center: 'title',
+      right: ''
+    },
+    fixedWeekCount: false,
+    eventClick: handleEventClick,
+    height: 'auto',
+    dayMaxEvents: true,
+    firstDay: 1, // Start with Monday
+    weekNumbers: true, // Aktiviert die Anzeige der Kalenderwochen
+    weekText: 'KW', // Setzt das Präfix auf "KW"
+    weekNumberFormat: { week: 'numeric' }, // Zeigt nur die Nummer an
+    eventContent: (info) => {
+      const dj = info.event.extendedProps.dj;
+      const availability = info.event.extendedProps.availability;
+      const el = document.createElement('div');
+      el.className = 'flex items-center px-2 w-full h-full';
+      el.innerHTML = getEventHtml(dj);
+      el.title = `${dj.full_name || dj.email}\nVom ${formatDate(availability.start_date)} bis ${formatDate(availability.end_date)}`;
+      return { domNodes: [el] };
+    }
+  });
 
-    calendar.render();
-    loadAllAvailabilities();
-  }
+  calendar.render();
+  loadAllAvailabilities();
+}
 
   $: if (browser && calendar && selectedStatus !== undefined) {
     updateCalendarEvents();
@@ -306,8 +309,7 @@
   }
 
   /* Entferne alle äußeren Ränder und Abstände */
-   /* Diese zusätzliche Klasse hilft, jeden äußeren Rand zu entfernen */
-   :global(.no-outer-border) {
+  :global(.no-outer-border) {
     border: 0 !important;
     padding: 16px !important;
     margin: 0 !important;
@@ -318,6 +320,7 @@
     border-radius: 0.5rem;
     overflow: hidden;
   }
+  
   /* Hauptcontainer */
   :global(.fc-theme-standard) {
     background-color: transparent;
@@ -349,10 +352,38 @@
     table-layout: fixed !important;
   }
   
+  /* Zellengrößen anpassen für KW-Spalte */
   :global(.fc-col-header-cell),
   :global(.fc-daygrid-day) {
     min-width: 0 !important;
-    width: calc(100% / 7) !important;
+    width: calc(100% / 8) !important; /* Angepasst von 7 auf 8 Spalten */
+  }
+
+  /* KW-Spalte Styling */
+  :global(.fc-daygrid-day.fc-day-other) {
+    background-color: rgba(31, 41, 55, 0.2) !important;
+  }
+  
+  :global(.fc-day-today .fc-scrollgrid-sync-inner) {
+    background-color: var(--fc-today-bg-color) !important;
+  }
+  
+  :global(.fc-daygrid-day.fc-week-number) {
+    max-width: 50px !important;
+    min-width: 50px !important;
+    width: 50px !important;
+  }
+  
+  :global(.fc-week-number) {
+    background-color: rgba(31, 41, 55, 0.4) !important;
+  }
+  
+  :global(.fc-week-number-cushion) {
+    color: rgba(156, 163, 175, 0.9) !important;
+    font-weight: 600 !important;
+    font-size: 0.8rem !important;
+    padding: 0.5rem 0.3rem !important;
+    text-align: center !important;
   }
 
   /* Zellenränder */
@@ -364,7 +395,7 @@
   }
   
   :global(.fc-theme-standard tr:last-child td) {
-    border-bottom: 1 !important;
+    border-bottom: 1px solid rgba(75, 85, 99, 0.6) !important; /* Korrigiert von 1 auf 1px */
   }
   
   :global(.fc-theme-standard td:last-child),
@@ -422,6 +453,15 @@
   :global(.fc-button-active) {
     background-color: var(--fc-button-active-bg-color) !important;
   }
+  :global(a.fc-daygrid-week-number) {
+    color: rgb(16, 185, 129) !important; /* text-green-500 */
+    font-weight: 600 !important;
+    font-size: 0.8rem !important;
+
+    background-color: rgba(16, 185, 129, 0.1) !important; /* text-green-500/10 */
+    position: absolute;
+    left: 2px;
+} 
 
   /* Tageszahlen und Kopfzeilen */
   :global(.fc-daygrid-day-number) {
@@ -429,6 +469,7 @@
     font-size: 0.875rem;
     font-weight: 500;
     padding: 0.5rem 0.75rem !important;
+  
   }
   
   :global(.fc-col-header-cell-cushion) {
@@ -491,6 +532,7 @@
 
   :global(.fc-toolbar.fc-header-toolbar) {
     margin-bottom: 1.25rem !important;
+    padding: 0 10px;
   }
 
   :global(.fc-toolbar-chunk:first-child) {
