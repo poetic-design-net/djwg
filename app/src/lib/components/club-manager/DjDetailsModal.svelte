@@ -131,7 +131,7 @@
     <div class="bg-gray-900 rounded-lg shadow-xl border border-gray-700 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
       <!-- Header -->
       <div class="flex items-center justify-between px-5 py-3 border-b border-gray-800 sticky top-0 bg-gray-900/95 backdrop-blur-sm z-10">
-        <h2 class="text-lg font-medium text-white">{dj.full_name || 'DJ Profile'}</h2>
+        <h2 class="text-lg font-medium text-white">{dj.username || 'DJ Profile'}</h2>
         <button
           class="text-gray-400 hover:text-white transition-colors"
           on:click={close}
