@@ -174,13 +174,15 @@
       initialView: 'dayGridMonth',
       locale: 'de',
       headerToolbar: {
-        left: 'prev,next today',
+        left: 'prev,next',
         center: 'title',
         right: ''
       },
+      fixedWeekCount: false,
       eventClick: handleEventClick,
       height: 'auto',
       dayMaxEvents: true,
+      firstDay: 1, // Start with Monday
       eventContent: (info) => {
         const dj = info.event.extendedProps.dj;
         const availability = info.event.extendedProps.availability;
@@ -211,22 +213,25 @@
   });
 </script>
 
-<div class="space-y-8">
+
+<div class="space-y-6">
+  <!-- Header -->
   <div class="prose prose-invert max-w-none">
-    <h3>DJ Verfügbarkeiten</h3>
-    <p class="text-gray-400">
+    <h3 class="text-2xl font-medium mb-2">DJ Verfügbarkeiten</h3>
+    <p class="text-gray-400 text-sm">
       Hier findest du eine Übersicht aller DJ Verfügbarkeiten im Kalender. Klicke auf einen DJ um eine Anfrage zu senden.
     </p>
   </div>
 
-  <div class="bg-gray-900/50 rounded-xl p-6 border border-gray-800/60">
-    <div class="flex items-center gap-4">
-      <div class="flex-grow">
-        <label for="status" class="block text-sm font-medium text-gray-400 mb-1">Status Filter</label>
+  <!-- Filter -->
+  <div class="bg-gray-800/40 rounded-lg p-4 backdrop-blur-sm border border-gray-700/30">
+    <div class="flex items-center flex-wrap gap-4">
+      <div class="w-64">
+        <label for="status" class="block text-xs font-medium text-gray-300 mb-1.5">Status Filter</label>
         <select
           id="status"
           bind:value={selectedStatus}
-          class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          class="w-full bg-gray-800/80 border border-gray-700/60 rounded-md px-3 py-1.5 text-sm text-white focus:ring-1 focus:ring-green-500 focus:border-green-500 transition-all"
         >
           <option value="all">Alle Status</option>
           {#each statusOptions as option}
@@ -234,44 +239,43 @@
           {/each}
         </select>
       </div>
+      
+      <!-- Legend inline -->
+      <div class="flex-grow flex items-center gap-5 justify-end">
+        {#each statusOptions as option}
+          <div class="flex items-center gap-1.5">
+            <span class="inline-block w-3 h-3 rounded-full" style="background-color: {option.color}"></span>
+            <span class="text-sm text-gray-300">{option.label}</span>
+          </div>
+        {/each}
+      </div>
     </div>
   </div>
 
-  <div class="bg-gray-900/50 rounded-xl p-6 border border-gray-800/60">
+  <!-- Calendar - Ohne jeglichen äußeren Rand oder Padding -->
+  <div class="bg-gray-800/40 backdrop-blur-sm overflow-hidden p-0 border-0 calendar-container">
     {#if loading && !Object.keys(availabilities).length}
-      <div class="text-center py-8">
-        <svg class="animate-spin h-8 w-8 mx-auto text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <div class="text-center py-12">
+        <svg class="animate-spin h-8 w-8 mx-auto text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
         <p class="mt-2 text-gray-400">Kalender wird geladen...</p>
       </div>
     {:else if error}
-      <div class="bg-red-900/30 border border-red-800 text-red-200 px-4 py-3 rounded-lg">
+      <div class="m-4 bg-red-900/30 text-red-200 px-4 py-3 rounded-md">
         {error}
       </div>
     {/if}
 
     <div
       bind:this={calendarEl}
-      class="bg-gray-800/50 rounded-lg p-4 fc-theme-standard {loading ? 'opacity-50' : ''}"
+      class="fc-theme-standard no-outer-border {loading ? 'opacity-50' : ''}"
       style="min-height: 600px;"
     >
       {#if !loading && !error && Object.keys(availabilities).length === 0}
         <p class="text-center text-gray-400 py-4">Keine Verfügbarkeitsdaten gefunden.</p>
       {/if}
-    </div>
-  </div>
-
-  <div class="bg-gray-900/50 rounded-xl p-6 border border-gray-800/60">
-    <h4 class="text-lg font-medium text-white mb-4">Legende</h4>
-    <div class="space-y-2">
-      {#each statusOptions as option}
-        <div class="flex items-center gap-2">
-          <span class="inline-block w-3 h-3 rounded-full" style="background-color: {option.color}"></span>
-          <span class="text-gray-300">{option.label}</span>
-        </div>
-      {/each}
     </div>
   </div>
 </div>
@@ -281,84 +285,195 @@
 {/if}
 
 <style>
+  /* Basis-Kalender-Styling */
   :global(.fc) {
-    --fc-border-color: theme('colors.gray.700');
-    --fc-button-text-color: theme('colors.white');
-    --fc-button-bg-color: theme('colors.gray.700');
-    --fc-button-border-color: theme('colors.gray.600');
-    --fc-button-hover-bg-color: theme('colors.gray.600');
-    --fc-button-hover-border-color: theme('colors.gray.500');
-    --fc-button-active-bg-color: theme('colors.indigo.600');
-    --fc-button-active-border-color: theme('colors.indigo.500');
-    --fc-today-bg-color: theme('colors.gray.700/30');
-    --fc-neutral-bg-color: theme('colors.gray.800/50');
-    --fc-list-event-hover-bg-color: theme('colors.gray.700');
+    --fc-border-color: rgba(75, 85, 99, 0.4);
+    --fc-button-text-color: #fff;
+    --fc-button-bg-color: rgba(55, 65, 81, 0.7);
+    --fc-button-border-color: transparent;
+    --fc-button-hover-bg-color: rgba(75, 85, 99, 0.8);
+    --fc-button-hover-border-color: transparent;
+    --fc-button-active-bg-color: rgba(16, 185, 129, 0.8);
+    --fc-button-active-border-color: transparent;
+    --fc-today-bg-color: rgba(47, 45, 12, 0.5);
+    --fc-neutral-bg-color: transparent;
+    --fc-list-event-hover-bg-color: rgba(55, 65, 81, 0.7);
     --fc-page-bg-color: transparent;
+    height: 100%;
+    border: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
+  /* Entferne alle äußeren Ränder und Abstände */
+   /* Diese zusätzliche Klasse hilft, jeden äußeren Rand zu entfernen */
+   :global(.no-outer-border) {
+    border: 0 !important;
+    padding: 16px !important;
+    margin: 0 !important;
+    outline: 0 !important;
+  }
+  
+  :global(.calendar-container) {
+    border-radius: 0.5rem;
+    overflow: hidden;
+  }
+  /* Hauptcontainer */
   :global(.fc-theme-standard) {
     background-color: transparent;
+    border: none !important;
+    outline: none !important;
   }
 
+  /* Grid-Layout und Tabellen */
+  :global(.fc .fc-scrollgrid),
+  :global(.fc .fc-scrollgrid-section > *),
+  :global(.fc .fc-scrollgrid-section-header),
+  :global(.fc .fc-scrollgrid-section-body),
+  :global(.fc table) {
+    border: none !important;
+    outline: none !important;
+  }
+  
+  :global(.fc-scrollgrid-section) {
+    display: flex;
+  }
+  
+  :global(.fc-scrollgrid-section-header),
+  :global(.fc-scrollgrid-section-body) {
+    width: 100%;
+  }
+  
+  :global(.fc-scrollgrid-section table) {
+    width: 100% !important;
+    table-layout: fixed !important;
+  }
+  
+  :global(.fc-col-header-cell),
+  :global(.fc-daygrid-day) {
+    min-width: 0 !important;
+    width: calc(100% / 7) !important;
+  }
+
+  /* Zellenränder */
   :global(.fc-theme-standard th),
   :global(.fc-theme-standard td) {
-    border-color: theme('colors.gray.700/50') !important;
+    border: 0 !important;
+    border-right: 1px solid rgba(75, 85, 99, 0.6) !important;
+    border-bottom: 1px solid rgba(75, 85, 99, 0.6) !important;
+  }
+  
+  :global(.fc-theme-standard tr:last-child td) {
+    border-bottom: 1 !important;
+  }
+  
+  :global(.fc-theme-standard td:last-child),
+  :global(.fc-theme-standard th:last-child) {
+    border-right: 0 !important;
+  }
+  
+  /* Entferne alle äußeren Umrandungen */
+  :global(.fc-scrollgrid),
+  :global(.fc-scrollgrid-section),
+  :global(.fc-scrollgrid-section > td),
+  :global(.fc-scrollgrid-section > th),
+  :global(.fc table) {
+    border-width: 0 !important;
+  }
+  
+  :global(.fc-view-harness),
+  :global(.fc-view-harness-active) {
+    border: none !important;
+    outline: none !important;
   }
 
+  /* Heutiger Tag */
   :global(.fc-day-today) {
     background-color: var(--fc-today-bg-color) !important;
   }
 
+  /* Navigation Buttons */
   :global(.fc-button) {
-    @apply text-white transition-colors duration-200;
+    color: var(--fc-button-text-color);
+    background-color: var(--fc-button-bg-color);
+    border: none !important;
+    border-radius: 0.375rem;
+    padding: 0.4rem 0.75rem !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  }
+
+  :global(.fc-prev-button),
+  :global(.fc-next-button) {
+    background-color: rgba(55, 65, 81, 0.7);
+    min-width: 36px !important;
+  }
+
+  :global(.fc-button:hover) {
+    background-color: var(--fc-button-hover-bg-color);
   }
 
   :global(.fc-button:focus) {
-    box-shadow: 0 0 0 2px theme('colors.indigo.500');
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.5);
     outline: none;
   }
 
-  :global(.fc-daygrid-day-number),
-  :global(.fc-col-header-cell-cushion) {
-    @apply text-gray-300;
+  :global(.fc-button-active) {
+    background-color: var(--fc-button-active-bg-color) !important;
   }
+
+  /* Tageszahlen und Kopfzeilen */
+  :global(.fc-daygrid-day-number) {
+    color: #D1D5DB;
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 0.5rem 0.75rem !important;
+  }
+  
+  :global(.fc-col-header-cell-cushion) {
+    color: #D1D5DB;
+    font-weight: 500;
+    padding: 0.75rem 0.5rem !important;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+  }
+
+  /* Events */
   :global(.fc-event) {
-    padding: 2px 4px;
-    margin: 1px 0;
+    margin: 1px 2px;
     cursor: pointer;
-    transition: all 0.15s ease;
-    height: 40px; /* Angepasst an 32px Avatar */
-    background: theme('colors.gray.800/30') !important;
+    transition: all 0.2s ease;
+    height: 36px;
+    background: rgba(17, 24, 39, 0.5) !important;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    border-radius: 0.25rem;
+    border-left: 3px solid currentColor !important;
   }
 
   :global(.fc-event:hover) {
-    transform: scale(1.02);
-    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
   }
-
 
   :global(.fc-daygrid-event-harness) {
-    margin: 2px 0;
+    margin: 3px 2px;
   }
 
+  /* Tageszellen Formatierung */
   :global(.fc-daygrid-day-frame) {
     min-height: 120px;
-    display: flex;
-    flex-direction: column;
+    padding: 1px;
+    border-top: none !important;
   }
 
   :global(.fc-daygrid-day-events) {
-    flex-grow: 1;
-    margin: 0 !important;
     padding: 2px 0;
   }
 
   :global(.fc-h-event) {
-    border: none;
-    padding: 2px 4px;
-  }
-
-  :global(.fc-v-event) {
     border: none;
   }
 
@@ -366,47 +481,16 @@
     padding: 2px 4px;
   }
 
-  :global(.fc-event-title) {
-    font-weight: 500;
-    white-space: normal;
-  }
-
-  :global(.fc td) {
-    min-width: 120px;
-  }
-
-  :global(.fc-col-header-cell) {
-    padding: 8px 0;
-  }
-
-  :global(.fc-scrollgrid),
-  :global(.fc-scrollgrid-sync-table),
-  :global(.fc-daygrid-body),
-  :global(.fc-daygrid-body table) {
-    width: 100% !important;
-  }
-
-  :global(.fc-daygrid-body),
-  :global(.fc-scroller) {
-    overflow: visible !important;
-  }
-
-  :global(.fc-view-harness) {
-    overflow: auto !important;
-  }
-
+  /* Titel und Header */
   :global(.fc-toolbar-title) {
     color: white !important;
-    text-align: center !important;
     font-weight: 500 !important;
     font-size: 1.25rem !important;
-    width: 100% !important;
+    letter-spacing: 0.01em;
   }
 
   :global(.fc-toolbar.fc-header-toolbar) {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 1.5rem !important;
+    margin-bottom: 1.25rem !important;
   }
 
   :global(.fc-toolbar-chunk:first-child) {
@@ -424,26 +508,39 @@
     display: flex;
     justify-content: flex-end;
   }
+
+  /* Scrolling und Layout */
+  :global(.fc-view-harness) {
+    background: transparent;
+  }
+
+  :global(.fc-daygrid-body),
+  :global(.fc-scrollgrid-sync-table) {
+    width: 100% !important;
+  }
+
+  /* DJ Avatar und Name */
   :global(.dj-avatar), :global(.dj-avatar-placeholder) {
-    width: 32px; /* Vergrößert */
-    height: 32px; /* Vergrößert */
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     object-fit: cover;
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
 
   :global(.dj-avatar-placeholder) {
-    background: theme('colors.gray.700');
+    background: rgb(55, 65, 81);
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 8px; /* Angepasst an Größe */
-    color: theme('colors.gray.500');
+    padding: 6px;
+    color: rgb(156, 163, 175);
   }
 
   :global(.dj-name) {
     font-size: 12px;
     font-weight: 500;
-    color: theme('colors.gray.100');
+    color: rgb(229, 231, 235);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
