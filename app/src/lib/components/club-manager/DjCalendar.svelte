@@ -33,6 +33,12 @@
   let error: string | null = null;
   let calendar: Calendar | undefined;
   let calendarEl: HTMLElement;
+  
+  function getStatusBadgeColor(badges: Array<{ badge_id: string }> | undefined): string {
+   if (!badges || badges.length === 0) return '#6B7280'; // gray-500
+   const urlaubBadge = badges.find(b => b.badge_id === '551d9015-aa13-4117-8776-b59f1aaade9b');
+   return urlaubBadge ? '#F59E0B' : '#10B981'; // yellow-500 : green-500
+  }
 
   function getEventHtml(dj: EnrichedProfile): string {
     const avatarHtml = dj.avatar_url
@@ -54,9 +60,12 @@
     }
     
     return `
-      <div class="flex items-center gap-2">
-        ${avatarHtml}
-        <span class="dj-name">@${displayName}</span>
+      <div class="flex items-center justify-between w-full">
+        <div class="flex items-center gap-2">
+          ${avatarHtml}
+          <span class="dj-name">@${displayName}</span>
+        </div>
+        <span class="status-dot" style="background-color: ${getStatusBadgeColor(dj.badges)}"></span>
       </div>
     `;
   }
@@ -226,30 +235,51 @@
     </p>
   </div>
 
-  <!-- Filter -->
-  <div class="bg-gray-800/40 rounded-lg p-4 backdrop-blur-sm border border-gray-700/30">
-    <div class="flex items-center flex-wrap gap-4">
-      <div class="w-64">
-        <label for="status" class="block text-xs font-medium text-gray-300 mb-1.5">Status Filter</label>
-        <select
-          id="status"
-          bind:value={selectedStatus}
-          class="w-full bg-gray-800/80 border border-gray-700/60 rounded-md px-3 py-1.5 text-sm text-white focus:ring-1 focus:ring-green-500 focus:border-green-500 transition-all"
-        >
-          <option value="all">Alle Status</option>
+  <!-- Filter und DJ Übersicht -->
+  <div class="space-y-4">
+    <!-- Status Filter -->
+    <div class="bg-gray-800/40 rounded-lg p-4 backdrop-blur-sm border border-gray-700/30">
+      <div class="flex items-center flex-wrap gap-4">
+        <div class="w-64">
+          <label for="status" class="block text-xs font-medium text-gray-300 mb-1.5">Status Filter</label>
+          <select
+            id="status"
+            bind:value={selectedStatus}
+            class="w-full bg-gray-800/80 border border-gray-700/60 rounded-md px-3 py-1.5 text-sm text-white focus:ring-1 focus:ring-green-500 focus:border-green-500 transition-all"
+          >
+            <option value="all">Alle Status</option>
+            {#each statusOptions as option}
+              <option value={option.value}>{option.label}</option>
+            {/each}
+          </select>
+        </div>
+        
+        <!-- Legend inline -->
+        <div class="flex-grow flex items-center gap-5 justify-end">
           {#each statusOptions as option}
-            <option value={option.value}>{option.label}</option>
+            <div class="flex items-center gap-1.5">
+              <span class="inline-block w-3 h-3 rounded-full" style="background-color: {option.color}"></span>
+              <span class="text-sm text-gray-300">{option.label}</span>
+            </div>
           {/each}
-        </select>
+        </div>
       </div>
-      
-      <!-- Legend inline -->
-      <div class="flex-grow flex items-center gap-5 justify-end">
-        {#each statusOptions as option}
-          <div class="flex items-center gap-1.5">
-            <span class="inline-block w-3 h-3 rounded-full" style="background-color: {option.color}"></span>
-            <span class="text-sm text-gray-300">{option.label}</span>
-          </div>
+    </div>
+
+    <!-- DJs Übersicht -->
+    <div class="bg-gray-800/40 rounded-lg p-4 backdrop-blur-sm border border-gray-700/30">
+      <label class="block text-xs font-medium text-gray-300 mb-3">DJs ({djs.length})</label>
+      <div class="flex flex-wrap gap-2">
+        {#each djs as dj}
+          <button
+            class="inline-flex items-center gap-2 px-2 py-1 bg-gray-700/50 hover:bg-gray-700/70 rounded-full border border-gray-600/30 transition-all"
+            on:click={() => {
+              selectedDj = dj;
+              showModal = true;
+            }}
+          >
+            {@html getEventHtml(dj)}
+          </button>
         {/each}
       </div>
     </div>
@@ -433,6 +463,8 @@
     font-weight: 500 !important;
     transition: all 0.2s ease;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    display: inline-flex;
+    margin: 0 0.25rem;
   }
 
   :global(.fc-prev-button),
@@ -556,6 +588,16 @@
     background: transparent;
   }
 
+  /* Status dot styling */
+  :global(.status-dot) {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 9999px;
+    flex-shrink: 0;
+    margin-left: 2px;
+  }
+
   :global(.fc-daygrid-body),
   :global(.fc-scrollgrid-sync-table) {
     width: 100% !important;
@@ -593,5 +635,33 @@
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
+  }
+
+  /* DJ Tag Styles */
+  :global(.dj-tag) {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    background: rgba(55, 65, 81, 0.5);
+    border-radius: 9999px;
+    border: 1px solid rgba(75, 85, 99, 0.3);
+    transition: all 0.2s ease;
+  }
+
+  :global(.dj-tag:hover) {
+    background: rgba(75, 85, 99, 0.7);
+    transform: translateY(-1px);
+  }
+
+  :global(.dj-tag .dj-avatar),
+  :global(.dj-tag .dj-avatar-placeholder) {
+    width: 24px;
+    height: 24px;
+  }
+
+  :global(.dj-tag .dj-name) {
+    font-size: 0.875rem;
+    color: rgba(229, 231, 235, 0.9);
   }
 </style>

@@ -2,24 +2,93 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { RawDatabasePost, NormalizedPost } from '$lib/types/social';
 import { normalizePost } from '$lib/types/social';
 
+type SupabaseProfile = {
+  username: string | null;
+  avatar_url: string | null;
+};
+
+type SupabasePostResponse = {
+  id: string;
+  user_id: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+  profiles: SupabaseProfile | null;
+  post_likes: {
+    user_id: string;
+  }[];
+  post_comments: {
+    id: string;
+    content: string;
+    created_at: string;
+    user_id: string;
+    profiles: SupabaseProfile | null;
+  }[];
+  post_media: {
+    id: string;
+    media_url: string;
+    media_type: 'image' | 'gif' | 'video';
+    thumbnail_url: string | null;
+  }[];
+};
+
 export class SocialFeedService {
   constructor(private supabase: SupabaseClient) {}
+
+  private async uploadMediaToStorage(file: File, userId: string): Promise<string> {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${userId}/${Math.random().toString(36).slice(2)}.${fileExt}`;
+    const filePath = `${fileName}`;
+
+    const { error: uploadError } = await this.supabase.storage
+      .from('post-media')
+      .upload(filePath, file);
+
+    if (uploadError) throw uploadError;
+
+    const { data: { publicUrl } } = this.supabase.storage
+      .from('post-media')
+      .getPublicUrl(filePath);
+
+    return publicUrl;
+  }
+
+  private transformSupabaseResponse(data: any[]): SupabasePostResponse[] {
+    return data.map(item => ({
+      id: item.id,
+      user_id: item.user_id,
+      content: item.content,
+      created_at: item.created_at,
+      updated_at: item.updated_at,
+      profiles: item.profiles ? {
+        username: item.profiles.username,
+        avatar_url: item.profiles.avatar_url
+      } : null,
+      post_likes: (item.post_likes || []).map((like: any) => ({
+        user_id: like.user_id
+      })),
+      post_comments: (item.post_comments || []).map((comment: any) => ({
+        id: comment.id,
+        content: comment.content,
+        created_at: comment.created_at,
+        user_id: comment.user_id,
+        profiles: comment.profiles ? {
+          username: comment.profiles.username,
+          avatar_url: comment.profiles.avatar_url
+        } : null
+      })),
+      post_media: (item.post_media || []).map((media: any) => ({
+        id: media.id,
+        media_url: media.media_url,
+        media_type: media.media_type,
+        thumbnail_url: media.thumbnail_url
+      }))
+    }));
+  }
 
   async getPosts(): Promise<NormalizedPost[]> {
     try {
       console.log('🔍 Fetching posts...');
-      
-      // Teste zuerst nur die Basis-Tabelle
-      const { data: testData, error: testError } = await this.supabase
-        .from('posts')
-        .select('*');
-
-      if (testError) {
-        console.error('🔥 Error in test query:', testError);
-        throw testError;
-      }
-
-      console.log('✅ Found posts:', testData?.length || 0);
       
       // Hauptabfrage mit allen benötigten Feldern
       const { data, error } = await this.supabase
@@ -46,6 +115,12 @@ export class SocialFeedService {
               username,
               avatar_url
             )
+          ),
+          post_media (
+            id,
+            media_url,
+            media_type,
+            thumbnail_url
           )
         `)
         .order('created_at', { ascending: false });
@@ -55,12 +130,22 @@ export class SocialFeedService {
         throw error;
       }
 
-      console.log('✅ Full query successful, processing data...');
-      console.log('📦 Raw data example:', JSON.stringify(data?.[0], null, 2));
-
-      // Normalisiere die Daten
-      const normalizedPosts = (data || []).map(post => normalizePost(post as RawDatabasePost));
-      console.log('✅ Normalized first post:', JSON.stringify(normalizedPosts[0], null, 2));
+      // Konvertiere die Rohdaten in den erwarteten Typ
+      const transformedData = this.transformSupabaseResponse(data || []);
+      const normalizedPosts = transformedData.map(dbPost => {
+        const rawPost: RawDatabasePost = {
+          id: dbPost.id,
+          user_id: dbPost.user_id,
+          content: dbPost.content,
+          created_at: dbPost.created_at,
+          updated_at: dbPost.updated_at,
+          profiles: dbPost.profiles,
+          post_likes: dbPost.post_likes,
+          post_comments: dbPost.post_comments,
+          post_media: dbPost.post_media
+        };
+        return normalizePost(rawPost);
+      });
 
       return normalizedPosts;
     } catch (error) {
@@ -69,11 +154,12 @@ export class SocialFeedService {
     }
   }
 
-  async createPost(userId: string, content: string): Promise<void> {
+  async createPost(userId: string, content: string, media?: File[]): Promise<void> {
     try {
       console.log('📝 Creating post...', { userId });
       
-      const { data, error } = await this.supabase
+      // Create the post first
+      const { data: post, error: postError } = await this.supabase
         .from('posts')
         .insert({
           user_id: userId,
@@ -82,8 +168,33 @@ export class SocialFeedService {
         .select()
         .single();
 
-      if (error) throw error;
-      console.log('✅ Post created:', { postId: data?.id });
+      if (postError) throw postError;
+      console.log('✅ Post created:', { postId: post?.id });
+
+      // Upload media if provided
+      if (media && media.length > 0 && post) {
+        console.log('📤 Uploading media...');
+        
+        for (const file of media) {
+          const mediaUrl = await this.uploadMediaToStorage(file, userId);
+          
+          const mediaType = file.type.startsWith('image/gif') ? 'gif' :
+                          file.type.startsWith('image/') ? 'image' :
+                          file.type.startsWith('video/') ? 'video' : 'image';
+
+          const { error: mediaError } = await this.supabase
+            .from('post_media')
+            .insert({
+              post_id: post.id,
+              user_id: userId,
+              media_url: mediaUrl,
+              media_type: mediaType
+            });
+
+          if (mediaError) throw mediaError;
+        }
+        console.log('✅ Media uploaded');
+      }
     } catch (error) {
       console.error('🔥 Error creating post:', error);
       throw error;
@@ -94,6 +205,13 @@ export class SocialFeedService {
     try {
       console.log('🗑️ Deleting post...', { postId, userId });
 
+      // Get media files to delete from storage
+      const { data: mediaFiles } = await this.supabase
+        .from('post_media')
+        .select('media_url')
+        .eq('post_id', postId);
+
+      // Delete the post (cascade will handle post_media records)
       const { error } = await this.supabase
         .from('posts')
         .delete()
@@ -101,7 +219,20 @@ export class SocialFeedService {
         .eq('user_id', userId);
 
       if (error) throw error;
-      console.log('✅ Post deleted successfully');
+
+      // Delete media files from storage
+      if (mediaFiles && mediaFiles.length > 0) {
+        for (const file of mediaFiles) {
+          const filePath = file.media_url.split('/').pop();
+          if (filePath) {
+            await this.supabase.storage
+              .from('post-media')
+              .remove([`${userId}/${filePath}`]);
+          }
+        }
+      }
+
+      console.log('✅ Post and associated media deleted successfully');
     } catch (error) {
       console.error('🔥 Error deleting post:', error);
       throw error;
@@ -223,6 +354,18 @@ export class SocialFeedService {
         },
         (payload) => {
           console.log('📢 Comments change detected:', payload.eventType);
+          callback();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'post_media'
+        },
+        (payload) => {
+          console.log('📢 Media change detected:', payload.eventType);
           callback();
         }
       )
