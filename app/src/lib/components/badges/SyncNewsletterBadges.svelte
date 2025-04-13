@@ -7,11 +7,19 @@
     
     let syncing = false;
     let error: string | null = null;
+    let progress = {
+      current: 0,
+      total: 0,
+      percentage: 0,
+      updatedUsers: 0
+    };
     let lastSyncInfo: {
       success: boolean;
       message: string;
       updatedUsers: number;
       timestamp: string;
+      totalSubscribers?: number;
+      totalProcessed?: number;
     } | null = null;
     let showDetails = false;
   
@@ -28,17 +36,14 @@
       });
     }
     
-    async function syncNewsletterBadges() {
-      syncing = true;
-      error = null;
-      showDetails = false;
-      
+    async function processBatch(offset = 0) {
       try {
-        const response = await fetch('/api/sync-newsletter-badges', {
+        const response = await fetch('/api/sync-newsletter-badges-batch', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
-          }
+          },
+          body: JSON.stringify({ offset })
         });
         
         if (!response.ok) {
@@ -47,23 +52,59 @@
         
         const result = await response.json();
         
+        // Fortschritt aktualisieren
+        progress.current = result.totalProcessed;
+        progress.total = result.totalSubscribers;
+        progress.percentage = Math.round((progress.current / progress.total) * 100);
+        progress.updatedUsers += result.updatedUsers;
+        
+        // Wenn noch nicht fertig, nächsten Batch verarbeiten
+        if (!result.done && result.nextOffset !== null) {
+          // Kurze Pause, um Vercel etwas Zeit zu geben
+          await new Promise(resolve => setTimeout(resolve, 500));
+          return processBatch(result.nextOffset);
+        }
+        
         // Speichere Informationen über die letzte Synchronisierung
         lastSyncInfo = {
-          ...result,
-          timestamp: new Date().toISOString()
+          success: true,
+          message: `Synchronisierung abgeschlossen: ${progress.updatedUsers} Benutzer aktualisiert`,
+          updatedUsers: progress.updatedUsers,
+          timestamp: new Date().toISOString(),
+          totalSubscribers: result.totalSubscribers,
+          totalProcessed: result.totalProcessed
         };
         
         // Zeige eine spezifischere Nachricht basierend auf dem Ergebnis
-        if (result.updatedUsers === 0) {
+        if (progress.updatedUsers === 0) {
           toasts.info('Kein Update nötig, alle Newsletter-Abonnenten haben bereits das Badge');
         } else {
-          toasts.success(`${result.updatedUsers} Benutzer(n) wurden Badges zugewiesen`);
+          toasts.success(`${progress.updatedUsers} Benutzer(n) wurden Badges zugewiesen`);
         }
         
         // Automatisch Details anzeigen
         showDetails = true;
         
         await invalidateAll();
+        return true;
+      } catch (err) {
+        throw err;
+      }
+    }
+    
+    async function syncNewsletterBadges() {
+      syncing = true;
+      error = null;
+      showDetails = false;
+      progress = {
+        current: 0,
+        total: 0,
+        percentage: 0,
+        updatedUsers: 0
+      };
+      
+      try {
+        await processBatch(0);
       } catch (err) {
         error = err instanceof Error ? err.message : 'Ein unbekannter Fehler ist aufgetreten';
         toasts.error(error);
@@ -106,6 +147,24 @@
         </button>
       </div>
       
+      {#if syncing && progress.total > 0}
+        <div class="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg" transition:slide={{ duration: 300 }}>
+          <div class="mb-2 flex justify-between">
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Synchronisierung läuft...</span>
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{progress.percentage}%</span>
+          </div>
+          <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+            <div class="bg-indigo-600 h-2.5 rounded-full" style="width: {progress.percentage}%"></div>
+          </div>
+          <div class="mt-2 text-xs text-gray-600 dark:text-gray-400">
+            {progress.current} von {progress.total} Abonnenten verarbeitet
+            {#if progress.updatedUsers > 0}
+              • {progress.updatedUsers} Badges zugewiesen
+            {/if}
+          </div>
+        </div>
+      {/if}
+      
       {#if lastSyncInfo && showDetails}
         <div class="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg text-sm space-y-2" transition:slide={{ duration: 300 }}>
           <div class="flex justify-between items-center">
@@ -137,6 +196,11 @@
                 <span class="text-green-600 dark:text-green-500">{lastSyncInfo.updatedUsers}</span>
               {/if}
             </div>
+            
+            {#if lastSyncInfo.totalSubscribers !== undefined}
+              <div class="text-gray-600 dark:text-gray-600">Abonnenten gesamt:</div>
+              <div>{lastSyncInfo.totalSubscribers}</div>
+            {/if}
             
             <div class="text-gray-600 dark:text-gray-600">Nachricht:</div>
             <div>{lastSyncInfo.message}</div>

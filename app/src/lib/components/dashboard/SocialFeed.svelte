@@ -21,9 +21,28 @@
   let canPost = false;
   let loading = true;
   let subscription: ReturnType<typeof socialFeedService.subscribeToUpdates>;
+  let selectedFiles: FileList | null = null;
+  let previewUrls: string[] = [];
   
   // Kommentar-Inputs mit Index Signature
   let commentInputs: { [key: string]: string } = {};
+
+  // Medien-Vorschau Cleanup Funktion
+  let cleanup: (() => void) | undefined;
+  $: {
+    if (previewUrls.length > 0) {
+      cleanup = () => {
+        previewUrls.forEach(URL.revokeObjectURL);
+      };
+    }
+  }
+
+  onDestroy(() => {
+    if (cleanup) cleanup();
+    if (subscription) {
+      supabase.removeChannel(subscription);
+    }
+  });
 
   // Helper Funktionen
   function hasUserLiked(likes: PostLike[], userId: string): boolean {
@@ -63,6 +82,15 @@
     }
   }
 
+  // Medien-Vorschau
+  $: if (selectedFiles) {
+    previewUrls = [];
+    Array.from(selectedFiles).forEach(file => {
+      const url = URL.createObjectURL(file);
+      previewUrls = [...previewUrls, url];
+    });
+  }
+
   async function loadPosts() {
     try {
       loading = true;
@@ -79,9 +107,15 @@
     if (!newPostContent.trim() || !canPost) return;
 
     try {
-      await socialFeedService.createPost(user.id, newPostContent);
+      await socialFeedService.createPost(
+        user.id, 
+        newPostContent, 
+        selectedFiles ? Array.from(selectedFiles) : undefined
+      );
       await loadPosts();
       newPostContent = '';
+      selectedFiles = null;
+      previewUrls = [];
       toasts.success('Post wurde erstellt');
     } catch (error) {
       console.error('Fehler beim Erstellen des Posts:', error);
@@ -144,17 +178,9 @@
     loadPosts();
     subscription = socialFeedService.subscribeToUpdates(loadPosts);
   });
-
-  onDestroy(() => {
-    if (subscription) {
-      supabase.removeChannel(subscription);
-    }
-  });
 </script>
 
 <div class="space-y-6 p-4 bg-gray-950/90 rounded-xl border border-gray-800/60 backdrop-blur">
- 
-
   <!-- Post erstellen -->
   {#if canPost}
     <div class="space-y-3 p-4 bg-gray-900/80 rounded-xl border border-gray-800/60 shadow-lg">
@@ -164,13 +190,71 @@
         class="w-full p-4 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 resize-none shadow-inner"
         rows="3"
       />
-      <button
-        on:click={handlePostSubmit}
-        disabled={!newPostContent.trim()}
-        class="px-6 py-2 text-sm font-medium text-black bg-green-500 hover:bg-green-400 rounded-full transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-green-500/20"
-      >
-        Posten
-      </button>
+      
+      <!-- Medien Upload -->
+      <div class="flex items-center space-x-4">
+        <label class="cursor-pointer group">
+          <input
+            type="file"
+            class="hidden"
+            accept="image/*,video/*"
+            multiple
+            bind:files={selectedFiles}
+          />
+          <div class="flex items-center space-x-2 text-gray-400 hover:text-green-400 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span class="text-sm">Medien hinzufügen</span>
+          </div>
+        </label>
+        <button
+          on:click={handlePostSubmit}
+          disabled={!newPostContent.trim()}
+          class="px-6 py-2 text-sm font-medium text-black bg-green-500 hover:bg-green-400 rounded-full transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-green-500/20"
+        >
+          Posten
+        </button>
+      </div>
+
+      <!-- Medien Vorschau -->
+      {#if previewUrls.length > 0}
+        <div class="grid grid-cols-2 gap-2 mt-2">
+          {#each previewUrls as url}
+            <div class="relative group">
+              {#if url.includes('video')}
+                <video 
+                  src={url} 
+                  class="w-full h-32 object-cover rounded-lg"
+                  controls
+                />
+              {:else}
+                <img 
+                  src={url} 
+                  alt="Vorschau"
+                  class="w-full h-32 object-cover rounded-lg"
+                />
+              {/if}
+              <button
+                class="absolute top-1 right-1 p-1 bg-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                on:click={() => {
+                  const index = previewUrls.indexOf(url);
+                  if (selectedFiles && index > -1) {
+                    const newFiles = Array.from(selectedFiles);
+                    newFiles.splice(index, 1);
+                    selectedFiles = new DataTransfer().files;
+                    previewUrls = previewUrls.filter((_, i) => i !== index);
+                  }
+                }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+              </button>
+            </div>
+          {/each}
+        </div>
+      {/if}
     </div>
   {:else}
     <div class="p-6 bg-gray-900/80 rounded-xl border border-gray-800/60 text-center text-gray-400 text-sm shadow-lg backdrop-blur">
@@ -229,6 +313,30 @@
           <p class="text-white mb-4 text-lg whitespace-pre-wrap px-2">
             {@html formatTextWithLinks(post.content)}
           </p>
+
+          <!-- Medien anzeigen -->
+          {#if post.post_media && post.post_media.length > 0}
+            <div class="grid grid-cols-2 gap-2 mb-4">
+              {#each post.post_media as media}
+                <div class="relative group rounded-lg overflow-hidden">
+                  {#if media.media_type === 'video'}
+                    <video 
+                      src={media.media_url} 
+                      class="w-full h-48 object-cover"
+                      controls
+                    />
+                  {:else}
+                    <img 
+                      src={media.media_url} 
+                      alt="Post media"
+                      class="w-full h-48 object-cover"
+                    />
+                  {/if}
+                </div>
+              {/each}
+            </div>
+          {/if}
+
           <div class="flex items-center space-x-4 text-gray-400 mb-4">
             <button 
               on:click={() => handleLike(post.id)} 
