@@ -228,68 +228,60 @@
   };
 
   const handleSignInWithGoogle = async () => {
-    if (!mounted) return;
+  if (!mounted) return;
+  
+  try {
+    loading = true;
+    retryCount = 0;
     
-    try {
-      loading = true;
-      retryCount = 0;
-      
-      if (!supabase) {
-        errorMsg = 'Authentifizierungsdienst nicht verfügbar. Bitte versuche es später erneut.';
-        toasts.error(errorMsg);
-        return;
-      }
-
-      // Speichern des Newsletter-Status für die Weiterverarbeitung nach der Anmeldung
-      const wantsNewsletter = subscribeToNewsletter;
-      
-      // Speichern der E-Mail-Adresse, falls sie bereits eingegeben wurde
-      const userEmail = email;
-
-      let success = false;
-      while (!success && retryCount <= MAX_RETRIES) {
-        const { error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: `${browser ? location.origin : ''}/auth/callback?next=${encodeURIComponent(next)}`,
-            queryParams: {
-              access_type: 'offline',
-              prompt: 'consent',
-              // Übergeben des Newsletter-Status als State-Parameter
-              state: JSON.stringify({ 
-                subscribeToNewsletter: wantsNewsletter 
-              })
-            }
-          }
-        });
-
-        if (error) {
-          const shouldRetry = await handleAuthError(error);
-          if (!shouldRetry) break;
-          continue;
-        }
-
-        success = true;
-        
-        // Wenn der Benutzer den Newsletter abonnieren möchte und wir im Registrierungsmodus sind
-        if (isRegistering && wantsNewsletter && userEmail) {
-          try {
-            // Versuchen, die E-Mail für den Newsletter anzumelden
-            await subscribeEmailToMailchimp(userEmail);
-            console.log('Für Newsletter angemeldet (Google Auth)');
-          } catch (e) {
-            console.error('Newsletter Anmeldung fehlgeschlagen (Google Auth):', e);
-          }
-        }
-      }
-    } catch (error) {
-      errorMsg = 'Ein unerwarteter Fehler ist aufgetreten';
+    if (!supabase) {
+      errorMsg = 'Authentifizierungsdienst nicht verfügbar. Bitte versuche es später erneut.';
       toasts.error(errorMsg);
-      throw error; // Sentry wird den Fehler automatisch erfassen
-    } finally {
-      loading = false;
+      return;
     }
-  };
+
+    // Save newsletter status and email for processing after authentication
+    const wantsNewsletter = subscribeToNewsletter;
+    const userEmail = email;
+    
+    // Store newsletter preference in localStorage instead of state parameter
+    if (browser) {
+      localStorage.setItem('wants_newsletter', wantsNewsletter.toString());
+      if (userEmail) {
+        localStorage.setItem('user_email', userEmail);
+      }
+    }
+
+    let success = false;
+    while (!success && retryCount <= MAX_RETRIES) {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${browser ? location.origin : ''}/auth/callback?next=${encodeURIComponent(next)}`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent'
+            // Remove custom state parameter - let Supabase handle it
+          }
+        }
+      });
+
+      if (error) {
+        const shouldRetry = await handleAuthError(error);
+        if (!shouldRetry) break;
+        continue;
+      }
+
+      success = true;
+    }
+  } catch (error) {
+    errorMsg = 'Ein unerwarteter Fehler ist aufgetreten';
+    toasts.error(errorMsg);
+    throw error; // Sentry wird den Fehler automatisch erfassen
+  } finally {
+    loading = false;
+  }
+};
 
   const togglePasswordVisibility = () => {
     showPassword = !showPassword;
