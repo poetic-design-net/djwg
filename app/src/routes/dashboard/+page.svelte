@@ -184,11 +184,27 @@
       <!-- Videos Section -->
       <VideosSection {videos} {user} bind:this={videosComponent} />
 
-      <!-- Partner Section -->
-      {#if hasPartnerBadge(user)}
-       <CollapsibleSection title="Partner" initiallyOpen={true}>
-        <PartnerDisplay {user} />
-       </CollapsibleSection>
+      <!-- Partner Section (Admin Only - Testing) -->
+      {#if isAdmin}
+        <CollapsibleSection title="Partner" initiallyOpen={false}>
+          {#if hasPartnerBadge(user)}
+            <PartnerDisplay {user} />
+          {:else}
+            <div class="text-center py-8 space-y-4">
+              <div class="bg-gray-800/70 rounded-lg p-6 border border-gray-700/50">
+                <h3 class="text-xl font-medium text-white mb-3">Level 5 benötigt!</h3>
+                <p class="text-gray-400">Exklusive Angebote und Vergünstigungen unserer Partner - nur für dich!</p>
+                <div class="mt-4 flex justify-center">
+                  <InfoIcon
+                    variant="light"
+                    text="Erhalte Vergünstigungen und Gutscheine von unseren Partnern! Erreiche Level 5, um Zugang zu erhalten."
+                    position="bottom"
+                  />
+                </div>
+              </div>
+            </div>
+          {/if}
+        </CollapsibleSection>
       {/if}
     
 
