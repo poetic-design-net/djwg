@@ -44,3 +44,16 @@ export function filterPagesByUserBadges(pages: Record<string, any>, userBadges: 
 
   return filteredPages;
 }
+
+/**
+ * Prüft, ob ein User das Badge "Stufe 5" besitzt (Partner-Zugriff)
+ */
+export function hasPartnerAccess(userBadges: UserBadge[]): boolean {
+  const BADGE_STUFE_5_ID = 'b83547a4-fdbf-4ff8-8bec-0ea5666a0ac5';
+  
+  if (!userBadges || userBadges.length === 0) {
+    return false;
+  }
+
+  return userBadges.some(badge => badge.badge_id === BADGE_STUFE_5_ID);
+}

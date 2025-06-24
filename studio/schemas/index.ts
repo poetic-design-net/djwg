@@ -22,6 +22,7 @@ import knowledgeBaseItem from './knowledgeBaseItem'
 import aboutUs from './aboutUs'
 import onlineTalk from './onlineTalk'
 import badge from './badge'
+import partner from './partner'
 import video from './video'
 import videoCategory from './videoCategory'
 
@@ -92,6 +93,7 @@ export const schemaTypes = [
   merchProduct,
   onlineTalk,
   badge,
+  partner,
   award,
   video,
   videoCategory,

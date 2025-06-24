@@ -23,6 +23,7 @@
   import Award from '$lib/components/dashboard/Award.svelte';
   import DjHoliday from '$lib/components/dashboard/DjHoliday.svelte';
   import Notifications from '$lib/components/dashboard/Notifications.svelte';
+  import PartnerDisplay from '$lib/components/partners/PartnerDisplay.svelte';
 
   interface OnlineTalk {
     _id: string;
@@ -58,11 +59,16 @@
 
   const AWARD_BADGE_ID = 'fc005104-5c29-44bc-b05f-1f5e5ef817a1';
   const DJ_URLAUB_BADGE_ID = '551d9015-aa13-4117-8776-b59f1aaade9b';
+  const PARTNER_BADGE_ID = 'b83547a4-fdbf-4ff8-8bec-0ea5666a0ac5';
 
   export let data: PageData;
 
   const hasAwardBadge = (user: PageData['user']) => {
     return user.badges?.some((badge: Badge) => badge.badge_id === AWARD_BADGE_ID) || false;
+  };
+
+  const hasPartnerBadge = (user: PageData['user']) => {
+    return user.badges?.some((badge: Badge) => badge.badge_id === PARTNER_BADGE_ID) || false;
   };
 
   function canShowAward(user: PageData['user'], award: PageData['award']): boolean {
@@ -177,6 +183,14 @@
 
       <!-- Videos Section -->
       <VideosSection {videos} {user} bind:this={videosComponent} />
+
+      <!-- Partner Section -->
+      {#if hasPartnerBadge(user)}
+       <CollapsibleSection title="Partner" initiallyOpen={true}>
+        <PartnerDisplay {user} />
+       </CollapsibleSection>
+      {/if}
+    
 
       <!-- Award Section -->
       {#if canShowAward(user, award)}
