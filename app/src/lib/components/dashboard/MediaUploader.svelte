@@ -187,7 +187,7 @@
       multiple
       class="sr-only"
       on:change={handleFileSelect}
-      accept="image/*,video/*,audio/*"
+      accept="image/*,video/*,audio/*,application/pdf"
     />
     
     <label
@@ -214,7 +214,7 @@
           <span class="text-green-500 hover:text-green-400"> durchsuchen</span>
         </div>
         <p class="text-xs text-gray-500">
-          Bilder, Videos oder Audio-Dateien
+          Bilder, Videos, Audio-Dateien oder PDFs
         </p>
       </div>
     </label>
