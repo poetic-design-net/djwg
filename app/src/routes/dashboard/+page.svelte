@@ -135,7 +135,7 @@
 </script>
 
 <div class="min-h-screen bg-black py-6 px-4 sm:px-6 lg:px-8">
-  <div class="max-w-7xl mx-auto">
+  <div class="container px-6 mx-auto">
     <!-- Header -->
     <div class="mb-6 flex flex-col sm:flex-row justify-between gap-3 sm:items-center">
       <div>
@@ -161,10 +161,10 @@
         
         {#if isAdmin}
           <a
-            href="/admin/users"
+            href="/admin"
             class="flex-1 sm:flex-none text-center px-4 sm:px-6 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-full transition duration-300"
           >
-            <span>User</span>
+            <span>Admin</span>
           </a>
         {/if}
         
