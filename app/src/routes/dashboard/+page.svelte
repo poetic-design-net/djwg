@@ -78,9 +78,27 @@
   let loading = false;
   let showEditProfile = false;
   let videosComponent: VideosSection;
+  let activeTab = 'overview';
+  let showMobileTabs = false;
   const supabase = getContext<SupabaseClient>('supabase');
 
   const { user, profile, onlineTalks, isAdmin, videos, award } = data;
+
+  // Tab-Definitionen
+  const tabs = [
+    { id: 'overview', label: 'Übersicht', icon: '🏠' },
+    { id: 'badges', label: 'Badges', icon: '🏆' },
+    { id: 'videos', label: 'Videos', icon: '📺' },
+    ...(isAdmin ? [{ id: 'partner', label: 'Partner', icon: '🤝' }] : []),
+    ...(canShowAward(user, award) ? [{ id: 'award', label: 'DJ Award', icon: '🏅' }] : []),
+    { id: 'online-talks', label: 'Online Talks', icon: '🎤' },
+    { id: 'uploads', label: 'Uploads', icon: '📁' },
+    { id: 'dj-holiday', label: 'DJ Urlaub', icon: '🏖️' },
+    { id: 'community', label: 'Community Feed', icon: '👥' },
+    { id: 'links', label: 'Links', icon: '🔗' },
+    { id: 'newsletter', label: 'Newsletter', icon: '📧' },
+    { id: 'webmaster', label: 'Webmaster', icon: '🛠️' },
+  ];
 
   const handleLogout = async () => {
     if (loading) return;
@@ -107,12 +125,19 @@
     if (videosComponent) {
       videosComponent.openAndScrollTo();
     }
+    activeTab = 'videos';
+  }
+
+  function setActiveTab(tabId: string) {
+    activeTab = tabId;
+    showMobileTabs = false;
   }
 </script>
 
-<div class="min-h-screen bg-black py-12 px-4 sm:px-6 lg:px-8">
+<div class="min-h-screen bg-black py-6 px-4 sm:px-6 lg:px-8">
   <div class="max-w-7xl mx-auto">
-    <div class="mb-8 flex flex-col sm:flex-row justify-between gap-4 sm:items-center">
+    <!-- Header -->
+    <div class="mb-6 flex flex-col sm:flex-row justify-between gap-3 sm:items-center">
       <div>
         <h1 class="text-3xl sm:text-4xl font-medium text-white mb-2">Dashboard</h1>
         <p class="text-gray-400">Dein Bereich zum Lernen und Verwalten</p>
@@ -130,7 +155,7 @@
             variant="light"
             size="sm"
             text="Mit dem Preis einer Tasse Kaffee (2,50€) unterstützt du uns dabei, noch mehr coole Features und Workshops für die DJ-Community anzubieten! 🙌"
-            position="bottom" 
+            position="bottom"
           />
         </a>
         
@@ -153,128 +178,189 @@
       </div>
     </div>
 
-    <div class="space-y-6">
-      <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
+    <!-- Notifications -->
+    <div class="mb-6">
+      <Notifications {user} />
+    </div>
 
-       <!-- Benachrichtigungen -->
-       <div class="md:col-span-12">
-        <Notifications {user} />
-      </div>
-
-        <div class="md:col-span-4">
-          <ProfileSection
-            {user}
-            {profile}    
-            onEdit={() => showEditProfile = true}
-          />
-        </div>
+    <!-- Main Dashboard Layout -->
+    <div class="flex flex-col lg:flex-row gap-6">
+      <!-- Mobile Tab Selector -->
+      <div class="lg:hidden">
+        <button
+          on:click={() => showMobileTabs = !showMobileTabs}
+          class="w-full flex items-center justify-between px-4 py-3 bg-gray-800 rounded-lg border border-gray-700 text-white"
+        >
+          <span class="flex items-center gap-2">
+            <span>{tabs.find(tab => tab.id === activeTab)?.icon}</span>
+            <span>{tabs.find(tab => tab.id === activeTab)?.label}</span>
+          </span>
+          <svg class="w-5 h-5 transform transition-transform {showMobileTabs ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </button>
         
- 
-
-        <!-- Badges Section -->
-        <div class="relative rounded-xl p-6 border border-gray-800 overflow-hidden md:col-span-8">
-          <div class="absolute inset-0 mix-blend-overlay noise-filter"></div>
-          <div class="relative">
-            <h3 class="text-xl font-medium text-white mb-4">Deine Badges</h3>
-            <BadgeDisplay {user} on:openVideos={handleOpenVideos} />
-          </div>
-        </div>
-      </div>
-
-      <!-- Videos Section -->
-      <VideosSection {videos} {user} bind:this={videosComponent} />
-
-      <!-- Partner Section (Admin Only - Testing) -->
-      {#if isAdmin}
-        <CollapsibleSection title="Partner" initiallyOpen={false}>
-          {#if hasPartnerBadge(user)}
-            <PartnerDisplay {user} />
-          {:else}
-            <div class="text-center py-8 space-y-4">
-              <div class="bg-gray-800/70 rounded-lg p-6 border border-gray-700/50">
-                <h3 class="text-xl font-medium text-white mb-3">Level 5 benötigt!</h3>
-                <p class="text-gray-400">Exklusive Angebote und Vergünstigungen unserer Partner - nur für dich!</p>
-                <div class="mt-4 flex justify-center">
-                  <InfoIcon
-                    variant="light"
-                    text="Erhalte Vergünstigungen und Gutscheine von unseren Partnern! Erreiche Level 5, um Zugang zu erhalten."
-                    position="bottom"
-                  />
-                </div>
-              </div>
-            </div>
-          {/if}
-        </CollapsibleSection>
-      {/if}
-    
-
-      <!-- Award Section -->
-      {#if canShowAward(user, award)}
-        <CollapsibleSection title="DJ Award" initiallyOpen={false}>
-          {#if award}
-            <Award user={user} award={award} />
-          {/if}
-        </CollapsibleSection>
-      {/if}
-
-      <!-- DJ Urlaub Section -->
-      <CollapsibleSection title="DJ Urlaub" initiallyOpen={false}>
-        <DjHoliday {user} />
-      </CollapsibleSection>
-
-      <!-- Social Feed Section -->
-      <CollapsibleSection title="Community Feed" initiallyOpen={false}>
-        {#if isAdmin}
-          <SocialFeed {user} {profile} />
-        {:else}
-          <div class="text-center py-8 space-y-4">
-            <div class="bg-gray-800/70 rounded-lg p-6 border border-gray-700/50">
-              <h3 class="text-xl font-medium text-white mb-3">Coming Soon!</h3>
-              <p class="text-gray-400">Der Community Feed befindet sich derzeit in der Beta-Phase und wird bald für alle Mitglieder verfügbar sein.</p>
-              <div class="mt-4 flex justify-center">
-                <InfoIcon
-                  variant="light"
-                  text="Werde Teil der Beta und erhalte frühzeitigen Zugang zu neuen Features! Kontaktiere uns für mehr Informationen."
-                  position="bottom"
-                />
-              </div>
-            </div>
+        {#if showMobileTabs}
+          <div class="mt-2 bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+            {#each tabs as tab}
+              <button
+                on:click={() => setActiveTab(tab.id)}
+                class="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-700 transition-colors {activeTab === tab.id ? 'bg-gray-700 text-white' : 'text-gray-300'}"
+              >
+                <span class="text-lg">{tab.icon}</span>
+                <span>{tab.label}</span>
+              </button>
+            {/each}
           </div>
         {/if}
-      </CollapsibleSection>
+      </div>
 
-      <!-- Online Talks Section -->
-      <CollapsibleSection title="Online Talks" initiallyOpen={false}>
-        <OnlineTalkSection {onlineTalks} />
-      </CollapsibleSection>
+      <!-- Desktop Sidebar -->
+      <div class="hidden lg:block w-64 flex-shrink-0">
+        <div class="bg-black rounded-xl border border-gray-800 overflow-hidden">
+          <div class="p-4 border-b border-gray-800">
+            <h3 class="text-lg font-medium text-white">Navigation</h3>
+          </div>
+          <nav class="p-2">
+            {#each tabs as tab}
+              <button
+                on:click={() => setActiveTab(tab.id)}
+                class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors {activeTab === tab.id ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white'}"
+              >
+                <span class="text-lg">{tab.icon}</span>
+                <span class="font-medium">{tab.label}</span>
+              </button>
+            {/each}
+          </nav>
+        </div>
+      </div>
 
-      <!-- Media Section -->
-      <CollapsibleSection title="Meine Uploads" initiallyOpen={false}>
-        <MyFiles {user} let:handleUploadComplete>
-          <MediaUploader 
-            {user} 
-            on:uploadComplete={handleUploadComplete} 
-          />
-        </MyFiles>
-      </CollapsibleSection>
-           
-      <!-- Links & Resources -->
-      <CollapsibleSection title="Links & Ressourcen" initiallyOpen={false}>
-        <UsefulLinksSection {isAdmin} />
-      </CollapsibleSection>
-
-      <!-- Newsletter Section -->
-      <CollapsibleSection title="Newsletter & WhatsApp Channel" initiallyOpen={false}>
-        <NewsletterSection 
-          email={user.email} 
-          firstName={user.raw_user_meta_data?.first_name || user.user_metadata?.first_name || ''} 
-          lastName={user.raw_user_meta_data?.last_name || user.user_metadata?.last_name || ''} 
-        />
-      </CollapsibleSection>
-
-      <CollapsibleSection title="Webmaster" initiallyOpen={false}>
-        <WebMaster />
-      </CollapsibleSection>
+      <!-- Main Content Area -->
+      <div class="flex-1 min-w-0">
+        {#if activeTab === 'overview'}
+          <!-- Overview Tab - Only Profile -->
+          <div class="bg-black rounded-xl border border-gray-800 p-6">
+            <h2 class="text-2xl font-medium text-white mb-4">Profil Übersicht</h2>
+            <ProfileSection
+              {user}
+              {profile}
+              onEdit={() => showEditProfile = true}
+            />
+          </div>
+        {:else if activeTab === 'badges'}
+          <!-- Badges Tab -->
+          <div class="relative rounded-xl p-6 border border-gray-800 bg-black overflow-hidden">
+            <div class="absolute inset-0 mix-blend-overlay noise-filter"></div>
+            <div class="relative">
+              <h2 class="text-2xl font-medium text-white mb-4">Deine Badges</h2>
+              <BadgeDisplay {user} on:openVideos={handleOpenVideos} />
+            </div>
+          </div>
+        {:else if activeTab === 'videos'}
+          <!-- Videos Tab -->
+          <div class="bg-black rounded-xl border border-gray-800 p-6">
+              <h2 class="text-2xl font-medium text-white mb-4">DJ Learning Hub</h2>
+            <VideosSection {videos} {user} bind:this={videosComponent} />
+          </div>
+        {:else if activeTab === 'partner' && isAdmin}
+          <!-- Partner Tab -->
+          <div class="bg-black rounded-xl border border-gray-800 p-6">
+            <h2 class="text-2xl font-medium text-white mb-4">Partner</h2>
+            {#if hasPartnerBadge(user)}
+              <PartnerDisplay {user} />
+            {:else}
+              <div class="text-center py-6 space-y-3">
+                <div class="bg-gray-800/70 rounded-lg p-4 border border-gray-700/50">
+                  <h3 class="text-lg font-medium text-white mb-2">Level 5 benötigt!</h3>
+                  <p class="text-sm text-gray-400">Exklusive Angebote und Vergünstigungen unserer Partner - nur für dich!</p>
+                  <div class="mt-3 flex justify-center">
+                    <InfoIcon
+                      variant="light"
+                      text="Erhalte Vergünstigungen und Gutscheine von unseren Partnern! Erreiche Level 5, um Zugang zu erhalten."
+                      position="bottom"
+                    />
+                  </div>
+                </div>
+              </div>
+            {/if}
+          </div>
+        {:else if activeTab === 'award' && canShowAward(user, award)}
+          <!-- Award Tab -->
+          <div class="bg-black rounded-xl border border-gray-800 p-6">
+            <h2 class="text-2xl font-medium text-white mb-4">DJ Award</h2>
+            {#if award}
+              <Award user={user} award={award} />
+            {/if}
+          </div>
+        {:else if activeTab === 'dj-holiday'}
+          <!-- DJ Holiday Tab -->
+          <div class="bg-black rounded-xl border border-gray-800 p-6">
+            <h2 class="text-2xl font-medium text-white mb-4">DJ Urlaub</h2>
+            <DjHoliday {user} />
+          </div>
+        {:else if activeTab === 'community'}
+          <!-- Community Feed Tab -->
+          <div class="bg-black rounded-xl border border-gray-800 p-6">
+            <h2 class="text-2xl font-medium text-white mb-4">Community Feed</h2>
+            {#if isAdmin}
+              <SocialFeed {user} {profile} />
+            {:else}
+              <div class="text-center py-6 space-y-3">
+                <div class="bg-gray-800/70 rounded-lg p-4 border border-gray-700/50">
+                  <h3 class="text-lg font-medium text-white mb-2">Coming Soon!</h3>
+                  <p class="text-sm text-gray-400">Der Community Feed befindet sich derzeit in der Beta-Phase und wird bald für alle Mitglieder verfügbar sein.</p>
+                  <div class="mt-3 flex justify-center">
+                    <InfoIcon
+                      variant="light"
+                      text="Werde Teil der Beta und erhalte frühzeitigen Zugang zu neuen Features! Kontaktiere uns für mehr Informationen."
+                      position="bottom"
+                    />
+                  </div>
+                </div>
+              </div>
+            {/if}
+          </div>
+        {:else if activeTab === 'online-talks'}
+          <!-- Online Talks Tab -->
+          <div class="bg-black rounded-xl border border-gray-800 p-6">
+            <h2 class="text-2xl font-medium text-white mb-4">Online Talks</h2>
+            <OnlineTalkSection {onlineTalks} />
+          </div>
+        {:else if activeTab === 'uploads'}
+          <!-- Uploads Tab -->
+          <div class="bg-black rounded-xl border border-gray-800 p-6">
+            <h2 class="text-2xl font-medium text-white mb-4">Meine Uploads</h2>
+            <MyFiles {user} let:handleUploadComplete>
+              <MediaUploader
+                {user}
+                on:uploadComplete={handleUploadComplete}
+              />
+            </MyFiles>
+          </div>
+        {:else if activeTab === 'links'}
+          <!-- Links Tab -->
+          <div class="bg-black rounded-xl border border-gray-800 p-6">
+            <h2 class="text-2xl font-medium text-white mb-4">Links & Ressourcen</h2>
+            <UsefulLinksSection {isAdmin} />
+          </div>
+        {:else if activeTab === 'newsletter'}
+          <!-- Newsletter Tab -->
+          <div class="bg-black rounded-xl border border-gray-800 p-6">
+            <h2 class="text-2xl font-medium text-white mb-4">Newsletter & WhatsApp Channel</h2>
+            <NewsletterSection
+              email={user.email}
+              firstName={user.raw_user_meta_data?.first_name || user.user_metadata?.first_name || ''}
+              lastName={user.raw_user_meta_data?.last_name || user.user_metadata?.last_name || ''}
+            />
+          </div>
+        {:else if activeTab === 'webmaster'}
+          <!-- Webmaster Tab -->
+          <div class="bg-black rounded-xl border border-gray-800 p-6">
+            <h2 class="text-2xl font-medium text-white mb-4">Webmaster</h2>
+            <WebMaster />
+          </div>
+        {/if}
+      </div>
     </div>
   </div>
 </div>

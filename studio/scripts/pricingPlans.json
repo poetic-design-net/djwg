@@ -1,0 +1,59 @@
+[
+  {
+    "_type": "pricingPlan",
+    "key": "monthly",
+    "id": "nextlevel_monthly",
+    "name": "1 Monat",
+    "description": "Monatlicher Zugang zu NextLevel DJs Academy",
+    "price": 3900,
+    "originalPrice": 6900,
+    "interval": "month",
+    "intervalCount": 1,
+    "features": [
+      "Vollzugriff auf alle Videos",
+      "Download aller Musikdateien",
+      "Verschiedene Dateiformate",
+      "Neue Inhalte jeden Monat",
+      "Community Zugang"
+    ]
+  },
+  {
+    "_type": "pricingPlan",
+    "key": "quarterly",
+    "id": "nextlevel_quarterly",
+    "name": "3 Monate",
+    "description": "3 Monate Zugang zu NextLevel DJs Academy",
+    "price": 8900,
+    "originalPrice": 13900,
+    "interval": "month",
+    "intervalCount": 3,
+    "features": [
+      "Vollzugriff auf alle Videos",
+      "Download aller Musikdateien",
+      "Verschiedene Dateiformate",
+      "Neue Inhalte jeden Monat",
+      "Community Zugang",
+      "15% Ersparnis"
+    ]
+  },
+  {
+    "_type": "pricingPlan",
+    "key": "yearly",
+    "id": "nextlevel_yearly",
+    "name": "12 Monate",
+    "description": "Jährlicher Zugang zu NextLevel DJs Academy",
+    "price": 13900,
+    "originalPrice": 34900,
+    "interval": "year",
+    "intervalCount": 1,
+    "features": [
+      "Vollzugriff auf alle Videos",
+      "Download aller Musikdateien",
+      "Verschiedene Dateiformate",
+      "Neue Inhalte jeden Monat",
+      "Community Zugang",
+      "Beste Ersparnis (60%)",
+      "Prioritäts-Support"
+    ]
+  }
+] 

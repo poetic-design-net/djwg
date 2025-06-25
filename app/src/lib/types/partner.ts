@@ -8,12 +8,14 @@ export interface Partner {
   logo?: {
     asset: {
       _ref: string;
+      _type: 'reference';
       url?: string;
     };
   };
   video?: {
     asset: {
       _ref: string;
+      _type: 'reference';
       url?: string;
     };
   };

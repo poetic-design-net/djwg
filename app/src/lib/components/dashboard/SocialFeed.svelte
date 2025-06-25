@@ -180,7 +180,7 @@
   });
 </script>
 
-<div class="space-y-6 p-4 bg-gray-950/90 rounded-xl border border-gray-800/60 backdrop-blur">
+<div class="space-y-6">
   <!-- Post erstellen -->
   {#if canPost}
     <div class="space-y-3 p-4 bg-gray-900/80 rounded-xl border border-gray-800/60 shadow-lg">

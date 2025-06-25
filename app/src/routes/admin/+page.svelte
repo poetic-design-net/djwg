@@ -7,6 +7,16 @@
 
   const adminLinks: AdminLink[] = [
     {
+      title: 'Database Management',
+      href: '/admin/database',
+      description: 'Supabase-Datenbank überwachen und verwalten'
+    },
+    {
+      title: 'NextLevel Subscriptions',
+      href: '/admin/subscriptions',
+      description: 'Abonnements verwalten und Performance überwachen'
+    },
+    {
       title: 'Error Logs',
       href: '/admin/error-logs',
       description: 'System Fehler und Warnungen überwachen'

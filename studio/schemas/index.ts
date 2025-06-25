@@ -25,6 +25,7 @@ import badge from './badge'
 import partner from './partner'
 import video from './video'
 import videoCategory from './videoCategory'
+import pricingPlan from './pricingPlan'
 
 import area from './area' // Import für das neue Area-Schema
 import externalLinks from './objects/externalLinks' // Import für das neue ExternalLinks-Schema
@@ -97,6 +98,7 @@ export const schemaTypes = [
   award,
   video,
   videoCategory,
+  pricingPlan,
   // Objects
   blockContent,
   seo,

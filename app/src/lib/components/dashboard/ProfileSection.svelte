@@ -53,18 +53,15 @@
   }
 </script>
 
-<div class="relative rounded-3xl p-8 border border-gray-800 overflow-hidden h-full min-h-full flex flex-col">
-  <div class="absolute inset-0 mix-blend-overlay"></div>
-  <div class="relative flex-grow flex flex-col">
-    <div class="flex justify-between items-start mb-6">
-      <h2 class="text-2xl font-medium text-white">Profile Information</h2>
-      <button
-        on:click={onEdit}
-        class="px-4 py-2 text-sm font-medium text-white bg-gray-800 hover:bg-gray-700 rounded-xl transition duration-300"
-      >
-        Bearbeiten
-      </button>
-    </div>
+<div class="flex-grow flex flex-col">
+  <div class="flex justify-between items-start mb-6">
+    <button
+      on:click={onEdit}
+      class="px-4 py-2 text-sm font-medium text-white bg-gray-800 hover:bg-gray-700 rounded-xl transition duration-300 ml-auto"
+    >
+      Bearbeiten
+    </button>
+  </div>
 
     <!-- Fortschrittsbalken -->
     <div class="w-full bg-gray-800/40 rounded-full h-4 overflow-hidden mb-6">
@@ -222,5 +219,4 @@
           </div>
         </div>
       </div>
-  </div>
 </div>

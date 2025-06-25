@@ -3,7 +3,6 @@
   import { fade, slide } from 'svelte/transition';
   import type { Video } from '$lib/sanity/queries/videos';
   import SecurePlayer from '$lib/components/video/SecurePlayer.svelte';
-  import CollapsibleSection from './CollapsibleSection.svelte';
   import InfoIcon from '$lib/components/InfoIcon.svelte';
   import type { User } from '$lib/types/profile';
 
@@ -11,7 +10,6 @@
   export let user: User;
   export let isOpen = false;
 
-  let videoSection: CollapsibleSection;
 
   const loadedVideos = useQuery<Video[]>(videos);
   const userBadges = user.badges || [];
@@ -31,15 +29,13 @@
     /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) : false;
 
   export function openAndScrollTo() {
-    if (videoSection) {
-      videoSection.open();
-      setTimeout(() => {
-        const element = document.getElementById('dj-learning-hub');
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth' });
-        }
-      }, 100);
-    }
+    // Direkt zum Videos-Tab scrollen, da es jetzt ein Tab ist
+    setTimeout(() => {
+      const element = document.querySelector('[data-tab="videos"]');
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 100);
   }
 
   $: groupedVideos = ($loadedVideos?.data || []).reduce((acc, video) => {
@@ -140,15 +136,10 @@
   }
 </script>
 
-<CollapsibleSection 
-  title={`DJ Learning Hub (${totalVideos} Videos)`} 
-  initiallyOpen={true} 
-  id="dj-learning-hub"
-  bind:this={videoSection}
->
-  <div class="mb-6">
-    <p class="text-gray-400">Lerne von erfahrenen DJs und entwickle deine Skills weiter</p>
-  </div>
+<div class="mb-6">
+  
+  <p class="text-gray-400">Lerne von erfahrenen DJs und entwickle deine Skills weiter</p>
+</div>
 
   {#if !sortedCategories.length}
     <p class="text-gray-400">Keine Videos verfügbar.</p>
@@ -327,4 +318,3 @@
       {/each}
     </div>
   {/if}
-</CollapsibleSection>
