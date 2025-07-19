@@ -108,12 +108,20 @@
         provider_id: normalizeUserMetadata(user).provider_id
       };
 
+      // Prüfe ob E-Mail geändert wurde
+      const emailChanged = profile.email && profile.email !== user.email;
+      
       const { error: authError } = await supabase.auth.updateUser({
-        email: profile.email || user.email,
+        ...(emailChanged ? { email: profile.email } : {}),
         data: metadataUpdate
       });
 
       if (authError) throw authError;
+      
+      // Zeige Hinweis bei E-Mail-Änderung
+      if (emailChanged) {
+        toasts.success('Eine Bestätigungs-E-Mail wurde an die neue Adresse gesendet. Bitte bestätige die neue E-Mail-Adresse.');
+      }
 
       // 2. Aktualisiere das Profil
       const profileData: Partial<Profile> = {

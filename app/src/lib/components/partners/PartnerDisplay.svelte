@@ -101,13 +101,13 @@
           </div>
         {/if}
 
-        <div class="mt-6 flex justify-center">
+        <!-- <div class="mt-6 flex justify-center">
           <InfoIcon
             variant="light"
             text="Das Partner Badge erhältst du ab Level 5. Erreiche dieses Level, um Zugang zu exklusiven Angeboten zu erhalten!"
             position="top"
           />
-        </div>
+        </div> -->
       </div>
     </div>
   {/if}

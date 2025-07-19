@@ -90,13 +90,21 @@
     dispatch('openVideos');
   }
 
-  $: unlockedBadges = $badgeStore.availableBadges.filter(b => 
-    $badgeStore.userBadges.some(ub => ub.badge_id === b.id)
-  );
+  $: unlockedBadges = $badgeStore.availableBadges.filter(b => {
+    // Filter out Urlaub badge
+    const badgeName = b.name?.toLowerCase() || '';
+    if (badgeName.includes('urlaub')) return false;
+    
+    return $badgeStore.userBadges.some(ub => ub.badge_id === b.id);
+  });
   
-  $: lockedBadges = $badgeStore.availableBadges.filter(b => 
-    !$badgeStore.userBadges.some(ub => ub.badge_id === b.id)
-  );
+  $: lockedBadges = $badgeStore.availableBadges.filter(b => {
+    // Filter out Urlaub badge
+    const badgeName = b.name?.toLowerCase() || '';
+    if (badgeName.includes('urlaub')) return false;
+    
+    return !$badgeStore.userBadges.some(ub => ub.badge_id === b.id);
+  });
 </script>
 
 <div class="space-y-8">

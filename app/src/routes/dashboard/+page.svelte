@@ -25,6 +25,9 @@
   import DjHoliday from '$lib/components/dashboard/DjHoliday.svelte';
   import Notifications from '$lib/components/dashboard/Notifications.svelte';
   import PartnerDisplay from '$lib/components/partners/PartnerDisplay.svelte';
+  import { badgeStore } from '$lib/stores/badges';
+  import { loadSanityBadges } from '$lib/services/sanity-badge-service';
+  import BadgeCard from '$lib/components/badges/BadgeCard.svelte';
 
   interface OnlineTalk {
     _id: string;
@@ -99,21 +102,80 @@
   const supabase = getContext<SupabaseClient>('supabase');
 
   const { user, profile, onlineTalks, isAdmin, videos, award } = data;
+  
+  // Badge-Daten laden
+  let availableBadges: any[] = [];
+  
+  onMount(async () => {
+    // Lade Badges aus Sanity
+    const sanityBadges = await loadSanityBadges();
+    if (sanityBadges) {
+      availableBadges = sanityBadges;
+      badgeStore.setAvailableBadges(sanityBadges);
+    }
+    
+    // Lade User Badges
+    if (user.badges) {
+      user.badges.forEach((ub: { badge_id: string }) => {
+        const badge = sanityBadges?.find((b: any) => b.supabaseId === ub.badge_id);
+        if (badge) {
+          badgeStore.addUserBadge(badge, user.id);
+        }
+      });
+    }
+  });
+  
+  // Computed Badges
+  $: userBadgesWithData = user.badges?.map(ub => {
+    return availableBadges.find(b => b.supabaseId === ub.badge_id);
+  }).filter(badge => {
+    // Filter out Urlaub badge
+    if (!badge) return false;
+    const badgeName = badge.name?.toLowerCase() || '';
+    return !badgeName.includes('urlaub');
+  }) || [];
+  
+  // Badge Sortierungs-Funktion
+  function sortBadges(badges: any[]) {
+    const order = [
+      'welcome',      // Welcome Badge
+      'profil',       // Profil Badge
+      'newsletter',   // Newsletter Badge
+      'supporter',    // Supporter Badge
+      'workshop',     // Workshop Badge
+      'partner',      // Partner Badge
+      'coming soon',  // Coming Soon Badge
+      // 'urlaub',       // Urlaub Badge - auskommentiert
+    ];
+    
+    return badges.sort((a, b) => {
+      const aName = a.name?.toLowerCase() || '';
+      const bName = b.name?.toLowerCase() || '';
+      
+      // Find index in order array
+      let aIndex = order.findIndex(o => aName.includes(o));
+      let bIndex = order.findIndex(o => bName.includes(o));
+      
+      // If not found, put at end
+      if (aIndex === -1) aIndex = order.length;
+      if (bIndex === -1) bIndex = order.length;
+      
+      return aIndex - bIndex;
+    });
+  }
 
   // Tab-Definitionen
   const tabs = [
-    { id: 'overview', label: 'Übersicht', icon: '🏠' },
+    { id: 'overview', label: 'Profil', icon: '🏠' },
     { id: 'badges', label: 'Badges', icon: '🏆' },
     { id: 'videos', label: 'Videos', icon: '📺' },
     { id: 'partner', label: 'Partner', icon: '🤝' },
     ...(canShowAward(user, award) ? [{ id: 'award', label: 'DJ Award', icon: '🏅' }] : []),
     { id: 'online-talks', label: 'Online Talks', icon: '🎤' },
     { id: 'uploads', label: 'Uploads', icon: '📁' },
-    { id: 'dj-holiday', label: 'DJ Urlaub', icon: '🏖️' },
-    { id: 'community', label: 'Community Feed', icon: '👥' },
     { id: 'links', label: 'Links', icon: '🔗' },
     { id: 'newsletter', label: 'Newsletter', icon: '📧' },
-    { id: 'webmaster', label: 'Webmaster', icon: '🛠️' },
+    { id: 'webmaster', label: 'Du brauchst eine Website?', icon: '🛠️' },
   ];
 
   const handleLogout = async () => {
@@ -196,9 +258,9 @@
     </div>
 
     <!-- Notifications -->
-    <div class="mb-6">
+    <!-- <div class="mb-6">
       <Notifications {user} />
-    </div>
+    </div> -->
 
     <!-- Main Dashboard Layout -->
     <div class="flex flex-col lg:flex-row gap-6">
@@ -255,14 +317,39 @@
       <!-- Main Content Area -->
       <div class="flex-1 min-w-0">
         {#if activeTab === 'overview'}
-          <!-- Overview Tab - Only Profile -->
-          <div class="bg-black rounded-xl border border-gray-800 p-6">
-            <h2 class="text-2xl font-medium text-white mb-4">Profil Übersicht</h2>
-            <ProfileSection
-              {user}
-              {profile}
-              onEdit={() => showEditProfile = true}
-            />
+          <!-- Overview Tab - Profile mit Mini-Badges -->
+          <div class="space-y-6">
+            <!-- Mini-Badges Section -->
+            {#if userBadgesWithData.length > 0}
+              <div class="bg-black rounded-xl border border-gray-800 p-6">
+                <h3 class="text-lg font-medium text-white mb-4">Deine Badges</h3>
+                <div class="flex flex-wrap gap-4">
+                  {#each sortBadges(userBadgesWithData) as badge}
+                    <BadgeCard 
+                      {badge} 
+                      variant="mini"
+                      on:click={() => setActiveTab('badges')}
+                    />
+                  {/each}
+                </div>
+                <button
+                  on:click={() => setActiveTab('badges')}
+                  class="mt-4 text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  Alle Badges anzeigen →
+                </button>
+              </div>
+            {/if}
+            
+            <!-- Profil Section -->
+            <div class="bg-black rounded-xl border border-gray-800 p-6">
+              <h2 class="text-2xl font-medium text-white mb-4">Profil Übersicht</h2>
+              <ProfileSection
+                {user}
+                {profile}
+                onEdit={() => showEditProfile = true}
+              />
+            </div>
           </div>
         {:else if activeTab === 'badges'}
           <!-- Badges Tab -->
