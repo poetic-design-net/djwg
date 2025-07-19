@@ -152,14 +152,23 @@
 		    if (error === 'access_denied' && errorCode === 'otp_expired') {
 		      toasts.error('Der Login-Link ist abgelaufen. Bitte fordere einen neuen Link an.');
 		    }
-		  } else {
+		  } else if (window.location.hash) {
 		    // Only use hash as selector if it's a valid element ID
-		    const targetElement = document.querySelector(window.location.hash);
-		    if (targetElement) {
-		      setTimeout(() => {
-		        const targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset;
-		        smoothScrollTo(targetPosition, 300);
-		      }, 0);
+		    try {
+		      // Validate that hash starts with # and contains only valid CSS selector characters
+		      const hash = window.location.hash;
+		      if (hash.match(/^#[a-zA-Z][\w-]*$/)) {
+		        const targetElement = document.querySelector(hash);
+		        if (targetElement) {
+		          setTimeout(() => {
+		            const targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset;
+		            smoothScrollTo(targetPosition, 300);
+		          }, 0);
+		        }
+		      }
+		    } catch (e) {
+		      // Ignore invalid selectors
+		      console.warn('Invalid hash for scrolling:', window.location.hash);
 		    }
 		  }
 		}
