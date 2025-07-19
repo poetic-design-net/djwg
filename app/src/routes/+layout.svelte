@@ -139,6 +139,24 @@
 
 		setupScrollHandlers();
 
+		// Handle URL parameters for messages and errors
+		const urlParams = new URLSearchParams(window.location.search);
+		const message = urlParams.get('message');
+		
+		if (message) {
+		  // Display message based on content
+		  if (message.includes('Confirmation link accepted')) {
+		    toasts.success('E-Mail-Bestätigung erfolgreich! Bitte bestätige jetzt auch die E-Mail, die an deine neue Adresse gesendet wurde.');
+		  } else {
+		    toasts.info(message);
+		  }
+		  
+		  // Remove message from URL to prevent showing again on refresh
+		  urlParams.delete('message');
+		  const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '') + window.location.hash;
+		  window.history.replaceState({}, '', newUrl);
+		}
+
 		// Handle initial hash in URL
 		if (window.location.hash) {
 		  // Check if hash contains error parameters
