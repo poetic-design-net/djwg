@@ -4,6 +4,7 @@
   import type { User, Profile } from '$lib/types/profile';
   import { goto } from '$app/navigation';
   import { invalidate, invalidateAll } from '$app/navigation';
+  import { page } from '$app/stores';
   import ProfileSection from '$lib/components/dashboard/ProfileSection.svelte';
   import OnlineTalkSection from '$lib/components/dashboard/OnlineTalkSection.svelte';
   import NewsletterSection from '$lib/components/dashboard/NewsletterSection.svelte';
@@ -80,6 +81,21 @@
   let videosComponent: VideosSection;
   let activeTab = 'overview';
   let showMobileTabs = false;
+
+  // Tab aus URL-Parameter lesen
+  $: {
+    const tabParam = $page.url.searchParams.get('tab');
+    if (tabParam && tabs.some(t => t.id === tabParam)) {
+      activeTab = tabParam;
+    }
+  }
+
+  // Tab-Änderung in URL speichern
+  function updateTabInUrl(tabId: string) {
+    const url = new URL($page.url);
+    url.searchParams.set('tab', tabId);
+    goto(url.toString(), { replaceState: true, noScroll: true });
+  }
   const supabase = getContext<SupabaseClient>('supabase');
 
   const { user, profile, onlineTalks, isAdmin, videos, award } = data;
@@ -89,7 +105,7 @@
     { id: 'overview', label: 'Übersicht', icon: '🏠' },
     { id: 'badges', label: 'Badges', icon: '🏆' },
     { id: 'videos', label: 'Videos', icon: '📺' },
-    ...(isAdmin ? [{ id: 'partner', label: 'Partner', icon: '🤝' }] : []),
+    { id: 'partner', label: 'Partner', icon: '🤝' },
     ...(canShowAward(user, award) ? [{ id: 'award', label: 'DJ Award', icon: '🏅' }] : []),
     { id: 'online-talks', label: 'Online Talks', icon: '🎤' },
     { id: 'uploads', label: 'Uploads', icon: '📁' },
@@ -131,6 +147,7 @@
   function setActiveTab(tabId: string) {
     activeTab = tabId;
     showMobileTabs = false;
+    updateTabInUrl(tabId);
   }
 </script>
 
@@ -262,27 +279,11 @@
               <h2 class="text-2xl font-medium text-white mb-4">DJ Learning Hub</h2>
             <VideosSection {videos} {user} bind:this={videosComponent} />
           </div>
-        {:else if activeTab === 'partner' && isAdmin}
+        {:else if activeTab === 'partner'}
           <!-- Partner Tab -->
           <div class="bg-black rounded-xl border border-gray-800 p-6">
             <h2 class="text-2xl font-medium text-white mb-4">Partner</h2>
-            {#if hasPartnerBadge(user)}
-              <PartnerDisplay {user} />
-            {:else}
-              <div class="text-center py-6 space-y-3">
-                <div class="bg-gray-800/70 rounded-lg p-4 border border-gray-700/50">
-                  <h3 class="text-lg font-medium text-white mb-2">Level 5 benötigt!</h3>
-                  <p class="text-sm text-gray-400">Exklusive Angebote und Vergünstigungen unserer Partner - nur für dich!</p>
-                  <div class="mt-3 flex justify-center">
-                    <InfoIcon
-                      variant="light"
-                      text="Erhalte Vergünstigungen und Gutscheine von unseren Partnern! Erreiche Level 5, um Zugang zu erhalten."
-                      position="bottom"
-                    />
-                  </div>
-                </div>
-              </div>
-            {/if}
+            <PartnerDisplay {user} />
           </div>
         {:else if activeTab === 'award' && canShowAward(user, award)}
           <!-- Award Tab -->

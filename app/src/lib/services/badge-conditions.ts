@@ -40,19 +40,15 @@ export async function checkDJLevel1Condition(profile: Profile | null): Promise<B
 
 /**
  * Prüft die Bedingungen für das DJ Level 2 Badge
- * (manuell zuweisbar, aber nur wenn Level 1 vorhanden ist)
+ * (manuell zuweisbar)
  */
 export async function checkDJLevel2Condition(
   supabase: SupabaseClient,
   userId: string
 ): Promise<BadgeConditionResult> {
-  const hasLevel1 = await hasBadge(supabase, userId, DJ_LEVEL_1_ID);
-  
   return {
     shouldHave: false, // Immer false, da manuell zugewiesen
-    reason: hasLevel1 
-      ? 'Wird manuell zugewiesen'
-      : 'Benötigt zuerst DJ Level 1'
+    reason: 'Wird manuell zugewiesen'
   };
 }
 
@@ -66,10 +62,8 @@ export async function checkAllBadgeConditions(
   // Prüfe Level 1
   results.set(DJ_LEVEL_1_ID, await checkDJLevel1Condition(profile));
   
-  // Prüfe Level 2 nur, wenn Level 1 vorhanden ist
-  if (await hasBadge(supabase, userId, DJ_LEVEL_1_ID)) {
-    results.set(DJ_LEVEL_2_ID, await checkDJLevel2Condition(supabase, userId));
-  }
+  // Prüfe Level 2 (ohne Abhängigkeit von Level 1)
+  results.set(DJ_LEVEL_2_ID, await checkDJLevel2Condition(supabase, userId));
 
   return results;
 }
