@@ -20,7 +20,7 @@
     };
 </script>
 
-<div class="fixed top-4 right-4 z-[300] w-72">
+<div class="fixed top-4 right-4 z-[10000] w-72">
     {#each toastList as toast (toast.id)}
         <div
             transition:fly={{ x: 100, duration: 300 }}
