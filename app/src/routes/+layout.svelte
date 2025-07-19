@@ -159,10 +159,21 @@
 
 		// Handle initial hash in URL
 		if (window.location.hash) {
-		  // Check if hash contains error parameters
-		  if (window.location.hash.includes('error=')) {
-		    // Handle error parameters if needed
+		  // Check if hash contains parameters
+		  if (window.location.hash.includes('=')) {
 		    const params = new URLSearchParams(window.location.hash.substring(1));
+		    
+		    // Handle success messages
+		    const type = params.get('type');
+		    const accessToken = params.get('access_token');
+		    
+		    if (type === 'email_change' && accessToken) {
+		      toasts.success('E-Mail-Adresse erfolgreich geändert! Du kannst dich jetzt mit deiner neuen E-Mail-Adresse anmelden.');
+		      // Clean up URL
+		      window.history.replaceState({}, '', window.location.pathname + window.location.search);
+		    }
+		    
+		    // Handle error parameters
 		    const error = params.get('error');
 		    const errorCode = params.get('error_code');
 		    const errorDescription = params.get('error_description');
