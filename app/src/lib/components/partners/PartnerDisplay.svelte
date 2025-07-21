@@ -13,7 +13,7 @@
   let loading = true;
   
   // Partner Badge ID
-  const PARTNER_BADGE_ID = 'b83547a4-fdbf-4ff8-8bec-0ea5666a0ac5';
+  const PARTNER_BADGE_ID = '319b8937-cc53-4b1c-a2ef-b9f97aa81f51';
   
   // Check if user has partner badge
   $: hasPartnerBadge = user.badges?.some(badge => badge.badge_id === PARTNER_BADGE_ID) || false;
@@ -101,13 +101,25 @@
           </div>
         {/if}
 
-        <!-- <div class="mt-6 flex justify-center">
-          <InfoIcon
-            variant="light"
-            text="Das Partner Badge erhältst du ab Level 5. Erreiche dieses Level, um Zugang zu exklusiven Angeboten zu erhalten!"
-            position="top"
-          />
-        </div> -->
+        <div class="mt-6 text-center">
+          <div class="flex justify-center mb-2">
+            <InfoIcon
+              variant="light"
+              text="Exklusive Inhalte für Workshop-Teilnehmer – sichere dir dein Ticket für vollen Zugang!"
+              position="top"
+            />
+          </div>
+          <p class="text-sm text-gray-300">
+            Falls du nicht freigeschaltet bist, schreib uns bitte 
+            <a 
+              href="mailto:info@djworkshopgermany.de?subject=Bitte%20um%20Freischaltung%20für%20die%20Partner%20Codes" 
+              class="text-amber-400 hover:text-amber-300 underline"
+            >
+              hier
+            </a> 
+            eine Email.
+          </p>
+        </div>
       </div>
     </div>
   {/if}

@@ -1,14 +1,52 @@
 import { STRIPE_SECRET_KEY } from '$env/static/private';
 import Stripe from 'stripe';
+import { client } from '$lib/sanity/client';
+import { z } from 'zod';
 
 if (!STRIPE_SECRET_KEY) {
-  throw new Error('STRIPE_SECRET_KEY is not set');
+	throw new Error('STRIPE_SECRET_KEY is not set');
 }
 
 export const stripe = new Stripe(STRIPE_SECRET_KEY, {
-  apiVersion: '2025-05-28.basil',
-  typescript: true
+	apiVersion: '2025-05-28.basil',
+	typescript: true
 });
+
+const planSchema = z.object({
+	_id: z.string(),
+	key: z.string(),
+	name: z.string(),
+	description: z.string(),
+	price: z.number(),
+	originalPrice: z.number().optional(),
+	interval: z.enum(['day', 'week', 'month', 'year']),
+	intervalCount: z.number(),
+	features: z.array(z.string()).optional()
+});
+
+export type PricingPlan = z.infer<typeof planSchema>;
+const plansSchema = z.array(planSchema);
+
+/**
+ * Fetches pricing plans from Sanity.
+ * @returns {Promise<PricingPlan[]>} A promise that resolves to an array of pricing plans.
+ */
+export async function getPricingPlans(): Promise<PricingPlan[]> {
+	const query = `*[_type == "pricingPlan"]{
+    _id,
+    key,
+    name,
+    description,
+    price,
+    originalPrice,
+    interval,
+    intervalCount,
+    features
+  }`;
+
+	const plans = await client.fetch(query);
+	return plansSchema.parse(plans);
+}
 
 // NextLevel DJs Subscription Plans
 export const SUBSCRIPTION_PLANS = {

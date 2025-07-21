@@ -40,7 +40,8 @@
 		"svelte-motion": "^0.12.2",
 		"tailwind-merge": "^2.5.4",
 		"tailwindcss-gradients": "^3.0.0",
-		"vanilla-cookieconsent": "3.0.1"
+		"vanilla-cookieconsent": "3.0.1",
+		"zod": "^3.25.67"
 	},
 	"devDependencies": {
 		"@portabletext/svelte": "^2.1.11",
