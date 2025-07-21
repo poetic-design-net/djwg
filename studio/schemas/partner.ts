@@ -47,6 +47,13 @@ export default {
       type: 'url',
     },
     {
+      name: 'showWebsiteWithoutBadge',
+      title: 'Website ohne Badge anzeigen',
+      type: 'boolean',
+      description: 'Wenn aktiviert, wird die Website auch für Nutzer ohne Partner Badge sichtbar sein (aber nicht klickbar)',
+      initialValue: false,
+    },
+    {
       name: 'discountCode',
       title: 'Gutscheincode',
       type: 'string',
@@ -62,6 +69,19 @@ export default {
       title: 'Kontakt E-Mail',
       type: 'string',
       validation: (Rule: any) => Rule.email(),
+    },
+    {
+      name: 'emailSubject',
+      title: 'E-Mail Betreff (vorausgefüllt)',
+      type: 'string',
+      description: 'Dieser Betreff wird automatisch vorausgefüllt, wenn Nutzer auf die E-Mail klicken',
+    },
+    {
+      name: 'emailBody',
+      title: 'E-Mail Text (vorausgefüllt)',
+      type: 'text',
+      rows: 4,
+      description: 'Dieser Text wird automatisch vorausgefüllt, wenn Nutzer auf die E-Mail klicken',
     },
     {
       name: 'isActive',

@@ -20,9 +20,12 @@ export interface Partner {
     };
   };
   website?: string;
+  showWebsiteWithoutBadge?: boolean;
   discountCode?: string;
   discountDescription?: string;
   email?: string;
+  emailSubject?: string;
+  emailBody?: string;
   isActive: boolean;
   orderRank?: number;
 }

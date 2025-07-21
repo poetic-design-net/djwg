@@ -17,9 +17,12 @@ export const partnersQuery = `
       }
     },
     website,
+    showWebsiteWithoutBadge,
     discountCode,
     discountDescription,
     email,
+    emailSubject,
+    emailBody,
     isActive,
     orderRank
   }
@@ -44,9 +47,12 @@ export const partnerBySlugQuery = `
       }
     },
     website,
+    showWebsiteWithoutBadge,
     discountCode,
     discountDescription,
     email,
+    emailSubject,
+    emailBody,
     isActive,
     orderRank
   }
