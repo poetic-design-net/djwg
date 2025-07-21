@@ -40,9 +40,6 @@
           </svg>
         </div>
         <h2 class="text-2xl font-medium text-white">Gute Deals!</h2>
-        <div class="px-2 py-1 bg-amber-600/20 text-amber-400 rounded-full text-xs font-medium border border-amber-600/30">
-          Profi Lvl 5
-        </div>
       </div>
       <p class="text-gray-200 text-base">
         Exklusive Angebote und Vergünstigungen unserer Partner - nur für dich!
