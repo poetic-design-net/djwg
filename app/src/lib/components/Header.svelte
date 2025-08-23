@@ -63,10 +63,7 @@
           if (menuItem.link?.startsWith('/auth')) {
             return !isAuthenticated;
           }
-          // Dashboard-Links nur anzeigen wenn authentifiziert
-          if (menuItem.link?.includes('/dashboard')) {
-            return isAuthenticated;
-          }
+          // Dashboard-Links immer anzeigen (Server-seitige Weiterleitung kümmert sich um Auth)
           // Alle anderen Links anzeigen
           return true;
         })
@@ -81,9 +78,7 @@
         if (link.link?.startsWith('/auth')) {
           return !isAuthenticated;
         }
-        if (link.link?.includes('/dashboard')) {
-          return isAuthenticated;
-        }
+        // Dashboard-Links immer anzeigen (Server-seitige Weiterleitung kümmert sich um Auth)
         return true;
       })
     };
@@ -92,8 +87,8 @@
   // Für direkte Links
   return {
     ...item,
-    hidden: (item.directLink?.startsWith('/auth') && isAuthenticated) ||
-            (item.directLink?.includes('/dashboard') && !isAuthenticated)
+    hidden: (item.directLink?.startsWith('/auth') && isAuthenticated)
+    // Dashboard-Links immer anzeigen (Server-seitige Weiterleitung kümmert sich um Auth)
   };
 }).filter((item: NavigationItem & { hidden?: boolean }) => !item.hidden);
 
