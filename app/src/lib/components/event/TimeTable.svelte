@@ -1,12 +1,304 @@
 <script lang="ts">
   import { fade, slide } from 'svelte/transition';
   import { onMount } from 'svelte';
+  import { quintOut } from 'svelte/easing';
+  import { toasts } from '$lib/stores/toast';
 
   let timelineItems: HTMLElement[] = [];
   let timelineObserver: IntersectionObserver;
   let timelineContainer: HTMLElement;
 
+  // Load user registrations
+  async function loadUserRegistrations() {
+    if (!user || !eventId) return;
+    
+    isLoadingRegistrations = true;
+    try {
+      const response = await fetch(`/api/schedule-registrations?eventId=${eventId}&userId=${user.id}`);
+      const result = await response.json();
+      
+      if (result.success) {
+        userRegistrations.clear();
+        result.data.forEach((reg: any) => {
+          const key = `${reg.dayIndex}-${reg.stageIndex}-${reg.itemIndex}`;
+          userRegistrations.set(key, reg);
+        });
+        userRegistrations = new Map(userRegistrations);
+      }
+    } catch (error) {
+      console.error('Error loading registrations:', error);
+    } finally {
+      isLoadingRegistrations = false;
+    }
+  }
+  
+  // Load registration counts for all sessions
+  async function loadRegistrationCounts() {
+    if (!eventId) return;
+    
+    try {
+      const response = await fetch(`/api/schedule-registrations?eventId=${eventId}`);
+      const result = await response.json();
+      
+      if (result.success) {
+        const newCounts = new Map();
+        
+        result.data.forEach((reg: any) => {
+          // Only count confirmed registrations, not waitlist
+          // Also handle legacy registrations without status field
+          if (!reg.status || reg.status === 'confirmed') {
+            const key = `${reg.dayIndex}-${reg.stageIndex}-${reg.itemIndex}`;
+            const current = newCounts.get(key) || 0;
+            newCounts.set(key, current + 1);
+          }
+        });
+        
+        // Force reactivity by creating a new Map AND update the object
+        registrationCounts = newCounts;
+        
+        // Convert Map to object for better reactivity
+        const countsObj: Record<string, number> = {};
+        newCounts.forEach((value, key) => {
+          countsObj[key] = value;
+        });
+        registrationCountsObject = countsObj;
+      }
+    } catch (error) {
+      console.error('Error loading registration counts:', error);
+    }
+  }
+  
+  // Check if user is registered for a session
+  function isUserRegistered(dayIndex: number, stageIndex: number, itemIndex: number): boolean {
+    const key = `${dayIndex}-${stageIndex}-${itemIndex}`;
+    return userRegistrations.has(key);
+  }
+  
+  // Get registration count for a session - use object for better reactivity
+  function getRegistrationCount(dayIndex: number, stageIndex: number, itemIndex: number): number {
+    const key = `${dayIndex}-${stageIndex}-${itemIndex}`;
+    const count = registrationCountsObject[key] || 0;
+    return count;
+  }
+  
+  // Handle registration
+  async function handleRegistration() {
+    if (!selectedSession || !user || !userProfile) return;
+    
+    isRegistering = true;
+    registrationError = null;
+    registrationSuccess = null;
+    
+    try {
+      const { item, dayIndex, stageIndex, itemIndex } = selectedSession;
+      const key = `${dayIndex}-${stageIndex}-${itemIndex}`;
+      
+      // Optimistic UI update - immediately increment count
+      const currentCount = registrationCounts.get(key) || 0;
+      registrationCounts = new Map(registrationCounts.set(key, currentCount + 1));
+      
+      // Also update the object for reactivity
+      registrationCountsObject = {
+        ...registrationCountsObject,
+        [key]: currentCount + 1
+      };
+      
+      const response = await fetch('/api/schedule-registrations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          eventId,
+          eventScheduleId,
+          dayIndex,
+          stageIndex,
+          itemIndex,
+          sessionTitle: item.title,
+          sessionTime: item.time,
+          maxRegistrations: item.maxRegistrations
+        })
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        // Revert optimistic update on error
+        registrationCounts = new Map(registrationCounts.set(key, currentCount));
+        registrationCountsObject = {
+          ...registrationCountsObject,
+          [key]: currentCount
+        };
+        throw new Error(result.error);
+      }
+      
+      registrationSuccess = result.message || 'Erfolgreich angemeldet!';
+      
+      // Show success toast
+      toasts.success(`Erfolgreich für "${item.title}" angemeldet!`);
+      
+      // Update local state
+      if (result.userRegistrations) {
+        userRegistrations.clear();
+        result.userRegistrations.forEach((reg: any) => {
+          const regKey = `${reg.dayIndex}-${reg.stageIndex}-${reg.itemIndex}`;
+          userRegistrations.set(regKey, reg);
+        });
+        userRegistrations = new Map(userRegistrations);
+      }
+      
+      // If the server provided an updated count, use it immediately
+      if (result.updatedCount !== undefined && result.sessionKey) {
+        registrationCounts.set(result.sessionKey, result.updatedCount);
+        registrationCounts = new Map(registrationCounts);
+        registrationCountsObject = {
+          ...registrationCountsObject,
+          [result.sessionKey]: result.updatedCount
+        };
+      }
+      
+      // Small delay to ensure Sanity has processed the write
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Reload counts to ensure accuracy with server state
+      await loadRegistrationCounts();
+      
+      // Close modal immediately after success
+      selectedSession = null;
+      registrationSuccess = null;
+      
+    } catch (e: any) {
+      registrationError = e.message || 'Ein Fehler ist aufgetreten.';
+      console.error('Registration error:', e);
+      // Reload counts to ensure we're in sync after error
+      await loadRegistrationCounts();
+    } finally {
+      isRegistering = false;
+    }
+  }
+  
+  // Check if cancellation is allowed (up to 1 day before event)
+  function canCancelRegistration(dateStr: string): { allowed: boolean; message: string } {
+    try {
+      const eventDate = new Date(dateStr);
+      const now = new Date();
+      const oneDayBefore = new Date(eventDate);
+      oneDayBefore.setDate(oneDayBefore.getDate() - 1);
+      
+      if (now > oneDayBefore) {
+        const hours = Math.floor((eventDate.getTime() - now.getTime()) / (1000 * 60 * 60));
+        if (hours < 0) {
+          return { 
+            allowed: false, 
+            message: 'Das Event hat bereits begonnen' 
+          };
+        }
+        return { 
+          allowed: false, 
+          message: `Stornierung nur bis 24 Stunden vor Event möglich (noch ${hours} Stunden bis zum Event)` 
+        };
+      }
+      
+      return { 
+        allowed: true, 
+        message: 'Stornierung möglich' 
+      };
+    } catch (error) {
+      console.error('Error checking cancellation deadline:', error);
+      return { 
+        allowed: false, 
+        message: 'Fehler beim Prüfen der Stornierungsfrist' 
+      };
+    }
+  }
+  
+  // Cancel registration
+  async function cancelRegistration(dayIndex: number, stageIndex: number, itemIndex: number) {
+    const key = `${dayIndex}-${stageIndex}-${itemIndex}`;
+    const registration = userRegistrations.get(key);
+    
+    if (!registration) return;
+    
+    // Check if cancellation is allowed
+    const day = schedule[dayIndex];
+    if (day) {
+      const cancellationStatus = canCancelRegistration(day.date);
+      if (!cancellationStatus.allowed) {
+        toasts.error(cancellationStatus.message);
+        return;
+      }
+    }
+    
+    // Get the session info for the toast message
+    const stage = day?.stages?.[stageIndex];
+    const item = stage?.schedule?.[itemIndex];
+    const sessionTitle = item?.title || 'Session';
+    
+    try {
+      // Optimistic UI update - immediately decrement count
+      const currentCount = registrationCounts.get(key) || 0;
+      if (currentCount > 0) {
+        registrationCounts = new Map(registrationCounts.set(key, currentCount - 1));
+        registrationCountsObject = {
+          ...registrationCountsObject,
+          [key]: currentCount - 1
+        };
+      }
+      
+      // Optimistically remove from user registrations
+      userRegistrations.delete(key);
+      userRegistrations = new Map(userRegistrations);
+      
+      const response = await fetch(`/api/schedule-registrations/${registration._id}`, {
+        method: 'DELETE'
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        // Revert optimistic updates on error
+        userRegistrations.set(key, registration);
+        userRegistrations = new Map(userRegistrations);
+        registrationCounts = new Map(registrationCounts.set(key, currentCount));
+        registrationCountsObject = {
+          ...registrationCountsObject,
+          [key]: currentCount
+        };
+        throw new Error(result.error || 'Failed to cancel registration');
+      }
+      
+      // If the server provided an updated count, use it immediately
+      if (result.updatedCount !== undefined && result.sessionKey) {
+        registrationCounts.set(result.sessionKey, result.updatedCount);
+        registrationCounts = new Map(registrationCounts);
+        registrationCountsObject = {
+          ...registrationCountsObject,
+          [result.sessionKey]: result.updatedCount
+        };
+      }
+      
+      // Show success toast
+      toasts.success(`Erfolgreich von "${sessionTitle}" abgemeldet!`);
+      
+      // Reload counts to ensure accuracy with server state
+      await loadRegistrationCounts();
+    } catch (error) {
+      console.error('Error cancelling registration:', error);
+      toasts.error('Fehler beim Abmelden. Bitte versuche es erneut.');
+      // Reload to ensure we're in sync after error
+      await loadUserRegistrations();
+      await loadRegistrationCounts();
+    }
+  }
+
   onMount(() => {
+    // Load registrations
+    if (eventId) {
+      loadRegistrationCounts();
+      if (user) {
+        loadUserRegistrations();
+      }
+    }
     // Intersection Observer für Timeline-Punkte
     timelineObserver = new IntersectionObserver(
       (entries) => {
@@ -47,6 +339,9 @@
       image?: string;
     };
     icon?: string;
+    allowRegistration?: boolean;
+    maxRegistrations?: number;
+    registrationRequired?: boolean;
   }
 
   interface Stage {
@@ -63,16 +358,47 @@
   export let schedule: Day[] = [];
   export let isSecret: boolean = false;
   export let isAdmin: boolean = false;
+  export let user: { id: string; email: string } | null = null;
+  export let userProfile: any = null;
+  export let eventId: string = '';
+  export let eventScheduleId: string = '';
+  
+  // Required badge ID for registration
+  const REQUIRED_BADGE_ID = '319b8937-cc53-4b1c-a2ef-b9f97aa81f51';
+  
+  // Check if user has the required badge
+  $: hasRequiredBadge = userProfile?.badges?.some((badge: any) => 
+    badge._id === REQUIRED_BADGE_ID || badge._ref === REQUIRED_BADGE_ID
+  ) || false;
+  
   
   let selectedDayIndex = 0;
   let selectedStageIndex = 0;
   let expandedDescriptions: Record<string, boolean> = {};
+  
+  // Registration state - use regular object for better reactivity
+  let userRegistrations: Map<string, any> = new Map();
+  let registrationCounts: Map<string, number> = new Map();
+  let registrationCountsObject: Record<string, number> = {};
+  let isLoadingRegistrations = false;
+  let selectedSession: { item: ScheduleItem; dayIndex: number; stageIndex: number; itemIndex: number } | null = null;
+  let showLoginPrompt = false;
+  let isRegistering = false;
+  let registrationError: string | null = null;
+  let registrationSuccess: string | null = null;
 
   $: selectedDay = schedule[selectedDayIndex];
   $: selectedStage = selectedDay?.stages?.[selectedStageIndex];
   $: hasStages = selectedDay?.stages?.length > 0;
+  
+  // Reload registration data when eventId or user changes
+  $: if (eventId) {
+    if (user) {
+      loadUserRegistrations();
+    }
+    loadRegistrationCounts();
+  }
 
-  $: console.log('Current expanded state:', expandedDescriptions);
 
   function truncateText(text: string, wordCount: number = 15): string {
     const words = text.split(' ');
@@ -340,6 +666,80 @@
                           <span class="break-words">{item.instructor.name}</span>
                         </div>
                       {/if}
+                      
+                      {#if item.allowRegistration}
+                        <div class="mt-4 flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                          {#if item.maxRegistrations}
+                            {#key `${selectedDayIndex}-${selectedStageIndex}-${i}-${registrationCountsObject[`${selectedDayIndex}-${selectedStageIndex}-${i}`] || 0}`}
+                            <div class="text-sm text-gray-400">
+                              <span class="inline-flex items-center">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                </svg>
+                                {getRegistrationCount(selectedDayIndex, selectedStageIndex, i)}/{item.maxRegistrations} Plätze
+                              </span>
+                            </div>
+                            {/key}
+                          {/if}
+                          
+                          {#key `${selectedDayIndex}-${selectedStageIndex}-${i}-user-${userRegistrations.size}`}
+                          {#if isUserRegistered(selectedDayIndex, selectedStageIndex, i)}
+                            {@const cancellationStatus = canCancelRegistration(selectedDay.date)}
+                            <div class="relative group">
+                              <button
+                                on:click={() => {
+                                  if (cancellationStatus.allowed) {
+                                    cancelRegistration(selectedDayIndex, selectedStageIndex, i);
+                                  } else {
+                                    toasts.error(cancellationStatus.message);
+                                  }
+                                }}
+                                class="px-4 py-2 {cancellationStatus.allowed ? 'bg-green-500 hover:bg-green-600' : 'bg-green-600 cursor-not-allowed opacity-75'} text-black text-sm font-medium rounded-full transition-colors duration-200"
+                                title={cancellationStatus.allowed ? 'Klicken zum Abmelden' : cancellationStatus.message}
+                              >
+                                <span class="group-hover:hidden">✓ Angemeldet</span>
+                                <span class="hidden group-hover:inline">Abmelden?</span>
+                              </button>
+                              
+                              <!-- Tooltip -->
+                              <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 whitespace-nowrap z-10">
+                                {#if cancellationStatus.allowed}
+                                  <span>Stornierung möglich bis 24h vor Event</span>
+                                {:else}
+                                  <span>{cancellationStatus.message}</span>
+                                {/if}
+                                <div class="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
+                                  <div class="border-4 border-transparent border-t-gray-900"></div>
+                                </div>
+                              </div>
+                            </div>
+                          {:else if item.maxRegistrations && getRegistrationCount(selectedDayIndex, selectedStageIndex, i) >= item.maxRegistrations}
+                            <button
+                              disabled
+                              class="px-4 py-2 bg-gray-700 text-gray-400 text-sm font-medium rounded-full cursor-not-allowed"
+                            >
+                              Ausgebucht
+                            </button>
+                          {:else}
+                            <button
+                              on:click={() => {
+                                if (!user) {
+                                  showLoginPrompt = true;
+                                } else if (!hasRequiredBadge) {
+                                  toasts.error('Du benötigst den "Event-Teilnehmer" Badge um dich anzumelden. Bitte schließe zuerst dein Profil ab.');
+                                } else {
+                                  selectedSession = { item, dayIndex: selectedDayIndex, stageIndex: selectedStageIndex, itemIndex: i };
+                                }
+                              }}
+                              class="px-4 py-2 {!user || !hasRequiredBadge ? 'bg-gray-600 hover:bg-gray-700' : 'bg-green-400 hover:bg-green-500'} text-black text-sm font-medium rounded-full transition-colors duration-200"
+                              title={!hasRequiredBadge ? 'Badge erforderlich' : 'Jetzt anmelden'}
+                            >
+                              {!hasRequiredBadge ? '🔒 Badge erforderlich' : 'Jetzt anmelden'}
+                            </button>
+                          {/if}
+                          {/key}
+                        </div>
+                      {/if}
                     </div>
                   </div>
                 </div>
@@ -363,6 +763,94 @@
   <div class="py-20 bg-black/40">
     <div class="container px-4 mx-auto text-center">
       <p class="text-gray-400">Kein Schedule verfügbar.</p>
+    </div>
+  </div>
+{/if}
+
+<!-- Registration Confirmation Modal -->
+{#if selectedSession && user}
+  <div 
+    class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50"
+    transition:fade={{ duration: 200 }}
+    on:click|self={() => selectedSession = null}
+  >
+    <div 
+      class="w-full max-w-md bg-black border border-gray-800 rounded-3xl p-8"
+      transition:slide={{ duration: 200, easing: quintOut }}
+    >
+      <h3 class="text-2xl text-white mb-2">Anmeldung bestätigen</h3>
+      <p class="text-gray-400 mb-6">{selectedSession.item.title} - {selectedSession.item.time}</p>
+      
+      <div class="space-y-6">
+        <div class="bg-black/40 border border-gray-800 rounded-xl p-4">
+          <p class="text-sm text-gray-400 mb-2">Du meldest dich an als:</p>
+          <p class="text-white font-medium">
+            {userProfile?.displayName || userProfile?.username || user.email.split('@')[0]}
+          </p>
+          <p class="text-sm text-gray-400 mt-1">{user.email}</p>
+        </div>
+
+        {#if registrationError}
+          <p class="text-red-400 text-sm">{registrationError}</p>
+        {/if}
+
+        {#if registrationSuccess}
+          <p class="text-green-400 text-sm">{registrationSuccess}</p>
+        {/if}
+
+        <div class="flex space-x-4">
+          <button
+            type="button"
+            class="flex-1 px-6 py-3 text-white border border-gray-800 rounded-xl hover:border-gray-700 transition-colors duration-200"
+            on:click={() => selectedSession = null}
+            disabled={isRegistering}
+          >
+            Abbrechen
+          </button>
+          <button
+            on:click={handleRegistration}
+            class="flex-1 px-6 py-3 bg-green-400 text-black rounded-xl hover:bg-green-500 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isRegistering}
+          >
+            {isRegistering ? 'Wird angemeldet...' : 'Jetzt anmelden'}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+{/if}
+
+<!-- Login Prompt Modal -->
+{#if showLoginPrompt}
+  <div 
+    class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50"
+    transition:fade={{ duration: 200 }}
+    on:click|self={() => showLoginPrompt = false}
+  >
+    <div 
+      class="w-full max-w-md bg-black border border-gray-800 rounded-3xl p-8"
+      transition:slide={{ duration: 200, easing: quintOut }}
+    >
+      <h3 class="text-2xl text-white mb-4">Anmeldung erforderlich</h3>
+      <p class="text-gray-300 mb-6">
+        Um dich für diese Session anzumelden, musst du dich zuerst einloggen oder registrieren.
+      </p>
+      
+      <div class="flex space-x-4">
+        <button
+          type="button"
+          class="flex-1 px-6 py-3 text-white border border-gray-800 rounded-xl hover:border-gray-700 transition-colors duration-200"
+          on:click={() => showLoginPrompt = false}
+        >
+          Abbrechen
+        </button>
+        <a
+          href="/auth?next={encodeURIComponent(window.location.pathname + window.location.search)}"
+          class="flex-1 px-6 py-3 bg-green-400 text-black rounded-xl hover:bg-green-500 transition-colors duration-200 text-center"
+        >
+          Jetzt anmelden
+        </a>
+      </div>
     </div>
   </div>
 {/if}

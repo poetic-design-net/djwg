@@ -38,7 +38,7 @@
   <div class="container px-4 mx-auto">
     <div class="md:max-w-5xl mx-auto">
       <div class="text-center mb-16">
-        <span class="inline-block mb-4 text-sm text-green-400 font-medium tracking-tighter">Partner & Aussteller</span>
+        <span class="inline-block mb-4 text-sm text-green-400 font-medium tracking-tighter">{ausstellerPage?.partnerTag || 'Partner & Aussteller'}</span>
         <h1 class="font-heading mb-8 text-5xl md:text-7xl lg:text-8xl text-white tracking-7xl lg:tracking-8xl">
           {ausstellerPage?.title || 'Aussteller werden'}
         </h1>

@@ -7,15 +7,22 @@
   export let timeSlots: TimeSlot[] = [];
   export let isAdmin = false;
   export let isSecret = false;
+  export let user: { id: string; email: string } | null = null;
+  export let userProfile: any = null;
+  
+  // Required badge ID for registration
+  const REQUIRED_BADGE_ID = '319b8937-cc53-4b1c-a2ef-b9f97aa81f51';
+  
+  // Check if user has the required badge
+  $: hasRequiredBadge = userProfile?.badges?.some((badge: any) => 
+    badge._id === REQUIRED_BADGE_ID || badge._ref === REQUIRED_BADGE_ID
+  ) || false;
 
   let selectedSlot: TimeSlot | null = null;
-  let bookingForm = {
-    name: '',
-    email: ''
-  };
   let isSubmitting = false;
   let error: string | null = null;
   let success: string | null = null;
+  let showLoginPrompt = false;
   
   // Rate limiting
   const RATE_LIMIT_WINDOW = 3600000; // 1 hour in milliseconds
@@ -56,7 +63,19 @@
   }
 
   async function handleBooking() {
-    if (!selectedSlot || !bookingForm.name || !bookingForm.email) return;
+    if (!selectedSlot) return;
+    
+    // Check if user is logged in
+    if (!user || !userProfile) {
+      showLoginPrompt = true;
+      return;
+    }
+    
+    // Check if user has required badge
+    if (!hasRequiredBadge) {
+      error = 'Du benötigst den "Event-Teilnehmer" Badge um dich anzumelden. Bitte schließe zuerst dein Profil ab.';
+      return;
+    }
 
     if (isRateLimited()) {
       error = 'Zu viele Buchungsversuche. Bitte warte eine Stunde, bevor du es erneut versuchst.';
@@ -70,8 +89,10 @@
 
     try {
       const booking = {
-        name: bookingForm.name,
-        email: bookingForm.email,
+        name: userProfile.displayName || userProfile.username || user.email.split('@')[0],
+        email: user.email,
+        userId: user.id,
+        profileId: userProfile.id,
         createdAt: new Date().toISOString()
       };
 
@@ -94,7 +115,6 @@
       }
 
       success = 'Dein Slot wurde erfolgreich gebucht!';
-      bookingForm = { name: '', email: '' };
       selectedSlot = null;
 
       // Update time slots from the server response
@@ -140,7 +160,7 @@
 <div class="py-20 bg-black/40 items-center flex justify-center">
   <div class="container mx-auto px-4">
     <div class="relative">
-      {#if isSecret}
+      {#if isSecret && !isAdmin}
         <div class="absolute inset-0 backdrop-blur-xl bg-black/40 z-10 flex items-center justify-center">
           <div class="text-center">
             <h2 class="mb-4 font-heading text-5xl md:text-6xl text-white tracking-tighter ">Open Stage </h2>
@@ -212,7 +232,13 @@
               {#if !slot.isBlocked && isSlotAvailable(slot)}
                 <button
                   class="px-4 py-2 text-sm font-medium bg-green-400 text-black rounded-full hover:bg-green-500 transition-colors duration-200 ml-auto"
-                  on:click={() => selectedSlot = slot}
+                  on:click={() => {
+                    if (!user) {
+                      showLoginPrompt = true;
+                    } else {
+                      selectedSlot = slot;
+                    }
+                  }}
                 >
                   Jetzt buchen
                 </button>
@@ -224,8 +250,8 @@
     </div>
   </div>
 
-  <!-- Booking Form Modal -->
-  {#if selectedSlot}
+  <!-- Booking Confirmation Modal -->
+  {#if selectedSlot && user}
     <div 
       class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50"
       transition:fade={{ duration: 200 }}
@@ -237,29 +263,13 @@
       >
         <h3 class="text-2xl text-white mb-6">Slot buchen für {formatTime(selectedSlot.startTime)}</h3>
         
-        <form on:submit|preventDefault={handleBooking} class="space-y-6">
-          <div>
-            <label for="name" class="block text-sm text-gray-400 mb-2">Name</label>
-            <input
-              type="text"
-              id="name"
-              bind:value={bookingForm.name}
-              required
-              class="w-full px-4 py-3 bg-black/40 border border-gray-800 rounded-xl text-white focus:border-green-500 focus:outline-none transition-colors duration-200"
-              placeholder="Dein Name"
-            >
-          </div>
-
-          <div>
-            <label for="email" class="block text-sm text-gray-400 mb-2">E-Mail</label>
-            <input
-              type="email"
-              id="email"
-              bind:value={bookingForm.email}
-              required
-              class="w-full px-4 py-3 bg-black/40 border border-gray-800 rounded-xl text-white focus:border-green-500 focus:outline-none transition-colors duration-200"
-              placeholder="deine@email.de"
-            >
+        <div class="space-y-6">
+          <div class="bg-black/40 border border-gray-800 rounded-xl p-4">
+            <p class="text-sm text-gray-400 mb-2">Du buchst als:</p>
+            <p class="text-white font-medium">
+              {userProfile?.displayName || userProfile?.username || user.email.split('@')[0]}
+            </p>
+            <p class="text-sm text-gray-400 mt-1">{user.email}</p>
           </div>
 
           {#if error}
@@ -280,14 +290,56 @@
               Abbrechen
             </button>
             <button
-              type="submit"
-              class="flex-1 px-6 py-3 bg-green-400 text-black rounded-xl hover:bg-green-500 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={isSubmitting}
+              on:click={handleBooking}
+              class="flex-1 px-6 py-3 {hasRequiredBadge ? 'bg-green-400 hover:bg-green-500' : 'bg-gray-600 hover:bg-gray-700'} text-black rounded-xl transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isSubmitting || !hasRequiredBadge}
+              title={!hasRequiredBadge ? 'Badge erforderlich' : ''}
             >
-              {isSubmitting ? 'Wird gebucht...' : 'Jetzt buchen'}
+              {#if !hasRequiredBadge}
+                🔒 Badge erforderlich
+              {:else if isSubmitting}
+                Wird gebucht...
+              {:else}
+                Slot buchen
+              {/if}
             </button>
           </div>
-        </form>
+        </div>
+      </div>
+    </div>
+  {/if}
+
+  <!-- Login Prompt Modal -->
+  {#if showLoginPrompt}
+    <div 
+      class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50"
+      transition:fade={{ duration: 200 }}
+      on:click|self={() => showLoginPrompt = false}
+    >
+      <div 
+        class="w-full max-w-md bg-black border border-gray-800 rounded-3xl p-8"
+        transition:slide={{ duration: 200, easing: quintOut }}
+      >
+        <h3 class="text-2xl text-white mb-4">Anmeldung erforderlich</h3>
+        <p class="text-gray-300 mb-6">
+          Um einen Slot zu buchen, musst du dich zuerst anmelden oder registrieren.
+        </p>
+        
+        <div class="flex space-x-4">
+          <button
+            type="button"
+            class="flex-1 px-6 py-3 text-white border border-gray-800 rounded-xl hover:border-gray-700 transition-colors duration-200"
+            on:click={() => showLoginPrompt = false}
+          >
+            Abbrechen
+          </button>
+          <a
+            href="/auth?next={encodeURIComponent(window.location.pathname)}"
+            class="flex-1 px-6 py-3 bg-green-400 text-black rounded-xl hover:bg-green-500 transition-colors duration-200 text-center"
+          >
+            Jetzt anmelden
+          </a>
+        </div>
       </div>
     </div>
   {/if}

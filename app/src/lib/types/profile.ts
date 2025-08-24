@@ -12,6 +12,15 @@ export interface UserMetadata {
   isAdmin?: string;
 }
 
+export interface StandardUserMetadata {
+  first_name?: string;
+  last_name?: string;
+  name?: string;
+  full_name?: string;
+  picture?: string;
+  avatar_url?: string;
+}
+
 // Erweitere die Basis-User-Schnittstelle
 export interface User {
   id: string;
@@ -36,6 +45,9 @@ export interface Profile {
   username?: string;
   full_name?: string;
   avatar_url?: string;
+  email?: string;
+  phone?: string;
+  address_city?: string;
   website?: string;
   bio?: string;
   social_links?: {

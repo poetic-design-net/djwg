@@ -6,10 +6,25 @@ const logosSection: SchemaTypeDefinition = {
   type: 'object',
   fields: [
     {
+      name: 'eyebrow',
+      title: 'Eyebrow Text',
+      description: 'Kleiner Text über der Hauptüberschrift (z.B. "Unsere Aussteller")',
+      type: 'string',
+      initialValue: 'Unsere Aussteller'
+    },
+    {
+      name: 'headline',
+      title: 'Hauptüberschrift',
+      description: 'Die Hauptüberschrift der Partner/Aussteller Section',
+      type: 'string',
+      initialValue: 'Unterstützt von führenden Marken der DJ-Industrie'
+    },
+    {
       name: 'title',
-      title: 'Titel',
+      title: 'Titel (Legacy)',
       type: 'array',
       of: [{ type: 'block' }],
+      hidden: true // Versteckt, aber behalten für Kompatibilität
     },
     {
       name: 'description',

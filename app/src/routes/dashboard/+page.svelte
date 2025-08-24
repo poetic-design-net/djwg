@@ -28,6 +28,8 @@
   import { badgeStore } from '$lib/stores/badges';
   import { loadSanityBadges } from '$lib/services/sanity-badge-service';
   import BadgeCard from '$lib/components/badges/BadgeCard.svelte';
+  import EventRegistrations from '$lib/components/dashboard/EventRegistrations.svelte';
+  import EventRegistrationsPreview from '$lib/components/dashboard/EventRegistrationsPreview.svelte';
 
   interface OnlineTalk {
     _id: string;
@@ -167,6 +169,7 @@
   // Tab-Definitionen
   const tabs = [
     { id: 'overview', label: 'Profil', icon: '🏠' },
+    { id: 'event-registrations', label: 'Meine Events', icon: '📅' },
     { id: 'badges', label: 'Badges', icon: '🏆' },
     { id: 'videos', label: 'Videos', icon: '📺' },
     { id: 'partner', label: 'Partner', icon: '🤝' },
@@ -341,6 +344,12 @@
               </div>
             {/if}
             
+            <!-- Event Registrations Preview -->
+            <EventRegistrationsPreview 
+              userId={user.id}
+              onShowAll={() => setActiveTab('event-registrations')}
+            />
+            
             <!-- Profil Section -->
             <div class="bg-black rounded-xl border border-gray-800 p-6">
               <h2 class="text-2xl font-medium text-white mb-4">Profil Übersicht</h2>
@@ -351,6 +360,9 @@
               />
             </div>
           </div>
+        {:else if activeTab === 'event-registrations'}
+          <!-- Event Registrations Tab -->
+          <EventRegistrations userId={user.id} />
         {:else if activeTab === 'badges'}
           <!-- Badges Tab -->
           <div class="relative rounded-xl p-6 border border-gray-800 bg-black overflow-hidden">
@@ -358,6 +370,11 @@
             <div class="relative">
               <h2 class="text-2xl font-medium text-white mb-4">Deine Badges</h2>
               <BadgeDisplay {user} on:openVideos={handleOpenVideos} />
+            </div>
+            
+            <!-- Event Registrations -->
+            <div class="mb-8">
+              <EventRegistrations userId={user?.id} />
             </div>
           </div>
         {:else if activeTab === 'videos'}

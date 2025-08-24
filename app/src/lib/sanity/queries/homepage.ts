@@ -141,6 +141,14 @@ export interface HomePage {
     selectedArtists: Artist[]
     isLineupRevealed: boolean
   }
+  logosSection?: {
+    eyebrow?: string
+    headline?: string
+    title?: PortableTextBlock[]
+    description?: string
+    selectedLogos?: MenuLogo[]
+    showButton?: boolean
+  }
 }
 
 export const homePageQuery = groq`*[_type == "homePage"][0]{
@@ -264,6 +272,28 @@ export const homePageQuery = groq`*[_type == "homePage"][0]{
   newsletterSection {
     title,
     description
+  },
+  logosSection {
+    eyebrow,
+    headline,
+    title,
+    description,
+    selectedLogos[]->{
+      _id,
+      name,
+      url,
+      image {
+        "asset": {
+          "_type": "reference",
+          "_ref": asset->._id,
+          ...asset->
+        },
+        alt,
+        hotspot,
+        crop
+      }
+    },
+    showButton
   },
   seo {
     metaTitle,

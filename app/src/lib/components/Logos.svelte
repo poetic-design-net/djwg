@@ -6,6 +6,9 @@
   
   export let logos: Logo[] = [];
   export let showButton = true;
+  export let eyebrow: string | undefined = undefined;
+  export let headline: string | undefined = undefined;
+  export let description: string | undefined = undefined;
   let currentHighlight = 0;
   let displayedLogos: Logo[] = [];
   let showAll = false;
@@ -49,9 +52,11 @@
 
 <div class="container px-4 mx-auto">
   <div class="mb-20 md:max-w-4xl text-center mx-auto">
-    <span class="inline-block mb-4 text-sm text-green-400 font-medium tracking-tighter">Unsere Aussteller</span>
-    <h2 class="font-heading mb-6 text-5xl lg:text-6xl text-white tracking-7xl lg:tracking-8xl">Unterstützt von führenden Marken der DJ-Industrie</h2>
-
+    <span class="inline-block mb-4 text-sm text-green-400 font-medium tracking-tighter">{eyebrow || 'Unsere Aussteller'}</span>
+    <h2 class="font-heading mb-6 text-5xl lg:text-6xl text-white tracking-7xl lg:tracking-8xl">{headline || 'Unterstützt von führenden Marken der DJ-Industrie'}</h2>
+    {#if description}
+      <p class="text-lg text-gray-300 max-w-2xl mx-auto">{description}</p>
+    {/if}
   </div>
   <div class="md:max-w-7xl border border-gray-900 mx-auto">
     <div class="flex flex-wrap">

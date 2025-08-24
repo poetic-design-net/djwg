@@ -7,7 +7,7 @@ import type { Area } from '$lib/types/area';
 import type { Feature, Ticket } from '$lib/types/ticket';
 import type { LocationDetails, ExternalLinks } from '$lib/types/location';
 
-export interface FAQ {
+export interface EventFAQ {
   _id: string;
   question: string;
   answer: PortableTextBlock[];
@@ -69,7 +69,35 @@ export const eventsQuery = groq`*[_type == "event"] | order(order asc) {
     asset->,
     hotspot
   },
-  schedule,
+  "schedule": *[_type == "eventSchedule" && references(^._id)][0] {
+    _id,
+    isSecret,
+    days[] {
+      "date": date,
+      stages[] {
+        name,
+        description,
+        schedule[] {
+          time,
+          title,
+          description,
+          icon,
+          instructor-> {
+            name,
+            role,
+            image {
+              asset->,
+              hotspot
+            }
+          },
+          allowRegistration,
+          maxRegistrations,
+          registrationRequired,
+          currentRegistrations
+        }
+      }
+    }
+  },
   hasOpenStage,
   isOpenStageSecret,
   features,
@@ -161,6 +189,7 @@ export const eventQuery = groq`*[_type == "event" && slug.current == $slug][0] {
   },
   "schedule": *[_type == "eventSchedule" && references(^._id)][0] {
     _id,
+    isSecret,
     days[] {
       "date": date,
       stages[] {
@@ -178,7 +207,11 @@ export const eventQuery = groq`*[_type == "event" && slug.current == $slug][0] {
               asset->,
               hotspot
             }
-          }
+          },
+          allowRegistration,
+          maxRegistrations,
+          registrationRequired,
+          currentRegistrations
         }
       }
     }
@@ -190,6 +223,12 @@ export const eventQuery = groq`*[_type == "event" && slug.current == $slug][0] {
   gallery[] {
     asset->,
     hotspot
+  },
+  logosSection {
+    eyebrow,
+    headline,
+    description,
+    showButton
   },
   logos[]-> {
     _id,
@@ -302,7 +341,11 @@ export const eventScheduleQuery = groq`*[_type == "eventSchedule" && event._ref 
             asset->,
             hotspot
           }
-        }
+        },
+        allowRegistration,
+        maxRegistrations,
+        registrationRequired,
+        currentRegistrations
       }
     }
   }
@@ -409,6 +452,12 @@ export interface TransformedEvent {
   }[];
   areas?: Area[];
   gallery?: SanityImageSource[];
+  logosSection?: {
+    eyebrow?: string;
+    headline?: string;
+    description?: string;
+    showButton?: boolean;
+  };
   logos?: Logo[];
   externalLinks?: ExternalLinks;
   locationDetails?: LocationDetails;

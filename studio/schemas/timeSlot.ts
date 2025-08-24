@@ -41,6 +41,16 @@ export default defineType({
             type: 'string'
           },
           {
+            name: 'userId',
+            title: 'User ID',
+            type: 'string'
+          },
+          {
+            name: 'profileId',
+            title: 'Profile ID',
+            type: 'string'
+          },
+          {
             name: 'createdAt',
             title: 'Created At',
             type: 'datetime'

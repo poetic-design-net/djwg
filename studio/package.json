@@ -35,7 +35,7 @@
     "@sanity/eslint-config-studio": "^3.0.1",
     "@types/node": "^18.19.64",
     "@types/react": "^18.3.3",
-    "dotenv": "^16.4.5",
+    "dotenv": "^16.4.7",
     "eslint": "^8.57.0",
     "prettier": "^3.3.3",
     "tsx": "^4.19.2",

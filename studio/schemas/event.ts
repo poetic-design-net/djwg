@@ -347,6 +347,41 @@ export default defineType({
       description: 'FAQ-Sektion für dieses Event'
     }),
     defineField({
+      name: 'logosSection',
+      title: 'Partner & Aussteller Section',
+      type: 'object',
+      group: 'logos',
+      fields: [
+        defineField({
+          name: 'eyebrow',
+          title: 'Eyebrow Text',
+          description: 'Kleiner Text über der Hauptüberschrift (z.B. "Unsere Aussteller")',
+          type: 'string',
+          initialValue: 'Unsere Aussteller'
+        }),
+        defineField({
+          name: 'headline',
+          title: 'Hauptüberschrift',
+          description: 'Die Hauptüberschrift der Partner Section',
+          type: 'string',
+          initialValue: 'Unterstützt von führenden Marken der DJ-Industrie'
+        }),
+        defineField({
+          name: 'description',
+          title: 'Beschreibung',
+          description: 'Optionale Beschreibung unter der Überschrift',
+          type: 'text'
+        }),
+        defineField({
+          name: 'showButton',
+          title: 'Button anzeigen',
+          description: '"Aussteller werden" Button anzeigen',
+          type: 'boolean',
+          initialValue: true
+        })
+      ]
+    }),
+    defineField({
       name: 'logos',
       title: 'Partner Logos',
       type: 'array',

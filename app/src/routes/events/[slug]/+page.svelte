@@ -1,13 +1,17 @@
 <script lang="ts">
   import EventDetail from '$lib/components/EventDetail.svelte';
   import Seo from '$lib/components/Seo.svelte';
-  import type { TransformedEvent } from '$lib/sanity/queries/events';
+  import type { TransformedEvent, TimeSlot } from '$lib/sanity/queries/events';
 
   export let data: {
     event: TransformedEvent;
+    timeSlots: TimeSlot[];
+    isAdmin: boolean;
+    user: { id: string; email: string } | null;
+    userProfile: any;
   };
 
-  $: ({ event } = data);
+  $: ({ event, timeSlots, isAdmin, user, userProfile } = data);
 
   // Ensure we always have a valid SEO object
   $: seo = event?.seo || {};
@@ -26,7 +30,7 @@
 
 <div class="min-h-screen bg-black">
   {#if event}
-    <EventDetail {event} />
+    <EventDetail {event} {timeSlots} {isAdmin} {user} {userProfile} />
   {:else}
     <div class="container mx-auto px-4 py-20 text-center">
       <h1 class="text-4xl text-white mb-4">Event nicht gefunden</h1>

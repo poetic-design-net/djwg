@@ -177,7 +177,13 @@
 
 <section id="partners" class="relative py-36 overflow-hidden">  
   {#if logosData.length > 0}
-    <Logos logos={logosData} />
+    <Logos 
+      logos={logosData} 
+      eyebrow={homeData?.logosSection?.eyebrow}
+      headline={homeData?.logosSection?.headline}
+      description={homeData?.logosSection?.description}
+      showButton={homeData?.logosSection?.showButton ?? true}
+    />
   {/if}
 </section>
 

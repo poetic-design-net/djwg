@@ -139,12 +139,20 @@
           schedule={scheduleDays} 
           isSecret={event.schedule?.isSecret || false}
           {isAdmin}
+          {user}
+          {userProfile}
+          eventId={event._id}
+          eventScheduleId={event.schedule?._id || ''}
         />
       {:else}
         <TimeTableOverview 
           schedule={scheduleDays} 
           isSecret={event.schedule?.isSecret || false}
           {isAdmin}
+          {user}
+          {userProfile}
+          eventId={event._id}
+          eventScheduleId={event.schedule?._id || ''}
         />
       {/if}
     </div>
@@ -172,7 +180,13 @@
 
   {#if event.logos && event.logos.length > 0}
     <div id="logos" class="py-20 bg-black/40">
-      <Logos logos={event.logos || []} />
+      <Logos 
+        logos={event.logos || []} 
+        eyebrow={event.logosSection?.eyebrow}
+        headline={event.logosSection?.headline}
+        description={event.logosSection?.description}
+        showButton={event.logosSection?.showButton ?? true}
+      />
     </div>
   {/if}
 

@@ -98,6 +98,27 @@ export default {
                               title: 'Icon',
                               type: 'string',
                               description: 'SVG path for the icon'
+                            },
+                            {
+                              name: 'allowRegistration',
+                              title: 'Allow Registration',
+                              type: 'boolean',
+                              description: 'Allow users to register for this session',
+                              initialValue: false
+                            },
+                            {
+                              name: 'maxRegistrations',
+                              title: 'Maximum Registrations',
+                              type: 'number',
+                              description: 'Maximum number of registrations (leave empty for unlimited)',
+                              validation: Rule => Rule.min(1)
+                            },
+                            {
+                              name: 'registrationRequired',
+                              title: 'Registration Required',
+                              type: 'boolean',
+                              description: 'Is registration required to attend?',
+                              initialValue: false
                             }
                           ],
                           preview: {

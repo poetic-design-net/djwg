@@ -12,6 +12,7 @@ import artist from './artist'
 import event from './event'
 import eventSchedule from './eventSchedule'
 import timeSlot from './timeSlot'
+import scheduleRegistration from './scheduleRegistration'
 import faq from './faq'
 import founder from './founder'
 import navigation from './navigation'
@@ -29,6 +30,9 @@ import pricingPlan from './pricingPlan'
 
 import area from './area' // Import für das neue Area-Schema
 import externalLinks from './objects/externalLinks' // Import für das neue ExternalLinks-Schema
+import exhibitionHall from './exhibitionHall'
+import exhibitor from './exhibitor'
+import exhibitionStand from './exhibitionStand'
 
 // Document Types
 import page from './documents/page'
@@ -64,6 +68,9 @@ export const schemaTypes = [
   mediaUpload,
   awardUpload,
   area, // Area-Schema hinzufügen
+  exhibitionHall,
+  exhibitor,
+  exhibitionStand,
   ticket,
   post,
   djCourse,
@@ -79,6 +86,7 @@ export const schemaTypes = [
   event,
   eventSchedule,
   timeSlot,
+  scheduleRegistration,
   faq,
   founder,
   navigation,

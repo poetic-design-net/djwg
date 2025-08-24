@@ -35,6 +35,9 @@ interface SanityEvent {
             image?: Image;
           };
           icon?: string;
+          allowRegistration?: boolean;
+          maxRegistrations?: number;
+          registrationRequired?: boolean;
         }>;
       }>;
     }>;
@@ -165,7 +168,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
                 name: item.instructor.name || '',
                 role: item.instructor.role || '',
                 image: item.instructor.image ? urlFor(item.instructor.image).url() : undefined
-              } : undefined
+              } : undefined,
+              allowRegistration: item.allowRegistration || false,
+              maxRegistrations: item.maxRegistrations || null,
+              registrationRequired: item.registrationRequired || false
             }))
           }))
         })).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()) // Sort days by date
