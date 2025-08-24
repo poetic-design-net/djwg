@@ -44,6 +44,9 @@
 
   export let event: TransformedEvent;
   export let timeSlots: TimeSlot[] = [];
+  export let isAdmin: boolean = false;
+  export let user: { id: string; email: string } | null = null;
+  export let userProfile: any = null;
 
   $: artists = (event.artists || []) as TransformedArtist[];
   $: console.log('Event artists data:', event.artists);
@@ -132,9 +135,17 @@
       </div>
       
       {#if scheduleView === 'timeline'}
-        <TimeTable schedule={scheduleDays} />
+        <TimeTable 
+          schedule={scheduleDays} 
+          isSecret={event.schedule?.isSecret || false}
+          {isAdmin}
+        />
       {:else}
-        <TimeTableOverview schedule={scheduleDays} />
+        <TimeTableOverview 
+          schedule={scheduleDays} 
+          isSecret={event.schedule?.isSecret || false}
+          {isAdmin}
+        />
       {/if}
     </div>
   {/if}
@@ -144,7 +155,9 @@
       <OpenStage
         eventId={event._id}
         {timeSlots}
-        isAdmin={false}
+        {isAdmin}
+        {user}
+        {userProfile}
         isSecret={event.isOpenStageSecret}
       />
     </div>

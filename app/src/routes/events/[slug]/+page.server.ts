@@ -3,6 +3,8 @@ import type { PageServerLoad } from './$types';
 import { eventQuery } from '$lib/sanity/queries';
 import { urlFor } from '$lib/sanity/image';
 import type { Image } from '@sanity/types';
+import groq from 'groq';
+import { isAdmin } from '$lib/config/admin.server';
 
 import type { PortableTextBlock } from '@portabletext/types';
 
@@ -17,6 +19,7 @@ interface SanityEvent {
   image: Image;
   schedule?: {
     _id: string;
+    isSecret?: boolean;
     days: Array<{
       date: string;
       stages: Array<{
@@ -86,11 +89,42 @@ interface SanityEvent {
   };
 }
 
-export const load: PageServerLoad = async ({ params, locals: { loadQuery } }) => {
+export const load: PageServerLoad = async ({ params, locals }) => {
+  const { loadQuery, supabase, getUser } = locals as any;
+  
   try {
+    // Get user and check admin status
+    const user = await getUser?.();
+    const isUserAdmin = user ? isAdmin(user.email) : false;
+    
+    // Get user profile if logged in
+    let userProfile = null;
+    if (user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+      userProfile = profile;
+    }
     // Load event data with embedded schedule
     const event = await loadQuery<SanityEvent>(eventQuery, { slug: params.slug });
     if (!event?.data) throw error(404, 'Event not found');
+
+    // Load time slots for OpenStage if enabled
+    let timeSlots = [];
+    if (event.data.hasOpenStage) {
+      const timeSlotsQuery = groq`*[_type == "timeSlot" && event._ref == $eventId] | order(startTime asc) {
+        _id,
+        startTime,
+        duration,
+        isBlocked,
+        bookings
+      }`;
+      
+      const timeSlotsResult = await loadQuery(timeSlotsQuery, { eventId: event.data._id });
+      timeSlots = timeSlotsResult?.data || [];
+    }
 
     // Transform Sanity image URLs and handle dates
     const transformedEvent = {
@@ -115,6 +149,7 @@ export const load: PageServerLoad = async ({ params, locals: { loadQuery } }) =>
         selectedFaqs: event.data.faqSection.selectedFaqs || []
       } : undefined,
       schedule: event.data.schedule ? {
+        isSecret: event.data.schedule.isSecret || false,
         days: (event.data.schedule.days || []).map(day => ({
           // Ensure date is in ISO format
           date: new Date(day.date || new Date()).toISOString(),
@@ -139,7 +174,11 @@ export const load: PageServerLoad = async ({ params, locals: { loadQuery } }) =>
 
     
     return {
-      event: transformedEvent
+      event: transformedEvent,
+      timeSlots,
+      isAdmin: isUserAdmin,
+      user: user ? { id: user.id, email: user.email } : null,
+      userProfile
     };
   } catch (err) {
     console.error('Error loading event:', err);

@@ -61,6 +61,8 @@
   }
 
   export let schedule: Day[] = [];
+  export let isSecret: boolean = false;
+  export let isAdmin: boolean = false;
   
   let selectedDayIndex = 0;
   let selectedStageIndex = 0;
@@ -184,6 +186,24 @@
         <span class="inline-block mb-4 text-sm text-green-400 font-medium tracking-tighter">Tagesablauf</span>
         <h2 class="font-heading text-5xl md:text-6xl text-white tracking-tighter">Timeline</h2>
       </div>
+
+      {#if isSecret && !isAdmin}
+        <div class="relative">
+          <div class="absolute inset-0 backdrop-blur-xl bg-black/60 z-10 flex items-center justify-center rounded-3xl">
+            <div class="text-center p-8">
+              <svg class="w-16 h-16 mx-auto mb-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+              </svg>
+              <h3 class="text-2xl text-white mb-2">Noch geheim!</h3>
+              <p class="text-gray-400">Der Zeitplan wird bald veröffentlicht.</p>
+            </div>
+          </div>
+          <div class="opacity-20 pointer-events-none">
+            <!-- Placeholder content to show blurred background -->
+            <div class="h-96"></div>
+          </div>
+        </div>
+      {:else}
 
       <!-- Day Tabs -->
       {#if schedule.length > 1}
@@ -335,6 +355,7 @@
         <div class="text-center py-12">
           <p class="text-gray-400">Keine Bühnen für diesen Tag verfügbar.</p>
         </div>
+      {/if}
       {/if}
     </div>
   </div>

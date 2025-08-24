@@ -17,6 +17,13 @@ export default {
       description: 'The event this schedule belongs to'
     },
     {
+      name: 'isSecret',
+      title: 'Secret Schedule',
+      type: 'boolean',
+      description: 'Hide schedule from public view (only visible to admins)',
+      initialValue: false
+    },
+    {
       name: 'days',
       title: 'Days',
       type: 'array',
