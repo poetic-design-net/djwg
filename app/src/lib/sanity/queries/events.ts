@@ -408,6 +408,8 @@ export interface SanityEvent {
   tickets?: Ticket[];
 }
 
+export type Event = TransformedEvent;
+
 export interface TransformedEvent {
   _id: string;
   title: string;

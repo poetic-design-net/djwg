@@ -111,7 +111,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
       userProfile = profile;
     }
     // Load event data with embedded schedule
-    const event = await loadQuery<SanityEvent>(eventQuery, { slug: params.slug });
+    const event = await loadQuery(eventQuery, { slug: params.slug }) as { data: SanityEvent | null };
     if (!event?.data) throw error(404, 'Event not found');
 
     // Load time slots for OpenStage if enabled
@@ -139,7 +139,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
         image: event.data.locationDetails.image
       },
       // Transform schedule if it exists
-      artists: event.data.artists?.map(artist => ({
+      artists: event.data.artists?.map((artist: any) => ({
         ...artist,
         image: artist.image
       })),
@@ -153,13 +153,13 @@ export const load: PageServerLoad = async ({ params, locals }) => {
       } : undefined,
       schedule: event.data.schedule ? {
         isSecret: event.data.schedule.isSecret || false,
-        days: (event.data.schedule.days || []).map(day => ({
+        days: (event.data.schedule.days || []).map((day: any) => ({
           // Ensure date is in ISO format
           date: new Date(day.date || new Date()).toISOString(),
-          stages: (day.stages || []).map(stage => ({
+          stages: (day.stages || []).map((stage: any) => ({
             name: stage.name || '',
             description: stage.description || '',
-            schedule: (stage.schedule || []).map(item => ({
+            schedule: (stage.schedule || []).map((item: any) => ({
               time: item.time || '',
               title: item.title || '',
               description: item.description || '',
@@ -174,7 +174,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
               registrationRequired: item.registrationRequired || false
             }))
           }))
-        })).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()) // Sort days by date
+        })).sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime()) // Sort days by date
       } : undefined
     };
 

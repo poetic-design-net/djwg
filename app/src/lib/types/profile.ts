@@ -19,6 +19,8 @@ export interface StandardUserMetadata {
   full_name?: string;
   picture?: string;
   avatar_url?: string;
+  email?: string;
+  provider?: string;
 }
 
 // Erweitere die Basis-User-Schnittstelle
