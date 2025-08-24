@@ -55,8 +55,29 @@
   $: scheduleDays = event.schedule?.days ?? [];
   $: hasValidSchedule = scheduleDays.length > 0;
   
-  // Schedule view state
+  // Schedule view state with URL parameter support
+  import { browser } from '$app/environment';
+  import { page } from '$app/stores';
+  
   let scheduleView: 'timeline' | 'overview' = 'timeline';
+  
+  // Check URL parameter on mount
+  $: if (browser && $page.url.searchParams.has('view')) {
+    const view = $page.url.searchParams.get('view');
+    if (view === 'overview' || view === 'timeline') {
+      scheduleView = view;
+    }
+  }
+  
+  // Update URL when view changes
+  function switchView(newView: 'timeline' | 'overview') {
+    scheduleView = newView;
+    if (browser) {
+      const url = new URL(window.location.href);
+      url.searchParams.set('view', newView);
+      window.history.replaceState({}, '', url.toString());
+    }
+  }
 
   // Define sections based on available content
   $: sections = [
@@ -117,23 +138,6 @@
 
   {#if hasValidSchedule}
     <div id="schedule">
-      <div class="container px-4 mx-auto">
-        <div class="flex justify-center gap-4">
-          <button
-            class="px-6 py-3 rounded-full text-sm font-medium transition-all duration-300 {scheduleView === 'timeline' ? 'bg-green-500 text-black scale-105' : 'text-white hover:text-green-500 hover:scale-105 border border-gray-700 hover:border-green-500'}"
-            on:click={() => scheduleView = 'timeline'}
-          >
-            Timeline
-          </button>
-          <button
-            class="px-6 py-3 rounded-full text-sm font-medium transition-all duration-300 {scheduleView === 'overview' ? 'bg-[#33cc99] text-black scale-105' : 'text-white hover:text-[#33cc99] hover:scale-105 border border-gray-700 hover:border-[#33cc99]'}"
-            on:click={() => scheduleView = 'overview'}
-          >
-            Übersicht
-          </button>
-        </div>
-      </div>
-      
       {#if scheduleView === 'timeline'}
         <TimeTable 
           schedule={scheduleDays} 
@@ -143,6 +147,8 @@
           {userProfile}
           eventId={event._id}
           eventScheduleId={event.schedule?._id || ''}
+          {scheduleView}
+          on:switchView={() => switchView('overview')}
         />
       {:else}
         <TimeTableOverview 
@@ -153,6 +159,8 @@
           {userProfile}
           eventId={event._id}
           eventScheduleId={event.schedule?._id || ''}
+          {scheduleView}
+          on:switchView={() => switchView('timeline')}
         />
       {/if}
     </div>

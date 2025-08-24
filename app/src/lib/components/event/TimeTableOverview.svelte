@@ -5,6 +5,10 @@
   export let schedule: Day[] = [];
   export let isSecret: boolean = false;
   export let isAdmin: boolean = false;
+  export let scheduleView: string = 'overview';
+  
+  import { createEventDispatcher } from 'svelte';
+  const dispatch = createEventDispatcher();
   
   // Stage filtering
   let selectedStages: Set<string> = new Set();
@@ -149,9 +153,31 @@
 {#if schedule?.length > 0}
   <div class="py-20 bg-black/40">
     <div class="container px-4 mx-auto">
-      <div class="mb-20 text-center">
+      <div class="mb-12 text-center">
         <span class="inline-block mb-4 text-sm text-[#33cc99] font-medium tracking-tighter">Tagesablauf</span>
-        <h2 class="font-heading text-5xl md:text-6xl text-white tracking-tighter">Übersicht</h2>
+        <h2 class="font-heading text-5xl md:text-6xl text-white tracking-tighter mb-8">Übersicht</h2>
+        
+        <!-- View Switcher -->
+        <div class="relative inline-flex items-center gap-1 bg-black/40 backdrop-blur-sm rounded-full p-1 border border-gray-800">
+            <button
+              class="group px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 flex items-center gap-2 text-gray-400 hover:text-green-400 hover:bg-white/5"
+              on:click={() => dispatch('switchView')}
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              Timeline
+            </button>
+            <button
+              class="group px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 flex items-center gap-2 {scheduleView === 'overview' ? 'bg-green-400 text-black shadow-lg shadow-green-400/20' : 'text-gray-400 hover:text-white'}"
+              disabled
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+              </svg>
+              Übersicht
+            </button>
+        </div>
       </div>
 
       {#if isSecret && !isAdmin}
@@ -191,7 +217,7 @@
                   on:click={() => toggleStage(stageName)}
                   class="px-4 py-2 rounded-full text-sm font-medium transition-all
                     {selectedStages.has(stageName) 
-                      ? 'bg-[#33cc99] text-black' 
+                      ? 'bg-teal-500 text-black' 
                       : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}"
                 >
                   {stageName}
@@ -204,7 +230,12 @@
       
       {#each filteredSchedule as day}
         <div class="mb-16">
-          <h3 class="text-2xl text-white mb-6">{formatDate(day.date)}</h3>
+          <h3 class="text-2xl text-white mb-6 flex items-center justify-center gap-2">
+            <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+            {formatDate(day.date)}
+          </h3>
           
           <div class="schedule-wrapper-container">
             <!-- Left scroll indicator -->

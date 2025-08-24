@@ -362,6 +362,10 @@
   export let userProfile: any = null;
   export let eventId: string = '';
   export let eventScheduleId: string = '';
+  export let scheduleView: string = 'timeline';
+  
+  import { createEventDispatcher } from 'svelte';
+  const dispatch = createEventDispatcher();
   
   // Required badge ID for registration
   const REQUIRED_BADGE_ID = '319b8937-cc53-4b1c-a2ef-b9f97aa81f51';
@@ -508,9 +512,31 @@
 {#if schedule?.length > 0 && selectedDay}
   <div class="py-20 bg-black/40">
     <div class="container px-4 mx-auto">
-      <div class="mb-20 text-center">
+      <div class="mb-12 text-center">
         <span class="inline-block mb-4 text-sm text-green-400 font-medium tracking-tighter">Tagesablauf</span>
-        <h2 class="font-heading text-5xl md:text-6xl text-white tracking-tighter">Timeline</h2>
+        <h2 class="font-heading text-5xl md:text-6xl text-white tracking-tighter mb-8">Timeline</h2>
+        
+        <!-- View Switcher -->
+        <div class="relative inline-flex items-center gap-1 bg-black/40 backdrop-blur-sm rounded-full p-1 border border-gray-800">
+            <button
+              class="group px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 flex items-center gap-2 {scheduleView === 'timeline' ? 'bg-green-400 text-black shadow-lg shadow-green-400/20' : 'text-gray-400 hover:text-white'}"
+              disabled
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              Timeline
+            </button>
+            <button
+              class="group px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 flex items-center gap-2 text-gray-400 hover:text-green-400 hover:bg-white/5"
+              on:click={() => dispatch('switchView')}
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+              </svg>
+              Übersicht
+            </button>
+        </div>
       </div>
 
       {#if isSecret && !isAdmin}
@@ -537,9 +563,12 @@
           {#each schedule as day, i}
             <a
               href={getTabUrl(i)}
-              class="px-6 py-3 rounded-full text-sm font-medium transition-all duration-300 {selectedDayIndex === i ? 'bg-green-500 text-black scale-105' : 'text-white hover:text-green-500 hover:scale-105 border border-gray-700 hover:border-green-500'}"
+              class="px-6 py-3 rounded-full text-sm font-medium transition-all duration-300 flex items-center gap-2 {selectedDayIndex === i ? 'bg-emerald-500 text-black scale-105' : 'text-white hover:text-emerald-400 hover:scale-105 border border-gray-700 hover:border-emerald-400'}"
               on:click|preventDefault={() => selectDay(i)}
             >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              </svg>
               {formatDate(day.date)}
             </a>
           {/each}
@@ -553,7 +582,7 @@
             {#each selectedDay.stages as stage, i}
               <a
                 href={getTabUrl(selectedDayIndex, i)}
-                class="px-6 py-3 rounded-full text-sm font-medium transition-all duration-300 {selectedStageIndex === i ? 'bg-green-500 text-black scale-105' : 'text-white hover:text-green-500 hover:scale-105 border border-gray-700 hover:border-green-500'}"
+                class="px-6 py-3 rounded-full text-sm font-medium transition-all duration-300 {selectedStageIndex === i ? 'bg-teal-500 text-black scale-105' : 'text-gray-300 hover:text-teal-400 hover:scale-105 border border-gray-700 hover:border-teal-400'}"
                 on:click|preventDefault={() => selectStage(i)}
               >
                 {stage.name}
@@ -607,28 +636,38 @@
                 >
                   <!-- Left Side (Time) -->
                   <div class="flex-1 w-full md:w-5/12 order-2 md:order-none mb-4 md:mb-0 pl-20 md:pl-0 {i % 2 === 0 ? 'md:text-right md:pr-10' : 'md:hidden'}">
-                    <span class="text-xl text-green-400 font-medium">{item.time}</span>
+                    <span class="text-xl text-green-400 font-medium group-hover:text-green-300 transition-colors duration-300">{item.time}</span>
                   </div>
 
-                  <!-- Center (Icon) -->
+                  <!-- Center (Icon or Image) -->
                   <div
                     bind:this={timelineItems[i]}
-                    class="timeline-dot absolute left-6 md:left-1/2 top-0 md:top-1/2 transform md:-translate-y-1/2 md:-translate-x-1/2 w-12 h-12 md:w-14 md:h-14 bg-black border-4 border-gray-800 rounded-full flex items-center justify-center group-hover:border-green-500 transition-all duration-500 ease-out z-10"
+                    class="timeline-dot absolute left-6 md:left-1/2 top-0 md:top-1/2 transform md:-translate-y-1/2 md:-translate-x-1/2 w-12 h-12 md:w-14 md:h-14 bg-black border-4 border-gray-800 rounded-full flex items-center justify-center group-hover:border-green-500 transition-all duration-500 ease-out z-10 overflow-hidden"
                   >
-                    <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d={item.icon}></path>
-                    </svg>
+                    {#if item.instructor?.image}
+                      <img 
+                        src={item.instructor.image} 
+                        alt={item.instructor.name}
+                        class="w-full h-full object-cover"
+                      />
+                    {:else if item.icon}
+                      <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d={item.icon}></path>
+                      </svg>
+                    {:else}
+                      <div class="w-3 h-3 bg-green-400 rounded-full"></div>
+                    {/if}
                   </div>
 
                   <!-- Right Side (Time for odd items) -->
                   <div class="hidden md:block flex-1 w-full md:w-5/12 order-2 mb-4 md:mb-0 pl-20 md:pl-0 {i % 2 === 1 ? 'md:text-left md:pl-10' : 'md:hidden'}">
-                    <span class="text-xl text-green-400 font-medium">{item.time}</span>
+                    <span class="text-xl text-green-400 font-medium group-hover:text-green-300 transition-colors duration-300">{item.time}</span>
                   </div>
 
                   <!-- Content -->
                   <div class="flex-1 w-full md:w-5/12 order-3 pl-20 md:pl-0 {i % 2 === 0 ? 'md:pl-10' : 'md:pr-10 md:order-first'}">
-                    <div class="p-4 md:p-6 bg-black/40 border border-gray-800 rounded-3xl hover:border-green-500 transition-all duration-500 hover:scale-[1.02] transform">
-                      <h3 class="mb-2 text-lg md:text-xl text-white">{item.title}</h3>
+                    <div class="event-card p-4 md:p-6 bg-black/40 border border-gray-800 rounded-3xl hover:border-green-500 transition-all duration-500 hover:scale-[1.02] transform hover:bg-black/60 hover:shadow-2xl hover:shadow-green-500/10">
+                      <h3 class="mb-2 text-lg md:text-xl text-white font-medium group-hover:text-green-400 transition-colors duration-300">{item.title}</h3>
                       {#if item.description}
                         {#if shouldTruncate(item.description)}
                           <div
@@ -659,11 +698,16 @@
                         {/if}
                       {/if}
                       {#if item.instructor}
-                        <div class="flex items-center text-sm text-green-400">
-                          <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="flex items-center gap-2 mt-3">
+                          <svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                           </svg>
-                          <span class="break-words">{item.instructor.name}</span>
+                          <div class="flex-1">
+                            <span class="text-sm font-medium text-green-400 break-words">{item.instructor.name}</span>
+                            {#if item.instructor.role}
+                              <span class="text-xs text-gray-500 ml-2">• {item.instructor.role}</span>
+                            {/if}
+                          </div>
                         </div>
                       {/if}
                       
@@ -876,6 +920,35 @@
   /* Ensure smooth transitions */
   .group {
     transition: transform 0.3s ease-out;
+  }
+  
+  /* Enhanced card hover effects */
+  .event-card {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .event-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, transparent, rgba(51, 204, 153, 0.05));
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+  
+  .event-card:hover::before {
+    opacity: 1;
+  }
+  
+  /* Better image loading */
+  img {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
   }
 
   /* Prevent content overflow on mobile */
