@@ -1,5 +1,4 @@
 import { defineType, defineField } from 'sanity'
-import { PolygonEditor } from '../../components/PolygonEditor'
 
 export default defineType({
   name: 'standShape',
@@ -22,15 +21,44 @@ export default defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
+      name: 'width',
+      title: 'Breite',
+      type: 'number',
+      hidden: ({ parent }) => parent?.type === 'polygon',
+      validation: (Rule) => Rule.min(10).max(500),
+      initialValue: 100,
+      description: 'Breite des Stands in Pixeln',
+    }),
+    defineField({
+      name: 'height',
+      title: 'Höhe',
+      type: 'number',
+      hidden: ({ parent }) => parent?.type === 'polygon',
+      validation: (Rule) => Rule.min(10).max(500),
+      initialValue: 100,
+      description: 'Höhe des Stands in Pixeln',
+    }),
+    defineField({
       name: 'points',
       title: 'Polygon-Punkte',
       type: 'array',
       of: [
         {
           type: 'object',
+          title: 'Punkt',
           fields: [
-            { name: 'x', type: 'number', title: 'X' },
-            { name: 'y', type: 'number', title: 'Y' },
+            { 
+              name: 'x', 
+              type: 'number', 
+              title: 'X-Koordinate',
+              validation: (Rule) => Rule.required().min(0).max(1000),
+            },
+            { 
+              name: 'y', 
+              type: 'number', 
+              title: 'Y-Koordinate',
+              validation: (Rule) => Rule.required().min(0).max(1000),
+            },
           ],
           preview: {
             select: {
@@ -39,20 +67,28 @@ export default defineType({
             },
             prepare({ x, y }) {
               return {
-                title: `Punkt: (${x}, ${y})`,
+                title: `Punkt: (${x || 0}, ${y || 0})`,
               }
             },
           },
         },
       ],
-      components: {
-        input: PolygonEditor,
-      },
       hidden: ({ parent }) => parent?.type !== 'polygon',
-      description: 'Nutze die Vorlagen oder zeichne deine eigene Form',
+      description: 'Gib die Punkte als X,Y Koordinaten ein. Das Polygon wird automatisch geschlossen. Mindestens 3 Punkte erforderlich.',
+      validation: (Rule) => Rule.custom((points, context) => {
+        const parent = context?.parent as any
+        if (parent?.type === 'polygon') {
+          if (!points || points.length < 3) {
+            return 'Ein Polygon muss mindestens 3 Punkte haben'
+          }
+        }
+        return true
+      }),
     }),
   ],
   initialValue: {
     type: 'rectangle',
+    width: 100,
+    height: 100,
   },
 })
