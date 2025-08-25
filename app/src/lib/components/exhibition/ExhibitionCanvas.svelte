@@ -20,6 +20,11 @@
     getOptimizedFontSize,
     shouldRenderFloorPlan 
   } from '$lib/utils/virtualization'
+  import {
+    generateShapePoints,
+    pointsToFlatArray,
+    getPolygonCenter,
+  } from '$lib/utils/exhibitionShapes'
 
   const builder = imageUrlBuilder(client)
 
@@ -39,6 +44,7 @@
   let Text: any
   let KonvaImage: any
   let Group: any
+  let Line: any
   let konvaLoaded = false
 
   $: hallStands = $filteredStands.filter(
@@ -71,6 +77,7 @@
       Text = konvaModule.Text
       KonvaImage = konvaModule.Image
       Group = konvaModule.Group
+      Line = konvaModule.Line
       konvaLoaded = true
       
       handleResize()
@@ -160,7 +167,10 @@
     isDragging = false
   }
 
-  function handleStandClick(stand: ExhibitionStand) {
+  function handleStandClick(stand: ExhibitionStand, e?: any) {
+    // Don't select stand if we're dragging
+    if (isDragging) return
+    
     selectedStand.set(stand)
     centerOnStand(stand)
   }
@@ -205,13 +215,28 @@
   }
 
   function getStandColor(stand: ExhibitionStand): string {
-    if ($selectedStand?._id === stand._id) {
-      return '#3b82f6' // blue for selected
+    // Custom color takes priority
+    if (stand.customColor?.useCustom && stand.customColor?.hex) {
+      return stand.customColor.hex
     }
+    // Selected stand gets blue
+    if ($selectedStand?._id === stand._id) {
+      return '#3b82f6'
+    }
+    // Otherwise use status color
     return STATUS_COLORS[stand.status] || '#e5e7eb'
   }
 
   function getStandOpacity(stand: ExhibitionStand): number {
+    // Use custom opacity if defined
+    if (stand.customColor?.useCustom && stand.customColor?.opacity !== undefined) {
+      // Increase opacity slightly when hovered/selected
+      if ($hoveredStand?._id === stand._id || $selectedStand?._id === stand._id) {
+        return Math.min(1, stand.customColor.opacity + 0.2)
+      }
+      return stand.customColor.opacity
+    }
+    // Default opacity behavior
     if ($hoveredStand?._id === stand._id || $selectedStand?._id === stand._id) {
       return 0.9
     }
@@ -235,6 +260,56 @@
     if (!hall?.floorPlan?.asset?._ref) return null
     return builder.image(hall.floorPlan).url()
   }
+
+  function getStandShape(stand: ExhibitionStand) {
+    const shapeType = stand.shape?.type || 'rectangle'
+    
+    // Debug logging for polygon issues (uncomment if needed)
+    // if (shapeType === 'polygon') {
+    //   console.log(`🔍 Polygon Debug for ${stand.standNumber}:`, {
+    //     standPosition: stand.position,
+    //     standSize: stand.size,
+    //     hasCustomPoints: !!stand.shape?.points?.length,
+    //     customPoints: stand.shape?.points,
+    //     shapeType: shapeType
+    //   })
+    // }
+    
+    // For custom polygon points
+    if (shapeType === 'polygon' && stand.shape?.points && stand.shape.points.length >= 3) {
+      // IMPORTANT: Points should be relative to (0,0) of the Group
+      // If points are stored as absolute coordinates, we need to offset them
+      const points = stand.shape.points.map(p => ({
+        x: p.x || 0,
+        y: p.y || 0
+      }))
+      
+      // console.log(`📍 Using custom points for ${stand.standNumber}:`, points)
+      return points
+    }
+    
+    // Generate points based on shape type
+    // All generated points are relative to (0,0) since Group handles absolute positioning
+    const generatedPoints = generateShapePoints(
+      shapeType,
+      stand.size.width,
+      stand.size.height,
+      0,  // Always start at 0,0 within the Group
+      0
+    )
+    
+    // if (shapeType === 'polygon') {
+    //   console.log(`📐 Generated polygon points for ${stand.standNumber}:`, generatedPoints)
+    // }
+    
+    return generatedPoints
+  }
+
+  function getTextPosition(stand: ExhibitionStand) {
+    const points = getStandShape(stand)
+    const center = getPolygonCenter(points)
+    return center
+  }
 </script>
 
 <div bind:this={stageContainer} class="absolute inset-0 touch-none">
@@ -244,11 +319,23 @@
       config={{
         width: stageWidth,
         height: stageHeight,
+        draggable: true,  // Enable dragging on the entire stage
       }}
-      on:mousedown={handleStageMouseDown}
-      on:mousemove={handleStageMouseMove}
-      on:mouseup={handleStageMouseUp}
-      on:mouseleave={handleStageMouseUp}
+      on:dragstart={() => {
+        isDragging = true
+      }}
+      on:dragend={() => {
+        isDragging = false
+      }}
+      on:dragmove={(e) => {
+        const stage = e.target
+        if (stage) {
+          canvasPosition.set({
+            x: stage.x(),
+            y: stage.y()
+          })
+        }
+      }}
     >
       <svelte:component this={Layer}
         config={{
@@ -295,28 +382,87 @@
             config={{
               x: stand.position.x,
               y: stand.position.y,
+              draggable: false,  // Disable dragging on the stand itself
             }}
-            on:click={() => handleStandClick(stand)}
+            on:click={(e) => handleStandClick(stand, e)}
             on:mouseenter={() => handleStandMouseEnter(stand)}
             on:mouseleave={handleStandMouseLeave}
+            on:mousedown={(e) => {
+              // Allow drag to start even when clicking on stands
+              handleStageMouseDown(e)
+              e.cancelBubble = false  // Allow event to bubble for dragging
+            }}
           >
-            <!-- Stand rectangle -->
-            <svelte:component this={Rect}
-              config={{
-                x: 0,
-                y: 0,
-                width: stand.size.width,
-                height: stand.size.height,
-                fill: getStandColor(stand),
-                stroke: $selectedStand?._id === stand._id ? '#1e40af' : '#9ca3af',
-                strokeWidth: $selectedStand?._id === stand._id ? 3 : 1,
-                opacity: getStandOpacity(stand),
-                cornerRadius: 4,
-                shadowColor: stand.exhibitor?.isPremium ? '#fbbf24' : '#000000',
-                shadowBlur: stand.exhibitor?.isPremium ? 20 : 5,
-                shadowOpacity: stand.exhibitor?.isPremium ? 0.5 : 0.1,
-              }}
-            />
+            <!-- Debug: Bounding Box for polygons - Set DEBUG_POLYGON to true -->
+            {@const DEBUG_POLYGON = false}
+            {#if stand.shape?.type === 'polygon' && DEBUG_POLYGON}
+              <svelte:component this={Rect}
+                config={{
+                  x: 0,
+                  y: 0,
+                  width: stand.size.width,
+                  height: stand.size.height,
+                  fill: 'transparent',
+                  stroke: '#ff00ff',
+                  strokeWidth: 1,
+                  opacity: 0.5,
+                  dash: [5, 5],
+                }}
+              />
+            {/if}
+            
+            <!-- Stand shape (polygon or rectangle) -->
+            {#if stand.shape?.type && stand.shape.type !== 'rectangle'}
+              {@const shapePoints = getStandShape(stand)}
+              {@const flatPoints = pointsToFlatArray(shapePoints)}
+              {#if shapePoints.length >= 3}
+                <svelte:component this={Line}
+                  config={{
+                    points: flatPoints,
+                    fill: getStandColor(stand),
+                    stroke: $selectedStand?._id === stand._id ? '#1e40af' : '#9ca3af',
+                    strokeWidth: $selectedStand?._id === stand._id ? 3 : 1,
+                    opacity: getStandOpacity(stand),
+                    closed: true,
+                    shadowColor: stand.exhibitor?.isPremium ? '#fbbf24' : '#000000',
+                    shadowBlur: stand.exhibitor?.isPremium ? 20 : 5,
+                    shadowOpacity: stand.exhibitor?.isPremium ? 0.5 : 0.1,
+                  }}
+                />
+              {:else}
+                <!-- Fallback to rectangle if polygon has insufficient points -->
+                <svelte:component this={Rect}
+                  config={{
+                    x: 0,
+                    y: 0,
+                    width: stand.size.width,
+                    height: stand.size.height,
+                    fill: getStandColor(stand),
+                    stroke: '#ff0000',
+                    strokeWidth: 2,
+                    opacity: 0.5,
+                  }}
+                />
+              {/if}
+            {:else}
+              <!-- Traditional rectangle for backward compatibility -->
+              <svelte:component this={Rect}
+                config={{
+                  x: 0,
+                  y: 0,
+                  width: stand.size.width,
+                  height: stand.size.height,
+                  fill: getStandColor(stand),
+                  stroke: $selectedStand?._id === stand._id ? '#1e40af' : '#9ca3af',
+                  strokeWidth: $selectedStand?._id === stand._id ? 3 : 1,
+                  opacity: getStandOpacity(stand),
+                  cornerRadius: 4,
+                  shadowColor: stand.exhibitor?.isPremium ? '#fbbf24' : '#000000',
+                  shadowBlur: stand.exhibitor?.isPremium ? 20 : 5,
+                  shadowOpacity: stand.exhibitor?.isPremium ? 0.5 : 0.1,
+                }}
+              />
+            {/if}
 
             <!-- Stand number -->
             <svelte:component this={Text}
@@ -333,10 +479,11 @@
 
             <!-- Company name (if space allows) -->
             {#if shouldShowLabel(stand) && stand.exhibitor}
+              {@const textPos = getTextPosition(stand)}
               <svelte:component this={Text}
                 config={{
-                  x: stand.size.width / 2,
-                  y: stand.size.height / 2,
+                  x: textPos.x,
+                  y: textPos.y,
                   text: stand.exhibitor.company,
                   fontSize: getStandFontSize(14),
                   fontFamily: 'system-ui',
@@ -390,18 +537,36 @@
             }}
           />
 
-          <!-- Minimap stands -->
+          <!-- Minimap stands with polygon support -->
           {#each visibleStands as stand}
-            <svelte:component this={Rect}
-              config={{
-                x: (stand.position.x / hall.dimensions.width) * 192,
-                y: (stand.position.y / hall.dimensions.height) * 144,
-                width: (stand.size.width / hall.dimensions.width) * 192,
-                height: (stand.size.height / hall.dimensions.height) * 144,
-                fill: STATUS_COLORS[stand.status] || '#e5e7eb',
-                opacity: 0.6,
-              }}
-            />
+            {#if stand.shape?.type && stand.shape.type !== 'rectangle'}
+              {@const shapePoints = getStandShape(stand)}
+              {@const scaledPoints = shapePoints.map(p => [
+                ((stand.position.x + p.x) / hall.dimensions.width) * 192,
+                ((stand.position.y + p.y) / hall.dimensions.height) * 144
+              ]).flat()}
+              {#if shapePoints.length >= 3}
+                <svelte:component this={Line}
+                  config={{
+                    points: scaledPoints,
+                    fill: getStandColor(stand),
+                    closed: true,
+                    opacity: 0.6,
+                  }}
+                />
+              {/if}
+            {:else}
+              <svelte:component this={Rect}
+                config={{
+                  x: (stand.position.x / hall.dimensions.width) * 192,
+                  y: (stand.position.y / hall.dimensions.height) * 144,
+                  width: (stand.size.width / hall.dimensions.width) * 192,
+                  height: (stand.size.height / hall.dimensions.height) * 144,
+                  fill: getStandColor(stand),
+                  opacity: 0.6,
+                }}
+              />
+            {/if}
           {/each}
 
           <!-- Viewport indicator -->

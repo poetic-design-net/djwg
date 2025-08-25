@@ -10,8 +10,8 @@ const USE_MOCK_DATA = false // Set to true to use mock data
 
 export const load: PageServerLoad = async ({ locals }) => {
   // Check if user is admin
-  const session = await locals.auth()
-  const adminStatus = isAdmin(session?.user?.email)
+  const user = await locals.getUser()
+  const adminStatus = isAdmin(user?.email)
 
   try {
     let data

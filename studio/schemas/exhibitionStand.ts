@@ -27,6 +27,11 @@ export default defineType({
       description: 'Leer lassen für verfügbare Stände',
     }),
     defineField({
+      name: 'shape',
+      title: 'Form',
+      type: 'standShape',
+    }),
+    defineField({
       name: 'position',
       title: 'Position',
       type: 'object',
@@ -65,6 +70,7 @@ export default defineType({
         }),
       ],
       validation: (Rule) => Rule.required(),
+      description: 'Bounding Box für die Form',
     }),
     defineField({
       name: 'status',
@@ -95,6 +101,11 @@ export default defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
+      name: 'customColor',
+      title: 'Farbe & Stil',
+      type: 'standColor',
+    }),
+    defineField({
       name: 'price',
       title: 'Preis (€)',
       type: 'number',
@@ -107,11 +118,14 @@ export default defineType({
       of: [{ type: 'string' }],
       options: {
         list: [
+          { title: 'TV/Monitor', value: 'tv' },
+          { title: 'PA-System', value: 'pa' },
+          { title: 'Mikrofon', value: 'microphone' },
+          { title: 'Mixer', value: 'mixer' },
+          { title: 'DJ Booth', value: 'djbooth' },
+          { title: 'HDMI-Anschluss', value: 'hdmi' },
           { title: 'Stromanschluss', value: 'power' },
-          { title: 'Wasseranschluss', value: 'water' },
           { title: 'Internet/WLAN', value: 'internet' },
-          { title: 'Eckstand', value: 'corner' },
-          { title: 'Hauptgang', value: 'mainAisle' },
         ],
       },
     }),

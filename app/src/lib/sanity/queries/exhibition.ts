@@ -51,6 +51,7 @@ export const exhibitionStandsQuery = groq`
       products,
       isSecret
     },
+    shape,
     position,
     size,
     status,
@@ -108,6 +109,8 @@ export const exhibitionDataQuery = groq`
         products,
         isSecret
       },
+      shape,
+      customColor,
       position,
       size,
       status,

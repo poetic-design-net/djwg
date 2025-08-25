@@ -18,6 +18,16 @@
   let canScrollRight = false;
   let hoveredEvent: { event: ScheduleItem; position: DOMRect } | null = null;
   
+  // Zoom state
+  let zoomLevel = 100;
+  const zoomStep = 5;
+  const minZoom = 30;
+  const maxZoom = 100;
+  
+  // Hold-to-zoom state
+  let zoomInterval: NodeJS.Timeout | null = null;
+  let isZooming = false;
+  
   // Initialize all stages as selected
   $: if (schedule.length > 0 && selectedStages.size === 0) {
     schedule.forEach(day => {
@@ -67,6 +77,72 @@
   function handleEventLeave() {
     hoveredEvent = null;
   }
+  
+  function zoomIn() {
+    if (zoomLevel < maxZoom) {
+      zoomLevel = Math.min(zoomLevel + zoomStep, maxZoom);
+    }
+  }
+  
+  function zoomOut() {
+    if (zoomLevel > minZoom) {
+      zoomLevel = Math.max(zoomLevel - zoomStep, minZoom);
+    }
+  }
+  
+  function resetZoom() {
+    zoomLevel = 100;
+  }
+  
+  // Hold-to-zoom functions
+  function startZoomOut() {
+    if (isZooming) return;
+    isZooming = true;
+    zoomOut();
+    zoomInterval = setInterval(() => {
+      zoomOut();
+    }, 50);
+  }
+  
+  function startZoomIn() {
+    if (isZooming) return;
+    isZooming = true;
+    zoomIn();
+    zoomInterval = setInterval(() => {
+      zoomIn();
+    }, 50);
+  }
+  
+  function stopZoom() {
+    if (zoomInterval) {
+      clearInterval(zoomInterval);
+      zoomInterval = null;
+    }
+    isZooming = false;
+  }
+  
+  // Keyboard shortcuts
+  function handleKeydown(event: KeyboardEvent) {
+    if (event.ctrlKey || event.metaKey) {
+      if (event.key === '+' || event.key === '=') {
+        event.preventDefault();
+        zoomIn();
+      } else if (event.key === '-') {
+        event.preventDefault();
+        zoomOut();
+      } else if (event.key === '0') {
+        event.preventDefault();
+        resetZoom();
+      }
+    }
+  }
+  
+  onMount(() => {
+    window.addEventListener('keydown', handleKeydown);
+    return () => {
+      window.removeEventListener('keydown', handleKeydown);
+    };
+  });
   
   onMount(() => {
     if (scrollContainer) {
@@ -197,6 +273,50 @@
           </div>
         </div>
       {:else}
+      
+      <!-- Zoom Controls -->
+      <div class="flex justify-center mb-6">
+        <div class="inline-flex items-center gap-2 bg-black/60 backdrop-blur-sm rounded-full px-4 py-2 border border-gray-800">
+          <button
+            on:mousedown={startZoomOut}
+            on:mouseup={stopZoom}
+            on:mouseleave={stopZoom}
+            on:touchstart={startZoomOut}
+            on:touchend={stopZoom}
+            disabled={zoomLevel <= minZoom}
+            class="p-1 rounded-full transition-all select-none {zoomLevel <= minZoom ? 'text-gray-600 cursor-not-allowed' : 'text-gray-400 hover:text-green-400 hover:bg-white/5 active:bg-white/10'}"
+            title="Verkleinern (Gedrückt halten oder Ctrl/Cmd + -)"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"></path>
+            </svg>
+          </button>
+          
+          <button
+            on:click={resetZoom}
+            class="px-3 py-1 text-sm font-medium text-gray-400 hover:text-green-400 transition-all"
+            title="Zoom zurücksetzen (Ctrl/Cmd + 0)"
+          >
+            {zoomLevel}%
+          </button>
+          
+          <button
+            on:mousedown={startZoomIn}
+            on:mouseup={stopZoom}
+            on:mouseleave={stopZoom}
+            on:touchstart={startZoomIn}
+            on:touchend={stopZoom}
+            disabled={zoomLevel >= maxZoom}
+            class="p-1 rounded-full transition-all select-none {zoomLevel >= maxZoom ? 'text-gray-600 cursor-not-allowed' : 'text-gray-400 hover:text-green-400 hover:bg-white/5 active:bg-white/10'}"
+            title="Vergrößern (Gedrückt halten oder Ctrl/Cmd + +)"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+      
       <!-- Stage Filter for multiple stages -->
       {#if schedule.some(day => day.stages.length > 3)}
         <div class="mb-6 bg-black/60 rounded-xl p-4">
@@ -264,8 +384,8 @@
               </button>
             {/if}
             
-            <div class="schedule-wrapper {canScrollLeft ? 'can-scroll-left' : ''} {canScrollRight ? 'can-scroll-right' : ''}" bind:this={scrollContainer}>
-            <div class="schedule-container">
+            <div class="schedule-wrapper {canScrollLeft ? 'can-scroll-left' : ''} {canScrollRight ? 'can-scroll-right' : ''}" style="overflow: auto;" bind:this={scrollContainer}>
+            <div class="schedule-container" style="transform: scale({zoomLevel / 100}); transform-origin: top left; width: {100 * (100 / zoomLevel)}%;">
               <div class="schedule-header">
                 <div class="header-cell time-header">Zeit</div>
                 {#each day.stages as stage}

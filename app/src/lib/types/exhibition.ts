@@ -48,6 +48,15 @@ export interface ExhibitionStand {
   standNumber: string
   hall: ExhibitionHall
   exhibitor?: Exhibitor
+  shape?: {
+    type: 'rectangle' | 'lShape' | 'uShape' | 'polygon'
+    points?: Array<{ x: number; y: number }>
+  }
+  customColor?: {
+    useCustom?: boolean
+    hex?: string
+    opacity?: number
+  }
   position: {
     x: number
     y: number

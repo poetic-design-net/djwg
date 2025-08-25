@@ -33,6 +33,8 @@ import externalLinks from './objects/externalLinks' // Import für das neue Exte
 import exhibitionHall from './exhibitionHall'
 import exhibitor from './exhibitor'
 import exhibitionStand from './exhibitionStand'
+import standShape from './objects/standShape'
+import standColor from './objects/standColor'
 
 // Document Types
 import page from './documents/page'
@@ -124,5 +126,7 @@ export const schemaTypes = [
   pricingSection,
   socialMediaLink,
   merchSection,
-  externalLinks // ExternalLinks-Schema hinzufügen
+  externalLinks, // ExternalLinks-Schema hinzufügen
+  standShape,
+  standColor
 ]
