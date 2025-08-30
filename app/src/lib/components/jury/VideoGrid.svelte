@@ -5,6 +5,7 @@
 	
 	export let submissions: any[] = [];
 	export let viewMode: 'grid' | 'list' = 'grid';
+	export let isAdmin: boolean = false;
 	
 	const dispatch = createEventDispatcher();
 	
@@ -32,7 +33,9 @@
 			<SubmissionCard 
 				{submission}
 				{viewMode}
+				{isAdmin}
 				on:rate={handleRate(submission._id)}
+				on:statusChange={(e) => dispatch('statusChange', { submissionId: submission._id, status: e.detail.status })}
 			/>
 		</div>
 	{/each}

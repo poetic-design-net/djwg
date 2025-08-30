@@ -9,6 +9,7 @@
 	import { supabaseClient } from '$lib/supabase';
 	
 	export let user: any;
+	export let isAdmin: boolean = false;
 	
 	let submissions: any[] = [];
 	let filteredSubmissions: any[] = [];
@@ -160,6 +161,35 @@
 	function toggleStats() {
 		showStats = !showStats;
 	}
+	
+	async function handleStatusUpdate(event: CustomEvent) {
+		const { submissionId, status } = event.detail;
+		
+		try {
+			const response = await fetch('/api/jury/submissions/status', {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					submissionId,
+					status
+				})
+			});
+			
+			if (!response.ok) throw new Error('Failed to update status');
+			
+			// Update local state
+			const submission = submissions.find(s => s._id === submissionId);
+			if (submission) {
+				submission.status = status;
+				filterSubmissions();
+			}
+			
+			toasts.success('Status aktualisiert');
+		} catch (error) {
+			console.error('Failed to update status:', error);
+			toasts.error('Fehler beim Aktualisieren des Status');
+		}
+	}
 </script>
 
 <div class="min-h-screen bg-black py-6 px-4 sm:px-6 lg:px-8">
@@ -224,7 +254,9 @@
 			<VideoGrid 
 				submissions={filteredSubmissions}
 				{viewMode}
+				{isAdmin}
 				on:rate={handleRatingUpdate}
+				on:statusChange={handleStatusUpdate}
 			/>
 		{/if}
 	</div>

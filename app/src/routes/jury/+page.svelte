@@ -41,7 +41,7 @@
 		<div class="animate-spin rounded-full h-12 w-12 border-4 border-purple-500 border-t-transparent"></div>
 	</div>
 {:else if hasAccess}
-	<JuryDashboard user={data.user} />
+	<JuryDashboard user={data.user} isAdmin={data.isAdmin} />
 {:else}
 	<div class="min-h-screen flex items-center justify-center bg-gray-900">
 		<div class="text-center p-8">

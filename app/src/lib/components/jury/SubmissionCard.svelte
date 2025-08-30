@@ -6,12 +6,21 @@
 	
 	export let submission: any;
 	export let viewMode: 'grid' | 'list' = 'grid';
+	export let isAdmin: boolean = false;
 	
 	const dispatch = createEventDispatcher();
 	
 	let showRating = false;
 	let comments = submission.userRating?.comments || '';
 	let selectedMedia: 'mainVideo' | 'introVideo' | 'profilePhoto' | 'setupPhoto' | null = null;
+	let currentStatus = submission.status || 'pending';
+	
+	const statusOptions = [
+		{ value: 'pending', label: 'Ausstehend', color: 'bg-yellow-500/20 text-yellow-300' },
+		{ value: 'reviewed', label: 'Überprüft', color: 'bg-blue-500/20 text-blue-300' },
+		{ value: 'accepted', label: 'Akzeptiert', color: 'bg-green-500/20 text-green-300' },
+		{ value: 'rejected', label: 'Abgelehnt', color: 'bg-red-500/20 text-red-300' }
+	];
 	
 	// Gruppiere die Dateien nach Typ
 	$: groupedFiles = groupSubmissionFiles(submission);
@@ -45,6 +54,11 @@
 		showRating = !showRating;
 	}
 	
+	function handleStatusChange(newStatus: string) {
+		currentStatus = newStatus;
+		dispatch('statusChange', { status: newStatus });
+	}
+	
 	function handleRating(event: CustomEvent) {
 		dispatch('rate', {
 			rating: event.detail,
@@ -62,12 +76,8 @@
 	}
 	
 	function getStatusColor(status: string) {
-		switch (status) {
-			case 'pending': return 'bg-yellow-500/20 text-yellow-300';
-			case 'reviewed': return 'bg-blue-500/20 text-blue-300';
-			case 'accepted': return 'bg-green-500/20 text-green-300';
-			default: return 'bg-gray-500/20 text-gray-300';
-		}
+		const option = statusOptions.find(opt => opt.value === status);
+		return option?.color || 'bg-gray-500/20 text-gray-300';
 	}
 </script>
 
@@ -106,13 +116,33 @@
 				</h3>
 				<p class="text-sm text-gray-400">{submission.userEmail}</p>
 				<div class="flex items-center gap-2 mt-2">
-					<span class={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(submission.status)}`}>
-						{submission.status}
-					</span>
+					{#if isAdmin}
+						<select
+							bind:value={currentStatus}
+							on:change={() => handleStatusChange(currentStatus)}
+							class="px-3 py-1 rounded-full text-xs font-medium bg-gray-700 text-white border border-gray-600 hover:border-gray-500 focus:outline-none focus:border-green-500 cursor-pointer"
+						>
+							{#each statusOptions as option}
+								<option value={option.value}>{option.label}</option>
+							{/each}
+						</select>
+					{:else}
+						<span class={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(currentStatus)}`}>
+							{statusOptions.find(opt => opt.value === currentStatus)?.label || currentStatus}
+						</span>
+					{/if}
 					<span class="text-xs text-gray-500">
-						{groupedFiles.mainVideo || groupedFiles.introVideo ? '✓' : '✗'} Video
-						· {groupedFiles.profilePhoto ? '✓' : '✗'} Profil
-						· {groupedFiles.setupPhoto ? '✓' : '✗'} Setup
+						<span class={groupedFiles.mainVideo || groupedFiles.introVideo ? 'text-green-400' : 'text-gray-500'}>
+							{groupedFiles.mainVideo || groupedFiles.introVideo ? '✓' : '✗'} Video
+						</span>
+						· 
+						<span class={groupedFiles.profilePhoto ? 'text-green-400' : 'text-gray-500'}>
+							{groupedFiles.profilePhoto ? '✓' : '✗'} Profil
+						</span>
+						· 
+						<span class={groupedFiles.setupPhoto ? 'text-green-400' : 'text-gray-500'}>
+							{groupedFiles.setupPhoto ? '✓' : '✗'} Setup
+						</span>
 					</span>
 				</div>
 			</div>
