@@ -336,8 +336,7 @@
                 <div class="flex items-center justify-between">
                   <div class="flex items-center gap-2">
                     <a
-                      href="/admin/desk/awardUpload;{notification.submission_id}"
-                      target="_blank"
+                      href="/jury"
                       class="text-xs text-green-500 hover:text-green-400 transition-colors"
                     >
                       Ansehen →
@@ -379,7 +378,7 @@
         {#if notifications.length > 0}
           <div class="sticky bottom-0 bg-gray-900 border-t border-gray-800 p-3">
             <a
-              href="/admin/desk/awardUpload"
+              href="/jury"
               class="block text-center text-sm text-green-500 hover:text-green-400 transition-colors"
             >
               Alle Einreichungen anzeigen →

@@ -64,23 +64,31 @@ export const GET: RequestHandler = async ({ locals }) => {
 	try {
 		// Fetch all award submissions from Sanity
 		const submissions = await client.fetch(`
-			*[_type == "awardUpload" && status != "rejected"] | order(createdAt desc) {
+			*[_type == "awardUpload" && status != "rejected"] | order(uploadedAt desc) {
 				_id,
 				userName,
 				userEmail,
 				status,
-				file,
+				"fileUrl": asset.file.asset->url,
+				asset,
 				description,
-				createdAt,
-				winner
+				uploadedAt,
+				_createdAt,
+				winner,
+				isWinner
 			}
 		`);
 		
-		// Process submissions to add fileUrl
-		const processedSubmissions = submissions.map((submission: any) => ({
-			...submission,
-			fileUrl: getFileUrl(submission.file)
-		}));
+		// Process submissions - fileUrl is already fetched from Sanity
+		const processedSubmissions = submissions.map((submission: any) => {
+			// Use the fileUrl from Sanity directly, or try to construct it from asset.file
+			const finalUrl = submission.fileUrl || getFileUrl(submission.asset?.file);
+			return {
+				...submission,
+				fileUrl: finalUrl,
+				winner: submission.winner || submission.isWinner // Handle both fields
+			};
+		});
 
 		// Fetch user's existing ratings from Supabase
 		const { data: userRatings } = await typedLocals.supabase
