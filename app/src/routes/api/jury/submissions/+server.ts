@@ -131,16 +131,33 @@ export const GET: RequestHandler = async ({ locals }) => {
 		// Convert map to array
 		const processedSubmissions = Array.from(userSubmissionsMap.values());
 
-		// Fetch user's existing ratings from Supabase
+		// Collect ALL submission IDs (including grouped ones)
+		const allSubmissionIds = new Set<string>();
+		submissions.forEach((submission: any) => {
+			allSubmissionIds.add(submission._id);
+		});
+
+		// Fetch user's existing ratings from Supabase for ALL submission IDs
 		const { data: userRatings } = await typedLocals.supabase
 			.from('jury_ratings')
 			.select('submission_id, rating, comments, updated_at')
-			.eq('juror_id', user.id);
+			.eq('juror_id', user.id)
+			.in('submission_id', Array.from(allSubmissionIds));
 
 		// Create a map of user ratings for quick lookup
 		const ratingsMap = new Map(
 			userRatings?.map(r => [r.submission_id, r]) || []
 		);
+		
+		// Also create a map to find ratings by userId (for grouped submissions)
+		const userIdToSubmissionIds = new Map<string, string[]>();
+		submissions.forEach((submission: any) => {
+			const userId = submission.userId || submission.userEmail;
+			if (!userIdToSubmissionIds.has(userId)) {
+				userIdToSubmissionIds.set(userId, []);
+			}
+			userIdToSubmissionIds.get(userId)!.push(submission._id);
+		});
 
 		// Fetch submission statistics
 		const { data: stats } = await typedLocals.supabase
@@ -152,17 +169,38 @@ export const GET: RequestHandler = async ({ locals }) => {
 		);
 
 		// Combine submissions with ratings and stats
-		const enrichedSubmissions = processedSubmissions.map((submission: any) => ({
-			...submission,
-			userRating: ratingsMap.get(submission._id) || null,
-			stats: statsMap.get(submission._id) || {
-				total_ratings: 0,
-				average_rating: null,
-				min_rating: null,
-				max_rating: null,
-				rating_deviation: null
+		const enrichedSubmissions = processedSubmissions.map((submission: any) => {
+			// Try to find a rating for this grouped submission
+			// Check all submission IDs associated with this user
+			const userId = submission.userId || submission.userEmail;
+			const submissionIds = userIdToSubmissionIds.get(userId) || [submission._id];
+			
+			// Find the first rating for any of this user's submissions
+			let userRating = null;
+			let submissionStats = null;
+			
+			for (const subId of submissionIds) {
+				if (!userRating && ratingsMap.has(subId)) {
+					userRating = ratingsMap.get(subId);
+				}
+				if (!submissionStats && statsMap.has(subId)) {
+					submissionStats = statsMap.get(subId);
+				}
+				if (userRating && submissionStats) break; // Found both, stop searching
 			}
-		}));
+			
+			return {
+				...submission,
+				userRating: userRating,
+				stats: submissionStats || {
+					total_ratings: 0,
+					average_rating: null,
+					min_rating: null,
+					max_rating: null,
+					rating_deviation: null
+				}
+			};
+		});
 
 		// Get jury progress for current user
 		const { data: progress } = await typedLocals.supabase
