@@ -45,16 +45,21 @@ export function shouldRenderDetails(
   if (isHovered || isSelected) return true
 
   // Show details based on zoom level
-  // At very low zoom (< 0.4), hide labels to avoid clutter
-  if (scale < 0.4) return false
+  // At very low zoom (< 0.35), hide labels to avoid clutter
+  if (scale < 0.35) return false
   
-  // At normal to high zoom (>= 0.4), show labels based on stand size
+  // At normal to high zoom (>= 0.35), show labels based on stand size
   const area = stand.size.width * stand.size.height
   const scaledArea = area * scale * scale
 
+  // Check if text would be readable
+  // Need minimum width for text to be legible
+  const minWidthForText = 40 / scale
+  if (stand.size.width < minWidthForText) return false
+
   // Lower threshold for better label visibility
-  // Small stands need at least 1500 pixels, larger stands always show
-  return scaledArea > 1500 || area > 10000
+  // Small stands need at least 1200 pixels, larger stands always show
+  return scaledArea > 1200 || area > 8000
 }
 
 export function getOptimizedFontSize(

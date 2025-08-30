@@ -482,21 +482,24 @@
             {#if shouldShowLabel(stand) && stand.exhibitor}
               {@const textPos = getTextPosition(stand)}
               {@const fontSize = getStandFontSize(14)}
+              {@const maxWidth = stand.size.width - 12}
+              {@const lineHeight = fontSize * 1.2}
               <svelte:component this={Text}
                 config={{
                   x: textPos.x,
-                  y: textPos.y,
+                  y: textPos.y - lineHeight / 2,
                   text: stand.exhibitor.company,
                   fontSize: fontSize,
                   fontFamily: 'system-ui',
                   fill: '#1f2937',
                   align: 'center',
                   verticalAlign: 'middle',
-                  width: stand.size.width - 8,
-                  offsetX: (stand.size.width - 8) / 2,
-                  offsetY: fontSize / 2,
-                  wrap: 'word',
+                  width: maxWidth,
+                  height: stand.size.height - 30,
+                  offsetX: maxWidth / 2,
+                  wrap: 'char',
                   ellipsis: true,
+                  lineHeight: lineHeight / fontSize,
                 }}
               />
             {/if}
