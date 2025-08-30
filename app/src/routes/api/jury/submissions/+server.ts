@@ -3,6 +3,7 @@ import type { RequestHandler } from './$types';
 import { client } from '$lib/sanity/client';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { LoaderLocals } from '@sanity/svelte-loader';
+import { dataset, projectId } from '$lib/sanity/api';
 
 interface AppLocals extends LoaderLocals {
     supabase: SupabaseClient;
@@ -10,6 +11,21 @@ interface AppLocals extends LoaderLocals {
 }
 
 const AWARD_BADGE_ID = 'fc005104-5c29-44bc-b05f-1f5e5ef817a1';
+
+// Helper function to construct file URL from Sanity file reference
+function getFileUrl(file: any): string | null {
+	if (!file?.asset?._ref) return null;
+	
+	// Extract file ID from reference: file-{id}-{extension}
+	const refParts = file.asset._ref.split('-');
+	if (refParts.length < 3) return null;
+	
+	const fileId = refParts[1];
+	const extension = refParts[refParts.length - 1];
+	
+	// Construct CDN URL
+	return `https://cdn.sanity.io/files/${projectId}/${dataset}/${fileId}.${extension}`;
+}
 
 // GET: Fetch all submissions with user's ratings
 export const GET: RequestHandler = async ({ locals }) => {
@@ -53,13 +69,18 @@ export const GET: RequestHandler = async ({ locals }) => {
 				userName,
 				userEmail,
 				status,
-				"fileUrl": file.asset->url,
-				"thumbnail": file.asset->metadata.dimensions,
+				file,
 				description,
 				createdAt,
 				winner
 			}
 		`);
+		
+		// Process submissions to add fileUrl
+		const processedSubmissions = submissions.map((submission: any) => ({
+			...submission,
+			fileUrl: getFileUrl(submission.file)
+		}));
 
 		// Fetch user's existing ratings from Supabase
 		const { data: userRatings } = await typedLocals.supabase
@@ -82,7 +103,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 		);
 
 		// Combine submissions with ratings and stats
-		const enrichedSubmissions = submissions.map((submission: any) => ({
+		const enrichedSubmissions = processedSubmissions.map((submission: any) => ({
 			...submission,
 			userRating: ratingsMap.get(submission._id) || null,
 			stats: statsMap.get(submission._id) || {
@@ -111,7 +132,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 				max_rating: null,
 				last_activity: null
 			},
-			totalSubmissions: submissions.length
+			totalSubmissions: processedSubmissions.length
 		});
 
 	} catch (err) {

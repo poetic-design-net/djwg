@@ -2,6 +2,7 @@
 	import { createEventDispatcher } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import RatingInterface from './RatingInterface.svelte';
+	import SecurePlayer from '$lib/components/video/SecurePlayer.svelte';
 	
 	export let submission: any;
 	export let viewMode: 'grid' | 'list' = 'grid';
@@ -132,22 +133,19 @@
 		<!-- Video Player -->
 		{#if showVideo}
 			<div transition:fade class="mt-4">
-				<div class="relative aspect-video bg-black rounded-lg overflow-hidden">
-					{#if submission.fileUrl}
-						<video
-							controls
-							class="w-full h-full"
-							poster={submission.thumbnail?.url}
-						>
-							<source src={submission.fileUrl} type="video/mp4" />
-							Your browser does not support the video tag.
-						</video>
-					{:else}
-						<div class="flex items-center justify-center h-full text-gray-400">
-							<p>Video not available</p>
-						</div>
-					{/if}
-				</div>
+				{#if submission.fileUrl}
+					<SecurePlayer
+						videoId={submission._id}
+						title={submission.userName}
+						autoplay={false}
+						requireFullscreen={false}
+						directUrl={submission.fileUrl}
+					/>
+				{:else}
+					<div class="aspect-video bg-black rounded-lg overflow-hidden flex items-center justify-center">
+						<p class="text-gray-400">Video nicht verfügbar</p>
+					</div>
+				{/if}
 			</div>
 		{/if}
 		
@@ -161,13 +159,13 @@
 				
 				<div>
 					<label for="comments-{submission._id}" class="block text-sm text-gray-400 mb-2">
-						Comments (optional)
+						Kommentar (optional)
 					</label>
 					<textarea
 						id="comments-{submission._id}"
 						bind:value={comments}
-						placeholder="Add your feedback..."
-						class="w-full px-3 py-2 bg-gray-900/50 text-white rounded-lg border border-gray-700 focus:border-purple-500 focus:outline-none resize-none"
+						placeholder="Füge dein Feedback hinzu..."
+						class="w-full px-3 py-2 bg-gray-900/50 text-white rounded-lg border border-gray-700 focus:border-green-500 focus:outline-none resize-none"
 						rows="3"
 					></textarea>
 				</div>
@@ -177,7 +175,7 @@
 						on:click={() => showRating = false}
 						class="flex-1 px-4 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition"
 					>
-						Cancel
+						Abbrechen
 					</button>
 				</div>
 			</div>

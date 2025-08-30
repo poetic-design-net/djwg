@@ -30,6 +30,7 @@
   import BadgeCard from '$lib/components/badges/BadgeCard.svelte';
   import EventRegistrations from '$lib/components/dashboard/EventRegistrations.svelte';
   import EventRegistrationsPreview from '$lib/components/dashboard/EventRegistrationsPreview.svelte';
+  import AwardNotifications from '$lib/components/dashboard/AwardNotifications.svelte';
 
   interface OnlineTalk {
     _id: string;
@@ -248,6 +249,11 @@
           >
             <span>Admin</span>
           </a>
+        {/if}
+        
+        <!-- Award Notifications für Admins -->
+        {#if isAdmin}
+          <AwardNotifications {user} {isAdmin} />
         {/if}
         
         <button
