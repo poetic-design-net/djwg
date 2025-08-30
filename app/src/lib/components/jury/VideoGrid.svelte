@@ -1,19 +1,22 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
-	import { fade, scale } from 'svelte/transition';
-	import VideoRatingCard from './VideoRatingCard.svelte';
+	import { scale } from 'svelte/transition';
+	import SubmissionCard from './SubmissionCard.svelte';
 	
 	export let submissions: any[] = [];
 	export let viewMode: 'grid' | 'list' = 'grid';
 	
 	const dispatch = createEventDispatcher();
 	
-	function handleRate(submission: any, rating: number, comments: string) {
-		dispatch('rate', {
-			submissionId: submission._id,
-			rating,
-			comments
-		});
+	function handleRate(submissionId: string) {
+		return (event: CustomEvent) => {
+			// SubmissionCard emits {rating, comments} in event.detail
+			dispatch('rate', {
+				submissionId,
+				rating: event.detail.rating,
+				comments: event.detail.comments
+			});
+		};
 	}
 	
 </script>
@@ -26,10 +29,10 @@
 			transition:scale={{ delay: index * 50, duration: 300 }}
 			class={viewMode === 'grid' ? '' : 'w-full'}
 		>
-			<VideoRatingCard 
+			<SubmissionCard 
 				{submission}
 				{viewMode}
-				on:rate={(e) => handleRate(submission, e.detail.rating, e.detail.comments)}
+				on:rate={handleRate(submission._id)}
 			/>
 		</div>
 	{/each}

@@ -27,6 +27,7 @@
   
   let awardSubmissions: any[] = [];
   let loadingSubmissions = true;
+  let groupedSubmission: any = null;
   
   // Lade die Award-Einreichungen des Benutzers
   async function loadAwardSubmissions() {
@@ -37,16 +38,68 @@
           userName,
           userEmail,
           status,
-          "fileUrl": file.asset->url,
-          "thumbnail": file.asset->metadata.dimensions,
+          "fileUrl": coalesce(
+            file.asset->url,
+            asset.file.asset->url,
+            "https://cdn.sanity.io/files/" + $projectId + "/" + $dataset + "/" + asset.file.asset._ref
+          ),
+          "imageUrl": coalesce(
+            asset.image.asset->url,
+            "https://cdn.sanity.io/images/" + $projectId + "/" + $dataset + "/" + asset.image.asset._ref
+          ),
+          asset,
+          "fileType": fileType,
+          "fileName": originalFilename,
           description,
           _createdAt,
           uploadedAt,
-          winner
+          winner,
+          isWinner
         }
-      `, { email: user.email });
+      `, { 
+        email: user.email,
+        projectId: 'h41owctz',
+        dataset: 'production'
+      });
       
       awardSubmissions = submissions || [];
+      
+      // Gruppiere die Einreichungen für die Anzeige
+      if (awardSubmissions.length > 0) {
+        // Finde Videos und Bilder
+        const videos = awardSubmissions.filter(s => s.fileType?.startsWith('video/'));
+        const images = awardSubmissions.filter(s => s.fileType?.startsWith('image/'));
+        
+        // Das Hauptvideo enthält Mix + Vorstellungsvideo
+        const mainVideo = videos[0]; // Das erste/einzige Video ist Mix + Intro kombiniert
+        const profilePhoto = images.find(img => 
+          img.fileName?.toLowerCase().includes('profil') || 
+          img.fileName?.toLowerCase().includes('portrait') ||
+          img.fileName?.toLowerCase().includes('foto') ||
+          !img.fileName?.toLowerCase().includes('setup')
+        ) || images[0];
+        const setupPhoto = images.find(img => 
+          img.fileName?.toLowerCase().includes('setup') || 
+          img.fileName?.toLowerCase().includes('dj') ||
+          img.fileName?.toLowerCase().includes('equipment')
+        ) || images[1];
+        
+        groupedSubmission = {
+          userName: awardSubmissions[0].userName,
+          userEmail: awardSubmissions[0].userEmail,
+          mainVideo, // Enthält Mix + Vorstellungsvideo
+          profilePhoto: profilePhoto || images[0],
+          setupPhoto: setupPhoto || images[1],
+          allFiles: awardSubmissions,
+          hasVideo: !!mainVideo,
+          hasProfilePhoto: !!profilePhoto,
+          hasSetupPhoto: !!setupPhoto,
+          isComplete: !!mainVideo && !!profilePhoto && !!setupPhoto,
+          latestDate: awardSubmissions[0]._createdAt || awardSubmissions[0].uploadedAt,
+          hasWinner: awardSubmissions.some(s => s.winner || s.isWinner),
+          overallStatus: awardSubmissions[0].status
+        };
+      }
     } catch (error) {
       console.error('Fehler beim Laden der Award-Einreichungen:', error);
     } finally {
@@ -95,73 +148,147 @@
       <AwardUploader {user} on:uploadComplete={handleUploadComplete} />
     </div>
     
-    <!-- Meine Award-Einreichungen -->
-    {#if !loadingSubmissions && awardSubmissions.length > 0}
+    <!-- Meine Award-Einreichung -->
+    {#if !loadingSubmissions && groupedSubmission}
       <div class="my-8 space-y-4">
-        <h3 class="text-lg font-medium text-white">Meine Award-Einreichungen</h3>
-        <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {#each awardSubmissions as submission}
-            <div class="bg-gray-900/50 rounded-xl border border-gray-800/60 overflow-hidden">
-              <!-- Video Thumbnail oder Placeholder -->
-              <div class="aspect-video bg-gray-800 relative">
-                {#if submission.fileUrl}
-                  <!-- Video Player -->
-                  <video
-                    controls
-                    class="w-full h-full object-cover"
-                    poster={submission.thumbnail?.url}
-                  >
-                    <source src={submission.fileUrl} type="video/mp4" />
-                    Dein Browser unterstützt das Video-Tag nicht.
-                  </video>
-                {:else}
-                  <div class="flex items-center justify-center h-full">
-                    <svg class="w-12 h-12 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                {/if}
-                
-                <!-- Status Badge -->
-                {#if submission.status}
-                  <div class="absolute top-2 right-2">
-                    <span class="px-2 py-1 text-xs font-medium rounded-full 
-                      {submission.status === 'accepted' ? 'bg-green-500/20 text-green-300' : 
-                       submission.status === 'reviewed' ? 'bg-blue-500/20 text-blue-300' : 
-                       submission.status === 'rejected' ? 'bg-red-500/20 text-red-300' : 
-                       'bg-yellow-500/20 text-yellow-300'}">
-                      {submission.status === 'accepted' ? 'Akzeptiert' :
-                       submission.status === 'reviewed' ? 'Geprüft' :
-                       submission.status === 'rejected' ? 'Abgelehnt' :
-                       'Ausstehend'}
-                    </span>
-                  </div>
-                {/if}
-                
-                <!-- Winner Badge -->
-                {#if submission.winner}
-                  <div class="absolute top-2 left-2">
-                    <span class="text-3xl" title="Gewinner">🏆</span>
-                  </div>
-                {/if}
-              </div>
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-medium text-white">Meine Award-Einreichung</h3>
+          <div class="flex items-center gap-2">
+            <span class="text-sm text-gray-400">
+              {groupedSubmission.totalFiles} Datei{groupedSubmission.totalFiles !== 1 ? 'en' : ''} hochgeladen
+            </span>
+            {#if groupedSubmission.overallStatus}
+              <span class="px-2 py-1 text-xs font-medium rounded-full 
+                {groupedSubmission.overallStatus === 'accepted' ? 'bg-green-500/20 text-green-300' : 
+                 groupedSubmission.overallStatus === 'reviewed' ? 'bg-blue-500/20 text-blue-300' : 
+                 groupedSubmission.overallStatus === 'rejected' ? 'bg-red-500/20 text-red-300' : 
+                 'bg-yellow-500/20 text-yellow-300'}">
+                {groupedSubmission.overallStatus === 'accepted' ? 'Akzeptiert' :
+                 groupedSubmission.overallStatus === 'reviewed' ? 'Geprüft' :
+                 groupedSubmission.overallStatus === 'rejected' ? 'Abgelehnt' :
+                 'Ausstehend'}
+              </span>
+            {/if}
+            {#if groupedSubmission.hasWinner}
+              <span class="text-2xl" title="Gewinner">🏆</span>
+            {/if}
+          </div>
+        </div>
+        
+        <!-- Übersicht Card -->
+        <div class="bg-gray-900/50 rounded-xl border border-gray-800/60 p-6">
+          <div class="grid gap-6 md:grid-cols-2">
+            <!-- Videos Section -->
+            <div class="space-y-4">
+              <h4 class="text-sm font-medium text-gray-400 uppercase tracking-wider">Videos</h4>
               
-              <!-- Submission Info -->
-              <div class="p-4 space-y-2">
-                {#if submission.description}
-                  <p class="text-sm text-gray-300 line-clamp-2">{submission.description}</p>
-                {/if}
-                <p class="text-xs text-gray-500">
-                  Eingereicht am {formatDate(submission.uploadedAt || submission._createdAt)}
-                </p>
+              {#if groupedSubmission.mainVideo && groupedSubmission.mainVideo.fileUrl}
+                <div class="space-y-2">
+                  <p class="text-xs text-gray-500">Video (15-20 Min Mix + Vorstellung)</p>
+                  <div class="aspect-video bg-gray-800 rounded-lg overflow-hidden">
+                    <video
+                      controls
+                      class="w-full h-full object-cover"
+                    >
+                      <source src={groupedSubmission.mainVideo.fileUrl} type="video/mp4" />
+                      Dein Browser unterstützt das Video-Tag nicht.
+                    </video>
+                  </div>
+                  <p class="text-xs text-gray-400">
+                    Datei: {groupedSubmission.mainVideo.fileName || 'Video.mp4'}
+                  </p>
+                </div>
+              {:else}
+                <div class="bg-gray-800/50 rounded-lg p-4 text-center space-y-2">
+                  <p class="text-sm text-gray-500">Video noch nicht hochgeladen</p>
+                  <p class="text-xs text-gray-600">
+                    Bitte lade dein 15-20 minütiges Video (Mix + Vorstellung) hoch
+                  </p>
+                </div>
+              {/if}
+            </div>
+            
+            <!-- Bilder Section -->
+            <div class="space-y-4">
+              <h4 class="text-sm font-medium text-gray-400 uppercase tracking-wider">Fotos</h4>
+              
+              <div class="grid grid-cols-2 gap-4">
+                <!-- Profil Foto -->
+                <div class="space-y-2">
+                  <p class="text-xs text-gray-500">Profil-Foto</p>
+                  <div class="aspect-square bg-gray-800 rounded-lg overflow-hidden">
+                    {#if groupedSubmission.profilePhoto?.imageUrl || groupedSubmission.profilePhoto?.fileUrl}
+                      <img 
+                        src={groupedSubmission.profilePhoto.imageUrl || groupedSubmission.profilePhoto.fileUrl}
+                        alt="Profil-Foto"
+                        class="w-full h-full object-cover"
+                      />
+                    {:else}
+                      <div class="flex items-center justify-center h-full">
+                        <svg class="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                      </div>
+                    {/if}
+                  </div>
+                </div>
+                
+                <!-- Setup Foto -->
+                <div class="space-y-2">
+                  <p class="text-xs text-gray-500">DJ Setup</p>
+                  <div class="aspect-square bg-gray-800 rounded-lg overflow-hidden">
+                    {#if groupedSubmission.setupPhoto?.imageUrl || groupedSubmission.setupPhoto?.fileUrl}
+                      <img 
+                        src={groupedSubmission.setupPhoto.imageUrl || groupedSubmission.setupPhoto.fileUrl}
+                        alt="DJ Setup"
+                        class="w-full h-full object-cover"
+                      />
+                    {:else}
+                      <div class="flex items-center justify-center h-full">
+                        <svg class="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                        </svg>
+                      </div>
+                    {/if}
+                  </div>
+                </div>
               </div>
             </div>
-          {/each}
+          </div>
+          
+          <!-- Upload Status -->
+          <div class="mt-6 pt-6 border-t border-gray-800">
+            <div class="flex items-center justify-between">
+              <p class="text-xs text-gray-500">
+                Zuletzt aktualisiert: {formatDate(groupedSubmission.latestDate)}
+              </p>
+              <div class="flex items-center gap-3 text-xs">
+                <span class="{groupedSubmission.hasVideo ? 'text-green-500' : 'text-gray-500'}">
+                  {groupedSubmission.hasVideo ? '✓' : '○'} Video (Mix + Vorstellung)
+                </span>
+                <span class="{groupedSubmission.hasProfilePhoto ? 'text-green-500' : 'text-gray-500'}">
+                  {groupedSubmission.hasProfilePhoto ? '✓' : '○'} Profil-Foto
+                </span>
+                <span class="{groupedSubmission.hasSetupPhoto ? 'text-green-500' : 'text-gray-500'}">
+                  {groupedSubmission.hasSetupPhoto ? '✓' : '○'} Setup-Foto
+                </span>
+                {#if groupedSubmission.isComplete}
+                  <span class="text-green-400 font-medium ml-auto">✓ Vollständig</span>
+                {/if}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     {:else if !loadingSubmissions}
       <div class="my-8 p-6 bg-gray-900/50 rounded-xl border border-gray-800/60 text-center">
-        <p class="text-gray-400">Du hast noch keine Videos für den Award eingereicht.</p>
+        <p class="text-gray-400">Du hast noch keine Dateien für den Award eingereicht.</p>
+        <p class="text-sm text-gray-500 mt-2">Bitte lade folgende Dateien hoch:</p>
+        <ul class="text-sm text-gray-500 mt-2 space-y-1">
+          <li>• 15-20 minütiges Video (DJ Mix + Vorstellung) als MP4</li>
+          <li>• Ein Foto von dir zum Posten</li>
+          <li>• Ein Foto von deinem DJ Setup</li>
+        </ul>
       </div>
     {/if}
 

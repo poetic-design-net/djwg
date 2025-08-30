@@ -66,29 +66,70 @@ export const GET: RequestHandler = async ({ locals }) => {
 		const submissions = await client.fetch(`
 			*[_type == "awardUpload" && status != "rejected"] | order(uploadedAt desc) {
 				_id,
+				userId,
 				userName,
 				userEmail,
 				status,
 				"fileUrl": asset.file.asset->url,
+				"imageUrl": asset.image.asset->url,
 				asset,
 				description,
 				uploadedAt,
 				_createdAt,
 				winner,
-				isWinner
+				isWinner,
+				originalFilename,
+				fileType,
+				fileSize
 			}
 		`);
 		
-		// Process submissions - fileUrl is already fetched from Sanity
-		const processedSubmissions = submissions.map((submission: any) => {
-			// Use the fileUrl from Sanity directly, or try to construct it from asset.file
-			const finalUrl = submission.fileUrl || getFileUrl(submission.asset?.file);
-			return {
+		// Process and group submissions by user
+		const userSubmissionsMap = new Map<string, any>();
+		
+		submissions.forEach((submission: any) => {
+			const userId = submission.userId || submission.userEmail; // Use userId or email as key
+			
+			// Process file URLs
+			const fileUrl = submission.fileUrl || getFileUrl(submission.asset?.file);
+			const imageUrl = submission.imageUrl || (submission.asset?.image ? 
+				`https://cdn.sanity.io/images/${projectId}/${dataset}/${submission.asset.image.asset._ref.replace('image-', '').replace('-jpg', '.jpg').replace('-png', '.png')}` : null);
+			
+			const processedFile = {
 				...submission,
-				fileUrl: finalUrl,
-				winner: submission.winner || submission.isWinner // Handle both fields
+				fileUrl: fileUrl || imageUrl, // Use fileUrl or imageUrl as fallback
+				imageUrl,
+				fileName: submission.originalFilename,
+				fileType: submission.fileType
 			};
+			
+			if (!userSubmissionsMap.has(userId)) {
+				// First submission for this user - create a grouped entry
+				userSubmissionsMap.set(userId, {
+					_id: submission._id, // Use first submission's ID as main ID
+					userId: submission.userId,
+					userName: submission.userName,
+					userEmail: submission.userEmail,
+					status: submission.status,
+					uploadedAt: submission.uploadedAt,
+					_createdAt: submission._createdAt,
+					winner: submission.winner || submission.isWinner,
+					files: [processedFile] // Start files array with this submission
+				});
+			} else {
+				// Additional submission for this user - add to files array
+				const userEntry = userSubmissionsMap.get(userId);
+				userEntry.files.push(processedFile);
+				// Update status to the most recent submission's status
+				if (new Date(submission.uploadedAt) > new Date(userEntry.uploadedAt)) {
+					userEntry.status = submission.status;
+					userEntry.uploadedAt = submission.uploadedAt;
+				}
+			}
 		});
+		
+		// Convert map to array
+		const processedSubmissions = Array.from(userSubmissionsMap.values());
 
 		// Fetch user's existing ratings from Supabase
 		const { data: userRatings } = await typedLocals.supabase

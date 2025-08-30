@@ -114,7 +114,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 				}
 			`, { ids: submissionIds });
 
-			const submissionMap = new Map(submissions.map((s: any) => [s._id, s]));
+			const submissionMap = new Map<string, any>(submissions.map((s: any) => [s._id, s]));
 			enrichedLeaderboard = leaderboard.map(item => ({
 				...item,
 				userName: submissionMap.get(item.submission_id)?.userName || 'Unknown',
