@@ -44,12 +44,17 @@ export function shouldRenderDetails(
   // Always show details for hovered or selected stands
   if (isHovered || isSelected) return true
 
-  // Show details based on zoom level and stand size
+  // Show details based on zoom level
+  // At very low zoom (< 0.4), hide labels to avoid clutter
+  if (scale < 0.4) return false
+  
+  // At normal to high zoom (>= 0.4), show labels based on stand size
   const area = stand.size.width * stand.size.height
   const scaledArea = area * scale * scale
 
-  // Only show labels if the stand is large enough on screen
-  return scaledArea > 5000 // Adjust threshold as needed
+  // Lower threshold for better label visibility
+  // Small stands need at least 1500 pixels, larger stands always show
+  return scaledArea > 1500 || area > 10000
 }
 
 export function getOptimizedFontSize(
@@ -58,7 +63,20 @@ export function getOptimizedFontSize(
   min = 8,
   max = 24
 ): number {
-  const scaledSize = baseSize / Math.sqrt(scale)
+  // Improved scaling formula that maintains better readability
+  // At scale 1.0, use baseSize
+  // At scale 0.5, increase font size slightly
+  // At scale 2.0, decrease font size slightly
+  let scaledSize: number
+  
+  if (scale < 1) {
+    // When zoomed out, increase font size to maintain readability
+    scaledSize = baseSize / (scale * 0.8) // Less aggressive scaling
+  } else {
+    // When zoomed in, decrease font size proportionally
+    scaledSize = baseSize / Math.pow(scale, 0.6) // Smoother scaling for zoom in
+  }
+  
   return Math.max(min, Math.min(max, scaledSize))
 }
 

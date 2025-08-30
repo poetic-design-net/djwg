@@ -110,7 +110,7 @@
     
     e.preventDefault()
     
-    const scaleBy = 1.1
+    const scaleBy = 1.08 // Smoother zoom steps
     const stage = { x: $canvasPosition.x, y: $canvasPosition.y }
     const oldScale = $canvasScale
     const pointer = {
@@ -125,8 +125,9 @@
 
     const newScale = e.deltaY > 0 ? oldScale / scaleBy : oldScale * scaleBy
     
-    // Limit scale - min 0.5 (50%), max 3 (300%)
-    const limitedScale = Math.max(0.5, Math.min(3, newScale))
+    // Adjusted scale limits for better label visibility
+    // min 0.3 (30%), max 5 (500%)
+    const limitedScale = Math.max(0.3, Math.min(5, newScale))
     
     canvasScale.set(limitedScale)
     canvasPosition.set({
@@ -464,13 +465,13 @@
               />
             {/if}
 
-            <!-- Stand number -->
+            <!-- Stand number (always visible) -->
             <svelte:component this={Text}
               config={{
                 x: 4,
                 y: 4,
                 text: stand.standNumber,
-                fontSize: getStandFontSize(12),
+                fontSize: getStandFontSize(10),
                 fontFamily: 'system-ui',
                 fill: '#1f2937',
                 fontStyle: 'bold',
@@ -480,20 +481,22 @@
             <!-- Company name (if space allows) -->
             {#if shouldShowLabel(stand) && stand.exhibitor}
               {@const textPos = getTextPosition(stand)}
+              {@const fontSize = getStandFontSize(14)}
               <svelte:component this={Text}
                 config={{
                   x: textPos.x,
                   y: textPos.y,
                   text: stand.exhibitor.company,
-                  fontSize: getStandFontSize(14),
+                  fontSize: fontSize,
                   fontFamily: 'system-ui',
                   fill: '#1f2937',
                   align: 'center',
                   verticalAlign: 'middle',
                   width: stand.size.width - 8,
                   offsetX: (stand.size.width - 8) / 2,
-                  offsetY: getStandFontSize(14) / 2,
+                  offsetY: fontSize / 2,
                   wrap: 'word',
+                  ellipsis: true,
                 }}
               />
             {/if}
@@ -588,7 +591,7 @@
     <!-- Zoom controls -->
     <div class="absolute bottom-4 left-4 flex flex-col gap-2">
       <button
-        on:click={() => canvasScale.update(s => Math.min(3, s * 1.2))}
+        on:click={() => canvasScale.update(s => Math.min(5, s * 1.15))}
         class="bg-white rounded-lg p-2 shadow-lg hover:bg-gray-50 transition-colors"
         aria-label="Zoom in"
       >
@@ -597,7 +600,7 @@
         </svg>
       </button>
       <button
-        on:click={() => canvasScale.update(s => Math.max(0.5, s / 1.2))}
+        on:click={() => canvasScale.update(s => Math.max(0.3, s / 1.15))}
         class="bg-white rounded-lg p-2 shadow-lg hover:bg-gray-50 transition-colors"
         aria-label="Zoom out"
       >
@@ -606,12 +609,9 @@
         </svg>
       </button>
       <button
-        on:click={() => {
-          canvasScale.set(1)
-          canvasPosition.set({ x: 0, y: 0 })
-        }}
+        on:click={() => centerView()}
         class="bg-white rounded-lg p-2 shadow-lg hover:bg-gray-50 transition-colors"
-        aria-label="Reset zoom"
+        aria-label="Reset zoom and center view"
       >
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
