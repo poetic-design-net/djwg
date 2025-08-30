@@ -228,6 +228,22 @@
     return STATUS_COLORS[stand.status] || '#e5e7eb'
   }
 
+  function getTextColor(stand: ExhibitionStand): string {
+    const bgColor = getStandColor(stand)
+    
+    // Convert hex to RGB to calculate luminance
+    const hex = bgColor.replace('#', '')
+    const r = parseInt(hex.substr(0, 2), 16) / 255
+    const g = parseInt(hex.substr(2, 2), 16) / 255
+    const b = parseInt(hex.substr(4, 2), 16) / 255
+    
+    // Calculate relative luminance
+    const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b
+    
+    // Return white text for dark backgrounds, dark text for light backgrounds
+    return luminance > 0.5 ? '#000000' : '#ffffff'
+  }
+
   function getStandOpacity(stand: ExhibitionStand): number {
     // Use custom opacity if defined
     if (stand.customColor?.useCustom && stand.customColor?.opacity !== undefined) {
@@ -473,7 +489,7 @@
                 text: stand.standNumber,
                 fontSize: getStandFontSize(10),
                 fontFamily: 'system-ui',
-                fill: '#1f2937',
+                fill: getTextColor(stand),
                 fontStyle: 'bold',
               }}
             />
@@ -491,7 +507,7 @@
                   text: stand.exhibitor.company,
                   fontSize: fontSize,
                   fontFamily: 'system-ui',
-                  fill: '#1f2937',
+                  fill: getTextColor(stand),
                   align: 'center',
                   verticalAlign: 'middle',
                   width: maxWidth,
