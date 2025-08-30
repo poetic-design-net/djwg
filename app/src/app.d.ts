@@ -7,10 +7,8 @@ declare global {
 		interface Locals extends LoaderLocals {
 			supabase: SupabaseClient;
 			getUser(): Promise<User | null>;
-			user?: {
-				id: string;
-				badges: UserBadge[];
-			};
+			user?: User | null;
+			hasJuryAccess?: boolean;
 		}
 		interface PageData {
 			user: User | null;

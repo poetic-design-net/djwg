@@ -11,7 +11,7 @@ const writeClient = createClient({
   useCdn: false
 });
 
-export async function POST({ request }) {
+export async function POST({ request }: any) {
   try {
     const { slotId, isBlocked, eventId } = await request.json();
 

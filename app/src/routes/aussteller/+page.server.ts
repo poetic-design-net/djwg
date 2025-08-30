@@ -20,7 +20,7 @@ export const load: PageServerLoad = async () => {
 }
 
 export const actions = {
-  default: async ({ request }) => {
+  default: async ({ request }: any) => {
     try {
       const data = await request.formData()
       const name = data.get('name')

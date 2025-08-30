@@ -1,10 +1,9 @@
 import { error } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types';
 import { client } from '$lib/sanity/client';
 import { merchPageQuery } from '$lib/sanity/queries/merch';
 import type { MerchPage } from '$lib/types/merch';
 
-export const load: PageServerLoad = async () => {
+export const load = async () => {
   try {
     const merchPage = await client.fetch<MerchPage>(merchPageQuery);
 

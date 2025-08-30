@@ -12,7 +12,7 @@ const serviceRoleClient = createClient(PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROL
   }
 });
 
-export async function POST({ request, locals }) {
+export async function POST({ request, locals }: any) {
   try {
     const { type, data } = await request.json();
 

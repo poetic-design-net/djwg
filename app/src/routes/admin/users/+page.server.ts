@@ -83,7 +83,7 @@ export const load: PageServerLoad = async ({ locals, setHeaders }) => {
 };
 
 export const actions = {
-  assignBadge: async ({ request, locals }) => {
+  assignBadge: async ({ request, locals }: any) => {
     const formData = await request.formData();
     const userId = formData.get('userId') as string;
     const badgeId = formData.get('badgeId') as string;
@@ -104,7 +104,7 @@ export const actions = {
     return { success: true };
   },
 
-  removeBadge: async ({ request, locals }) => {
+  removeBadge: async ({ request, locals }: any) => {
     try {
       const formData = await request.formData();
       const userId = formData.get('userId') as string;
@@ -135,7 +135,7 @@ export const actions = {
     }
   },
 
-  assignBulkBadges: async ({ request, locals }) => {
+  assignBulkBadges: async ({ request, locals }: any) => {
     try {
       const formData = await request.formData();
       const userIds = JSON.parse(formData.get('userIds') as string) as string[];
@@ -153,7 +153,7 @@ export const actions = {
         .in('user_id', userIds);
 
       // Filtere Benutzer, die das Badge bereits haben
-      const existingUserIds = new Set(existingBadges?.map(badge => badge.user_id) || []);
+      const existingUserIds = new Set(existingBadges?.map((badge: any) => badge.user_id) || []);
       const newUserIds = userIds.filter(id => !existingUserIds.has(id));
 
       if (newUserIds.length > 0) {
@@ -175,7 +175,7 @@ export const actions = {
     }
   },
 
-  removeBulkBadges: async ({ request, locals }) => {
+  removeBulkBadges: async ({ request, locals }: any) => {
     try {
       const formData = await request.formData();
       const userIds = JSON.parse(formData.get('userIds') as string) as string[];

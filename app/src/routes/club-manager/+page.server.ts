@@ -109,7 +109,7 @@ export const load: PageServerLoad = async ({ locals, cookies }) => {
 };
 
 export const actions = {
-  default: async ({ request, cookies }) => {
+  default: async ({ request, cookies }: any) => {
     const data = await request.formData();
     const password = data.get('password');
 

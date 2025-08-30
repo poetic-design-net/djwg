@@ -1,0 +1,55 @@
+import type { Handle } from '@sveltejs/kit';
+import { supabase } from '$lib/supabase';
+
+const AWARD_BADGE_ID = 'fc005104-5c29-44bc-b05f-1f5e5ef817a1';
+
+export const handle: Handle = async ({ event, resolve }) => {
+	// Get session from cookies
+	const session = event.cookies.get('sb-access-token');
+	
+	if (session) {
+		try {
+			// Verify the session token
+			const { data: { user }, error } = await supabase.auth.getUser(session);
+			
+			if (user && !error) {
+				event.locals.user = user;
+				
+				// Special handling for jury routes
+				if (event.url.pathname.startsWith('/jury') || event.url.pathname.startsWith('/api/jury')) {
+					// Check for award badge
+					const { data: badgeData } = await supabase
+						.from('user_badges')
+						.select('badge_id')
+						.eq('user_id', user.id)
+						.eq('badge_id', AWARD_BADGE_ID)
+						.single();
+					
+					event.locals.hasJuryAccess = !!badgeData;
+				}
+			}
+		} catch (error) {
+			console.error('Session verification failed:', error);
+			event.locals.user = null;
+		}
+	} else {
+		event.locals.user = null;
+	}
+	
+	// Rate limiting for API routes
+	if (event.url.pathname.startsWith('/api/jury')) {
+		const clientIp = event.getClientAddress();
+		const rateLimitKey = `jury-rate-limit:${clientIp}:${event.locals.user?.id || 'anonymous'}`;
+		
+		// Simple in-memory rate limiting (in production, use Redis or similar)
+		const now = Date.now();
+		const windowMs = 60 * 1000; // 1 minute
+		const maxRequests = 30;
+		
+		// This is a simplified example - in production, use a proper rate limiting solution
+		// You could use a Map or external service to track requests
+	}
+	
+	const response = await resolve(event);
+	return response;
+};
