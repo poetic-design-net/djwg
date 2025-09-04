@@ -244,31 +244,53 @@
       {/if}
     </button>
     
+    <!-- Mobile Backdrop -->
+    {#if showNotifications}
+      <div 
+        class="fixed inset-0 bg-black/50 z-40 sm:hidden"
+        on:click={() => showNotifications = false}
+      />
+    {/if}
+    
     <!-- Notification Dropdown -->
     {#if showNotifications}
       <div 
         transition:slide={{ duration: 200 }}
-        class="absolute right-0 mt-2 w-96 max-h-96 overflow-y-auto bg-gray-900 border border-gray-800 rounded-lg shadow-xl z-50"
+        class="fixed sm:absolute left-1/2 -translate-x-1/2 sm:left-auto sm:translate-x-0 sm:right-0 mt-2 w-[calc(100%-1rem)] sm:w-96 max-w-[24rem] max-h-[50vh] sm:max-h-96 overflow-y-auto bg-gray-900 border border-gray-800 rounded-lg shadow-xl z-50"
       >
         <!-- Header -->
-        <div class="sticky top-0 bg-gray-900 border-b border-gray-800 p-4">
+        <div class="sticky top-0 bg-gray-900 border-b border-gray-800 p-3 sm:p-4">
           <div class="flex items-center justify-between">
-            <h3 class="text-lg font-medium text-white flex items-center gap-2">
-              <span>🏆</span>
-              Award-Einreichungen
+            <h3 class="text-base sm:text-lg font-medium text-white flex items-center gap-2">
+              <span class="text-sm sm:text-base">🏆</span>
+              <span class="text-sm sm:text-base">Award-Einreichungen</span>
               {#if unreadCount > 0}
-                <span class="text-sm text-green-500">({unreadCount} neu)</span>
+                <span class="text-xs sm:text-sm text-green-500">({unreadCount} neu)</span>
               {/if}
             </h3>
             
-            {#if unreadCount > 0}
+            <div class="flex items-center gap-2">
+              {#if unreadCount > 0}
+                <button
+                  on:click={markAllAsRead}
+                  class="text-xs text-green-500 hover:text-green-400 transition-colors"
+                >
+                  <span class="hidden sm:inline">Alle als gelesen markieren</span>
+                  <span class="sm:hidden">Gelesen</span>
+                </button>
+              {/if}
+              
+              <!-- Mobile Close Button -->
               <button
-                on:click={markAllAsRead}
-                class="text-xs text-green-500 hover:text-green-400 transition-colors"
+                on:click={() => showNotifications = false}
+                class="sm:hidden p-1 text-gray-400 hover:text-white transition-colors"
+                aria-label="Schließen"
               >
-                Alle als gelesen markieren
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
-            {/if}
+            </div>
           </div>
         </div>
         
@@ -291,85 +313,42 @@
             </div>
           {:else}
             {#each notifications as notification (notification.id)}
-              <div 
-                class="p-4 hover:bg-gray-800/50 transition-colors {notification.status === 'unread' ? 'bg-gray-800/30' : ''}"
+              <a
+                href="/jury"
+                class="block p-3 sm:p-4 hover:bg-gray-800/50 transition-colors {notification.status === 'unread' ? 'bg-gray-800/30' : ''}"
                 transition:fade
+                on:click={() => {
+                  if (notification.status === 'unread') {
+                    markAsRead(notification.id);
+                  }
+                  showNotifications = false;
+                }}
               >
-                <!-- Priority & Status -->
-                <div class="flex items-start justify-between mb-2">
-                  <div class="flex items-center gap-2">
-                    {#if notification.status === 'unread'}
-                      <span class="h-2 w-2 bg-green-500 rounded-full"></span>
-                    {/if}
-                    <span class="text-xs px-2 py-1 rounded-full {getPriorityColor(notification.priority)}">
-                      {notification.priority === 'urgent' ? 'Dringend' : 
-                       notification.priority === 'high' ? 'Hoch' :
-                       notification.priority === 'normal' ? 'Normal' : 'Niedrig'}
-                    </span>
+                <!-- Main Content -->
+                <div class="flex items-start gap-3">
+                  <!-- Unread Indicator -->
+                  {#if notification.status === 'unread'}
+                    <span class="h-2 w-2 bg-green-500 rounded-full mt-1.5 flex-shrink-0"></span>
+                  {:else}
+                    <span class="h-2 w-2 flex-shrink-0"></span>
+                  {/if}
+                  
+                  <!-- Info -->
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-white truncate">
+                      {notification.user_name}
+                    </p>
+                    <p class="text-xs text-gray-400 truncate">
+                      {notification.file_name}
+                    </p>
                   </div>
                   
-                  <span class="text-xs text-gray-500">
+                  <!-- Time -->
+                  <span class="text-xs text-gray-500 flex-shrink-0">
                     {formatTimeAgo(notification.created_at)}
                   </span>
                 </div>
-                
-                <!-- User Info -->
-                <div class="mb-2">
-                  <p class="text-sm font-medium text-white">{notification.user_name}</p>
-                  <p class="text-xs text-gray-400">{notification.user_email}</p>
-                </div>
-                
-                <!-- File Info -->
-                <div class="bg-gray-900/50 rounded p-2 mb-3">
-                  <div class="flex items-center justify-between text-xs">
-                    <span class="text-gray-300 truncate flex-1">
-                      📁 {notification.file_name}
-                    </span>
-                    <span class="text-gray-500 ml-2">
-                      {formatFileSize(notification.file_size)}
-                    </span>
-                  </div>
-                  <p class="text-xs text-gray-500 mt-1">{notification.file_type}</p>
-                </div>
-                
-                <!-- Actions -->
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center gap-2">
-                    <a
-                      href="/jury"
-                      class="text-xs text-green-500 hover:text-green-400 transition-colors"
-                    >
-                      Ansehen →
-                    </a>
-                    
-                    {#if notification.status === 'unread'}
-                      <button
-                        on:click={() => markAsRead(notification.id)}
-                        class="text-xs text-gray-400 hover:text-gray-300 transition-colors"
-                      >
-                        Als gelesen markieren
-                      </button>
-                    {/if}
-                  </div>
-                  
-                  <button
-                    on:click={() => archiveNotification(notification.id)}
-                    class="text-xs text-red-500 hover:text-red-400 transition-colors"
-                    title="Archivieren"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                    </svg>
-                  </button>
-                </div>
-                
-                <!-- Email Status -->
-                {#if notification.email_sent}
-                  <p class="text-xs text-gray-600 mt-2">
-                    ✉️ E-Mail-Benachrichtigung gesendet
-                  </p>
-                {/if}
-              </div>
+              </a>
             {/each}
           {/if}
         </div>
