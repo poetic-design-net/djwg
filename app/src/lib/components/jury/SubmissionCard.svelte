@@ -83,11 +83,11 @@
 
 <div class="bg-gray-800 rounded-lg border border-gray-700 hover:border-green-500 transition-all duration-300 overflow-hidden">
 	<!-- Header -->
-	<div class="p-4 border-b border-gray-700">
-		<div class="flex items-start gap-4">
+	<div class="p-3 sm:p-4 border-b border-gray-700">
+		<div class="flex items-start gap-3 sm:gap-4">
 			<!-- Avatar -->
 			<div class="relative flex-shrink-0">
-				<div class="w-16 h-16 rounded-full bg-gradient-to-br from-green-400 via-purple-500 to-pink-500 p-0.5">
+				<div class="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-green-400 via-purple-500 to-pink-500 p-0.5">
 					<div class="w-full h-full rounded-full bg-gray-900 p-0.5">
 						{#if groupedFiles.profilePhoto?.imageUrl || groupedFiles.profilePhoto?.fileUrl}
 							<img 
@@ -97,7 +97,7 @@
 							/>
 						{:else}
 							<div class="w-full h-full rounded-full bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center">
-								<span class="text-2xl font-medium text-gray-400">
+								<span class="text-lg sm:text-2xl font-medium text-gray-400">
 									{submission.userName?.charAt(0)?.toUpperCase() || '👤'}
 								</span>
 							</div>
@@ -110,49 +110,49 @@
 			</div>
 			
 			<!-- User Info -->
-			<div class="flex-1">
-				<h3 class="text-lg font-medium text-white mb-1">
+			<div class="flex-1 min-w-0">
+				<h3 class="text-base sm:text-lg font-medium text-white mb-1 truncate">
 					{submission.userName}
 				</h3>
-				<p class="text-sm text-gray-400">{submission.userEmail}</p>
-				<div class="flex items-center gap-2 mt-2">
+				<p class="text-xs sm:text-sm text-gray-400 truncate">{submission.userEmail}</p>
+				<div class="flex flex-col sm:flex-row sm:items-center gap-2 mt-2">
 					{#if isAdmin}
 						<select
 							bind:value={currentStatus}
 							on:change={() => handleStatusChange(currentStatus)}
-							class="px-3 py-1 rounded-full text-xs font-medium bg-gray-700 text-white border border-gray-600 hover:border-gray-500 focus:outline-none focus:border-green-500 cursor-pointer"
+							class="w-full sm:w-auto px-2 sm:px-3 py-1 rounded-full text-xs font-medium bg-gray-700 text-white border border-gray-600 hover:border-gray-500 focus:outline-none focus:border-green-500 cursor-pointer"
 						>
 							{#each statusOptions as option}
 								<option value={option.value}>{option.label}</option>
 							{/each}
 						</select>
 					{:else}
-						<span class={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(currentStatus)}`}>
+						<span class={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(currentStatus)}`}>
 							{statusOptions.find(opt => opt.value === currentStatus)?.label || currentStatus}
 						</span>
 					{/if}
-					<span class="text-xs text-gray-500">
-						<span class={groupedFiles.mainVideo || groupedFiles.introVideo ? 'text-green-400' : 'text-gray-500'}>
+					<div class="flex items-center gap-2 flex-wrap text-xs text-gray-500">
+						<span class={`whitespace-nowrap ${groupedFiles.mainVideo || groupedFiles.introVideo ? 'text-green-400' : 'text-gray-500'}`}>
 							{groupedFiles.mainVideo || groupedFiles.introVideo ? '✓' : '✗'} Video
 						</span>
-						· 
-						<span class={groupedFiles.profilePhoto ? 'text-green-400' : 'text-gray-500'}>
+						<span class="hidden sm:inline">·</span>
+						<span class={`whitespace-nowrap ${groupedFiles.profilePhoto ? 'text-green-400' : 'text-gray-500'}`}>
 							{groupedFiles.profilePhoto ? '✓' : '✗'} Profil
 						</span>
-						· 
-						<span class={groupedFiles.setupPhoto ? 'text-green-400' : 'text-gray-500'}>
+						<span class="hidden sm:inline">·</span>
+						<span class={`whitespace-nowrap ${groupedFiles.setupPhoto ? 'text-green-400' : 'text-gray-500'}`}>
 							{groupedFiles.setupPhoto ? '✓' : '✗'} Setup
 						</span>
-					</span>
+					</div>
 				</div>
 			</div>
 		</div>
 	</div>
 	
 	<!-- Content -->
-	<div class="p-4 space-y-4">
+	<div class="p-3 sm:p-4 space-y-3 sm:space-y-4">
 		<!-- Quick Preview - 3 Columns -->
-		<div class="grid grid-cols-3 gap-2">
+		<div class="grid grid-cols-3 gap-1.5 sm:gap-2">
 			<!-- Video Preview (DJ Mix or Intro) -->
 			{#if groupedFiles.mainVideo || groupedFiles.introVideo}
 				<button
@@ -163,8 +163,8 @@
 					<div class="absolute inset-0 flex items-center justify-center">
 						<span class="text-2xl">🎬</span>
 					</div>
-					<div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-1">
-						<p class="text-xs text-white truncate">Video</p>
+					<div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-0.5 sm:p-1">
+						<p class="text-[10px] sm:text-xs text-white truncate">Video</p>
 					</div>
 				</button>
 			{:else}
@@ -191,8 +191,8 @@
 							<span class="text-2xl">👤</span>
 						</div>
 					{/if}
-					<div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-1">
-						<p class="text-xs text-white truncate">Profil</p>
+					<div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-0.5 sm:p-1">
+						<p class="text-[10px] sm:text-xs text-white truncate">Profil</p>
 					</div>
 				</button>
 			{:else}
@@ -219,8 +219,8 @@
 							<span class="text-2xl">🎛️</span>
 						</div>
 					{/if}
-					<div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-1">
-						<p class="text-xs text-white truncate">Setup</p>
+					<div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-0.5 sm:p-1">
+						<p class="text-[10px] sm:text-xs text-white truncate">Setup</p>
 					</div>
 				</button>
 			{:else}
@@ -232,8 +232,8 @@
 		
 		<!-- Statistics -->
 		{#if submission.stats && submission.stats.total_ratings > 0}
-			<div class="bg-gray-900/50 rounded-lg p-3">
-				<div class="grid grid-cols-2 gap-2 text-sm">
+			<div class="bg-gray-900/50 rounded-lg p-2.5 sm:p-3">
+				<div class="grid grid-cols-2 gap-2 text-xs sm:text-sm">
 					<div>
 						<span class="text-gray-400">Durchschnitt:</span>
 						<span class="text-white font-medium ml-1">
@@ -252,22 +252,22 @@
 		
 		<!-- User's Rating -->
 		{#if submission.userRating}
-			<div class="bg-green-500/10 rounded-lg p-3 border border-green-500/30">
+			<div class="bg-green-500/10 rounded-lg p-2.5 sm:p-3 border border-green-500/30">
 				<div class="flex items-center justify-between">
-					<span class="text-sm text-green-400">Deine Bewertung:</span>
-					<div class="flex items-center space-x-2">
-						<span class="text-xl font-medium text-white">
+					<span class="text-xs sm:text-sm text-green-400">Deine Bewertung:</span>
+					<div class="flex items-center space-x-1.5 sm:space-x-2">
+						<span class="text-lg sm:text-xl font-medium text-white">
 							{submission.userRating.rating}/10
 						</span>
 						<span class="text-yellow-400">⭐</span>
 					</div>
 				</div>
 				{#if submission.userRating.comments}
-					<p class="text-xs text-gray-400 mt-2 italic">
+					<p class="text-xs text-gray-400 mt-2 italic line-clamp-2">
 						"{submission.userRating.comments}"
 					</p>
 				{/if}
-				<p class="text-xs text-gray-500 mt-1">
+				<p class="text-[10px] sm:text-xs text-gray-500 mt-1">
 					Aktualisiert: {formatDate(submission.userRating.updated_at)}
 				</p>
 			</div>
@@ -277,7 +277,7 @@
 		<div class="flex justify-center">
 			<button
 				on:click={toggleRating}
-				class="px-6 py-2 bg-green-500 text-black rounded-full hover:bg-green-400 transition flex items-center justify-center space-x-2 text-sm font-medium"
+				class="w-full sm:w-auto px-4 sm:px-6 py-2 bg-green-500 text-black rounded-full hover:bg-green-400 transition flex items-center justify-center space-x-1.5 sm:space-x-2 text-xs sm:text-sm font-medium"
 			>
 				<span>⭐</span>
 				<span>{submission.userRating ? 'Anpassen' : 'Bewerten'}</span>

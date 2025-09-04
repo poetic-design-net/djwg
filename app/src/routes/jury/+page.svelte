@@ -6,7 +6,7 @@
 	
 	export let data;
 	
-	const AWARD_BADGE_ID = 'fc005104-5c29-44bc-b05f-1f5e5ef817a1';
+	const AWARD_BADGE_ID = '6b83773a-5d51-4704-af6c-4492ffab786d';
 	
 	let hasAccess = false;
 	let loading = true;
