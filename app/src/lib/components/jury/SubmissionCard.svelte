@@ -12,7 +12,7 @@
 	
 	let showRating = false;
 	let comments = submission.userRating?.comments || '';
-	let selectedMedia: 'mainVideo' | 'introVideo' | 'profilePhoto' | 'setupPhoto' | null = null;
+	let selectedMedia: string | null = null;
 	let currentStatus = submission.status || 'pending';
 	
 	const statusOptions = [
@@ -151,84 +151,84 @@
 	
 	<!-- Content -->
 	<div class="p-3 sm:p-4 space-y-3 sm:space-y-4">
-		<!-- Quick Preview - 3 Columns -->
-		<div class="grid grid-cols-3 gap-1.5 sm:gap-2">
-			<!-- Video Preview (DJ Mix or Intro) -->
-			{#if groupedFiles.mainVideo || groupedFiles.introVideo}
-				<button
-					on:click={() => selectedMedia = groupedFiles.mainVideo ? 'mainVideo' : 'introVideo'}
-					class="relative aspect-square bg-gray-900 rounded overflow-hidden hover:ring-2 hover:ring-green-500 transition"
-					title="Video ansehen"
-				>
-					<div class="absolute inset-0 flex items-center justify-center">
-						<span class="text-2xl">🎬</span>
-					</div>
-					<div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-0.5 sm:p-1">
-						<p class="text-[10px] sm:text-xs text-white truncate">Video</p>
-					</div>
-				</button>
-			{:else}
-				<div class="aspect-square bg-gray-900/50 rounded flex items-center justify-center">
-					<span class="text-gray-600">🎬</span>
+		<!-- Media Gallery - Scrollable for multiple files -->
+		{#if groupedFiles.allFiles && groupedFiles.allFiles.length > 0}
+			<div class="space-y-2">
+				<div class="flex items-center justify-between">
+					<p class="text-xs text-gray-400">
+						{groupedFiles.allFiles.length} {groupedFiles.allFiles.length === 1 ? 'Datei' : 'Dateien'} hochgeladen
+					</p>
+					{#if groupedFiles.allFiles.length > 3}
+						<p class="text-xs text-green-400">← Scrollen →</p>
+					{/if}
 				</div>
-			{/if}
-			
-			<!-- Profile Photo Preview -->
-			{#if groupedFiles.profilePhoto}
-				<button
-					on:click={() => selectedMedia = 'profilePhoto'}
-					class="relative aspect-square bg-gray-900 rounded overflow-hidden hover:ring-2 hover:ring-green-500 transition"
-					title="Profil-Foto ansehen"
-				>
-					{#if groupedFiles.profilePhoto.imageUrl || groupedFiles.profilePhoto.fileUrl}
+				<div class="overflow-x-auto">
+					<div class="flex gap-2 pb-2" style="min-width: fit-content;">
+						{#each groupedFiles.allFiles as file, index}
+							<button
+								on:click={() => selectedMedia = `file-${index}`}
+								class="relative flex-shrink-0 w-24 h-24 sm:w-32 sm:h-32 bg-gray-900 rounded overflow-hidden hover:ring-2 hover:ring-green-500 transition"
+								title="{file.fileName}"
+							>
+								{#if file.fileType?.startsWith('video/')}
+									<div class="absolute inset-0 flex items-center justify-center">
+										<span class="text-2xl">🎬</span>
+									</div>
+								{:else if file.fileType?.startsWith('image/')}
+									<img 
+										src={file.imageUrl || file.fileUrl}
+										alt={file.fileName}
+										class="w-full h-full object-cover"
+										loading="lazy"
+									/>
+								{:else}
+									<div class="absolute inset-0 flex items-center justify-center">
+										<span class="text-2xl">📄</span>
+									</div>
+								{/if}
+								
+								<div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-1">
+									<p class="text-[10px] text-white truncate">
+										{file.fileName?.split('/').pop() || `Datei ${index + 1}`}
+									</p>
+									<p class="text-[9px] text-gray-300">
+										{file.fileType?.startsWith('video/') ? 'Video' : 
+										 file.fileType?.startsWith('image/') ? 'Bild' : 'Datei'}
+									</p>
+								</div>
+								
+								{#if index === 0}
+									<span class="absolute top-1 left-1 bg-green-500 text-black text-[10px] px-1 rounded">Haupt</span>
+								{/if}
+							</button>
+						{/each}
+					</div>
+				</div>
+			</div>
+		{:else}
+			<!-- Fallback for old single-file structure -->
+			<div class="grid grid-cols-3 gap-1.5 sm:gap-2">
+				<!-- Single Video/Image Preview -->
+				<div class="relative aspect-square bg-gray-900 rounded overflow-hidden">
+					{#if submission.fileType?.startsWith('video/')}
+						<button
+							on:click={() => selectedMedia = 'single'}
+							class="w-full h-full hover:ring-2 hover:ring-green-500 transition"
+						>
+							<div class="absolute inset-0 flex items-center justify-center">
+								<span class="text-2xl">🎬</span>
+							</div>
+						</button>
+					{:else if submission.fileType?.startsWith('image/')}
 						<img 
-							src={groupedFiles.profilePhoto.imageUrl || groupedFiles.profilePhoto.fileUrl}
-							alt="Profil"
+							src={submission.imageUrl || submission.fileUrl}
+							alt={submission.fileName}
 							class="w-full h-full object-cover"
 						/>
-					{:else}
-						<div class="absolute inset-0 flex items-center justify-center">
-							<span class="text-2xl">👤</span>
-						</div>
 					{/if}
-					<div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-0.5 sm:p-1">
-						<p class="text-[10px] sm:text-xs text-white truncate">Profil</p>
-					</div>
-				</button>
-			{:else}
-				<div class="aspect-square bg-gray-900/50 rounded flex items-center justify-center">
-					<span class="text-gray-600">👤</span>
 				</div>
-			{/if}
-			
-			<!-- Setup Photo Preview -->
-			{#if groupedFiles.setupPhoto}
-				<button
-					on:click={() => selectedMedia = 'setupPhoto'}
-					class="relative aspect-square bg-gray-900 rounded overflow-hidden hover:ring-2 hover:ring-green-500 transition"
-					title="DJ Setup ansehen"
-				>
-					{#if groupedFiles.setupPhoto.imageUrl || groupedFiles.setupPhoto.fileUrl}
-						<img 
-							src={groupedFiles.setupPhoto.imageUrl || groupedFiles.setupPhoto.fileUrl}
-							alt="Setup"
-							class="w-full h-full object-cover"
-						/>
-					{:else}
-						<div class="absolute inset-0 flex items-center justify-center">
-							<span class="text-2xl">🎛️</span>
-						</div>
-					{/if}
-					<div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-0.5 sm:p-1">
-						<p class="text-[10px] sm:text-xs text-white truncate">Setup</p>
-					</div>
-				</button>
-			{:else}
-				<div class="aspect-square bg-gray-900/50 rounded flex items-center justify-center">
-					<span class="text-gray-600">🎛️</span>
-				</div>
-			{/if}
-		</div>
+			</div>
+		{/if}
 		
 		<!-- Statistics -->
 		{#if submission.stats && submission.stats.total_ratings > 0}
@@ -286,37 +286,56 @@
 		
 		<!-- Selected Media Display -->
 		{#if selectedMedia}
+			{@const fileIndex = selectedMedia.startsWith('file-') ? parseInt(selectedMedia.split('-')[1]) : -1}
+			{@const selectedFile = fileIndex >= 0 ? groupedFiles.allFiles?.[fileIndex] : null}
 			<div transition:fade class="mt-4">
-				{#if (selectedMedia === 'mainVideo' || selectedMedia === 'introVideo') && (groupedFiles.mainVideo || groupedFiles.introVideo)}
+				
+				{#if selectedFile}
 					<div class="space-y-2">
-						<p class="text-sm text-gray-400">Video (DJ Mix mit Vorstellung)</p>
-						<SecurePlayer
-							videoId={(groupedFiles.mainVideo || groupedFiles.introVideo)._id || submission._id + '-video'}
-							title={submission.userName + ' - Video'}
-							autoplay={false}
-							requireFullscreen={false}
-							directUrl={(groupedFiles.mainVideo || groupedFiles.introVideo).fileUrl}
-						/>
+						<p class="text-sm text-gray-400">{selectedFile.fileName?.split('/').pop() || 'Datei'}</p>
+						{#if selectedFile.fileType?.startsWith('video/')}
+							<SecurePlayer
+								videoId={selectedFile._id || `${submission._id}-video-${fileIndex}`}
+								title={`${submission.userName} - ${selectedFile.fileName || 'Video'}`}
+								autoplay={false}
+								requireFullscreen={false}
+								directUrl={selectedFile.fileUrl}
+							/>
+						{:else if selectedFile.fileType?.startsWith('image/')}
+							<img 
+								src={selectedFile.imageUrl || selectedFile.fileUrl}
+								alt={selectedFile.fileName}
+								class="w-full rounded-lg"
+							/>
+						{:else}
+							<div class="bg-gray-900 rounded-lg p-8 text-center">
+								<p class="text-gray-400">Datei-Vorschau nicht verfügbar</p>
+								<p class="text-sm text-gray-500 mt-2">{selectedFile.fileType}</p>
+							</div>
+						{/if}
 					</div>
-				{:else if selectedMedia === 'profilePhoto' && groupedFiles.profilePhoto}
+				{:else if selectedMedia === 'single'}
+					<!-- Fallback for single file -->
 					<div class="space-y-2">
-						<p class="text-sm text-gray-400">Profil-Foto</p>
-						<img 
-							src={groupedFiles.profilePhoto.imageUrl || groupedFiles.profilePhoto.fileUrl}
-							alt="Profil-Foto"
-							class="w-full rounded-lg"
-						/>
-					</div>
-				{:else if selectedMedia === 'setupPhoto' && groupedFiles.setupPhoto}
-					<div class="space-y-2">
-						<p class="text-sm text-gray-400">DJ Setup</p>
-						<img 
-							src={groupedFiles.setupPhoto.imageUrl || groupedFiles.setupPhoto.fileUrl}
-							alt="DJ Setup"
-							class="w-full rounded-lg"
-						/>
+						<p class="text-sm text-gray-400">{submission.fileName || 'Datei'}</p>
+						{#if submission.fileType?.startsWith('video/')}
+							<SecurePlayer
+								videoId={submission._id}
+								title={submission.userName + ' - Video'}
+								autoplay={false}
+								requireFullscreen={false}
+								directUrl={submission.fileUrl}
+							/>
+						{:else if submission.fileType?.startsWith('image/')}
+							<img 
+								src={submission.imageUrl || submission.fileUrl}
+								alt={submission.fileName}
+								class="w-full rounded-lg"
+							/>
+						{/if}
 					</div>
 				{/if}
+				
 				<button
 					on:click={() => selectedMedia = null}
 					class="mt-2 text-sm text-gray-400 hover:text-gray-300"
