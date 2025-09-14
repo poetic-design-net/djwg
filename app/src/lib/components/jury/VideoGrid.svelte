@@ -30,12 +30,11 @@
 			transition:scale={{ delay: index * 50, duration: 300 }}
 			class={viewMode === 'grid' ? '' : 'w-full'}
 		>
-			<SubmissionCard 
+			<SubmissionCard
 				{submission}
 				{viewMode}
 				{isAdmin}
 				on:rate={handleRate(submission._id)}
-				on:statusChange={(e) => dispatch('statusChange', { submissionId: submission._id, status: e.detail.status })}
 			/>
 		</div>
 	{/each}

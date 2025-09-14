@@ -13,14 +13,6 @@
 	let showRating = false;
 	let comments = submission.userRating?.comments || '';
 	let selectedMedia: string | null = null;
-	let currentStatus = submission.status || 'pending';
-	
-	const statusOptions = [
-		{ value: 'pending', label: 'Ausstehend', color: 'bg-yellow-500/20 text-yellow-300' },
-		{ value: 'reviewed', label: 'Überprüft', color: 'bg-blue-500/20 text-blue-300' },
-		{ value: 'accepted', label: 'Akzeptiert', color: 'bg-green-500/20 text-green-300' },
-		{ value: 'rejected', label: 'Abgelehnt', color: 'bg-red-500/20 text-red-300' }
-	];
 	
 	// Gruppiere die Dateien nach Typ
 	$: groupedFiles = groupSubmissionFiles(submission);
@@ -54,10 +46,6 @@
 		showRating = !showRating;
 	}
 	
-	function handleStatusChange(newStatus: string) {
-		currentStatus = newStatus;
-		dispatch('statusChange', { status: newStatus });
-	}
 	
 	function handleRating(event: CustomEvent) {
 		dispatch('rate', {
@@ -73,11 +61,6 @@
 			month: '2-digit',
 			year: 'numeric'
 		});
-	}
-	
-	function getStatusColor(status: string) {
-		const option = statusOptions.find(opt => opt.value === status);
-		return option?.color || 'bg-gray-500/20 text-gray-300';
 	}
 </script>
 
@@ -115,35 +98,18 @@
 					{submission.userName}
 				</h3>
 				<p class="text-xs sm:text-sm text-gray-400 truncate">{submission.userEmail}</p>
-				<div class="flex flex-col sm:flex-row sm:items-center gap-2 mt-2">
-					{#if isAdmin}
-						<select
-							bind:value={currentStatus}
-							on:change={() => handleStatusChange(currentStatus)}
-							class="w-full sm:w-auto px-2 sm:px-3 py-1 rounded-full text-xs font-medium bg-gray-700 text-white border border-gray-600 hover:border-gray-500 focus:outline-none focus:border-green-500 cursor-pointer"
-						>
-							{#each statusOptions as option}
-								<option value={option.value}>{option.label}</option>
-							{/each}
-						</select>
-					{:else}
-						<span class={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(currentStatus)}`}>
-							{statusOptions.find(opt => opt.value === currentStatus)?.label || currentStatus}
-						</span>
-					{/if}
-					<div class="flex items-center gap-2 flex-wrap text-xs text-gray-500">
-						<span class={`whitespace-nowrap ${groupedFiles.mainVideo || groupedFiles.introVideo ? 'text-green-400' : 'text-gray-500'}`}>
-							{groupedFiles.mainVideo || groupedFiles.introVideo ? '✓' : '✗'} Video
-						</span>
-						<span class="hidden sm:inline">·</span>
-						<span class={`whitespace-nowrap ${groupedFiles.profilePhoto ? 'text-green-400' : 'text-gray-500'}`}>
-							{groupedFiles.profilePhoto ? '✓' : '✗'} Profil
-						</span>
-						<span class="hidden sm:inline">·</span>
-						<span class={`whitespace-nowrap ${groupedFiles.setupPhoto ? 'text-green-400' : 'text-gray-500'}`}>
-							{groupedFiles.setupPhoto ? '✓' : '✗'} Setup
-						</span>
-					</div>
+				<div class="flex items-center gap-2 flex-wrap text-xs text-gray-500 mt-2">
+					<span class={`whitespace-nowrap ${groupedFiles.mainVideo || groupedFiles.introVideo ? 'text-green-400' : 'text-gray-500'}`}>
+						{groupedFiles.mainVideo || groupedFiles.introVideo ? '✓' : '✗'} Video
+					</span>
+					<span class="hidden sm:inline">·</span>
+					<span class={`whitespace-nowrap ${groupedFiles.profilePhoto ? 'text-green-400' : 'text-gray-500'}`}>
+						{groupedFiles.profilePhoto ? '✓' : '✗'} Profil
+					</span>
+					<span class="hidden sm:inline">·</span>
+					<span class={`whitespace-nowrap ${groupedFiles.setupPhoto ? 'text-green-400' : 'text-gray-500'}`}>
+						{groupedFiles.setupPhoto ? '✓' : '✗'} Setup
+					</span>
 				</div>
 			</div>
 		</div>
