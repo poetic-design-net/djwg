@@ -539,7 +539,7 @@
         </div>
       {/if}
       
-      {#each filteredSchedule as day}
+      {#each filteredSchedule as day, dayIndex}
         <div class="mb-16">
           <h3 class="text-2xl text-white mb-6 flex items-center justify-center gap-2">
             <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
