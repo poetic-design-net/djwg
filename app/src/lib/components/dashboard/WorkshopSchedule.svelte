@@ -6,8 +6,17 @@
   import { getImageUrl } from '$lib/sanity/image';
 
   export let userId: string;
+  export let userProfile: any = null;
 
   const dispatch = createEventDispatcher();
+
+  // Required badge ID for registration (same as in TimeTableOverview)
+  const REQUIRED_BADGE_ID = '319b8937-cc53-4b1c-a2ef-b9f97aa81f51';
+
+  // Check if user has the required badge
+  $: hasRequiredBadge = userProfile?.badges?.some((badge: any) =>
+    badge._id === REQUIRED_BADGE_ID || badge._ref === REQUIRED_BADGE_ID
+  ) || false;
 
   interface Artist {
     _id?: string;
@@ -111,7 +120,6 @@
       }`;
 
       const schedules = await client.fetch(scheduleCheckQuery);
-      console.log('Found eventSchedule documents:', schedules);
 
       // Fetch events with schedule data (checking both embedded and referenced schedules)
       const query = groq`*[_type == "event"] {
@@ -234,16 +242,12 @@
       } | order(date asc)`;
 
       const data = await client.fetch(query);
-      console.log('Loaded all events:', data);
 
       // Filter only events that have schedule data
       events = (data || []).filter(e => e.schedule && e.schedule.days && e.schedule.days.length > 0);
-      console.log('Events with schedule:', events);
 
       // If no events with schedule, show all events for debugging
-      if (events.length === 0 && data.length > 0) {
-        console.log('No events have schedule data. Raw event structure:', data[0]);
-      }
+      // Events loaded
 
     } catch (err) {
       console.error('Error loading events:', err);
@@ -287,7 +291,6 @@
 
       const data = await client.fetch(query);
       openStageSlots = data || [];
-      console.log('Loaded Open Stage slots:', openStageSlots);
     } catch (err) {
       console.error('Error loading Open Stage slots:', err);
     }
@@ -304,6 +307,12 @@
 
   async function registerForSession(event: Event, session: ScheduleItem, dayIndex: number, stageIndex: number, itemIndex: number, slotId?: string) {
     try {
+      // Check if user has required badge
+      if (!hasRequiredBadge) {
+        alert('Du benötigst den "Event-Teilnehmer" Badge um dich anzumelden. Bitte schließe zuerst dein Profil ab.');
+        return;
+      }
+
       // Check if this is an Open Stage slot
       if (slotId && dayIndex === -1) {
         // For Open Stage, we need to register differently
@@ -435,17 +444,7 @@
     // Open Space sessions might use isOpenTable instead of allowRegistration
     const hasRegistration = item.allowRegistration === true || item.isOpenTable === true;
 
-    // Extended debug logging
-    console.log('Session evaluation:', {
-      title: item.title,
-      type: item.type,
-      allowRegistration: item.allowRegistration,
-      isOpenTable: item.isOpenTable,
-      registrationRequired: item.registrationRequired,
-      maxRegistrations: item.maxRegistrations,
-      maxParticipants: item.maxParticipants,
-      willBeShown: hasRegistration
-    });
+    // Check registration capability
 
     return hasRegistration;
   }
@@ -453,25 +452,21 @@
   function getSessionType(item: ScheduleItem): 'workshop' | 'openspace' | 'other' {
     // Use the type field from Sanity if available
     if (item.type) {
-      console.log(`Session "${item.title}" has explicit type: ${item.type}`);
       return item.type;
     }
 
     // Check if it's an Open Table (Open Space) session
     if (item.isOpenTable === true) {
-      console.log(`Session "${item.title}" detected as openspace due to isOpenTable flag`);
       return 'openspace';
     }
 
     // Try to detect from title as fallback
     const titleLower = item.title.toLowerCase();
     if (titleLower.includes('open space') || titleLower.includes('openspace') || titleLower.includes('open table')) {
-      console.log(`Session "${item.title}" detected as openspace from title`);
       return 'openspace';
     }
 
     // Default to workshop for all registrable sessions
-    console.log(`Session "${item.title}" defaulting to workshop`);
     return 'workshop';
   }
 
@@ -536,11 +531,10 @@
   }
 
   // Get all workshop and open space sessions from all events
-  $: allSessions = [
+  $: allSessions = (() => {
     // Regular schedule sessions
-    ...events.flatMap(event => {
+    const regularSessions = events.flatMap(event => {
       if (!event.schedule || !event.schedule.days) {
-        console.log('Event has no schedule:', event.title);
         return [];
       }
 
@@ -561,30 +555,28 @@
         )
       );
 
-      console.log('Sessions from event', event.title, ':', sessions);
       return sessions;
-    }),
+    });
+
     // Open Stage time slots converted to sessions
-    ...convertOpenStageToSessions(openStageSlots, events)
-  ];
+    const openStageSessions = convertOpenStageToSessions(openStageSlots, events);
+
+    const combined = [...regularSessions, ...openStageSessions];
+    return combined;
+  })();
 
   // Filter sessions based on selected filter
   $: filteredSessions = filter === 'all'
     ? allSessions
     : allSessions.filter(s => s.type === filter);
 
-  // Debug output with type breakdown
-  $: {
-    const typeBreakdown = allSessions.reduce((acc, s) => {
-      acc[s.type] = (acc[s.type] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-
-    console.log('Session type breakdown:', typeBreakdown);
-    console.log('All sessions:', allSessions.length, allSessions);
-    console.log('Filtered sessions:', filteredSessions.length, filteredSessions);
-    console.log('Current filter:', filter);
-  }
+  // Track session stats
+  $: sessionStats = {
+    total: allSessions.length,
+    filtered: filteredSessions.length,
+    workshops: allSessions.filter(s => s.type === 'workshop').length,
+    openspace: allSessions.filter(s => s.type === 'openspace').length
+  };
 
   // Group sessions by date
   $: sessionsByDate = filteredSessions.reduce((acc, session) => {
@@ -791,9 +783,13 @@
                         <span class="px-4 py-2 bg-gray-800 text-gray-500 text-sm rounded-lg cursor-not-allowed inline-block">
                           Ausgebucht
                         </span>
+                      {:else if !hasRequiredBadge}
+                        <span class="px-4 py-2 bg-orange-500/20 border border-orange-500/50 text-orange-400 text-sm rounded-lg cursor-not-allowed inline-block" title="Event-Teilnehmer Badge erforderlich">
+                          🔒 Badge fehlt
+                        </span>
                       {:else}
                         <button
-                          on:click={() => registerForSession(session.event, session.item, session.dayIndex, session.stageIndex, session.itemIndex, session.slotId)}
+                          on:click={() => registerForSession(session.event, session.item, session.dayIndex, session.stageIndex, session.itemIndex, session?.slotId)}
                           class="px-4 py-2 bg-green-500 hover:bg-green-600 text-black text-sm rounded-lg transition-colors duration-200"
                         >
                           Anmelden
