@@ -14,7 +14,7 @@
   let minutes = 0;
   let seconds = 0;
   let isComplete = false;
-  let interval: number | null = null;
+  let interval: ReturnType<typeof setInterval> | null = null;
 
   function calculateTimeRemaining() {
     const target = new Date(targetDate).getTime();

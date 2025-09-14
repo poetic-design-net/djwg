@@ -1,9 +1,13 @@
 <script lang="ts">
-  import type { SocialMediaLink } from '$lib/sanity/queries/settings'
   import {
     LinkIcon,
     ArrowRightIcon
   } from 'heroicons-svelte/24/outline'
+
+  interface SocialMediaLink {
+    platform: string;
+    url: string;
+  }
 
   export let socialLinks: SocialMediaLink[]
 

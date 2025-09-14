@@ -36,14 +36,14 @@
           <div class="relative overflow-hidden rounded-3xl">
             {#if mainImage?.asset}
               <picture>
-                <source 
-                  srcset={enhancedUrlFor(mainImage.asset).webp} 
+                <source
+                  srcset={enhancedUrlFor(mainImage as any).webp}
                   type="image/webp"
                 >
-                <img 
-                  class="h-96 w-full object-cover transform hover:scale-105 transition duration-500" 
-                  src={enhancedUrlFor(mainImage.asset).fallback}
-                  alt={mainImage.alt || ''} 
+                <img
+                  class="h-96 w-full object-cover transform hover:scale-105 transition duration-500"
+                  src={enhancedUrlFor(mainImage as any).fallback}
+                  alt={(mainImage as any).alt || ''} 
                   loading="lazy"
                   decoding="async"
                 />

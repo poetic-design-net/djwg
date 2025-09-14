@@ -52,7 +52,7 @@
                     <div class="relative w-20 h-20 rounded-full overflow-hidden">
                       <OptimizedImage 
                         image={artist.image}
-                        alt={artist.image?.alt || artist.name}
+                        alt={(artist.image as any)?.alt || artist.name}
                         maxWidth={160}
                         sizes="80px"
                         className="w-full h-full object-cover"

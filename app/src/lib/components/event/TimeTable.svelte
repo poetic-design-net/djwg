@@ -413,7 +413,7 @@
     // Clear existing interval if any
     const existingInterval = artistIntervals.get(key);
     if (existingInterval) {
-      clearInterval(existingInterval);
+      clearInterval(existingInterval as unknown as ReturnType<typeof setInterval>);
     }
 
     // Initialize index
@@ -437,7 +437,7 @@
       console.log(`Rotated artist for ${key}: ${currentIndex} -> ${nextIndex}`);
     }, 4000);
 
-    artistIntervals.set(key, interval);
+    artistIntervals.set(key, interval as unknown as number);
     console.log(`Set interval ${interval} for ${key}`);
   }
 
@@ -487,7 +487,7 @@
     return () => {
       timelineObserver?.disconnect();
       // Clear all artist rotation intervals
-      artistIntervals.forEach(interval => clearInterval(interval));
+      artistIntervals.forEach(interval => clearInterval(interval as unknown as ReturnType<typeof setInterval>));
       artistIntervals.clear();
     };
   });
@@ -579,7 +579,7 @@
   let hoverPosition = { x: 0, y: 0 };
   let hoverElement: HTMLElement | null = null;
   let hoverVisible = false;
-  let hoverTimeout: NodeJS.Timeout | null = null;
+  let hoverTimeout: ReturnType<typeof setTimeout> | null = null;
 
   function handleArtistHover(event: MouseEvent, artist: Artist) {
     const element = event.currentTarget as HTMLElement;
@@ -643,11 +643,11 @@
   $: if (selectedStage?.schedule && typeof window !== 'undefined') {
     // Clear existing intervals only for the previous stage
     const currentStageKey = `${selectedDayIndex}-${selectedStageIndex}`;
-    const keysToRemove = [];
+    const keysToRemove: string[] = [];
 
     artistIntervals.forEach((interval, key) => {
       if (!key.startsWith(currentStageKey)) {
-        clearInterval(interval);
+        clearInterval(interval as unknown as ReturnType<typeof setInterval>);
         keysToRemove.push(key);
       }
     });
