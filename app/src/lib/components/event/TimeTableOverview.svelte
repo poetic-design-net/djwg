@@ -1,6 +1,10 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import { createEventDispatcher } from 'svelte';
+  import { toasts } from '$lib/stores/toast';
+  import { fade, slide } from 'svelte/transition';
+  import { quintOut } from 'svelte/easing';
+  import CountdownTimer from './CountdownTimer.svelte';
 
   // Extended interface to support multiple artists
   interface Artist {
@@ -13,7 +17,7 @@
   }
 
   interface ExtendedScheduleItem {
-    _id?: string; // Workshop ID for registration
+    _id?: string; // Item ID for registration
     time: string;
     title: string;
     description?: string;
@@ -21,11 +25,24 @@
     instructors?: Artist[]; // New: multiple artists
     instructorDisplayMode?: 'all' | 'b2b' | 'vs' | 'comma' | 'ampersand' | 'main';
     icon?: string;
-    isWorkshop?: boolean; // Indicates if this is a registrable workshop
-    maxParticipants?: number;
-    currentParticipants?: number;
+    // Registration fields from Sanity
+    allowRegistration?: boolean;
+    registrationStartTime?: string;
+    maxRegistrations?: number;
+    registrationRequired?: boolean;
+    isOpenTable?: boolean;
+    openTableSettings?: {
+      autoAcceptRegistrations?: boolean;
+      showRemainingSlots?: boolean;
+      waitlistEnabled?: boolean;
+      description?: string;
+    };
+    // Runtime fields
+    isWorkshop?: boolean; // Used for styling only
+    maxParticipants?: number; // Alias for maxRegistrations
+    currentParticipants?: number; // Calculated from registrations
     isRegistered?: boolean; // Current user registration status
-    registrationOpen?: boolean;
+    registrationOpen?: boolean; // Whether registration is currently open
   }
 
   interface Stage {
@@ -44,10 +61,20 @@
   export let isAdmin: boolean = false;
   export let scheduleView: string = 'overview';
   export let enableAnimations: boolean = true; // Can be controlled from parent
-  export let userId: string | undefined = undefined; // For registration functionality
-  export let onRegister: ((workshopId: string) => void) | undefined = undefined;
+  export let user: { id: string; email: string } | null = null;
+  export let userProfile: any = null;
+  export let eventId: string = '';
+  export let eventScheduleId: string = '';
 
   const dispatch = createEventDispatcher();
+
+  // Required badge ID for registration
+  const REQUIRED_BADGE_ID = '319b8937-cc53-4b1c-a2ef-b9f97aa81f51';
+
+  // Check if user has the required badge
+  $: hasRequiredBadge = userProfile?.badges?.some((badge: any) =>
+    badge._id === REQUIRED_BADGE_ID || badge._ref === REQUIRED_BADGE_ID
+  ) || false;
 
   // Stage filtering
   let selectedStages: Set<string> = new Set();
@@ -55,7 +82,20 @@
   let scrollContainer: HTMLDivElement;
   let canScrollLeft = false;
   let canScrollRight = false;
-  let hoveredEvent: { event: ExtendedScheduleItem; position: DOMRect } | null = null;
+  let hoveredEvent: { event: ExtendedScheduleItem; position: DOMRect; dayIndex: number; stageIndex: number; itemIndex: number } | null = null;
+  let isInteractingWithHoverCard = false;
+
+  // Registration state
+  let userRegistrations: Map<string, any> = new Map();
+  let registrationCounts: Map<string, number> = new Map();
+  let registrationCountsObject: Record<string, number> = {};
+  let isLoadingRegistrations = false;
+  let selectedSession: { item: ExtendedScheduleItem; dayIndex: number; stageIndex: number; itemIndex: number } | null = null;
+  let showLoginPrompt = false;
+  let isRegistering = false;
+  let registrationError: string | null = null;
+  let registrationSuccess: string | null = null;
+  let countdownCompleted: Set<string> = new Set();
 
   // Artist rotation state
   let artistIndexMap: Map<string, number> = new Map();
@@ -72,12 +112,131 @@
   let zoomInterval: ReturnType<typeof setInterval> | null = null;
   let isZooming = false;
 
+  // Load user registrations
+  async function loadUserRegistrations() {
+    if (!user || !eventId) return;
+
+    isLoadingRegistrations = true;
+    try {
+      const response = await fetch(`/api/schedule-registrations?eventId=${eventId}&userId=${user.id}`);
+      const result = await response.json();
+
+      if (result.success) {
+        userRegistrations.clear();
+        result.data.forEach((reg: any) => {
+          const key = `${reg.dayIndex}-${reg.stageIndex}-${reg.itemIndex}`;
+          userRegistrations.set(key, reg);
+        });
+        userRegistrations = new Map(userRegistrations);
+      }
+    } catch (error) {
+      console.error('Error loading registrations:', error);
+    } finally {
+      isLoadingRegistrations = false;
+    }
+  }
+
+  // Load registration counts for all sessions
+  async function loadRegistrationCounts() {
+    if (!eventId) return;
+
+    try {
+      const response = await fetch(`/api/schedule-registrations?eventId=${eventId}`);
+      const result = await response.json();
+
+      if (result.success) {
+        const newCounts = new Map();
+
+        result.data.forEach((reg: any) => {
+          // Only count confirmed registrations, not waitlist
+          if (!reg.status || reg.status === 'confirmed') {
+            const key = `${reg.dayIndex}-${reg.stageIndex}-${reg.itemIndex}`;
+            const current = newCounts.get(key) || 0;
+            newCounts.set(key, current + 1);
+          }
+        });
+
+        registrationCounts = newCounts;
+
+        // Convert Map to object for better reactivity
+        const countsObj: Record<string, number> = {};
+        newCounts.forEach((value, key) => {
+          countsObj[key] = value;
+        });
+        registrationCountsObject = countsObj;
+      }
+    } catch (error) {
+      console.error('Error loading registration counts:', error);
+    }
+  }
+
+  // Check if user is registered for a session
+  function isUserRegistered(dayIndex: number, stageIndex: number, itemIndex: number): boolean {
+    const key = `${dayIndex}-${stageIndex}-${itemIndex}`;
+    return userRegistrations.has(key);
+  }
+
+  // Get registration count for a session
+  function getRegistrationCount(dayIndex: number, stageIndex: number, itemIndex: number): number {
+    const key = `${dayIndex}-${stageIndex}-${itemIndex}`;
+    return registrationCountsObject[key] || 0;
+  }
+
+  // Check if registration is open for a session
+  function isRegistrationOpen(item: ExtendedScheduleItem, dayIndex: number, stageIndex: number, itemIndex: number): boolean {
+    if (!item.registrationStartTime) {
+      return true;
+    }
+
+    const key = `${dayIndex}-${stageIndex}-${itemIndex}`;
+
+    if (countdownCompleted.has(key)) {
+      return true;
+    }
+
+    const now = new Date().getTime();
+    const startTime = new Date(item.registrationStartTime).getTime();
+
+    if (now >= startTime) {
+      countdownCompleted.add(key);
+      countdownCompleted = new Set(countdownCompleted);
+      return true;
+    }
+
+    return false;
+  }
+
+  // Handle countdown completion
+  function handleCountdownComplete(dayIndex: number, stageIndex: number, itemIndex: number) {
+    const key = `${dayIndex}-${stageIndex}-${itemIndex}`;
+    countdownCompleted.add(key);
+    countdownCompleted = new Set(countdownCompleted);
+
+    const item = filteredSchedule[dayIndex]?.stages?.[stageIndex]?.schedule?.[itemIndex];
+    if (item) {
+      toasts.success(`Die Registrierung für "${item.title}" ist jetzt geöffnet!`);
+    }
+  }
+
+  // Enhanced schedule item with registration data
+  function enhanceScheduleItem(item: ExtendedScheduleItem, stageName?: string): ExtendedScheduleItem {
+    // Only enhance items that have explicit allowRegistration from the data
+    if (item.allowRegistration) {
+      return {
+        ...item,
+        isWorkshop: true, // Mark as workshop for styling purposes
+        registrationOpen: item.registrationOpen !== undefined ? item.registrationOpen : true,
+        maxParticipants: item.maxRegistrations || item.maxParticipants,
+        currentParticipants: item.currentParticipants,
+        isRegistered: item.isRegistered || false
+      };
+    }
+    return item;
+  }
+
   // Helper function to get all artists from an item
   function getAllArtists(item: ExtendedScheduleItem): Artist[] {
     const artists: Artist[] = [];
-
-    // Debug logging
-    console.log('Item:', item.title, 'Instructor:', item.instructor, 'Instructors:', item.instructors);
 
     // Add instructors if they exist
     if (item.instructors && Array.isArray(item.instructors) && item.instructors.length > 0) {
@@ -223,20 +382,184 @@
     });
   }
   
-  function handleEventHover(event: ExtendedScheduleItem, element: HTMLElement) {
+  function handleEventHover(event: ExtendedScheduleItem, element: HTMLElement, dayIndex: number, stageIndex: number, itemIndex: number) {
     const rect = element.getBoundingClientRect();
-    hoveredEvent = { event, position: rect };
+    hoveredEvent = { event, position: rect, dayIndex, stageIndex, itemIndex };
   }
-  
+
   function handleEventLeave() {
-    hoveredEvent = null;
+    // Only hide if not interacting with the hover card
+    if (!isInteractingWithHoverCard) {
+      hoveredEvent = null;
+    }
   }
 
   // Handle workshop registration
-  function handleWorkshopClick(event: ExtendedScheduleItem, e: MouseEvent) {
-    if (event.isWorkshop && event._id && onRegister) {
-      e.stopPropagation();
-      onRegister(event._id);
+  function handleWorkshopClick(event: ExtendedScheduleItem, e: MouseEvent, dayIndex: number, stageIndex: number, itemIndex: number) {
+    e.stopPropagation();
+
+    if (!user) {
+      showLoginPrompt = true;
+    } else if (!hasRequiredBadge) {
+      toasts.error('Du benötigst den "Event-Teilnehmer" Badge um dich anzumelden. Bitte schließe zuerst dein Profil ab.');
+    } else if (!isRegistrationOpen(event, dayIndex, stageIndex, itemIndex)) {
+      toasts.error('Die Registrierung ist noch nicht geöffnet.');
+    } else {
+      selectedSession = { item: event, dayIndex, stageIndex, itemIndex };
+    }
+  }
+
+  // Handle registration
+  async function handleRegistration() {
+    if (!selectedSession || !user || !userProfile) return;
+
+    isRegistering = true;
+    registrationError = null;
+    registrationSuccess = null;
+
+    try {
+      const { item, dayIndex, stageIndex, itemIndex } = selectedSession;
+      const key = `${dayIndex}-${stageIndex}-${itemIndex}`;
+
+      // Optimistic UI update
+      const currentCount = registrationCounts.get(key) || 0;
+      registrationCounts = new Map(registrationCounts.set(key, currentCount + 1));
+
+      registrationCountsObject = {
+        ...registrationCountsObject,
+        [key]: currentCount + 1
+      };
+
+      const response = await fetch('/api/schedule-registrations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          eventId,
+          eventScheduleId,
+          dayIndex,
+          stageIndex,
+          itemIndex,
+          sessionTitle: item.title,
+          sessionTime: item.time,
+          maxRegistrations: item.maxRegistrations || item.maxParticipants,
+          isOpenTable: item.isOpenTable,
+          openTableSettings: item.openTableSettings
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        // Revert optimistic update on error
+        registrationCounts = new Map(registrationCounts.set(key, currentCount));
+        registrationCountsObject = {
+          ...registrationCountsObject,
+          [key]: currentCount
+        };
+        throw new Error(result.error);
+      }
+
+      registrationSuccess = result.message || 'Erfolgreich angemeldet!';
+
+      toasts.success(`Erfolgreich für "${item.title}" angemeldet!`);
+
+      // Update local state
+      if (result.userRegistrations) {
+        userRegistrations.clear();
+        result.userRegistrations.forEach((reg: any) => {
+          const regKey = `${reg.dayIndex}-${reg.stageIndex}-${reg.itemIndex}`;
+          userRegistrations.set(regKey, reg);
+        });
+        userRegistrations = new Map(userRegistrations);
+      }
+
+      if (result.updatedCount !== undefined && result.sessionKey) {
+        registrationCounts.set(result.sessionKey, result.updatedCount);
+        registrationCounts = new Map(registrationCounts);
+        registrationCountsObject = {
+          ...registrationCountsObject,
+          [result.sessionKey]: result.updatedCount
+        };
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 500));
+      await loadRegistrationCounts();
+
+      selectedSession = null;
+      registrationSuccess = null;
+
+    } catch (e: any) {
+      registrationError = e.message || 'Ein Fehler ist aufgetreten.';
+      console.error('Registration error:', e);
+      await loadRegistrationCounts();
+    } finally {
+      isRegistering = false;
+    }
+  }
+
+  // Cancel registration
+  async function cancelRegistration(dayIndex: number, stageIndex: number, itemIndex: number) {
+    const key = `${dayIndex}-${stageIndex}-${itemIndex}`;
+    const registration = userRegistrations.get(key);
+
+    if (!registration) return;
+
+    const day = filteredSchedule[dayIndex];
+    const stage = day?.stages?.[stageIndex];
+    const item = stage?.schedule?.[itemIndex];
+    const sessionTitle = item?.title || 'Session';
+
+    try {
+      // Optimistic UI update
+      const currentCount = registrationCounts.get(key) || 0;
+      if (currentCount > 0) {
+        registrationCounts = new Map(registrationCounts.set(key, currentCount - 1));
+        registrationCountsObject = {
+          ...registrationCountsObject,
+          [key]: currentCount - 1
+        };
+      }
+
+      userRegistrations.delete(key);
+      userRegistrations = new Map(userRegistrations);
+
+      const response = await fetch(`/api/schedule-registrations/${registration._id}`, {
+        method: 'DELETE'
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        // Revert optimistic updates on error
+        userRegistrations.set(key, registration);
+        userRegistrations = new Map(userRegistrations);
+        registrationCounts = new Map(registrationCounts.set(key, currentCount));
+        registrationCountsObject = {
+          ...registrationCountsObject,
+          [key]: currentCount
+        };
+        throw new Error(result.error || 'Failed to cancel registration');
+      }
+
+      if (result.updatedCount !== undefined && result.sessionKey) {
+        registrationCounts.set(result.sessionKey, result.updatedCount);
+        registrationCounts = new Map(registrationCounts);
+        registrationCountsObject = {
+          ...registrationCountsObject,
+          [result.sessionKey]: result.updatedCount
+        };
+      }
+
+      toasts.success(`Erfolgreich von "${sessionTitle}" abgemeldet!`);
+
+      await loadRegistrationCounts();
+    } catch (error) {
+      console.error('Error cancelling registration:', error);
+      toasts.error('Fehler beim Abmelden. Bitte versuche es erneut.');
+      await loadUserRegistrations();
+      await loadRegistrationCounts();
     }
   }
   
@@ -302,6 +625,14 @@
   onMount(() => {
     window.addEventListener('keydown', handleKeydown);
 
+    // Load registrations
+    if (eventId) {
+      loadRegistrationCounts();
+      if (user) {
+        loadUserRegistrations();
+      }
+    }
+
     // Start artist rotation for all items with multiple artists
     filteredSchedule.forEach((day, dayIndex) => {
       day.stages.forEach((stage, stageIndex) => {
@@ -318,6 +649,14 @@
       window.removeEventListener('keydown', handleKeydown);
     };
   });
+
+  // Reload registration data when eventId or user changes
+  $: if (eventId) {
+    if (user) {
+      loadUserRegistrations();
+    }
+    loadRegistrationCounts();
+  }
 
   onMount(() => {
     if (scrollContainer) {
@@ -595,14 +934,17 @@
 
                 {#each day.stages as stage, stageIndex}
                   <div class="stage-column">
-                    {#each stage.schedule as event, itemIndex}
+                    {#each stage.schedule as rawEvent, itemIndex}
+                      {@const event = enhanceScheduleItem(rawEvent, stage.name)}
                       {@const styles = getEventStyles(event, timeSlots)}
                       {@const artists = getAllArtists(event)}
                       {@const currentArtist = getCurrentArtist(event, dayIndex, stageIndex, itemIndex)}
+                      {@const isRegistered = isUserRegistered(dayIndex, stageIndex, itemIndex)}
+                      {@const regCount = getRegistrationCount(dayIndex, stageIndex, itemIndex)}
                       <div
-                        class="event-card group {currentArtist?.image ? 'has-image' : ''} {enableAnimations && currentArtist?.image ? 'animated' : ''} {event.isWorkshop ? 'has-workshop' : ''} {event.isRegistered ? 'registered' : ''}"
+                        class="event-card group {currentArtist?.image ? 'has-image' : ''} {enableAnimations && currentArtist?.image ? 'animated' : ''} {event.isWorkshop || event.allowRegistration ? 'has-workshop' : ''} {isRegistered ? 'registered' : ''}"
                         style="top: {styles.top}; height: {styles.height}; --delay: {(stageIndex * 3 + itemIndex * 1.5)}s;"
-                        on:mouseenter={(e) => handleEventHover(event, e.currentTarget)}
+                        on:mouseenter={(e) => handleEventHover(event, e.currentTarget, dayIndex, stageIndex, itemIndex)}
                         on:mouseleave={handleEventLeave}
                         role="button"
                         tabindex="0"
@@ -630,21 +972,41 @@
                         <div class="event-card-content">
                           <div class="flex items-center justify-between gap-2">
                             <p class="event-title flex-1">{event.title}</p>
-                            {#if event.isWorkshop && event.registrationOpen}
+                            {#if event.allowRegistration}
                               <div class="workshop-indicator">
-                                {#if event.isRegistered}
-                                  <span class="registered-badge">
-                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                {#if !isRegistrationOpen(event, dayIndex, stageIndex, itemIndex) && event.registrationStartTime}
+                                  <span class="countdown-badge" title="Registrierung öffnet bald">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                     </svg>
                                   </span>
-                                {:else if event.maxParticipants && event.currentParticipants && event.currentParticipants >= event.maxParticipants}
+                                {:else if isRegistered}
+                                  <button
+                                    class="registered-badge group/reg"
+                                    on:click={(e) => {
+                                      e.stopPropagation();
+                                      cancelRegistration(dayIndex, stageIndex, itemIndex);
+                                    }}
+                                    title="Klicken zum Abmelden"
+                                  >
+                                    <span class="group-hover/reg:hidden">
+                                      <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                      </svg>
+                                    </span>
+                                    <span class="hidden group-hover/reg:block">
+                                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                      </svg>
+                                    </span>
+                                  </button>
+                                {:else if event.maxRegistrations && regCount >= event.maxRegistrations}
                                   <span class="full-badge">VOLL</span>
                                 {:else}
                                   <button
                                     class="register-btn"
-                                    on:click={(e) => handleWorkshopClick(event, e)}
-                                    title="Für Workshop anmelden"
+                                    on:click={(e) => handleWorkshopClick(event, e, dayIndex, stageIndex, itemIndex)}
+                                    title="Jetzt anmelden"
                                   >
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
@@ -691,16 +1053,16 @@
                         {/if}
                         </div>
 
-                        {#if event.isWorkshop && event.maxParticipants}
+                        {#if event.allowRegistration && event.maxRegistrations}
                           <div class="workshop-capacity">
                             <div class="capacity-bar">
                               <div
-                                class="capacity-fill"
-                                style="width: {Math.min(100, ((event.currentParticipants || 0) / event.maxParticipants) * 100)}%"
+                                class="capacity-fill {regCount >= event.maxRegistrations ? 'full' : ''}"
+                                style="width: {Math.min(100, (regCount / event.maxRegistrations) * 100)}%"
                               />
                             </div>
                             <span class="capacity-text">
-                              {event.currentParticipants || 0}/{event.maxParticipants}
+                              {regCount}/{event.maxRegistrations}
                             </span>
                           </div>
                         {/if}
@@ -720,16 +1082,24 @@
   
   <!-- Hover Overlay -->
   {#if hoveredEvent}
-    <div 
-      class="fixed pointer-events-none z-50"
+    {@const hoverIsRegistered = isUserRegistered(hoveredEvent.dayIndex, hoveredEvent.stageIndex, hoveredEvent.itemIndex)}
+    {@const hoverRegCount = getRegistrationCount(hoveredEvent.dayIndex, hoveredEvent.stageIndex, hoveredEvent.itemIndex)}
+    <div
+      class="fixed z-50"
       style="
         left: {hoveredEvent.position.left - 3}px;
         top: {hoveredEvent.position.top - 3}px;
         width: {hoveredEvent.position.width}px;
         height: auto;
+        pointer-events: {hoveredEvent.event.allowRegistration ? 'auto' : 'none'};
       "
+      on:mouseenter={() => isInteractingWithHoverCard = true}
+      on:mouseleave={() => {
+        isInteractingWithHoverCard = false;
+        hoveredEvent = null;
+      }}
     >
-      <div class="hover-overlay-card">
+      <div class="hover-overlay-card {hoveredEvent.event.allowRegistration ? 'interactive' : ''}">
         <div class="flex items-start justify-between mb-2">
           <h3 class="text-white font-bold text-base">{hoveredEvent.event.title}</h3>
           <span class="text-[#33cc99] text-xs font-medium">{hoveredEvent.event.time}</span>
@@ -737,6 +1107,83 @@
         
         {#if hoveredEvent.event.description}
           <p class="text-gray-300 text-sm mb-2">{hoveredEvent.event.description}</p>
+        {/if}
+
+        {#if hoveredEvent.event.allowRegistration}
+          <div class="pt-2 border-t border-gray-700">
+            <!-- Registration Status -->
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-[#33cc99]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                </svg>
+                {#if hoveredEvent.event.maxRegistrations}
+                  <span class="text-xs text-gray-400">
+                    {hoverRegCount}/{hoveredEvent.event.maxRegistrations} Teilnehmer
+                  </span>
+                {:else if hoveredEvent.event.isOpenTable}
+                  <span class="text-xs text-gray-400">Open Table</span>
+                {:else}
+                  <span class="text-xs text-gray-400">Workshop</span>
+                {/if}
+              </div>
+            </div>
+
+            <!-- Registration Buttons -->
+            <div class="flex justify-center">
+              {#if !isRegistrationOpen(hoveredEvent.event, hoveredEvent.dayIndex, hoveredEvent.stageIndex, hoveredEvent.itemIndex) && hoveredEvent.event.registrationStartTime}
+                <div class="px-3 py-1.5 bg-yellow-500/20 border border-yellow-500/50 rounded-full text-yellow-400 text-xs font-medium">
+                  <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  Öffnet bald
+                </div>
+              {:else if !user}
+                <button
+                  on:click={() => showLoginPrompt = true}
+                  class="px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white text-xs font-medium rounded-full transition-colors"
+                >
+                  Anmelden zum Registrieren
+                </button>
+              {:else if !hasRequiredBadge}
+                <div class="px-3 py-1.5 bg-orange-500/20 border border-orange-500/50 rounded-full text-orange-400 text-xs font-medium">
+                  🔒 Badge erforderlich
+                </div>
+              {:else if hoverIsRegistered}
+                <button
+                  on:click={(e) => {
+                    e.stopPropagation();
+                    cancelRegistration(hoveredEvent.dayIndex, hoveredEvent.stageIndex, hoveredEvent.itemIndex);
+                    hoveredEvent = null;
+                  }}
+                  class="px-3 py-1.5 bg-green-500 hover:bg-red-500 text-black text-xs font-medium rounded-full transition-all group/cancel"
+                >
+                  <span class="group-hover/cancel:hidden">✓ Angemeldet</span>
+                  <span class="hidden group-hover/cancel:inline">Abmelden</span>
+                </button>
+              {:else if hoveredEvent.event.maxRegistrations && hoverRegCount >= hoveredEvent.event.maxRegistrations}
+                <div class="px-3 py-1.5 bg-red-500/20 border border-red-500/50 rounded-full text-red-400 text-xs font-medium">
+                  Ausgebucht
+                </div>
+              {:else}
+                <button
+                  on:click={(e) => {
+                    e.stopPropagation();
+                    selectedSession = {
+                      item: hoveredEvent.event,
+                      dayIndex: hoveredEvent.dayIndex,
+                      stageIndex: hoveredEvent.stageIndex,
+                      itemIndex: hoveredEvent.itemIndex
+                    };
+                    hoveredEvent = null;
+                  }}
+                  class="px-3 py-1.5 bg-green-400 hover:bg-green-500 text-black text-xs font-medium rounded-full transition-colors"
+                >
+                  {hoveredEvent.event.isOpenTable ? 'Platz reservieren' : 'Jetzt anmelden'}
+                </button>
+              {/if}
+            </div>
+          </div>
         {/if}
 
         {#if getAllArtists(hoveredEvent.event).length > 0}
@@ -798,6 +1245,97 @@
   <div class="py-20 bg-black/40">
     <div class="container px-4 mx-auto text-center">
       <p class="text-gray-400">Kein Schedule verfügbar.</p>
+    </div>
+  </div>
+{/if}
+
+<!-- Registration Confirmation Modal -->
+{#if selectedSession && user}
+  <div
+    class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50"
+    transition:fade={{ duration: 200 }}
+    on:click|self={() => selectedSession = null}
+  >
+    <div
+      class="w-full max-w-md bg-black border border-gray-800 rounded-3xl p-8"
+      transition:slide={{ duration: 200, easing: quintOut }}
+    >
+      <h3 class="text-2xl text-white mb-2">{selectedSession.item.isOpenTable ? 'Open Table Reservierung' : 'Anmeldung bestätigen'}</h3>
+      <p class="text-gray-400 mb-6">{selectedSession.item.title} - {selectedSession.item.time}</p>
+      {#if selectedSession.item.isOpenTable && selectedSession.item.openTableSettings?.description}
+        <p class="text-emerald-400 text-sm mb-4 italic">{selectedSession.item.openTableSettings.description}</p>
+      {/if}
+
+      <div class="space-y-6">
+        <div class="bg-black/40 border border-gray-800 rounded-xl p-4">
+          <p class="text-sm text-gray-400 mb-2">Du meldest dich an als:</p>
+          <p class="text-white font-medium">
+            {userProfile?.displayName || userProfile?.username || user.email.split('@')[0]}
+          </p>
+          <p class="text-sm text-gray-400 mt-1">{user.email}</p>
+        </div>
+
+        {#if registrationError}
+          <p class="text-red-400 text-sm">{registrationError}</p>
+        {/if}
+
+        {#if registrationSuccess}
+          <p class="text-green-400 text-sm">{registrationSuccess}</p>
+        {/if}
+
+        <div class="flex space-x-4">
+          <button
+            type="button"
+            class="flex-1 px-6 py-3 text-white border border-gray-800 rounded-xl hover:border-gray-700 transition-colors duration-200"
+            on:click={() => selectedSession = null}
+            disabled={isRegistering}
+          >
+            Abbrechen
+          </button>
+          <button
+            on:click={handleRegistration}
+            class="flex-1 px-6 py-3 bg-green-400 text-black rounded-xl hover:bg-green-500 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isRegistering}
+          >
+            {isRegistering ? 'Wird angemeldet...' : 'Jetzt anmelden'}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+{/if}
+
+<!-- Login Prompt Modal -->
+{#if showLoginPrompt}
+  <div
+    class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50"
+    transition:fade={{ duration: 200 }}
+    on:click|self={() => showLoginPrompt = false}
+  >
+    <div
+      class="w-full max-w-md bg-black border border-gray-800 rounded-3xl p-8"
+      transition:slide={{ duration: 200, easing: quintOut }}
+    >
+      <h3 class="text-2xl text-white mb-4">Anmeldung erforderlich</h3>
+      <p class="text-gray-300 mb-6">
+        Um dich für diese Session anzumelden, musst du dich zuerst einloggen oder registrieren.
+      </p>
+
+      <div class="flex space-x-4">
+        <button
+          type="button"
+          class="flex-1 px-6 py-3 text-white border border-gray-800 rounded-xl hover:border-gray-700 transition-colors duration-200"
+          on:click={() => showLoginPrompt = false}
+        >
+          Abbrechen
+        </button>
+        <a
+          href="/auth?next={encodeURIComponent(window.location.pathname + window.location.search)}"
+          class="flex-1 px-6 py-3 bg-green-400 text-black rounded-xl hover:bg-green-500 transition-colors duration-200 text-center"
+        >
+          Jetzt anmelden
+        </a>
+      </div>
     </div>
   </div>
 {/if}
@@ -1152,13 +1690,26 @@
     border: 1px solid rgba(51, 204, 153, 0.4);
     border-radius: 0.75rem;
     padding: 0.875rem;
-    box-shadow: 
+    box-shadow:
       0 25px 50px rgba(0, 0, 0, 0.9),
       0 0 100px rgba(51, 204, 153, 0.1),
       inset 0 0 30px rgba(51, 204, 153, 0.05);
     animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     min-width: 320px;
     max-width: 400px;
+    pointer-events: none;
+  }
+
+  .hover-overlay-card.interactive {
+    pointer-events: auto;
+  }
+
+  .hover-overlay-card button {
+    pointer-events: auto;
+  }
+
+  .hover-overlay-card a {
+    pointer-events: auto;
   }
   
   @keyframes slideUp {
@@ -1381,6 +1932,15 @@
     border: 1px solid #33cc99;
     border-radius: 4px;
     color: #33cc99;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .registered-badge:hover {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.5);
+    color: #ef4444;
+    transform: scale(1.1);
   }
 
   .full-badge {
@@ -1418,8 +1978,30 @@
     transition: width 0.3s ease;
   }
 
-  .capacity-fill[style*="width: 100%"] {
+  .capacity-fill.full {
     background: linear-gradient(90deg, #ef4444, #dc2626);
+  }
+
+  .countdown-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    background: rgba(251, 191, 36, 0.2);
+    border: 1px solid rgba(251, 191, 36, 0.5);
+    border-radius: 4px;
+    color: #fbbf24;
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
   }
 
   .capacity-text {

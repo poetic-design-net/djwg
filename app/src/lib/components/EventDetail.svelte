@@ -151,8 +151,8 @@
           on:switchView={() => switchView('overview')}
         />
       {:else}
-        <TimeTableOverview 
-          schedule={scheduleDays} 
+        <TimeTableOverview
+          schedule={scheduleDays}
           isSecret={event.schedule?.isSecret || false}
           {isAdmin}
           {user}
