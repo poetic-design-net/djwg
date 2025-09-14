@@ -37,13 +37,13 @@
             {#if mainImage?.asset}
               <picture>
                 <source
-                  srcset={enhancedUrlFor(mainImage as any).webp}
+                  srcset={enhancedUrlFor(mainImage).webp}
                   type="image/webp"
                 >
                 <img
                   class="h-96 w-full object-cover transform hover:scale-105 transition duration-500"
-                  src={enhancedUrlFor(mainImage as any).fallback}
-                  alt={(mainImage as any).alt || ''} 
+                  src={enhancedUrlFor(mainImage).fallback}
+                  alt={mainImage?.alt || ''} 
                   loading="lazy"
                   decoding="async"
                 />

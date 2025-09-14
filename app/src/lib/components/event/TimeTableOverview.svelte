@@ -1,22 +1,62 @@
 <script lang="ts">
-  import type { Day, Stage, ScheduleItem } from '$lib/types/event';
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
+  import { createEventDispatcher } from 'svelte';
+
+  // Extended interface to support multiple artists
+  interface Artist {
+    _id?: string;
+    name: string;
+    role?: string;
+    image?: string;
+    soundcloud?: string;
+    instagram?: string;
+  }
+
+  interface ExtendedScheduleItem {
+    time: string;
+    title: string;
+    description?: string;
+    instructor?: Artist; // Deprecated - for backward compatibility
+    instructors?: Artist[]; // New: multiple artists
+    instructorDisplayMode?: 'all' | 'b2b' | 'vs' | 'comma' | 'ampersand' | 'main';
+    icon?: string;
+  }
+
+  interface Stage {
+    name: string;
+    description: string;
+    schedule: ExtendedScheduleItem[];
+  }
+
+  interface Day {
+    date: string;
+    stages: Stage[];
+  }
 
   export let schedule: Day[] = [];
   export let isSecret: boolean = false;
   export let isAdmin: boolean = false;
   export let scheduleView: string = 'overview';
-  
-  import { createEventDispatcher } from 'svelte';
+
   const dispatch = createEventDispatcher();
-  
+
   // Stage filtering
   let selectedStages: Set<string> = new Set();
   let showStageFilter = false;
   let scrollContainer: HTMLDivElement;
   let canScrollLeft = false;
   let canScrollRight = false;
-  let hoveredEvent: { event: ScheduleItem; position: DOMRect } | null = null;
+  let hoveredEvent: { event: ExtendedScheduleItem; position: DOMRect } | null = null;
+
+  // Artist rotation state
+  let artistIndexMap: Map<string, number> = new Map();
+  let artistIntervals: Map<string, number> = new Map();
+
+  // Hover preview state for artists
+  let hoveredArtist: Artist | null = null;
+  let hoveredArtistPosition: { x: number; y: number } | null = null;
+  let hoverVisible = false;
+  let hoverTimeout: ReturnType<typeof setTimeout> | null = null;
   
   // Zoom state
   let zoomLevel = 100;
@@ -25,8 +65,140 @@
   const maxZoom = 100;
   
   // Hold-to-zoom state
-  let zoomInterval: NodeJS.Timeout | null = null;
+  let zoomInterval: ReturnType<typeof setInterval> | null = null;
   let isZooming = false;
+
+  // Helper function to get all artists from an item
+  function getAllArtists(item: ExtendedScheduleItem): Artist[] {
+    const artists: Artist[] = [];
+
+    // Add instructors if they exist
+    if (item.instructors && Array.isArray(item.instructors)) {
+      artists.push(...item.instructors);
+    }
+    // Fall back to single instructor for backward compatibility
+    else if (item.instructor) {
+      artists.push(item.instructor);
+    }
+
+    return artists;
+  }
+
+  // Format artist names based on display mode
+  function formatArtistNames(item: ExtendedScheduleItem): string {
+    const artists = getAllArtists(item);
+    if (artists.length === 0) return '';
+
+    const names = artists.map(a => a.name);
+    const mode = item.instructorDisplayMode || 'all';
+
+    switch (mode) {
+      case 'b2b':
+        return names.join(' b2b ');
+      case 'vs':
+        return names.join(' vs ');
+      case 'comma':
+        return names.join(', ');
+      case 'ampersand':
+        return names.join(' & ');
+      case 'main':
+        return names[0]; // Only show first artist
+      case 'all':
+      default:
+        // For 2 artists use &, for more use comma
+        if (names.length === 2) {
+          return names.join(' & ');
+        }
+        return names.slice(0, -1).join(', ') + ' & ' + names[names.length - 1];
+    }
+  }
+
+  // Get current artist for rotation
+  function getCurrentArtist(item: ExtendedScheduleItem, dayIndex: number, stageIndex: number, itemIndex: number): Artist | undefined {
+    const artists = getAllArtists(item);
+    if (artists.length === 0) return undefined;
+    if (artists.length === 1) return artists[0];
+
+    const key = `${dayIndex}-${stageIndex}-${itemIndex}`;
+    const currentIndex = artistIndexMap.get(key) || 0;
+    return artists[currentIndex];
+  }
+
+  // Start artist rotation for items with multiple artists
+  function startArtistRotation(dayIndex: number, stageIndex: number, itemIndex: number, artistCount: number) {
+    if (artistCount <= 1) return;
+
+    const key = `${dayIndex}-${stageIndex}-${itemIndex}`;
+
+    // Clear existing interval if any
+    const existingInterval = artistIntervals.get(key);
+    if (existingInterval) {
+      clearInterval(existingInterval as unknown as ReturnType<typeof setInterval>);
+    }
+
+    // Initialize index
+    if (!artistIndexMap.has(key)) {
+      artistIndexMap.set(key, 0);
+      artistIndexMap = new Map(artistIndexMap);
+    }
+
+    // Start rotation interval (change every 4 seconds)
+    const interval = setInterval(() => {
+      const currentIndex = artistIndexMap.get(key) || 0;
+      const nextIndex = (currentIndex + 1) % artistCount;
+      artistIndexMap.set(key, nextIndex);
+      // Force reactivity with assignment
+      artistIndexMap = new Map(artistIndexMap);
+    }, 4000);
+
+    artistIntervals.set(key, interval as unknown as number);
+  }
+
+  // Handle artist hover for preview
+  function handleArtistHover(event: MouseEvent, artist: Artist) {
+    const element = event.currentTarget as HTMLElement;
+    const rect = element.getBoundingClientRect();
+
+    // Calculate position for preview
+    const previewWidth = window.innerWidth < 768 ? 240 : 288;
+    const previewHeight = window.innerWidth < 768 ? 176 : 208;
+
+    let x = rect.left + (rect.width / 2) - (previewWidth / 2);
+    let y = rect.top - previewHeight - 12;
+
+    // Adjust horizontal position to stay on screen
+    if (x < 10) x = 10;
+    if (x + previewWidth > window.innerWidth - 10) {
+      x = window.innerWidth - previewWidth - 10;
+    }
+
+    // If not enough space above, show below
+    if (y < 10) {
+      y = rect.bottom + 12;
+    }
+
+    hoveredArtistPosition = { x, y };
+    hoveredArtist = artist;
+
+    // Clear any existing timeout
+    if (hoverTimeout) clearTimeout(hoverTimeout);
+
+    // Small delay then show with animation
+    hoverTimeout = setTimeout(() => {
+      hoverVisible = true;
+    }, 50);
+  }
+
+  function handleArtistLeave() {
+    if (hoverTimeout) clearTimeout(hoverTimeout);
+    hoverVisible = false;
+
+    // Keep the artist data briefly for fade out animation
+    setTimeout(() => {
+      hoveredArtist = null;
+      hoveredArtistPosition = null;
+    }, 300);
+  }
   
   // Initialize all stages as selected
   $: if (schedule.length > 0 && selectedStages.size === 0) {
@@ -139,17 +311,36 @@
   
   onMount(() => {
     window.addEventListener('keydown', handleKeydown);
+
+    // Start artist rotation for all items with multiple artists
+    filteredSchedule.forEach((day, dayIndex) => {
+      day.stages.forEach((stage, stageIndex) => {
+        stage.schedule.forEach((item, itemIndex) => {
+          const artists = getAllArtists(item);
+          if (artists.length > 1) {
+            startArtistRotation(dayIndex, stageIndex, itemIndex, artists.length);
+          }
+        });
+      });
+    });
+
     return () => {
       window.removeEventListener('keydown', handleKeydown);
     };
   });
-  
+
   onMount(() => {
     if (scrollContainer) {
       checkScroll();
       scrollContainer.addEventListener('scroll', checkScroll);
       return () => scrollContainer.removeEventListener('scroll', checkScroll);
     }
+  });
+
+  onDestroy(() => {
+    // Clear all artist rotation intervals
+    artistIntervals.forEach(interval => clearInterval(interval as unknown as ReturnType<typeof setInterval>));
+    artistIntervals.clear();
   });
 
   function formatDate(dateStr: string): string {
@@ -400,11 +591,13 @@
                   {/each}
                 </div>
 
-                {#each day.stages as stage}
+                {#each day.stages as stage, stageIndex}
                   <div class="stage-column">
-                    {#each stage.schedule as event}
+                    {#each stage.schedule as event, itemIndex}
                       {@const styles = getEventStyles(event, timeSlots)}
-                      <div 
+                      {@const artists = getAllArtists(event)}
+                      {@const currentArtist = getCurrentArtist(event, dayIndex, stageIndex, itemIndex)}
+                      <div
                         class="event-card group"
                         style="top: {styles.top}; height: {styles.height};"
                         on:mouseenter={(e) => handleEventHover(event, e.currentTarget)}
@@ -413,13 +606,22 @@
                         tabindex="0"
                       >
                         <p class="text-white font-medium">{event.title}</p>
-                        {#if event.instructor}
+                        {#if artists.length > 0}
                           <div class="flex items-center gap-1 mt-1">
-                            <p class="text-[#33cc99] text-xs truncate">{event.instructor.name}</p>
-                            {#if event.instructor.soundcloud}
-                              <a 
-                                href={event.instructor.soundcloud} 
-                                target="_blank" 
+                            <button
+                              type="button"
+                              class="flex items-center gap-1 text-[#33cc99] text-xs hover:text-[#33cc99]/80 transition-colors cursor-pointer"
+                              on:mouseenter={(e) => handleArtistHover(currentArtist, e.currentTarget)}
+                              on:mouseleave={handleArtistLeave}
+                            >
+                              <span class="truncate">
+                                {formatArtistNames(event)}
+                              </span>
+                            </button>
+                            {#if currentArtist.soundcloud}
+                              <a
+                                href={currentArtist.soundcloud}
+                                target="_blank"
                                 rel="noopener noreferrer"
                                 class="text-[#33cc99] hover:text-[#33cc99]/80"
                               >
@@ -428,10 +630,10 @@
                                 </svg>
                               </a>
                             {/if}
-                            {#if event.instructor.instagram}
-                              <a 
-                                href={event.instructor.instagram} 
-                                target="_blank" 
+                            {#if currentArtist.instagram}
+                              <a
+                                href={currentArtist.instagram}
+                                target="_blank"
                                 rel="noopener noreferrer"
                                 class="text-[#33cc99] hover:text-[#33cc99]/80 transition-colors"
                               >
@@ -476,51 +678,110 @@
         {#if hoveredEvent.event.description}
           <p class="text-gray-300 text-sm mb-2">{hoveredEvent.event.description}</p>
         {/if}
-        
-        {#if hoveredEvent.event.instructor}
+
+        {#if getAllArtists(hoveredEvent.event).length > 0}
+          {@const hoveredArtists = getAllArtists(hoveredEvent.event)}
           <div class="border-t border-gray-700 pt-2">
-            <div class="flex items-center gap-3">
-              {#if hoveredEvent.event.instructor.image}
-                <img 
-                  src={hoveredEvent.event.instructor.image} 
-                  alt={hoveredEvent.event.instructor.name}
-                  class="w-10 h-10 rounded-full object-cover"
-                />
-              {/if}
-              <div>
-                <p class="text-[#33cc99] font-medium text-sm">{hoveredEvent.event.instructor.name}</p>
-                {#if hoveredEvent.event.instructor.role}
-                  <p class="text-gray-400 text-xs">{hoveredEvent.event.instructor.role}</p>
+            {#each hoveredArtists as artist}
+              <div class="flex items-center gap-3 mb-2">
+                {#if artist.image}
+                  <img
+                    src={artist.image}
+                    alt={artist.name}
+                    class="w-10 h-10 rounded-full object-cover"
+                  />
                 {/if}
+                <div>
+                  <p class="text-[#33cc99] font-medium text-sm">{artist.name}</p>
+                  {#if artist.role}
+                    <p class="text-gray-400 text-xs">{artist.role}</p>
+                  {/if}
+                </div>
               </div>
-            </div>
-            
+            {/each}
+
             <div class="flex gap-2 mt-2">
-              {#if hoveredEvent.event.instructor.soundcloud}
-                <a 
-                  href={hoveredEvent.event.instructor.soundcloud} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  class="text-[#33cc99] hover:text-[#33cc99]/80 pointer-events-auto"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M2.048 13.164l.343 1.632-.343 1.607c-.007.037-.037.064-.074.064s-.067-.027-.074-.064l-.301-1.607.301-1.632c.007-.033.037-.06.074-.06.037 0 .067.027.074.06zm1.005-1.105l.462 2.737-.462 2.7c-.007.037-.037.067-.078.067s-.071-.03-.074-.067l-.404-2.7.404-2.737c.004-.034.033-.06.074-.06s.071.026.078.06zm1.004-.273l.43 3.01-.43 2.935c-.004.044-.037.078-.082.078-.041 0-.075-.034-.082-.078l-.372-2.935.372-3.01c.007-.041.041-.071.082-.071s.078.03.082.071zm1.008.152l.398 2.858-.398 2.86c-.004.049-.041.086-.09.086-.045 0-.082-.037-.086-.086l-.344-2.86.344-2.858c.004-.045.041-.082.086-.082s.086.034.09.082zm1.015-.073l.367 2.931-.367 2.842c-.004.052-.045.09-.093.09-.053 0-.09-.037-.093-.09l-.315-2.842.315-2.931c.004-.049.041-.086.093-.086s.089.037.093.086zm1.023-.349l.334 3.28-.334 2.799c-.004.056-.045.097-.101.097s-.093-.041-.097-.097l-.286-2.799.286-3.28c.004-.052.041-.09.097-.09.056 0 .097.037.101.09zm1.026-.224l.304 3.504-.304 2.812c-.004.06-.048.104-.108.104s-.101-.044-.104-.104l-.274-2.812.274-3.504c.003-.056.045-.097.104-.097s.104.041.108.097zm1.03-.224l.274 3.728-.274 2.771c0 .067-.052.116-.112.116-.064 0-.112-.049-.115-.116l-.244-2.771.244-3.728c.003-.063.052-.108.115-.108.06 0 .112.045.112.108zm1.036-.134l.244 3.862-.244 2.753c0 .071-.056.123-.12.123-.064 0-.116-.052-.12-.123l-.215-2.753.215-3.862c.004-.067.056-.115.12-.115s.12.048.12.115zm1.04-.112l.215 3.974-.215 2.734c0 .075-.056.13-.127.13s-.124-.055-.127-.13l-.19-2.734.19-3.974c.004-.071.056-.123.127-.123s.127.052.127.123zm1.045-.127l.189 4.101-.189 2.72c0 .082-.06.141-.134.141-.075 0-.135-.06-.135-.142l-.165-2.718.165-4.101c0-.075.06-.13.135-.13.074 0 .134.055.134.13zm1.052-.089l.16 4.19-.16 2.697c0 .086-.063.149-.142.149s-.142-.063-.142-.149l-.138-2.697.138-4.19c0-.082.063-.141.142-.141s.142.06.142.141zm1.056-.067l.134 4.257-.134 2.686c0 .093-.067.156-.15.156-.082 0-.149-.064-.149-.156l-.112-2.686.112-4.257c0-.086.067-.149.149-.149.082 0 .15.063.15.149zm1.063-.06l.104 4.317-.104 2.686c0 .097-.07.167-.157.167-.086 0-.157-.07-.157-.167l-.082-2.686.082-4.317c0-.093.071-.16.157-.16.086 0 .157.067.157.16zm1.176.06l.075 4.257-.075 2.671c0 .108-.075.179-.168.179s-.171-.071-.171-.179l-.052-2.667.052-4.261c0-.097.078-.171.171-.171.093 0 .168.075.168.171zm1.003-.374l.045 4.631-.045 2.671c0 .112-.082.19-.179.19s-.179-.078-.179-.19v-2.671l.001-4.631c0-.104.078-.186.178-.186s.179.082.179.186zm2.55-2.194c.712 0 1.3.537 1.374 1.226l.116 3.399-.116 2.682c0 .749-.615 1.359-1.374 1.359-.755 0-1.37-.61-1.37-1.359l-.097-2.682.097-3.399c0-.749.615-1.359 1.37-1.359z"/>
-                  </svg>
-                </a>
-              {/if}
-              {#if hoveredEvent.event.instructor.instagram}
-                <a 
-                  href={hoveredEvent.event.instructor.instagram} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  class="text-[#33cc99] hover:text-[#33cc99]/80 pointer-events-auto"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-                  </svg>
-                </a>
-              {/if}
+              {#each hoveredArtists as artist}
+                {#if artist.soundcloud}
+                  <a
+                    href={artist.soundcloud}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="text-[#33cc99] hover:text-[#33cc99]/80 pointer-events-auto"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M2.048 13.164l.343 1.632-.343 1.607c-.007.037-.037.064-.074.064s-.067-.027-.074-.064l-.301-1.607.301-1.632c.007-.033.037-.06.074-.06.037 0 .067.027.074.06zm1.005-1.105l.462 2.737-.462 2.7c-.007.037-.037.067-.078.067s-.071-.03-.074-.067l-.404-2.7.404-2.737c.004-.034.033-.06.074-.06s.071.026.078.06zm1.004-.273l.43 3.01-.43 2.935c-.004.044-.037.078-.082.078-.041 0-.075-.034-.082-.078l-.372-2.935.372-3.01c.007-.041.041-.071.082-.071s.078.03.082.071zm1.008.152l.398 2.858-.398 2.86c-.004.049-.041.086-.09.086-.045 0-.082-.037-.086-.086l-.344-2.86.344-2.858c.004-.045.041-.082.086-.082s.086.034.09.082zm1.015-.073l.367 2.931-.367 2.842c-.004.052-.045.09-.093.09-.053 0-.09-.037-.093-.09l-.315-2.842.315-2.931c.004-.049.041-.086.093-.086s.089.037.093.086zm1.023-.349l.334 3.28-.334 2.799c-.004.056-.045.097-.101.097s-.093-.041-.097-.097l-.286-2.799.286-3.28c.004-.052.041-.09.097-.09.056 0 .097.037.101.09zm1.026-.224l.304 3.504-.304 2.812c-.004.06-.048.104-.108.104s-.101-.044-.104-.104l-.274-2.812.274-3.504c.003-.056.045-.097.104-.097s.104.041.108.097zm1.03-.224l.274 3.728-.274 2.771c0 .067-.052.116-.112.116-.064 0-.112-.049-.115-.116l-.244-2.771.244-3.728c.003-.063.052-.108.115-.108.06 0 .112.045.112.108zm1.036-.134l.244 3.862-.244 2.753c0 .071-.056.123-.12.123-.064 0-.116-.052-.12-.123l-.215-2.753.215-3.862c.004-.067.056-.115.12-.115s.12.048.12.115zm1.04-.112l.215 3.974-.215 2.734c0 .075-.056.13-.127.13s-.124-.055-.127-.13l-.19-2.734.19-3.974c.004-.071.056-.123.127-.123s.127.052.127.123zm1.045-.127l.189 4.101-.189 2.72c0 .082-.06.141-.134.141-.075 0-.135-.06-.135-.142l-.165-2.718.165-4.101c0-.075.06-.13.135-.13.074 0 .134.055.134.13zm1.052-.089l.16 4.19-.16 2.697c0 .086-.063.149-.142.149s-.142-.063-.142-.149l-.138-2.697.138-4.19c0-.082.063-.141.142-.141s.142.06.142.141zm1.056-.067l.134 4.257-.134 2.686c0 .093-.067.156-.15.156-.082 0-.149-.064-.149-.156l-.112-2.686.112-4.257c0-.086.067-.149.149-.149.082 0 .15.063.15.149zm1.063-.06l.104 4.317-.104 2.686c0 .097-.07.167-.157.167-.086 0-.157-.07-.157-.167l-.082-2.686.082-4.317c0-.093.071-.16.157-.16.086 0 .157.067.157.16zm1.176.06l.075 4.257-.075 2.671c0 .108-.075.179-.168.179s-.171-.071-.171-.179l-.052-2.667.052-4.261c0-.097.078-.171.171-.171.093 0 .168.075.168.171zm1.003-.374l.045 4.631-.045 2.671c0 .112-.082.19-.179.19s-.179-.078-.179-.19v-2.671l.001-4.631c0-.104.078-.186.178-.186s.179.082.179.186zm2.55-2.194c.712 0 1.3.537 1.374 1.226l.116 3.399-.116 2.682c0 .749-.615 1.359-1.374 1.359-.755 0-1.37-.61-1.37-1.359l-.097-2.682.097-3.399c0-.749.615-1.359 1.37-1.359z"/>
+                    </svg>
+                  </a>
+                {/if}
+                {#if artist.instagram}
+                  <a
+                    href={artist.instagram}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="text-[#33cc99] hover:text-[#33cc99]/80 pointer-events-auto"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                    </svg>
+                  </a>
+                {/if}
+              {/each}
             </div>
+          </div>
+        {/if}
+      </div>
+    </div>
+  {/if}
+
+  <!-- Artist Hover Preview Portal -->
+  {#if hoveredArtist && hoveredArtistPosition}
+    <div
+      class="fixed z-[100] pointer-events-none"
+      style="left: {hoveredArtistPosition.x}px; top: {hoveredArtistPosition.y}px;"
+    >
+      <div class="bg-gray-900 border border-gray-700 rounded-lg p-3 shadow-xl">
+        <div class="flex items-center gap-3">
+          {#if hoveredArtist.image}
+            <img
+              src={hoveredArtist.image}
+              alt={hoveredArtist.name}
+              class="w-12 h-12 rounded-full object-cover"
+            />
+          {/if}
+          <div>
+            <p class="text-white font-medium">{hoveredArtist.name}</p>
+            {#if hoveredArtist.role}
+              <p class="text-gray-400 text-xs">{hoveredArtist.role}</p>
+            {/if}
+          </div>
+        </div>
+        {#if hoveredArtist.soundcloud || hoveredArtist.instagram}
+          <div class="flex gap-2 mt-2 border-t border-gray-700 pt-2">
+            {#if hoveredArtist.soundcloud}
+              <a
+                href={hoveredArtist.soundcloud}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-[#33cc99] hover:text-[#33cc99]/80 pointer-events-auto"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M2.048 13.164l.343 1.632-.343 1.607c-.007.037-.037.064-.074.064s-.067-.027-.074-.064l-.301-1.607.301-1.632c.007-.033.037-.06.074-.06.037 0 .067.027.074.06zm1.005-1.105l.462 2.737-.462 2.7c-.007.037-.037.067-.078.067s-.071-.03-.074-.067l-.404-2.7.404-2.737c.004-.034.033-.06.074-.06s.071.026.078.06zm1.004-.273l.43 3.01-.43 2.935c-.004.044-.037.078-.082.078-.041 0-.075-.034-.082-.078l-.372-2.935.372-3.01c.007-.041.041-.071.082-.071s.078.03.082.071zm1.008.152l.398 2.858-.398 2.86c-.004.049-.041.086-.09.086-.045 0-.082-.037-.086-.086l-.344-2.86.344-2.858c.004-.045.041-.082.086-.082s.086.034.09.082zm1.015-.073l.367 2.931-.367 2.842c-.004.052-.045.09-.093.09-.053 0-.09-.037-.093-.09l-.315-2.842.315-2.931c.004-.049.041-.086.093-.086s.089.037.093.086zm1.023-.349l.334 3.28-.334 2.799c-.004.056-.045.097-.101.097s-.093-.041-.097-.097l-.286-2.799.286-3.28c.004-.052.041-.09.097-.09.056 0 .097.037.101.09zm1.026-.224l.304 3.504-.304 2.812c-.004.06-.048.104-.108.104s-.101-.044-.104-.104l-.274-2.812.274-3.504c.003-.056.045-.097.104-.097s.104.041.108.097zm1.03-.224l.274 3.728-.274 2.771c0 .067-.052.116-.112.116-.064 0-.112-.049-.115-.116l-.244-2.771.244-3.728c.003-.063.052-.108.115-.108.06 0 .112.045.112.108zm1.036-.134l.244 3.862-.244 2.753c0 .071-.056.123-.12.123-.064 0-.116-.052-.12-.123l-.215-2.753.215-3.862c.004-.067.056-.115.12-.115s.12.048.12.115zm1.04-.112l.215 3.974-.215 2.734c0 .075-.056.13-.127.13s-.124-.055-.127-.13l-.19-2.734.19-3.974c.004-.071.056-.123.127-.123s.127.052.127.123zm1.045-.127l.189 4.101-.189 2.72c0 .082-.06.141-.134.141-.075 0-.135-.06-.135-.142l-.165-2.718.165-4.101c0-.075.06-.13.135-.13.074 0 .134.055.134.13zm1.052-.089l.16 4.19-.16 2.697c0 .086-.063.149-.142.149s-.142-.063-.142-.149l-.138-2.697.138-4.19c0-.082.063-.141.142-.141s.142.06.142.141zm1.056-.067l.134 4.257-.134 2.686c0 .093-.067.156-.15.156-.082 0-.149-.064-.149-.156l-.112-2.686.112-4.257c0-.086.067-.149.149-.149.082 0 .15.063.15.149zm1.063-.06l.104 4.317-.104 2.686c0 .097-.07.167-.157.167-.086 0-.157-.07-.157-.167l-.082-2.686.082-4.317c0-.093.071-.16.157-.16.086 0 .157.067.157.16zm1.176.06l.075 4.257-.075 2.671c0 .108-.075.179-.168.179s-.171-.071-.171-.179l-.052-2.667.052-4.261c0-.097.078-.171.171-.171.093 0 .168.075.168.171zm1.003-.374l.045 4.631-.045 2.671c0 .112-.082.19-.179.19s-.179-.078-.179-.19v-2.671l.001-4.631c0-.104.078-.186.178-.186s.179.082.179.186zm2.55-2.194c.712 0 1.3.537 1.374 1.226l.116 3.399-.116 2.682c0 .749-.615 1.359-1.374 1.359-.755 0-1.37-.61-1.37-1.359l-.097-2.682.097-3.399c0-.749.615-1.359 1.37-1.359z"/>
+                </svg>
+              </a>
+            {/if}
+            {#if hoveredArtist.instagram}
+              <a
+                href={hoveredArtist.instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-[#33cc99] hover:text-[#33cc99]/80 pointer-events-auto"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                </svg>
+              </a>
+            {/if}
           </div>
         {/if}
       </div>

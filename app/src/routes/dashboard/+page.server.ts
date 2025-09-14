@@ -11,80 +11,105 @@ import type { LoaderLocals } from '@sanity/svelte-loader';
 import { manageBadgesRealtime } from '$lib/services/badge-service';
 
 interface AppLocals extends LoaderLocals {
-    supabase: SupabaseClient;
-    getUser(): Promise<User | null>;
+	supabase: SupabaseClient;
+	getUser(): Promise<User | null>;
 }
 
-export const load: PageServerLoad = async ({ locals, depends }) => {
-    const typedLocals = locals as unknown as AppLocals;
+export const load: PageServerLoad = async ({ locals, depends, setHeaders }) => {
+	const typedLocals = locals as unknown as AppLocals;
 
-    try {
-        // Session validation
-        const { data: { session }, error: sessionError } = await typedLocals.supabase.auth.getSession();
+	// Set cache headers for static content
+	setHeaders({
+		'cache-control': 'private, max-age=0, must-revalidate'
+	});
 
-        if (sessionError || !session) {
-            throw redirect(303, `/auth?next=${encodeURIComponent('/dashboard')}`);
-        }
+	try {
+		// Quick auth check - redirect immediately if not authenticated
+		const { data: { session }, error: sessionError } = await typedLocals.supabase.auth.getSession();
 
-        // User validation
-        const user = await typedLocals.getUser();
-        if (!user) {
-            throw redirect(303, `/auth?next=${encodeURIComponent('/dashboard')}`);
-        }
+		if (sessionError || !session) {
+			throw redirect(303, `/auth?next=${encodeURIComponent('/dashboard')}`);
+		}
 
-        const isUserAdmin = isAdmin(user.email);
+		// Get user - critical for auth
+		const user = await typedLocals.getUser();
+		if (!user) {
+			throw redirect(303, `/auth?next=${encodeURIComponent('/dashboard')}`);
+		}
 
-        // Abhängigkeit für Profil-Updates deklarieren
-        depends('app:profile');
+		const isUserAdmin = isAdmin(user.email);
 
-        // Fetch profile
-        const { data: profile } = await typedLocals.supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', user.id)
-            .single();
+		// Declare dependency for profile updates
+		depends('app:profile');
 
-        // Badge-Management für den Benutzer
-        await manageBadgesRealtime(typedLocals.supabase, user.id, profile);
+		// Start all data fetching in parallel for performance
+		const [
+			profileResult,
+			onlineTalksResult,
+			awardResult,
+			videosResult,
+			badgesResult
+		] = await Promise.allSettled([
+			// Fetch profile
+			typedLocals.supabase
+				.from('profiles')
+				.select('*')
+				.eq('id', user.id)
+				.single(),
 
-        // Fetch online talks
-        const onlineTalks = await client.fetch(onlineTalksQuery);
-        
-        // Fetch award data
-        const award = await getAward();
+			// Fetch online talks
+			client.fetch(onlineTalksQuery),
 
-        // Fetch videos from Sanity with initial data
-        const rawVideos = await typedLocals.loadQuery<Video[]>(videosQuery);
+			// Fetch award data
+			getAward(),
 
-        // Get user badges
-        const { data: badges } = await typedLocals.supabase
-            .from('user_badges')
-            .select('badge_id')
-            .eq('user_id', user.id);
-        
-        const userBadges = badges || [];
+			// Fetch videos from Sanity
+			typedLocals.loadQuery<Video[]>(videosQuery),
 
-        return {
-            user: {
-                ...user,
-                badges: userBadges
-            },
-            session,
-            onlineTalks,
-            award: award.data,
-            isAdmin: isUserAdmin,
-            profile,
-            videos: {
-                query: videosQuery,
-                data: rawVideos,
-                options: { initial: rawVideos }
-            }
-        };
-    } catch (error) {
-        if (error instanceof Response && error.status === 303) {
-            throw error;
-        }
-        console.error('Unexpected error in load function:', error);
-        throw error;
-    }
+			// Get user badges
+			typedLocals.supabase
+				.from('user_badges')
+				.select('badge_id')
+				.eq('user_id', user.id)
+		]);
+
+		// Process results with fallbacks
+		const profile = profileResult.status === 'fulfilled' ? profileResult.value.data : null;
+		const onlineTalks = onlineTalksResult.status === 'fulfilled' ? onlineTalksResult.value : [];
+		const award = awardResult.status === 'fulfilled' ? awardResult.value : { data: null };
+		const rawVideos = videosResult.status === 'fulfilled' ? videosResult.value : null;
+		const badges = badgesResult.status === 'fulfilled' ? badgesResult.value.data : [];
+
+		// Badge management in background (non-blocking)
+		if (profile) {
+			manageBadgesRealtime(typedLocals.supabase, user.id, profile).catch(err => {
+				console.error('Badge management error:', err);
+			});
+		}
+
+		return {
+			user: {
+				...user,
+				badges: badges || []
+			},
+			session,
+			onlineTalks,
+			award: award.data,
+			isAdmin: isUserAdmin,
+			profile,
+			videos: rawVideos ? {
+				query: videosQuery,
+				data: rawVideos,
+				options: { initial: rawVideos }
+			} : {}
+		};
+	} catch (error) {
+		if (error instanceof Response && error.status === 303) {
+			throw error;
+		}
+		console.error('Unexpected error in dashboard load:', error);
+
+		// Graceful fallback for non-critical errors
+		throw redirect(303, '/auth');
+	}
 };
