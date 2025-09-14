@@ -270,6 +270,29 @@
     }
   }
 
+  async function loadOpenStageSlots() {
+    try {
+      // Load all Open Stage time slots
+      const query = groq`*[_type == "timeSlot"] | order(startTime asc) {
+        _id,
+        startTime,
+        endTime,
+        maxParticipants,
+        isBlocked,
+        bookings,
+        event {
+          _ref
+        }
+      }`;
+
+      const data = await client.fetch(query);
+      openStageSlots = data || [];
+      console.log('Loaded Open Stage slots:', openStageSlots);
+    } catch (err) {
+      console.error('Error loading Open Stage slots:', err);
+    }
+  }
+
   function isRegistered(eventId: string, dayIndex: number, stageIndex: number, itemIndex: number): boolean {
     return userRegistrations.some(reg =>
       reg.eventId === eventId &&
@@ -279,8 +302,16 @@
     );
   }
 
-  async function registerForSession(event: Event, session: ScheduleItem, dayIndex: number, stageIndex: number, itemIndex: number) {
+  async function registerForSession(event: Event, session: ScheduleItem, dayIndex: number, stageIndex: number, itemIndex: number, slotId?: string) {
     try {
+      // Check if this is an Open Stage slot
+      if (slotId && dayIndex === -1) {
+        // For Open Stage, we need to register differently
+        // This would need to use the booking API endpoint
+        alert('Open Stage Anmeldung ist in Entwicklung. Bitte nutze die Event-Detail-Seite.');
+        return;
+      }
+
       const registration = {
         userId,
         eventId: event._id,
@@ -460,33 +491,82 @@
     }
   }
 
+  // Convert Open Stage time slots to session format
+  function convertOpenStageToSessions(slots: TimeSlot[], events: Event[]) {
+    return slots.map(slot => {
+      // Find the event this slot belongs to
+      const event = events.find(e => e._id === slot.event?._ref);
+      if (!event) return null;
+
+      // Create a pseudo-schedule item from the time slot
+      const item: ScheduleItem = {
+        time: `${new Date(slot.startTime).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} - ${new Date(slot.endTime).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}`,
+        title: 'Open Stage Slot',
+        description: `Verfügbare Plätze: ${(slot.maxParticipants || 2) - (slot.bookings?.length || 0)} von ${slot.maxParticipants || 2}`,
+        type: 'openspace',
+        allowRegistration: !slot.isBlocked && ((slot.maxParticipants || 2) - (slot.bookings?.length || 0)) > 0,
+        maxParticipants: slot.maxParticipants || 2,
+        currentParticipants: slot.bookings?.length || 0,
+        isOpenTable: true
+      };
+
+      // Create a pseudo-day from the slot date
+      const slotDate = new Date(slot.startTime);
+      const day = {
+        date: slotDate.toISOString().split('T')[0],
+        stages: [{
+          name: 'Open Stage',
+          description: 'Open Stage Performance Slots',
+          schedule: [item]
+        }]
+      };
+
+      return {
+        event,
+        day,
+        dayIndex: -1, // Special index for Open Stage
+        stage: day.stages[0],
+        stageIndex: 0,
+        item,
+        itemIndex: 0,
+        type: 'openspace' as const,
+        slotId: slot._id // Keep reference to original slot
+      };
+    }).filter(Boolean);
+  }
+
   // Get all workshop and open space sessions from all events
-  $: allSessions = events.flatMap(event => {
-    if (!event.schedule || !event.schedule.days) {
-      console.log('Event has no schedule:', event.title);
-      return [];
-    }
+  $: allSessions = [
+    // Regular schedule sessions
+    ...events.flatMap(event => {
+      if (!event.schedule || !event.schedule.days) {
+        console.log('Event has no schedule:', event.title);
+        return [];
+      }
 
-    const sessions = event.schedule.days.flatMap((day, dayIndex) =>
-      day.stages.flatMap((stage, stageIndex) =>
-        stage.schedule
-          .filter(isWorkshopOrOpenSpace)
-          .map((item, itemIndex) => ({
-            event,
-            day,
-            dayIndex,
-            stage,
-            stageIndex,
-            item,
-            itemIndex,
-            type: getSessionType(item)
-          }))
-      )
-    );
+      const sessions = event.schedule.days.flatMap((day, dayIndex) =>
+        day.stages.flatMap((stage, stageIndex) =>
+          stage.schedule
+            .filter(isWorkshopOrOpenSpace)
+            .map((item, itemIndex) => ({
+              event,
+              day,
+              dayIndex,
+              stage,
+              stageIndex,
+              item,
+              itemIndex,
+              type: getSessionType(item)
+            }))
+        )
+      );
 
-    console.log('Sessions from event', event.title, ':', sessions);
-    return sessions;
-  });
+      console.log('Sessions from event', event.title, ':', sessions);
+      return sessions;
+    }),
+    // Open Stage time slots converted to sessions
+    ...convertOpenStageToSessions(openStageSlots, events)
+  ];
 
   // Filter sessions based on selected filter
   $: filteredSessions = filter === 'all'
@@ -713,7 +793,7 @@
                         </span>
                       {:else}
                         <button
-                          on:click={() => registerForSession(session.event, session.item, session.dayIndex, session.stageIndex, session.itemIndex)}
+                          on:click={() => registerForSession(session.event, session.item, session.dayIndex, session.stageIndex, session.itemIndex, session.slotId)}
                           class="px-4 py-2 bg-green-500 hover:bg-green-600 text-black text-sm rounded-lg transition-colors duration-200"
                         >
                           Anmelden

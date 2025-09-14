@@ -1107,16 +1107,22 @@
   {#if hoveredEvent}
     {@const hoverIsRegistered = isUserRegistered(hoveredEvent.dayIndex, hoveredEvent.stageIndex, hoveredEvent.itemIndex)}
     {@const hoverRegCount = getRegistrationCount(hoveredEvent.dayIndex, hoveredEvent.stageIndex, hoveredEvent.itemIndex)}
-    {@const cardHeight = 250} <!-- Estimated height -->
-    {@const spaceAbove = hoveredEvent.position.top}
-    {@const shouldShowAbove = spaceAbove > cardHeight}
-    {@const topPosition = shouldShowAbove ? hoveredEvent.position.top - cardHeight - 10 : hoveredEvent.position.bottom + 10}
+    {@const cardWidth = 380}
+    {@const spaceOnRight = window.innerWidth - (hoveredEvent.position.left + hoveredEvent.position.width)}
+    {@const showOnRight = spaceOnRight > cardWidth + 20}
+    {@const leftPosition = showOnRight
+      ? hoveredEvent.position.left + hoveredEvent.position.width + 15
+      : Math.max(10, hoveredEvent.position.left - cardWidth - 15)}
+    {@const topPosition = Math.min(
+      hoveredEvent.position.top,
+      window.innerHeight - 400
+    )}
     <div
       class="fixed z-50 hover-overlay-container"
       style="
-        left: {hoveredEvent.position.left}px;
+        left: {leftPosition}px;
         top: {topPosition}px;
-        width: {Math.max(350, hoveredEvent.position.width)}px;
+        width: {cardWidth}px;
         height: auto;
         pointer-events: none;
       "
