@@ -72,8 +72,11 @@
   function getAllArtists(item: ExtendedScheduleItem): Artist[] {
     const artists: Artist[] = [];
 
+    // Debug logging
+    console.log('Item:', item.title, 'Instructor:', item.instructor, 'Instructors:', item.instructors);
+
     // Add instructors if they exist
-    if (item.instructors && Array.isArray(item.instructors)) {
+    if (item.instructors && Array.isArray(item.instructors) && item.instructors.length > 0) {
       artists.push(...item.instructors);
     }
     // Fall back to single instructor for backward compatibility
@@ -156,6 +159,7 @@
 
   // Handle artist hover for preview
   function handleArtistHover(event: MouseEvent, artist: Artist) {
+    if (!event || !event.currentTarget || !artist) return;
     const element = event.currentTarget as HTMLElement;
     const rect = element.getBoundingClientRect();
 
@@ -631,7 +635,7 @@
                             <button
                               type="button"
                               class="flex items-center gap-1 text-[#33cc99] text-xs hover:text-[#33cc99]/80 transition-colors cursor-pointer"
-                              on:mouseenter={(e) => currentArtist && handleArtistHover(currentArtist, e.currentTarget)}
+                              on:mouseenter={(e) => currentArtist && handleArtistHover(e, currentArtist)}
                               on:mouseleave={handleArtistLeave}
                             >
                               <span class="truncate">
