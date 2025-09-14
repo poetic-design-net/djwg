@@ -1,7 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { fade, slide } from 'svelte/transition';
-  import { quintOut } from 'svelte/easing';
+  import { fade } from 'svelte/transition';
   import groq from 'groq';
   import { client } from '$lib/sanity/client';
   
@@ -221,9 +220,8 @@
   {:else}
     <div class="grid gap-4">
       {#each currentRegistrations as registration (registration._id)}
-        <div 
+        <div
           class="group relative bg-black/20 border border-gray-800 rounded-2xl p-4 hover:border-gray-700 transition-all duration-200"
-          in:slide={{ duration: 300, easing: quintOut }}
         >
           <div class="flex items-start justify-between">
             <div class="flex-1">

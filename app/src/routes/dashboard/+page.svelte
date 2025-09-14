@@ -31,6 +31,7 @@
 	import EventRegistrations from '$lib/components/dashboard/EventRegistrations.svelte';
 	import EventRegistrationsPreview from '$lib/components/dashboard/EventRegistrationsPreview.svelte';
 	import AwardNotifications from '$lib/components/dashboard/AwardNotifications.svelte';
+	import WorkshopSchedule from '$lib/components/dashboard/WorkshopSchedule.svelte';
 
 	// Skeleton Components
 	import DashboardSkeleton from '$lib/components/skeleton/DashboardSkeleton.svelte';
@@ -399,7 +400,7 @@
 				<div class="flex-1 min-w-0">
 					{#if activeTab === 'overview'}
 						<!-- Overview Tab -->
-						<div class="space-y-6" in:fade={{ duration: 300 }}>
+						<div class="space-y-6">
 							<!-- Mini-Badges Section -->
 							{#if !dataReady}
 								<div class="bg-black rounded-xl border border-gray-800 p-6">
@@ -443,7 +444,12 @@
 								<div in:fly={{ y: 20, duration: 400, delay: 500, easing: cubicOut }}>
 									<EventRegistrationsPreview
 										userId={user?.id}
-										onShowAll={() => setActiveTab('event-registrations')}
+										onShowAll={() => {
+											setActiveTab('event-registrations');
+											const url = new URL($page.url);
+											url.searchParams.set('eventTab', 'all-events');
+											goto(url.toString(), { replaceState: true, noScroll: true });
+										}}
 									/>
 								</div>
 							{/if}
@@ -469,13 +475,44 @@
 							{/if}
 						</div>
 					{:else if activeTab === 'event-registrations'}
-						<div in:fade={{ duration: 300 }}>
-							<EventRegistrations userId={user?.id} />
+						{@const eventSubTab = $page.url.searchParams.get('eventTab') || 'my-registrations'}
+						<div class="bg-black rounded-xl border border-gray-800 p-6">
+							<h2 class="text-2xl font-medium text-white mb-6">Events</h2>
+
+							<!-- Event Sub-Tabs -->
+							<div class="flex gap-2 mb-6 border-b border-gray-700">
+								<button
+									on:click={() => {
+										const url = new URL($page.url);
+										url.searchParams.set('eventTab', 'my-registrations');
+										goto(url.toString(), { replaceState: true, noScroll: true });
+									}}
+									class="px-4 py-2 text-sm font-medium transition-all duration-200 {eventSubTab === 'my-registrations' ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}"
+								>
+									Meine Anmeldungen
+								</button>
+								<button
+									on:click={() => {
+										const url = new URL($page.url);
+										url.searchParams.set('eventTab', 'all-events');
+										goto(url.toString(), { replaceState: true, noScroll: true });
+									}}
+									class="px-4 py-2 text-sm font-medium transition-all duration-200 {eventSubTab === 'all-events' ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-white'}"
+								>
+									Event Schedule
+								</button>
+							</div>
+
+							<!-- Sub-Tab Content -->
+							{#if eventSubTab === 'my-registrations'}
+								<EventRegistrations userId={user?.id} />
+							{:else if eventSubTab === 'all-events'}
+								<WorkshopSchedule userId={user?.id} />
+							{/if}
 						</div>
 					{:else if activeTab === 'badges'}
 						<div
 							class="relative rounded-xl p-6 border border-gray-800 bg-black overflow-hidden"
-							in:fade={{ duration: 300 }}
 						>
 							<div class="absolute inset-0 mix-blend-overlay noise-filter" />
 							<div class="relative">
@@ -488,29 +525,29 @@
 							</div>
 						</div>
 					{:else if activeTab === 'videos'}
-						<div class="bg-black rounded-xl border border-gray-800 p-6" in:fade={{ duration: 300 }}>
+						<div class="bg-black rounded-xl border border-gray-800 p-6">
 							<h2 class="text-2xl font-medium text-white mb-4">DJ Learning Hub</h2>
 							<VideosSection {videos} {user} bind:this={videosComponent} />
 						</div>
 					{:else if activeTab === 'partner'}
-						<div class="bg-black rounded-xl border border-gray-800 p-6" in:fade={{ duration: 300 }}>
+						<div class="bg-black rounded-xl border border-gray-800 p-6">
 							<h2 class="text-2xl font-medium text-white mb-4">Partner</h2>
 							<PartnerDisplay {user} />
 						</div>
 					{:else if activeTab === 'award' && canShowAward(user, award)}
-						<div class="bg-black rounded-xl border border-gray-800 p-6" in:fade={{ duration: 300 }}>
+						<div class="bg-black rounded-xl border border-gray-800 p-6">
 							<h2 class="text-2xl font-medium text-white mb-4">DJ Award</h2>
 							{#if award}
 								<Award {user} {award} />
 							{/if}
 						</div>
 					{:else if activeTab === 'dj-holiday'}
-						<div class="bg-black rounded-xl border border-gray-800 p-6" in:fade={{ duration: 300 }}>
+						<div class="bg-black rounded-xl border border-gray-800 p-6">
 							<h2 class="text-2xl font-medium text-white mb-4">DJ Urlaub</h2>
 							<DjHoliday {user} />
 						</div>
 					{:else if activeTab === 'community'}
-						<div class="bg-black rounded-xl border border-gray-800 p-6" in:fade={{ duration: 300 }}>
+						<div class="bg-black rounded-xl border border-gray-800 p-6">
 							<h2 class="text-2xl font-medium text-white mb-4">Community Feed</h2>
 							{#if isAdmin}
 								<SocialFeed {user} {profile} />
@@ -533,24 +570,24 @@
 							{/if}
 						</div>
 					{:else if activeTab === 'online-talks'}
-						<div class="bg-black rounded-xl border border-gray-800 p-6" in:fade={{ duration: 300 }}>
+						<div class="bg-black rounded-xl border border-gray-800 p-6">
 							<h2 class="text-2xl font-medium text-white mb-4">Online Talks</h2>
 							<OnlineTalkSection {onlineTalks} />
 						</div>
 					{:else if activeTab === 'uploads'}
-						<div class="bg-black rounded-xl border border-gray-800 p-6" in:fade={{ duration: 300 }}>
+						<div class="bg-black rounded-xl border border-gray-800 p-6">
 							<h2 class="text-2xl font-medium text-white mb-4">Meine Uploads</h2>
 							<MyFiles {user} let:handleUploadComplete>
 								<MediaUploader {user} on:uploadComplete={handleUploadComplete} />
 							</MyFiles>
 						</div>
 					{:else if activeTab === 'links'}
-						<div class="bg-black rounded-xl border border-gray-800 p-6" in:fade={{ duration: 300 }}>
+						<div class="bg-black rounded-xl border border-gray-800 p-6">
 							<h2 class="text-2xl font-medium text-white mb-4">Links & Ressourcen</h2>
 							<UsefulLinksSection {isAdmin} />
 						</div>
 					{:else if activeTab === 'newsletter'}
-						<div class="bg-black rounded-xl border border-gray-800 p-6" in:fade={{ duration: 300 }}>
+						<div class="bg-black rounded-xl border border-gray-800 p-6">
 							<h2 class="text-2xl font-medium text-white mb-4">Newsletter & WhatsApp Channel</h2>
 							<NewsletterSection
 								email={user?.email}
@@ -559,7 +596,7 @@
 							/>
 						</div>
 					{:else if activeTab === 'webmaster'}
-						<div class="bg-black rounded-xl border border-gray-800 p-6" in:fade={{ duration: 300 }}>
+						<div class="bg-black rounded-xl border border-gray-800 p-6">
 							<h2 class="text-2xl font-medium text-white mb-4">Webmaster</h2>
 							<WebMaster />
 						</div>
