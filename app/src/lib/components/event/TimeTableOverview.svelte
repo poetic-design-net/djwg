@@ -382,16 +382,35 @@
     });
   }
   
+  let hoverTimeout: ReturnType<typeof setTimeout> | null = null;
+  let leaveTimeout: ReturnType<typeof setTimeout> | null = null;
+
   function handleEventHover(event: ExtendedScheduleItem, element: HTMLElement, dayIndex: number, stageIndex: number, itemIndex: number) {
-    const rect = element.getBoundingClientRect();
-    hoveredEvent = { event, position: rect, dayIndex, stageIndex, itemIndex };
+    // Clear any existing timeouts
+    if (hoverTimeout) clearTimeout(hoverTimeout);
+    if (leaveTimeout) clearTimeout(leaveTimeout);
+
+    // Only show hover card after a short delay to prevent flicker
+    hoverTimeout = setTimeout(() => {
+      const rect = element.getBoundingClientRect();
+      hoveredEvent = { event, position: rect, dayIndex, stageIndex, itemIndex };
+    }, 300); // 300ms delay to show
   }
 
   function handleEventLeave() {
-    // Only hide if not interacting with the hover card
-    if (!isInteractingWithHoverCard) {
-      hoveredEvent = null;
+    // Clear hover timeout if leaving before hover card appears
+    if (hoverTimeout) {
+      clearTimeout(hoverTimeout);
+      hoverTimeout = null;
     }
+
+    // Add delay before hiding to allow mouse to move to hover card
+    if (leaveTimeout) clearTimeout(leaveTimeout);
+    leaveTimeout = setTimeout(() => {
+      if (!isInteractingWithHoverCard) {
+        hoveredEvent = null;
+      }
+    }, 150); // 150ms grace period
   }
 
   // Handle workshop registration
@@ -679,6 +698,10 @@
     // Clear all artist rotation intervals
     artistIntervals.forEach(interval => clearInterval(interval as unknown as ReturnType<typeof setInterval>));
     artistIntervals.clear();
+
+    // Clear hover timeouts
+    if (hoverTimeout) clearTimeout(hoverTimeout);
+    if (leaveTimeout) clearTimeout(leaveTimeout);
   });
 
   function formatDate(dateStr: string): string {
@@ -1084,19 +1107,32 @@
   {#if hoveredEvent}
     {@const hoverIsRegistered = isUserRegistered(hoveredEvent.dayIndex, hoveredEvent.stageIndex, hoveredEvent.itemIndex)}
     {@const hoverRegCount = getRegistrationCount(hoveredEvent.dayIndex, hoveredEvent.stageIndex, hoveredEvent.itemIndex)}
+    {@const cardHeight = 250} <!-- Estimated height -->
+    {@const spaceAbove = hoveredEvent.position.top}
+    {@const shouldShowAbove = spaceAbove > cardHeight}
+    {@const topPosition = shouldShowAbove ? hoveredEvent.position.top - cardHeight - 10 : hoveredEvent.position.bottom + 10}
     <div
-      class="fixed z-50"
+      class="fixed z-50 hover-overlay-container"
       style="
-        left: {hoveredEvent.position.left - 3}px;
-        top: {hoveredEvent.position.top - 3}px;
-        width: {hoveredEvent.position.width}px;
+        left: {hoveredEvent.position.left}px;
+        top: {topPosition}px;
+        width: {Math.max(350, hoveredEvent.position.width)}px;
         height: auto;
-        pointer-events: {hoveredEvent.event.allowRegistration ? 'auto' : 'none'};
+        pointer-events: none;
       "
-      on:mouseenter={() => isInteractingWithHoverCard = true}
+      on:mouseenter={() => {
+        if (leaveTimeout) {
+          clearTimeout(leaveTimeout);
+          leaveTimeout = null;
+        }
+        isInteractingWithHoverCard = true;
+      }}
       on:mouseleave={() => {
         isInteractingWithHoverCard = false;
-        hoveredEvent = null;
+        if (leaveTimeout) clearTimeout(leaveTimeout);
+        leaveTimeout = setTimeout(() => {
+          hoveredEvent = null;
+        }, 150);
       }}
     >
       <div class="hover-overlay-card {hoveredEvent.event.allowRegistration ? 'interactive' : ''}">
@@ -1683,6 +1719,12 @@
     background: rgba(0, 0, 0, 0.7);
   }
   
+  /* Hover Overlay Container */
+  .hover-overlay-container {
+    pointer-events: none !important;
+    transition: opacity 0.2s ease-in-out;
+  }
+
   /* Hover Overlay Card */
   .hover-overlay-card {
     background: linear-gradient(135deg, rgba(0, 0, 0, 0.98), rgba(17, 17, 17, 0.95));
@@ -1694,25 +1736,13 @@
       0 25px 50px rgba(0, 0, 0, 0.9),
       0 0 100px rgba(51, 204, 153, 0.1),
       inset 0 0 30px rgba(51, 204, 153, 0.05);
-    animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: fadeInUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     min-width: 320px;
     max-width: 400px;
-    pointer-events: none;
-  }
-
-  .hover-overlay-card.interactive {
     pointer-events: auto;
   }
 
-  .hover-overlay-card button {
-    pointer-events: auto;
-  }
-
-  .hover-overlay-card a {
-    pointer-events: auto;
-  }
-  
-  @keyframes slideUp {
+  @keyframes fadeInUp {
     from {
       opacity: 0;
       transform: translateY(10px);

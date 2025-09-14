@@ -15,6 +15,13 @@ export function urlFor(source: Image) {
 }
 
 /**
+ * Get simple image URL - alias for urlFor
+ */
+export function getImageUrl(source: Image): string {
+  return urlFor(source).url();
+}
+
+/**
  * Enhanced image URL builder with WebP support and responsive sizes
  */
 export function enhancedUrlFor(source: Image, options: {

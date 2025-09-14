@@ -29,6 +29,18 @@
     maxParticipants?: number;
     currentParticipants?: number;
     type?: 'workshop' | 'openspace' | 'other';
+    allowRegistration?: boolean;
+    registrationStartTime?: string;
+    maxRegistrations?: number;
+    registrationRequired?: boolean;
+    currentRegistrations?: number;
+    isOpenTable?: boolean;
+    openTableSettings?: {
+      autoAcceptRegistrations?: boolean;
+      showRemainingSlots?: boolean;
+      waitlistEnabled?: boolean;
+      description?: string;
+    };
   }
 
   interface Stage {
@@ -49,6 +61,19 @@
     date: string;
     location?: string;
     schedule?: Day[];
+    hasOpenStage?: boolean;
+  }
+
+  interface TimeSlot {
+    _id: string;
+    startTime: string;
+    endTime: string;
+    maxParticipants?: number;
+    isBlocked?: boolean;
+    bookings?: any[];
+    event?: {
+      _ref: string;
+    };
   }
 
   interface Registration {
@@ -60,6 +85,7 @@
   }
 
   let events: Event[] = [];
+  let openStageSlots: TimeSlot[] = [];
   let userRegistrations: Registration[] = [];
   let isLoading = true;
   let error: string | null = null;
@@ -69,6 +95,7 @@
   onMount(() => {
     loadEvents();
     loadUserRegistrations();
+    loadOpenStageSlots();
   });
 
   async function loadEvents() {
@@ -86,65 +113,124 @@
       const schedules = await client.fetch(scheduleCheckQuery);
       console.log('Found eventSchedule documents:', schedules);
 
-      // Now fetch all events and their schedules
+      // Fetch events with schedule data (checking both embedded and referenced schedules)
       const query = groq`*[_type == "event"] {
         _id,
         title,
         slug,
         date,
         location,
-        "schedule": *[_type == "eventSchedule" && references(^._id)][0] {
-          _id,
-          isSecret,
-          days[] {
-            "date": date,
-            stages[] {
-              name,
-              description,
-              schedule[] {
-                _key,
-                time,
-                title,
+        hasOpenStage,
+        // Try to get referenced eventSchedule first
+        "schedule": coalesce(
+          *[_type == "eventSchedule" && references(^._id)][0] {
+            _id,
+            isSecret,
+            days[] {
+              "date": date,
+              stages[] {
+                name,
                 description,
-                icon,
-                instructor-> {
-                  name,
-                  role,
-                  image {
-                    asset->,
-                    hotspot
+                schedule[] {
+                  _key,
+                  time,
+                  title,
+                  description,
+                  type,
+                  icon,
+                  instructor-> {
+                    name,
+                    role,
+                    image {
+                      asset->,
+                      hotspot
+                    },
+                    soundcloud,
+                    instagram
                   },
-                  soundcloud,
-                  instagram
-                },
-                instructors[]-> {
-                  _id,
-                  name,
-                  role,
-                  image {
-                    asset->,
-                    hotspot
+                  instructors[]-> {
+                    _id,
+                    name,
+                    role,
+                    image {
+                      asset->,
+                      hotspot
+                    },
+                    soundcloud,
+                    instagram
                   },
-                  soundcloud,
-                  instagram
-                },
-                instructorDisplayMode,
-                allowRegistration,
-                registrationStartTime,
-                maxRegistrations,
-                registrationRequired,
-                currentRegistrations,
-                isOpenTable,
-                openTableSettings {
-                  autoAcceptRegistrations,
-                  showRemainingSlots,
-                  waitlistEnabled,
-                  description
+                  instructorDisplayMode,
+                  allowRegistration,
+                  registrationStartTime,
+                  maxRegistrations,
+                  registrationRequired,
+                  currentRegistrations,
+                  isOpenTable,
+                  openTableSettings {
+                    autoAcceptRegistrations,
+                    showRemainingSlots,
+                    waitlistEnabled,
+                    description
+                  }
+                }
+              }
+            }
+          },
+          // Fall back to embedded schedule if it exists
+          schedule {
+            _id,
+            isSecret,
+            days[] {
+              "date": date,
+              stages[] {
+                name,
+                description,
+                schedule[] {
+                  _key,
+                  time,
+                  title,
+                  description,
+                  type,
+                  icon,
+                  instructor-> {
+                    name,
+                    role,
+                    image {
+                      asset->,
+                      hotspot
+                    },
+                    soundcloud,
+                    instagram
+                  },
+                  instructors[]-> {
+                    _id,
+                    name,
+                    role,
+                    image {
+                      asset->,
+                      hotspot
+                    },
+                    soundcloud,
+                    instagram
+                  },
+                  instructorDisplayMode,
+                  allowRegistration,
+                  registrationStartTime,
+                  maxRegistrations,
+                  registrationRequired,
+                  currentRegistrations,
+                  isOpenTable,
+                  openTableSettings {
+                    autoAcceptRegistrations,
+                    showRemainingSlots,
+                    waitlistEnabled,
+                    description
+                  }
                 }
               }
             }
           }
-        }
+        )
       } | order(date asc)`;
 
       const data = await client.fetch(query);
@@ -156,7 +242,7 @@
 
       // If no events with schedule, show all events for debugging
       if (events.length === 0 && data.length > 0) {
-        console.log('No events have schedule data. All events:', data);
+        console.log('No events have schedule data. Raw event structure:', data[0]);
       }
 
     } catch (err) {
@@ -301,44 +387,61 @@
   }
 
   function getAvailableSpots(session: ScheduleItem): string {
-    if (!session.maxParticipants) return '';
-    const available = session.maxParticipants - (session.currentParticipants || 0);
+    // Check both maxParticipants and maxRegistrations
+    const maxSpots = session.maxParticipants || session.maxRegistrations;
+    const currentSpots = session.currentParticipants || session.currentRegistrations || 0;
+
+    if (!maxSpots) return '';
+
+    const available = maxSpots - currentSpots;
     if (available <= 0) return 'Ausgebucht';
     if (available <= 5) return `Nur noch ${available} Plätze`;
     return `${available} Plätze frei`;
   }
 
   function isWorkshopOrOpenSpace(item: ScheduleItem): boolean {
-    // For now, show ALL schedule items (we can filter later)
-    // This helps us see what data is actually available
-    return true;
+    // Show items where allowRegistration OR isOpenTable is true
+    // Open Space sessions might use isOpenTable instead of allowRegistration
+    const hasRegistration = item.allowRegistration === true || item.isOpenTable === true;
 
-    // Original logic for later:
-    // Check if type is explicitly set
-    // if (item.type === 'workshop' || item.type === 'openspace') {
-    //   return true;
-    // }
+    // Extended debug logging
+    console.log('Session evaluation:', {
+      title: item.title,
+      type: item.type,
+      allowRegistration: item.allowRegistration,
+      isOpenTable: item.isOpenTable,
+      registrationRequired: item.registrationRequired,
+      maxRegistrations: item.maxRegistrations,
+      maxParticipants: item.maxParticipants,
+      willBeShown: hasRegistration
+    });
 
-    // Check title for keywords
-    // const titleLower = item.title.toLowerCase();
-    // return titleLower.includes('workshop') ||
-    //        titleLower.includes('open space') ||
-    //        titleLower.includes('openspace') ||
-    //        titleLower.includes('session') ||
-    //        titleLower.includes('kurs');
+    return hasRegistration;
   }
 
   function getSessionType(item: ScheduleItem): 'workshop' | 'openspace' | 'other' {
-    if (item.type) return item.type;
-
-    const titleLower = item.title.toLowerCase();
-    if (titleLower.includes('workshop') || titleLower.includes('kurs')) {
-      return 'workshop';
+    // Use the type field from Sanity if available
+    if (item.type) {
+      console.log(`Session "${item.title}" has explicit type: ${item.type}`);
+      return item.type;
     }
-    if (titleLower.includes('open space') || titleLower.includes('openspace')) {
+
+    // Check if it's an Open Table (Open Space) session
+    if (item.isOpenTable === true) {
+      console.log(`Session "${item.title}" detected as openspace due to isOpenTable flag`);
       return 'openspace';
     }
-    return 'other';
+
+    // Try to detect from title as fallback
+    const titleLower = item.title.toLowerCase();
+    if (titleLower.includes('open space') || titleLower.includes('openspace') || titleLower.includes('open table')) {
+      console.log(`Session "${item.title}" detected as openspace from title`);
+      return 'openspace';
+    }
+
+    // Default to workshop for all registrable sessions
+    console.log(`Session "${item.title}" defaulting to workshop`);
+    return 'workshop';
   }
 
   function getSessionTypeLabel(type: 'workshop' | 'openspace' | 'other'): string {
@@ -390,9 +493,18 @@
     ? allSessions
     : allSessions.filter(s => s.type === filter);
 
-  // Debug output
-  $: console.log('All sessions:', allSessions.length, allSessions);
-  $: console.log('Filtered sessions:', filteredSessions.length, filteredSessions);
+  // Debug output with type breakdown
+  $: {
+    const typeBreakdown = allSessions.reduce((acc, s) => {
+      acc[s.type] = (acc[s.type] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    console.log('Session type breakdown:', typeBreakdown);
+    console.log('All sessions:', allSessions.length, allSessions);
+    console.log('Filtered sessions:', filteredSessions.length, filteredSessions);
+    console.log('Current filter:', filter);
+  }
 
   // Group sessions by date
   $: sessionsByDate = filteredSessions.reduce((acc, session) => {
