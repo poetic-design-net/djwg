@@ -88,10 +88,41 @@ export default {
                             },
                             {
                               name: 'instructor',
-                              title: 'Instructor',
+                              title: 'Instructor (Deprecated)',
                               type: 'reference',
                               to: [{ type: 'artist' }],
-                              description: 'The instructor/artist for this session'
+                              description: '⚠️ DEPRECATED: Use "instructors" field instead',
+                              hidden: true
+                            },
+                            {
+                              name: 'instructors',
+                              title: 'Artists / Instructors',
+                              type: 'array',
+                              of: [{
+                                type: 'reference',
+                                to: [{ type: 'artist' }]
+                              }],
+                              description: 'Die Artists/Instructors für diese Session (mehrere möglich)',
+                              validation: Rule => Rule.max(10)
+                            },
+                            {
+                              name: 'instructorDisplayMode',
+                              title: 'Artist Anzeige-Modus',
+                              type: 'string',
+                              options: {
+                                list: [
+                                  { title: 'Alle Namen anzeigen', value: 'all' },
+                                  { title: 'B2B (Artist 1 b2b Artist 2)', value: 'b2b' },
+                                  { title: 'VS (Artist 1 vs Artist 2)', value: 'vs' },
+                                  { title: 'Mit Komma getrennt', value: 'comma' },
+                                  { title: 'Mit & verbunden', value: 'ampersand' },
+                                  { title: 'Nur Hauptact', value: 'main' }
+                                ],
+                                layout: 'dropdown'
+                              },
+                              initialValue: 'all',
+                              description: 'Wie sollen mehrere Artists angezeigt werden?',
+                              hidden: ({ parent }) => !parent?.instructors || parent.instructors.length <= 1
                             },
                             {
                               name: 'icon',
@@ -107,6 +138,13 @@ export default {
                               initialValue: false
                             },
                             {
+                              name: 'registrationStartTime',
+                              title: 'Registration Start Time',
+                              type: 'datetime',
+                              description: 'When registration opens (shows countdown until this time)',
+                              hidden: ({ parent }) => !parent?.allowRegistration
+                            },
+                            {
                               name: 'maxRegistrations',
                               title: 'Maximum Registrations',
                               type: 'number',
@@ -119,6 +157,48 @@ export default {
                               type: 'boolean',
                               description: 'Is registration required to attend?',
                               initialValue: false
+                            },
+                            {
+                              name: 'isOpenTable',
+                              title: 'Open Table',
+                              type: 'boolean',
+                              description: 'Dies ist eine Open Table Session - Teilnehmer können sich spontan anmelden',
+                              initialValue: false
+                            },
+                            {
+                              name: 'openTableSettings',
+                              title: 'Open Table Einstellungen',
+                              type: 'object',
+                              hidden: ({ parent }) => !parent?.isOpenTable,
+                              fields: [
+                                {
+                                  name: 'autoAcceptRegistrations',
+                                  title: 'Automatische Annahme',
+                                  type: 'boolean',
+                                  description: 'Registrierungen werden automatisch angenommen (keine Warteliste)',
+                                  initialValue: true
+                                },
+                                {
+                                  name: 'showRemainingSlots',
+                                  title: 'Verbleibende Plätze anzeigen',
+                                  type: 'boolean',
+                                  description: 'Zeige die Anzahl der verfügbaren Plätze an',
+                                  initialValue: true
+                                },
+                                {
+                                  name: 'waitlistEnabled',
+                                  title: 'Warteliste aktivieren',
+                                  type: 'boolean',
+                                  description: 'Erlaube Warteliste wenn alle Plätze belegt sind',
+                                  initialValue: false
+                                },
+                                {
+                                  name: 'description',
+                                  title: 'Open Table Beschreibung',
+                                  type: 'text',
+                                  description: 'Zusätzliche Informationen für Open Table Teilnehmer'
+                                }
+                              ]
                             }
                           ],
                           preview: {

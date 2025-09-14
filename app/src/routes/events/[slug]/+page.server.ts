@@ -34,10 +34,24 @@ interface SanityEvent {
             role: string;
             image?: Image;
           };
+          instructors?: Array<{
+            name: string;
+            role: string;
+            image?: Image;
+          }>;
+          instructorDisplayMode?: string;
           icon?: string;
           allowRegistration?: boolean;
+          registrationStartTime?: string;
           maxRegistrations?: number;
           registrationRequired?: boolean;
+          isOpenTable?: boolean;
+          openTableSettings?: {
+            autoAcceptRegistrations?: boolean;
+            showRemainingSlots?: boolean;
+            waitlistEnabled?: boolean;
+            description?: string;
+          };
         }>;
       }>;
     }>;
@@ -122,6 +136,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
         startTime,
         duration,
         isBlocked,
+        isOpenTable,
+        maxParticipants,
+        openTableSettings,
         bookings
       }`;
       
@@ -169,9 +186,23 @@ export const load: PageServerLoad = async ({ params, locals }) => {
                 role: item.instructor.role || '',
                 image: item.instructor.image ? urlFor(item.instructor.image).url() : undefined
               } : undefined,
+              instructors: item.instructors?.map((inst: any) => ({
+                name: inst.name || '',
+                role: inst.role || '',
+                image: inst.image ? urlFor(inst.image).url() : undefined
+              })) || [],
+              instructorDisplayMode: item.instructorDisplayMode || 'all',
               allowRegistration: item.allowRegistration || false,
+              registrationStartTime: item.registrationStartTime || null,
               maxRegistrations: item.maxRegistrations || null,
-              registrationRequired: item.registrationRequired || false
+              registrationRequired: item.registrationRequired || false,
+              isOpenTable: item.isOpenTable || false,
+              openTableSettings: item.openTableSettings ? {
+                autoAcceptRegistrations: item.openTableSettings.autoAcceptRegistrations ?? true,
+                showRemainingSlots: item.openTableSettings.showRemainingSlots ?? true,
+                waitlistEnabled: item.openTableSettings.waitlistEnabled ?? false,
+                description: item.openTableSettings.description || ''
+              } : undefined
             }))
           }))
         })).sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime()) // Sort days by date

@@ -1,8 +1,9 @@
 <script lang="ts">
   import { fade, slide } from 'svelte/transition';
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { quintOut } from 'svelte/easing';
   import { toasts } from '$lib/stores/toast';
+  import CountdownTimer from './CountdownTimer.svelte';
 
   let timelineItems: HTMLElement[] = [];
   let timelineObserver: IntersectionObserver;
@@ -73,12 +74,53 @@
     const key = `${dayIndex}-${stageIndex}-${itemIndex}`;
     return userRegistrations.has(key);
   }
-  
+
   // Get registration count for a session - use object for better reactivity
   function getRegistrationCount(dayIndex: number, stageIndex: number, itemIndex: number): number {
     const key = `${dayIndex}-${stageIndex}-${itemIndex}`;
     const count = registrationCountsObject[key] || 0;
     return count;
+  }
+
+  // Check if registration is open for a session
+  function isRegistrationOpen(item: ScheduleItem, dayIndex: number, stageIndex: number, itemIndex: number): boolean {
+    // If no start time specified, registration is always open
+    if (!item.registrationStartTime) {
+      return true;
+    }
+
+    const key = `${dayIndex}-${stageIndex}-${itemIndex}`;
+
+    // Check if countdown has completed for this session
+    if (countdownCompleted.has(key)) {
+      return true;
+    }
+
+    // Check if current time is past registration start time
+    const now = new Date().getTime();
+    const startTime = new Date(item.registrationStartTime).getTime();
+
+    if (now >= startTime) {
+      // Mark as completed and trigger reactivity
+      countdownCompleted.add(key);
+      countdownCompleted = new Set(countdownCompleted);
+      return true;
+    }
+
+    return false;
+  }
+
+  // Handle countdown completion
+  function handleCountdownComplete(dayIndex: number, stageIndex: number, itemIndex: number) {
+    const key = `${dayIndex}-${stageIndex}-${itemIndex}`;
+    countdownCompleted.add(key);
+    countdownCompleted = new Set(countdownCompleted); // Trigger reactivity
+
+    // Show a toast notification
+    const item = schedule[dayIndex]?.stages?.[stageIndex]?.schedule?.[itemIndex];
+    if (item) {
+      toasts.success(`Die Registrierung für "${item.title}" ist jetzt geöffnet!`);
+    }
   }
   
   // Handle registration
@@ -116,7 +158,9 @@
           itemIndex,
           sessionTitle: item.title,
           sessionTime: item.time,
-          maxRegistrations: item.maxRegistrations
+          maxRegistrations: item.maxRegistrations,
+          isOpenTable: item.isOpenTable,
+          openTableSettings: item.openTableSettings
         })
       });
       
@@ -291,6 +335,112 @@
     }
   }
 
+  // Helper function to get all artists (handling both old and new format)
+  function getAllArtists(item: ScheduleItem): Artist[] {
+    const artists: Artist[] = [];
+
+    // Add new instructors array if exists
+    if (item.instructors && item.instructors.length > 0) {
+      artists.push(...item.instructors);
+    }
+    // Fall back to old instructor field if no instructors array
+    else if (item.instructor) {
+      artists.push(item.instructor);
+    }
+
+    return artists;
+  }
+
+  // Helper function to format artist names based on display mode
+  function formatArtistNames(item: ScheduleItem): string {
+    const artists = getAllArtists(item);
+
+    if (artists.length === 0) return '';
+    if (artists.length === 1) return artists[0].name;
+
+    const displayMode = item.instructorDisplayMode || 'all';
+    const names = artists.map(a => a.name);
+
+    switch (displayMode) {
+      case 'b2b':
+        return names.join(' b2b ');
+      case 'vs':
+        return names.join(' vs ');
+      case 'comma':
+        return names.join(', ');
+      case 'ampersand':
+        return names.join(' & ');
+      case 'main':
+        return names[0]; // Only show first artist
+      case 'all':
+      default:
+        // For 2 artists use &, for more use comma
+        if (names.length === 2) {
+          return names.join(' & ');
+        }
+        return names.slice(0, -1).join(', ') + ' & ' + names[names.length - 1];
+    }
+  }
+
+  // Helper function to get the main artist image
+  function getMainArtistImage(item: ScheduleItem): string | undefined {
+    const artists = getAllArtists(item);
+    return artists[0]?.image;
+  }
+
+  // Get current artist for rotation
+  function getCurrentArtist(item: ScheduleItem, dayIndex: number, stageIndex: number, itemIndex: number): Artist | undefined {
+    const artists = getAllArtists(item);
+    if (artists.length === 0) return undefined;
+    if (artists.length === 1) return artists[0];
+
+    const key = `${dayIndex}-${stageIndex}-${itemIndex}`;
+    const currentIndex = artistIndexMap.get(key) || 0;
+    const selectedArtist = artists[currentIndex];
+
+    // Debug logging
+    console.log(`getCurrentArtist for ${key}: index ${currentIndex}/${artists.length}, artist: ${selectedArtist?.name}`);
+
+    return selectedArtist;
+  }
+
+  // Start artist rotation for items with multiple artists
+  function startArtistRotation(dayIndex: number, stageIndex: number, itemIndex: number, artistCount: number) {
+    if (artistCount <= 1) return;
+
+    const key = `${dayIndex}-${stageIndex}-${itemIndex}`;
+
+    // Clear existing interval if any
+    const existingInterval = artistIntervals.get(key);
+    if (existingInterval) {
+      clearInterval(existingInterval);
+    }
+
+    // Initialize index
+    if (!artistIndexMap.has(key)) {
+      artistIndexMap.set(key, 0);
+      // Force reactivity with assignment
+      artistIndexMap = new Map(artistIndexMap);
+    }
+
+    // Add console log for debugging
+    console.log(`Starting artist rotation for ${key} with ${artistCount} artists`);
+
+    // Start rotation interval (change every 4 seconds for slower, smoother effect)
+    const interval = setInterval(() => {
+      const currentIndex = artistIndexMap.get(key) || 0;
+      const nextIndex = (currentIndex + 1) % artistCount;
+      artistIndexMap.set(key, nextIndex);
+      // Force reactivity with assignment
+      artistIndexMap = new Map(artistIndexMap);
+
+      console.log(`Rotated artist for ${key}: ${currentIndex} -> ${nextIndex}`);
+    }, 4000);
+
+    artistIntervals.set(key, interval);
+    console.log(`Set interval ${interval} for ${key}`);
+  }
+
   onMount(() => {
     // Load registrations
     if (eventId) {
@@ -324,24 +474,50 @@
     // URL-Parameter überprüfen und entsprechende Tabs auswählen
     handleUrlParams();
 
+    // Start artist rotation for all items with multiple artists
+    if (selectedStage?.schedule) {
+      selectedStage.schedule.forEach((item, i) => {
+        const artists = getAllArtists(item);
+        if (artists.length > 1) {
+          startArtistRotation(selectedDayIndex, selectedStageIndex, i, artists.length);
+        }
+      });
+    }
+
     return () => {
       timelineObserver?.disconnect();
+      // Clear all artist rotation intervals
+      artistIntervals.forEach(interval => clearInterval(interval));
+      artistIntervals.clear();
     };
   });
+
+  interface Artist {
+    _id?: string;
+    name: string;
+    role?: string;
+    image?: string;
+  }
 
   interface ScheduleItem {
     time: string;
     title: string;
     description?: string;
-    instructor?: {
-      name: string;
-      role: string;
-      image?: string;
-    };
+    instructor?: Artist; // Deprecated - for backward compatibility
+    instructors?: Artist[]; // New: multiple artists
+    instructorDisplayMode?: 'all' | 'b2b' | 'vs' | 'comma' | 'ampersand' | 'main';
     icon?: string;
     allowRegistration?: boolean;
+    registrationStartTime?: string;
     maxRegistrations?: number;
     registrationRequired?: boolean;
+    isOpenTable?: boolean;
+    openTableSettings?: {
+      autoAcceptRegistrations?: boolean;
+      showRemainingSlots?: boolean;
+      waitlistEnabled?: boolean;
+      description?: string;
+    };
   }
 
   interface Stage {
@@ -379,7 +555,7 @@
   let selectedDayIndex = 0;
   let selectedStageIndex = 0;
   let expandedDescriptions: Record<string, boolean> = {};
-  
+
   // Registration state - use regular object for better reactivity
   let userRegistrations: Map<string, any> = new Map();
   let registrationCounts: Map<string, number> = new Map();
@@ -391,6 +567,66 @@
   let registrationError: string | null = null;
   let registrationSuccess: string | null = null;
 
+  // Track which sessions have countdown completed
+  let countdownCompleted: Set<string> = new Set();
+
+  // Track current artist index for each session with multiple artists
+  let artistIndexMap: Map<string, number> = new Map();
+  let artistIntervals: Map<string, number> = new Map();
+
+  // Hover preview state management
+  let hoveredArtist: Artist | null = null;
+  let hoverPosition = { x: 0, y: 0 };
+  let hoverElement: HTMLElement | null = null;
+  let hoverVisible = false;
+  let hoverTimeout: NodeJS.Timeout | null = null;
+
+  function handleArtistHover(event: MouseEvent, artist: Artist) {
+    const element = event.currentTarget as HTMLElement;
+    const rect = element.getBoundingClientRect();
+
+    // Calculate position for preview
+    const previewWidth = window.innerWidth < 768 ? 240 : 288;
+    const previewHeight = window.innerWidth < 768 ? 176 : 208;
+
+    let x = rect.left + (rect.width / 2) - (previewWidth / 2);
+    let y = rect.top - previewHeight - 12;
+
+    // Adjust horizontal position to stay on screen
+    if (x < 10) x = 10;
+    if (x + previewWidth > window.innerWidth - 10) {
+      x = window.innerWidth - previewWidth - 10;
+    }
+
+    // If not enough space above, show below
+    if (y < 10) {
+      y = rect.bottom + 12;
+    }
+
+    hoverPosition = { x, y };
+    hoveredArtist = artist;
+    hoverElement = element;
+
+    // Clear any existing timeout
+    if (hoverTimeout) clearTimeout(hoverTimeout);
+
+    // Small delay then show with animation
+    hoverTimeout = setTimeout(() => {
+      hoverVisible = true;
+    }, 50);
+  }
+
+  function handleArtistLeave() {
+    if (hoverTimeout) clearTimeout(hoverTimeout);
+    hoverVisible = false;
+
+    // Keep the artist data briefly for fade out animation
+    setTimeout(() => {
+      hoveredArtist = null;
+      hoverElement = null;
+    }, 300);
+  }
+
   $: selectedDay = schedule[selectedDayIndex];
   $: selectedStage = selectedDay?.stages?.[selectedStageIndex];
   $: hasStages = selectedDay?.stages?.length > 0;
@@ -401,6 +637,37 @@
       loadUserRegistrations();
     }
     loadRegistrationCounts();
+  }
+
+  // Restart artist rotation when stage changes
+  $: if (selectedStage?.schedule && typeof window !== 'undefined') {
+    // Clear existing intervals only for the previous stage
+    const currentStageKey = `${selectedDayIndex}-${selectedStageIndex}`;
+    const keysToRemove = [];
+
+    artistIntervals.forEach((interval, key) => {
+      if (!key.startsWith(currentStageKey)) {
+        clearInterval(interval);
+        keysToRemove.push(key);
+      }
+    });
+
+    keysToRemove.forEach(key => {
+      artistIntervals.delete(key);
+      artistIndexMap.delete(key);
+    });
+
+    // Start new intervals for items with multiple artists in current stage
+    selectedStage.schedule.forEach((item, i) => {
+      const artists = getAllArtists(item);
+      if (artists.length > 1) {
+        const key = `${selectedDayIndex}-${selectedStageIndex}-${i}`;
+        // Only start rotation if not already running
+        if (!artistIntervals.has(key)) {
+          startArtistRotation(selectedDayIndex, selectedStageIndex, i, artists.length);
+        }
+      }
+    });
   }
 
 
@@ -622,15 +889,19 @@
           {/if}
         </div>
 
-        <div class="relative" bind:this={timelineContainer}>
+        <div class="relative overflow-visible" bind:this={timelineContainer}>
           <!-- Timeline Line -->
           <div class="absolute left-12 md:left-1/2 top-0 w-px h-full bg-gray-800 transform -translate-x-1/2"></div>
 
           <!-- Schedule Items -->
           {#if selectedStage.schedule?.length > 0}
-            <div class="relative space-y-8">
-              {#each selectedStage.schedule as item, i}
-                <div 
+            <div class="relative space-y-8 overflow-visible">
+              {#each selectedStage.schedule as item, i (item)}
+                {@const allArtists = getAllArtists(item)}
+                {@const sessionKey = `${selectedDayIndex}-${selectedStageIndex}-${i}`}
+                {@const artistIndex = artistIndexMap.get(sessionKey) || 0}
+                {@const currentArtist = getCurrentArtist(item, selectedDayIndex, selectedStageIndex, i)}
+                <div
                   class="relative flex flex-col md:flex-row items-start md:items-center group"
                   in:fade={{ duration: 300, delay: i * 50 }}
                 >
@@ -642,21 +913,29 @@
                   <!-- Center (Icon or Image) -->
                   <div
                     bind:this={timelineItems[i]}
-                    class="timeline-dot absolute left-6 md:left-1/2 top-0 md:top-1/2 transform md:-translate-y-1/2 md:-translate-x-1/2 w-12 h-12 md:w-14 md:h-14 bg-black border-4 border-gray-800 rounded-full flex items-center justify-center group-hover:border-green-500 transition-all duration-500 ease-out z-10 overflow-hidden"
+                    class="timeline-dot absolute left-6 md:left-1/2 top-0 md:top-1/2 transform md:-translate-y-1/2 md:-translate-x-1/2 w-12 h-12 md:w-14 md:h-14 bg-black border-4 border-gray-800 rounded-full flex items-center justify-center group-hover:border-green-500 transition-all duration-500 ease-out z-10 overflow-hidden {allArtists.length > 1 ? 'ring-2 ring-emerald-400 ring-offset-2 ring-offset-black' : ''}"
                   >
-                    {#if item.instructor?.image}
-                      <img 
-                        src={item.instructor.image} 
-                        alt={item.instructor.name}
-                        class="w-full h-full object-cover"
-                      />
-                    {:else if item.icon}
+                    {#key `${sessionKey}-${artistIndex}`}
+                      {#if currentArtist?.image}
+                        <img
+                          src={currentArtist.image}
+                          alt={currentArtist.name}
+                          class="w-full h-full object-cover"
+                          in:fade={{ duration: 500 }}
+                        />
+                        {#if allArtists.length > 1}
+                          <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 text-black text-xs font-bold rounded-full flex items-center justify-center">
+                            {allArtists.length}
+                          </div>
+                        {/if}
+                      {:else if item.icon}
                       <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d={item.icon}></path>
                       </svg>
                     {:else}
                       <div class="w-3 h-3 bg-green-400 rounded-full"></div>
                     {/if}
+                    {/key}
                   </div>
 
                   <!-- Right Side (Time for odd items) -->
@@ -665,8 +944,8 @@
                   </div>
 
                   <!-- Content -->
-                  <div class="flex-1 w-full md:w-5/12 order-3 pl-20 md:pl-0 {i % 2 === 0 ? 'md:pl-10' : 'md:pr-10 md:order-first'}">
-                    <div class="event-card p-4 md:p-6 bg-black/40 border border-gray-800 rounded-3xl hover:border-green-500 transition-all duration-500 hover:scale-[1.02] transform hover:bg-black/60 hover:shadow-2xl hover:shadow-green-500/10">
+                  <div class="flex-1 w-full md:w-5/12 order-3 pl-20 md:pl-0 {i % 2 === 0 ? 'md:pl-10' : 'md:pr-10 md:order-first'}" style="overflow: visible !important;">
+                    <div class="event-card p-4 md:p-6 bg-black/40 border border-gray-800 rounded-3xl hover:border-green-500 transition-all duration-500 hover:scale-[1.02] transform hover:bg-black/60 hover:shadow-2xl hover:shadow-green-500/10" style="overflow: visible !important;">
                       <h3 class="mb-2 text-lg md:text-xl text-white font-medium group-hover:text-green-400 transition-colors duration-300">{item.title}</h3>
                       {#if item.description}
                         {#if shouldTruncate(item.description)}
@@ -697,22 +976,50 @@
                           <p class="mb-2 text-sm md:text-base text-gray-400">{item.description}</p>
                         {/if}
                       {/if}
-                      {#if item.instructor}
-                        <div class="flex items-center gap-2 mt-3">
-                          <svg class="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                          </svg>
-                          <div class="flex-1">
-                            <span class="text-sm font-medium text-green-400 break-words">{item.instructor.name}</span>
-                            {#if item.instructor.role}
-                              <span class="text-xs text-gray-500 ml-2">• {item.instructor.role}</span>
-                            {/if}
+                      {#if getAllArtists(item).length > 0}
+                        {@const artists = getAllArtists(item)}
+                        <div class="mt-3" style="overflow: visible !important;">
+                          <!-- Artist badges display for all -->
+                          <div class="flex flex-wrap gap-2" style="overflow: visible !important; position: relative; z-index: 20;">
+                            {#each artists as artist, artistIdx}
+                              <div
+                                class="relative inline-block"
+                                on:mouseenter={(e) => handleArtistHover(e, artist)}
+                                on:mouseleave={handleArtistLeave}
+                                role="button"
+                                tabindex="0"
+                              >
+                                <div class="inline-flex items-center gap-1 px-3 py-1.5 bg-black/60 border border-gray-700 rounded-full hover:border-green-400 transition-colors cursor-pointer">
+                                  {#if artist.image}
+                                    <img
+                                      src={artist.image}
+                                      alt={artist.name}
+                                      class="w-5 h-5 rounded-full object-cover"
+                                    />
+                                  {/if}
+                                  <span class="text-sm font-medium text-green-400">{artist.name}</span>
+                                </div>
+                              </div>
+                            {/each}
                           </div>
                         </div>
                       {/if}
                       
+                      {#if item.isOpenTable}
+                        <!-- Open Table Badge -->
+                        <div class="mt-3 inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/20 border border-emerald-500/50 rounded-full">
+                          <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                          </svg>
+                          <span class="text-sm font-medium text-emerald-400">Open Table</span>
+                        </div>
+                        {#if item.openTableSettings?.description}
+                          <p class="mt-2 text-sm text-gray-400 italic">{item.openTableSettings.description}</p>
+                        {/if}
+                      {/if}
+
                       {#if item.allowRegistration}
-                        <div class="mt-4 flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                        <div class="mt-4 flex flex-col gap-3">
                           {#if item.maxRegistrations}
                             {#key `${selectedDayIndex}-${selectedStageIndex}-${i}-${registrationCountsObject[`${selectedDayIndex}-${selectedStageIndex}-${i}`] || 0}`}
                             <div class="text-sm text-gray-400">
@@ -720,13 +1027,39 @@
                                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                                 </svg>
-                                {getRegistrationCount(selectedDayIndex, selectedStageIndex, i)}/{item.maxRegistrations} Plätze
+                                {#if item.isOpenTable && item.openTableSettings?.showRemainingSlots !== false}
+                                  {@const regCount = getRegistrationCount(selectedDayIndex, selectedStageIndex, i)}
+                                  {@const remaining = item.maxRegistrations - regCount}
+                                  {#if remaining > 0}
+                                    {remaining} {remaining === 1 ? 'Platz' : 'Plätze'} frei
+                                  {:else if item.openTableSettings?.waitlistEnabled}
+                                    Warteliste verfügbar
+                                  {:else}
+                                    Ausgebucht
+                                  {/if}
+                                {:else}
+                                  {getRegistrationCount(selectedDayIndex, selectedStageIndex, i)}/{item.maxRegistrations} Plätze
+                                {/if}
                               </span>
                             </div>
                             {/key}
                           {/if}
-                          
-                          {#key `${selectedDayIndex}-${selectedStageIndex}-${i}-user-${userRegistrations.size}`}
+
+                          <!-- Countdown Timer or Registration Button -->
+                          {#key `${selectedDayIndex}-${selectedStageIndex}-${i}-countdown-${countdownCompleted.size}`}
+                          {#if !isRegistrationOpen(item, selectedDayIndex, selectedStageIndex, i) && item.registrationStartTime}
+                            <div class="bg-black/20 border border-gray-800 rounded-xl p-3">
+                              <CountdownTimer
+                                targetDate={item.registrationStartTime}
+                                onComplete={() => handleCountdownComplete(selectedDayIndex, selectedStageIndex, i)}
+                                label={item.isOpenTable ? "Open Table öffnet in" : "Registrierung öffnet in"}
+                                completedLabel={item.isOpenTable ? "Open Table ist jetzt verfügbar!" : "Registrierung ist jetzt möglich!"}
+                                compact={true}
+                              />
+                            </div>
+                          {:else}
+                            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                              {#key `${selectedDayIndex}-${selectedStageIndex}-${i}-user-${userRegistrations.size}`}
                           {#if isUserRegistered(selectedDayIndex, selectedStageIndex, i)}
                             {@const cancellationStatus = canCancelRegistration(selectedDay.date)}
                             <div class="relative group">
@@ -771,15 +1104,20 @@
                                   showLoginPrompt = true;
                                 } else if (!hasRequiredBadge) {
                                   toasts.error('Du benötigst den "Event-Teilnehmer" Badge um dich anzumelden. Bitte schließe zuerst dein Profil ab.');
+                                } else if (!isRegistrationOpen(item, selectedDayIndex, selectedStageIndex, i)) {
+                                  toasts.error('Die Registrierung ist noch nicht geöffnet.');
                                 } else {
                                   selectedSession = { item, dayIndex: selectedDayIndex, stageIndex: selectedStageIndex, itemIndex: i };
                                 }
                               }}
-                              class="px-4 py-2 {!user || !hasRequiredBadge ? 'bg-gray-600 hover:bg-gray-700' : 'bg-green-400 hover:bg-green-500'} text-black text-sm font-medium rounded-full transition-colors duration-200"
+                              class="px-4 py-2 {!user || !hasRequiredBadge ? 'bg-gray-600 hover:bg-gray-700' : 'bg-green-400 hover:bg-green-500'} text-black text-sm font-medium rounded-full transition-colors duration-200 {countdownCompleted.has(`${selectedDayIndex}-${selectedStageIndex}-${i}`) ? 'animate-pulse' : ''}"
                               title={!hasRequiredBadge ? 'Badge erforderlich' : 'Jetzt anmelden'}
                             >
-                              {!hasRequiredBadge ? '🔒 Badge erforderlich' : 'Jetzt anmelden'}
+                              {!hasRequiredBadge ? '🔒 Badge erforderlich' : item.isOpenTable ? 'Platz reservieren' : 'Jetzt anmelden'}
                             </button>
+                          {/if}
+                          {/key}
+                            </div>
                           {/if}
                           {/key}
                         </div>
@@ -822,8 +1160,11 @@
       class="w-full max-w-md bg-black border border-gray-800 rounded-3xl p-8"
       transition:slide={{ duration: 200, easing: quintOut }}
     >
-      <h3 class="text-2xl text-white mb-2">Anmeldung bestätigen</h3>
+      <h3 class="text-2xl text-white mb-2">{selectedSession.item.isOpenTable ? 'Open Table Reservierung' : 'Anmeldung bestätigen'}</h3>
       <p class="text-gray-400 mb-6">{selectedSession.item.title} - {selectedSession.item.time}</p>
+      {#if selectedSession.item.isOpenTable && selectedSession.item.openTableSettings?.description}
+        <p class="text-emerald-400 text-sm mb-4 italic">{selectedSession.item.openTableSettings.description}</p>
+      {/if}
       
       <div class="space-y-6">
         <div class="bg-black/40 border border-gray-800 rounded-xl p-4">
@@ -899,6 +1240,36 @@
   </div>
 {/if}
 
+<!-- Global Hover Preview - Rendered outside all stacking contexts -->
+{#if hoveredArtist && hoveredArtist.image}
+  <div
+    class="fixed pointer-events-none w-60 md:w-72 transition-all duration-300 ease-out"
+    style="left: {hoverPosition.x}px; top: {hoverPosition.y}px; z-index: 999999; opacity: {hoverVisible ? 1 : 0}; transform: scale({hoverVisible ? 1 : 0.9}) translateY({hoverVisible ? 0 : -8}px);"
+  >
+    <div class="relative bg-gradient-to-br from-gray-900 via-black to-gray-900 backdrop-blur-xl border border-gray-700/50 rounded-xl p-1.5 shadow-2xl shadow-black/80">
+      <!-- Gradient border effect -->
+      <div class="absolute inset-0 bg-gradient-to-br from-green-500/20 via-transparent to-green-500/20 rounded-xl opacity-100 transition-opacity duration-500"></div>
+
+      <!-- Image container -->
+      <div class="relative overflow-hidden rounded-lg">
+        <img
+          src={hoveredArtist.image}
+          alt={hoveredArtist.name}
+          class="w-full h-44 md:h-52 object-cover"
+        />
+
+        <!-- Subtle gradient overlay -->
+        <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none"></div>
+      </div>
+    </div>
+
+    <!-- Arrow pointing down (when preview is above badge) -->
+    <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-px">
+      <div class="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-gray-700/50"></div>
+    </div>
+  </div>
+{/if}
+
 <style>
   .timeline-dot {
     will-change: transform, border-color;
@@ -925,9 +1296,9 @@
   /* Enhanced card hover effects */
   .event-card {
     position: relative;
-    overflow: hidden;
+    overflow: visible;
   }
-  
+
   .event-card::before {
     content: '';
     position: absolute;
@@ -939,8 +1310,9 @@
     opacity: 0;
     transition: opacity 0.3s;
     pointer-events: none;
+    border-radius: inherit;
   }
-  
+
   .event-card:hover::before {
     opacity: 1;
   }
@@ -956,5 +1328,27 @@
     .break-words {
       word-break: break-word;
     }
+  }
+
+  /* Timeline circle z-index */
+  .timeline-dot {
+    z-index: 10;
+  }
+
+  /* Smooth transitions for hover states */
+  @media (prefers-reduced-motion: reduce) {
+    .transition-all {
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* Smooth artist rotation animation */
+  .timeline-dot img {
+    transition: opacity 0.5s ease-in-out;
+  }
+
+  /* Additional overflow visible enforcement */
+  :global(.overflow-visible) {
+    overflow: visible !important;
   }
 </style>

@@ -47,7 +47,8 @@
   }
 
   function getAvailableSlots(slot: TimeSlot): number {
-    return 2 - (slot.bookings?.length || 0);
+    const maxParticipants = slot.maxParticipants || 2; // Default to 2 if not set
+    return maxParticipants - (slot.bookings?.length || 0);
   }
 
   function isSlotAvailable(slot: TimeSlot): boolean {
@@ -200,7 +201,7 @@
                   {#if slot.isBlocked}
                     Gesperrt
                   {:else}
-                    {getAvailableSlots(slot)}/2 Plätze frei
+                    {getAvailableSlots(slot)} {getAvailableSlots(slot) === 1 ? 'Platz' : 'Plätze'} frei
                   {/if}
                 </span>
               </div>

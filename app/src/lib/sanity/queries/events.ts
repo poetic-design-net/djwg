@@ -90,10 +90,28 @@ export const eventsQuery = groq`*[_type == "event"] | order(order asc) {
               hotspot
             }
           },
+          instructors[]-> {
+            _id,
+            name,
+            role,
+            image {
+              asset->,
+              hotspot
+            }
+          },
+          instructorDisplayMode,
           allowRegistration,
+          registrationStartTime,
           maxRegistrations,
           registrationRequired,
-          currentRegistrations
+          currentRegistrations,
+          isOpenTable,
+          openTableSettings {
+            autoAcceptRegistrations,
+            showRemainingSlots,
+            waitlistEnabled,
+            description
+          }
         }
       }
     }
@@ -208,10 +226,28 @@ export const eventQuery = groq`*[_type == "event" && slug.current == $slug][0] {
               hotspot
             }
           },
+          instructors[]-> {
+            _id,
+            name,
+            role,
+            image {
+              asset->,
+              hotspot
+            }
+          },
+          instructorDisplayMode,
           allowRegistration,
+          registrationStartTime,
           maxRegistrations,
           registrationRequired,
-          currentRegistrations
+          currentRegistrations,
+          isOpenTable,
+          openTableSettings {
+            autoAcceptRegistrations,
+            showRemainingSlots,
+            waitlistEnabled,
+            description
+          }
         }
       }
     }
@@ -506,7 +542,17 @@ export interface ScheduleItem {
 export interface TimeSlot {
   _id: string;
   startTime: string;
+  duration?: number;
   isBlocked: boolean;
+  isOpenTable?: boolean;
+  maxParticipants?: number;
+  openTableSettings?: {
+    autoAcceptRegistrations?: boolean;
+    showRemainingSlots?: boolean;
+    waitlistEnabled?: boolean;
+    title?: string;
+    description?: string;
+  };
   bookings?: Array<{
     name: string;
     email: string;

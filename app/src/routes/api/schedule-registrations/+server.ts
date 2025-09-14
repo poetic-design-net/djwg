@@ -89,7 +89,9 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       itemIndex,
       sessionTitle,
       sessionTime,
-      maxRegistrations
+      maxRegistrations,
+      isOpenTable,
+      openTableSettings
     } = await request.json();
     
     // Validate required fields
@@ -155,7 +157,14 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       });
       
       if (currentCount >= maxRegistrations) {
-        // Add to waitlist instead
+        // Check if Open Table with waitlist enabled
+        const shouldWaitlist = isOpenTable && openTableSettings?.waitlistEnabled;
+
+        if (!shouldWaitlist) {
+          return json({ error: 'Registration limit reached' }, { status: 400 });
+        }
+
+        // Add to waitlist
         const registration: any = {
           _type: 'scheduleRegistration',
           event: { _type: 'reference', _ref: eventId },
