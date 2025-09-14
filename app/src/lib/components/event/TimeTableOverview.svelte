@@ -52,11 +52,6 @@
   let artistIndexMap: Map<string, number> = new Map();
   let artistIntervals: Map<string, number> = new Map();
 
-  // Hover preview state for artists
-  let hoveredArtist: Artist | null = null;
-  let hoveredArtistPosition: { x: number; y: number } | null = null;
-  let hoverVisible = false;
-  let hoverTimeout: ReturnType<typeof setTimeout> | null = null;
   
   // Zoom state
   let zoomLevel = 100;
@@ -157,52 +152,6 @@
     artistIntervals.set(key, interval as unknown as number);
   }
 
-  // Handle artist hover for preview
-  function handleArtistHover(event: MouseEvent, artist: Artist) {
-    if (!event || !event.currentTarget || !artist) return;
-    const element = event.currentTarget as HTMLElement;
-    const rect = element.getBoundingClientRect();
-
-    // Calculate position for preview
-    const previewWidth = window.innerWidth < 768 ? 240 : 288;
-    const previewHeight = window.innerWidth < 768 ? 176 : 208;
-
-    let x = rect.left + (rect.width / 2) - (previewWidth / 2);
-    let y = rect.top - previewHeight - 12;
-
-    // Adjust horizontal position to stay on screen
-    if (x < 10) x = 10;
-    if (x + previewWidth > window.innerWidth - 10) {
-      x = window.innerWidth - previewWidth - 10;
-    }
-
-    // If not enough space above, show below
-    if (y < 10) {
-      y = rect.bottom + 12;
-    }
-
-    hoveredArtistPosition = { x, y };
-    hoveredArtist = artist;
-
-    // Clear any existing timeout
-    if (hoverTimeout) clearTimeout(hoverTimeout);
-
-    // Small delay then show with animation
-    hoverTimeout = setTimeout(() => {
-      hoverVisible = true;
-    }, 50);
-  }
-
-  function handleArtistLeave() {
-    if (hoverTimeout) clearTimeout(hoverTimeout);
-    hoverVisible = false;
-
-    // Keep the artist data briefly for fade out animation
-    setTimeout(() => {
-      hoveredArtist = null;
-      hoveredArtistPosition = null;
-    }, 300);
-  }
   
   // Initialize all stages as selected
   $: if (schedule.length > 0 && selectedStages.size === 0) {
@@ -252,7 +201,7 @@
   function checkScroll() {
     if (!scrollContainer) return;
     canScrollLeft = scrollContainer.scrollLeft > 0;
-    canScrollRight = scrollContainer.scrollLeft < 
+    canScrollRight = scrollContainer.scrollLeft <
       scrollContainer.scrollWidth - scrollContainer.clientWidth - 10;
   }
   
@@ -265,7 +214,7 @@
     });
   }
   
-  function handleEventHover(event: ScheduleItem, element: HTMLElement) {
+  function handleEventHover(event: ExtendedScheduleItem, element: HTMLElement) {
     const rect = element.getBoundingClientRect();
     hoveredEvent = { event, position: rect };
   }
@@ -355,7 +304,16 @@
 
   onMount(() => {
     if (scrollContainer) {
-      checkScroll();
+      // Reset scroll position to start (0,0) on mount - critical for mobile
+      scrollContainer.scrollLeft = 0;
+      scrollContainer.scrollTop = 0;
+
+      // Small delay to ensure DOM is fully rendered before checking scroll
+      setTimeout(() => {
+        scrollContainer.scrollLeft = 0; // Double-ensure position reset
+        checkScroll();
+      }, 100);
+
       scrollContainer.addEventListener('scroll', checkScroll);
       return () => scrollContainer.removeEventListener('scroll', checkScroll);
     }
@@ -391,7 +349,7 @@
     };
   }
 
-  function generateTimeSlots(events: ScheduleItem[]): string[] {
+  function generateTimeSlots(events: ExtendedScheduleItem[]): string[] {
     const timeSet = new Set<string>();
     
     events.forEach(event => {
@@ -418,7 +376,7 @@
     });
   }
 
-  function getEventStyles(event: ScheduleItem, timeSlots: string[]): { top: string; height: string } {
+  function getEventStyles(event: ExtendedScheduleItem, timeSlots: string[]): { top: string; height: string } {
     const { start, end } = parseTimeRange(event.time);
     const startIndex = timeSlots.findIndex(slot => 
       new Date(`1970/01/01 ${slot}`).getTime() === start.getTime()
@@ -599,8 +557,11 @@
               </button>
             {/if}
             
-            <div class="schedule-wrapper {canScrollLeft ? 'can-scroll-left' : ''} {canScrollRight ? 'can-scroll-right' : ''}" style="overflow: auto;" bind:this={scrollContainer}>
-            <div class="schedule-container" style="transform: scale({zoomLevel / 100}); transform-origin: top left; width: {100 * (100 / zoomLevel)}%;">
+            <div class="schedule-wrapper {canScrollLeft ? 'can-scroll-left' : ''} {canScrollRight ? 'can-scroll-right' : ''}"
+                 style="overflow-x: auto; overflow-y: hidden; scroll-behavior: auto; -webkit-overflow-scrolling: touch;"
+                 bind:this={scrollContainer}>
+            <div class="schedule-container"
+                 style="transform: scale({zoomLevel / 100}); transform-origin: top left; width: {100 * (100 / zoomLevel)}%; will-change: transform;">
               <div class="schedule-header">
                 <div class="header-cell time-header">Zeit</div>
                 {#each day.stages as stage}
@@ -632,16 +593,13 @@
                         <p class="text-white font-medium">{event.title}</p>
                         {#if artists.length > 0}
                           <div class="flex items-center gap-1 mt-1">
-                            <button
-                              type="button"
-                              class="flex items-center gap-1 text-[#33cc99] text-xs hover:text-[#33cc99]/80 transition-colors cursor-pointer"
-                              on:mouseenter={(e) => currentArtist && handleArtistHover(e, currentArtist)}
-                              on:mouseleave={handleArtistLeave}
+                            <span
+                              class="flex items-center gap-1 text-[#33cc99] text-xs"
                             >
                               <span class="truncate">
                                 {formatArtistNames(event)}
                               </span>
-                            </button>
+                            </span>
                             {#if currentArtist?.soundcloud}
                               <a
                                 href={currentArtist.soundcloud}
@@ -758,59 +716,6 @@
     </div>
   {/if}
 
-  <!-- Artist Hover Preview Portal -->
-  {#if hoveredArtist && hoveredArtistPosition}
-    <div
-      class="fixed z-[100] pointer-events-none"
-      style="left: {hoveredArtistPosition.x}px; top: {hoveredArtistPosition.y}px;"
-    >
-      <div class="bg-gray-900 border border-gray-700 rounded-lg p-3 shadow-xl">
-        <div class="flex items-center gap-3">
-          {#if hoveredArtist.image}
-            <img
-              src={hoveredArtist.image}
-              alt={hoveredArtist.name}
-              class="w-12 h-12 rounded-full object-cover"
-            />
-          {/if}
-          <div>
-            <p class="text-white font-medium">{hoveredArtist.name}</p>
-            {#if hoveredArtist.role}
-              <p class="text-gray-400 text-xs">{hoveredArtist.role}</p>
-            {/if}
-          </div>
-        </div>
-        {#if hoveredArtist.soundcloud || hoveredArtist.instagram}
-          <div class="flex gap-2 mt-2 border-t border-gray-700 pt-2">
-            {#if hoveredArtist.soundcloud}
-              <a
-                href={hoveredArtist.soundcloud}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="text-[#33cc99] hover:text-[#33cc99]/80 pointer-events-auto"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M2.048 13.164l.343 1.632-.343 1.607c-.007.037-.037.064-.074.064s-.067-.027-.074-.064l-.301-1.607.301-1.632c.007-.033.037-.06.074-.06.037 0 .067.027.074.06zm1.005-1.105l.462 2.737-.462 2.7c-.007.037-.037.067-.078.067s-.071-.03-.074-.067l-.404-2.7.404-2.737c.004-.034.033-.06.074-.06s.071.026.078.06zm1.004-.273l.43 3.01-.43 2.935c-.004.044-.037.078-.082.078-.041 0-.075-.034-.082-.078l-.372-2.935.372-3.01c.007-.041.041-.071.082-.071s.078.03.082.071zm1.008.152l.398 2.858-.398 2.86c-.004.049-.041.086-.09.086-.045 0-.082-.037-.086-.086l-.344-2.86.344-2.858c.004-.045.041-.082.086-.082s.086.034.09.082zm1.015-.073l.367 2.931-.367 2.842c-.004.052-.045.09-.093.09-.053 0-.09-.037-.093-.09l-.315-2.842.315-2.931c.004-.049.041-.086.093-.086s.089.037.093.086zm1.023-.349l.334 3.28-.334 2.799c-.004.056-.045.097-.101.097s-.093-.041-.097-.097l-.286-2.799.286-3.28c.004-.052.041-.09.097-.09.056 0 .097.037.101.09zm1.026-.224l.304 3.504-.304 2.812c-.004.06-.048.104-.108.104s-.101-.044-.104-.104l-.274-2.812.274-3.504c.003-.056.045-.097.104-.097s.104.041.108.097zm1.03-.224l.274 3.728-.274 2.771c0 .067-.052.116-.112.116-.064 0-.112-.049-.115-.116l-.244-2.771.244-3.728c.003-.063.052-.108.115-.108.06 0 .112.045.112.108zm1.036-.134l.244 3.862-.244 2.753c0 .071-.056.123-.12.123-.064 0-.116-.052-.12-.123l-.215-2.753.215-3.862c.004-.067.056-.115.12-.115s.12.048.12.115zm1.04-.112l.215 3.974-.215 2.734c0 .075-.056.13-.127.13s-.124-.055-.127-.13l-.19-2.734.19-3.974c.004-.071.056-.123.127-.123s.127.052.127.123zm1.045-.127l.189 4.101-.189 2.72c0 .082-.06.141-.134.141-.075 0-.135-.06-.135-.142l-.165-2.718.165-4.101c0-.075.06-.13.135-.13.074 0 .134.055.134.13zm1.052-.089l.16 4.19-.16 2.697c0 .086-.063.149-.142.149s-.142-.063-.142-.149l-.138-2.697.138-4.19c0-.082.063-.141.142-.141s.142.06.142.141zm1.056-.067l.134 4.257-.134 2.686c0 .093-.067.156-.15.156-.082 0-.149-.064-.149-.156l-.112-2.686.112-4.257c0-.086.067-.149.149-.149.082 0 .15.063.15.149zm1.063-.06l.104 4.317-.104 2.686c0 .097-.07.167-.157.167-.086 0-.157-.07-.157-.167l-.082-2.686.082-4.317c0-.093.071-.16.157-.16.086 0 .157.067.157.16zm1.176.06l.075 4.257-.075 2.671c0 .108-.075.179-.168.179s-.171-.071-.171-.179l-.052-2.667.052-4.261c0-.097.078-.171.171-.171.093 0 .168.075.168.171zm1.003-.374l.045 4.631-.045 2.671c0 .112-.082.19-.179.19s-.179-.078-.179-.19v-2.671l.001-4.631c0-.104.078-.186.178-.186s.179.082.179.186zm2.55-2.194c.712 0 1.3.537 1.374 1.226l.116 3.399-.116 2.682c0 .749-.615 1.359-1.374 1.359-.755 0-1.37-.61-1.37-1.359l-.097-2.682.097-3.399c0-.749.615-1.359 1.37-1.359z"/>
-                </svg>
-              </a>
-            {/if}
-            {#if hoveredArtist.instagram}
-              <a
-                href={hoveredArtist.instagram}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="text-[#33cc99] hover:text-[#33cc99]/80 pointer-events-auto"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-                </svg>
-              </a>
-            {/if}
-          </div>
-        {/if}
-      </div>
-    </div>
-  {/if}
 {:else}
   <div class="py-20 bg-black/40">
     <div class="container px-4 mx-auto text-center">
@@ -823,7 +728,11 @@
   .schedule-wrapper {
     width: 100%;
     overflow-x: auto;
+    overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
+    scroll-behavior: auto; /* Prevent unwanted smooth scrolling on init */
+    position: relative;
+    touch-action: pan-x pan-y; /* Better touch handling on mobile */
   }
 
   .schedule-container {
@@ -839,6 +748,9 @@
     position: sticky;
     top: 0;
     z-index: 10;
+    /* Ensure header stays on top on mobile */
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
   }
 
   .header-cell {
@@ -873,6 +785,10 @@
     width: 100px;
     min-width: 100px;
     vertical-align: top;
+    /* Ensure sticky works properly on mobile */
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    transform: translateZ(0); /* Force GPU acceleration */
   }
 
   .time-cell {
@@ -916,6 +832,7 @@
     text-overflow: ellipsis;
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
   }
 
@@ -1040,16 +957,33 @@
     .stage-column {
       min-width: 200px;
     }
-    
+
     .schedule-wrapper {
-      scroll-snap-type: x mandatory;
+      /* Remove scroll-snap on mobile to prevent auto-scrolling issues */
+      scroll-snap-type: none;
       -webkit-overflow-scrolling: touch;
+      /* Ensure scroll starts at left */
+      scroll-padding-left: 0;
     }
-    
+
     .stage-column {
-      scroll-snap-align: start;
+      /* Remove snap align to prevent unwanted scrolling */
+      scroll-snap-align: none;
     }
-    
+
+    /* Ensure time column stays properly fixed on mobile */
+    .time-column {
+      position: sticky;
+      left: 0 !important;
+      z-index: 10; /* Higher z-index for mobile */
+    }
+
+    /* Fix for iOS Safari sticky positioning */
+    .schedule-body {
+      transform: translateZ(0);
+      -webkit-transform: translateZ(0);
+    }
+
     /* Larger touch targets on mobile */
     .scroll-indicator {
       padding: 1rem;

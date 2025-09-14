@@ -36,6 +36,7 @@
 	import DashboardSkeleton from '$lib/components/skeleton/DashboardSkeleton.svelte';
 	import SkeletonCard from '$lib/components/skeleton/SkeletonCard.svelte';
 	import SkeletonBadge from '$lib/components/skeleton/SkeletonBadge.svelte';
+	import SkeletonNav from '$lib/components/skeleton/SkeletonNav.svelte';
 
 	// Stores
 	import { badgeStore } from '$lib/stores/badges';
@@ -87,6 +88,7 @@
 	// State
 	let isLoading = true;
 	let dataReady = false;
+	let navReady = false;
 	let loading = false;
 	let showEditProfile = false;
 	let videosComponent: VideosSection;
@@ -182,7 +184,11 @@
 
 	// Lifecycle
 	onMount(async () => {
-		// Start with skeleton, then load data progressively
+		// Progressive loading - navigation first, then content
+		setTimeout(() => {
+			navReady = true;
+		}, 150);
+
 		setTimeout(() => {
 			isLoading = false;
 			dataReady = true;
@@ -358,29 +364,36 @@
 				</div>
 
 				<!-- Desktop Sidebar -->
-				<div
-					class="hidden lg:block w-64 flex-shrink-0"
-					in:fly={{ x: -20, duration: 400, delay: 300, easing: cubicOut }}
-				>
-					<div class="bg-black rounded-xl border border-gray-800 overflow-hidden sticky top-6">
-						<div class="p-4 border-b border-gray-800">
-							<h3 class="text-lg font-medium text-white">Navigation</h3>
-						</div>
-						<nav class="p-2">
-							{#each tabs as tab}
-								<button
-									on:click={() => setActiveTab(tab.id)}
-									class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-all duration-200 {activeTab === tab.id
-										? 'bg-gray-700 text-white transform scale-[1.02]'
-										: 'text-gray-300 hover:bg-gray-800 hover:text-white'}"
-								>
-									<span class="text-lg">{tab.icon}</span>
-									<span class="font-medium">{tab.label}</span>
-								</button>
-							{/each}
-						</nav>
+				{#if !navReady}
+					<div class="hidden lg:block w-64 flex-shrink-0">
+						<SkeletonNav items={tabs.length} />
 					</div>
-				</div>
+				{:else}
+					<div
+						class="hidden lg:block w-64 flex-shrink-0"
+						in:fly={{ x: -20, duration: 400, delay: 100, easing: cubicOut }}
+					>
+						<div class="bg-black rounded-xl border border-gray-800 overflow-hidden sticky top-6">
+							<div class="p-4 border-b border-gray-800">
+								<h3 class="text-lg font-medium text-white">Navigation</h3>
+							</div>
+							<nav class="p-2">
+								{#each tabs as tab, i}
+									<button
+										on:click={() => setActiveTab(tab.id)}
+										class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-all duration-200 {activeTab === tab.id
+											? 'bg-gray-700 text-white transform scale-[1.02]'
+											: 'text-gray-300 hover:bg-gray-800 hover:text-white'}"
+										style="animation-delay: {50 + i * 30}ms"
+									>
+										<span class="text-lg nav-icon-fade">{tab.icon}</span>
+										<span class="font-medium nav-text-fade">{tab.label}</span>
+									</button>
+								{/each}
+							</nav>
+						</div>
+					</div>
+				{/if}
 
 				<!-- Main Content Area -->
 				<div class="flex-1 min-w-0">
@@ -613,5 +626,37 @@
 	.noise-filter {
 		opacity: 0.02;
 		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' /%3E%3C/svg%3E");
+	}
+
+	.nav-icon-fade {
+		animation: fadeInScale 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+		opacity: 0;
+	}
+
+	.nav-text-fade {
+		animation: fadeInSlide 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+		opacity: 0;
+	}
+
+	@keyframes fadeInScale {
+		from {
+			opacity: 0;
+			transform: scale(0.8);
+		}
+		to {
+			opacity: 1;
+			transform: scale(1);
+		}
+	}
+
+	@keyframes fadeInSlide {
+		from {
+			opacity: 0;
+			transform: translateX(-10px);
+		}
+		to {
+			opacity: 1;
+			transform: translateX(0);
+		}
 	}
 </style>
