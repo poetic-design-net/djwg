@@ -215,6 +215,26 @@
     ...day,
     stages: day.stages.filter(stage => selectedStages.has(stage.name))
   }));
+
+  // Start artist rotation when schedule changes
+  $: if (filteredSchedule) {
+    // Clear existing intervals
+    artistIntervals.forEach(interval => clearInterval(interval));
+    artistIntervals.clear();
+    artistIndexMap.clear();
+
+    // Start rotation for all items with multiple artists
+    filteredSchedule.forEach((day, dayIndex) => {
+      day.stages.forEach((stage, stageIndex) => {
+        stage.schedule.forEach((event, itemIndex) => {
+          const artists = getAllArtists(event);
+          if (artists.length > 1) {
+            startArtistRotation(dayIndex, stageIndex, itemIndex, artists.length);
+          }
+        });
+      });
+    });
+  }
   
   function toggleStage(stageName: string) {
     if (selectedStages.has(stageName)) {
@@ -611,14 +631,14 @@
                             <button
                               type="button"
                               class="flex items-center gap-1 text-[#33cc99] text-xs hover:text-[#33cc99]/80 transition-colors cursor-pointer"
-                              on:mouseenter={(e) => handleArtistHover(currentArtist, e.currentTarget)}
+                              on:mouseenter={(e) => currentArtist && handleArtistHover(currentArtist, e.currentTarget)}
                               on:mouseleave={handleArtistLeave}
                             >
                               <span class="truncate">
                                 {formatArtistNames(event)}
                               </span>
                             </button>
-                            {#if currentArtist.soundcloud}
+                            {#if currentArtist?.soundcloud}
                               <a
                                 href={currentArtist.soundcloud}
                                 target="_blank"
@@ -630,7 +650,7 @@
                                 </svg>
                               </a>
                             {/if}
-                            {#if currentArtist.instagram}
+                            {#if currentArtist?.instagram}
                               <a
                                 href={currentArtist.instagram}
                                 target="_blank"
