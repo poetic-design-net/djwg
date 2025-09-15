@@ -21,7 +21,7 @@ export default {
       title: 'Secret Schedule',
       type: 'boolean',
       description: 'Hide schedule from public view (only visible to admins)',
-      initialValue: false
+      initialValue: true
     },
     {
       name: 'days',

@@ -86,7 +86,7 @@
     {/if}
 
     <div class="countdown-display flex items-center gap-2 {compact ? 'text-sm' : ''}">
-      {#if days > 0}
+      {#if !compact || days > 0}
         <div class="countdown-unit">
           <span class="countdown-value {compact ? 'text-lg' : 'text-2xl'} font-bold text-green-400">
             {String(days).padStart(2, '0')}
