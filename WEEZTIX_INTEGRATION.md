@@ -111,13 +111,24 @@ Simulates Weeztix webhook calls for testing:
 
 ## Data Flow
 
+### Automatic Badge Assignment (User bereits registriert)
 1. **Order Completed**: User completes ticket purchase on Weeztix
 2. **Webhook Sent**: Weeztix sends order data to webhook endpoint
 3. **Signature Verification**: System verifies webhook authenticity
 4. **User Matching**: System finds user by email address
 5. **Order Storage**: Order details saved to `weeztix_orders` table
-6. **Badge Assignment**: Badge assigned to user if found
+6. **Badge Assignment**: Badge automatically assigned to user
 7. **Update Tracking**: Order marked with badge assignment status
+
+### Claim System (User noch nicht registriert)
+1. **Order Completed**: User completes ticket purchase on Weeztix
+2. **Webhook Sent**: Weeztix sends order data to webhook endpoint
+3. **No User Found**: System generates unique claim code
+4. **Order Storage**: Order saved with claim code
+5. **Email Notification**: Claim instructions sent to purchaser
+6. **User Registration**: User registers on djworkshopgermany.de
+7. **Auto-Claim**: System automatically claims orders with matching email
+8. **Manual Claim**: User can also use claim code if different email
 
 ## Database Schema
 
@@ -137,6 +148,10 @@ Simulates Weeztix webhook calls for testing:
 - webhook_data: JSONB (Raw webhook payload)
 - badge_assigned: Boolean
 - badge_assigned_at: Timestamp
+- claim_code: Text (Unique code for manual claiming)
+- claimed_at: Timestamp (When order was claimed)
+- claim_email_sent: Boolean
+- claim_email_sent_at: Timestamp
 - created_at: Timestamp
 - updated_at: Timestamp
 ```

@@ -3,6 +3,7 @@ import { supabaseAdmin } from '$lib/supabase/admin';
 import type { RequestHandler } from './$types';
 import { env } from '$env/dynamic/private';
 import crypto from 'crypto';
+import { WeeztixClaimService } from '$lib/services/weeztix-claim';
 
 interface WeeztixOrderPayload {
   orderGuid: string;
@@ -27,9 +28,14 @@ interface WeeztixOrderPayload {
  */
 function verifyWebhookSignature(body: string, signature: string | null): boolean {
   const WEEZTIX_WEBHOOK_SECRET = env.WEEZTIX_WEBHOOK_SECRET;
-  if (!WEEZTIX_WEBHOOK_SECRET || !signature) {
-    console.warn('Webhook secret or signature missing, skipping verification');
+  if (!WEEZTIX_WEBHOOK_SECRET) {
+    console.warn('Webhook secret not configured, skipping verification (DEVELOPMENT ONLY)');
     return true; // Allow in development if no secret is configured
+  }
+
+  if (!signature) {
+    console.warn('No signature in webhook request');
+    return !WEEZTIX_WEBHOOK_SECRET; // Only allow if secret not configured
   }
 
   try {
@@ -119,6 +125,9 @@ export const POST: RequestHandler = async ({ request }) => {
       }
     }
 
+    // Generate claim code if no user found
+    const claimCode = !userId ? WeeztixClaimService.generateClaimCode(payload.orderGuid) : null;
+
     // Insert or update order
     const orderData = {
       order_guid: payload.orderGuid,
@@ -131,7 +140,8 @@ export const POST: RequestHandler = async ({ request }) => {
       event_date_guid: payload.eventDateGuid || null,
       product_guid: payload.productGuid || payload.items?.[0]?.productGuid || null,
       webhook_data: payload,
-      purchase_date: payload.timestamp ? new Date(payload.timestamp).toISOString() : new Date().toISOString()
+      purchase_date: payload.timestamp ? new Date(payload.timestamp).toISOString() : new Date().toISOString(),
+      claim_code: claimCode
     };
 
     const { data: order, error: upsertError } = await supabaseAdmin
@@ -183,6 +193,12 @@ export const POST: RequestHandler = async ({ request }) => {
       }
     } else if (!WEEZTIX_TICKET_BADGE_ID) {
       console.warn('WEEZTIX_TICKET_BADGE_ID not configured');
+    } else if (!userId && claimCode) {
+      // No user found - send claim email
+      console.log('No user found, claim code generated:', claimCode);
+
+      // Trigger claim email (could be done via Edge Function or email service)
+      await WeeztixClaimService.sendClaimEmail(order);
     }
 
     return json({
@@ -190,7 +206,8 @@ export const POST: RequestHandler = async ({ request }) => {
       processed: true,
       orderId: order.id,
       userId: userId,
-      badgeAssigned: userId && WEEZTIX_TICKET_BADGE_ID ? true : false
+      badgeAssigned: userId && WEEZTIX_TICKET_BADGE_ID ? true : false,
+      claimCode: !userId ? claimCode : undefined
     });
 
   } catch (err) {
