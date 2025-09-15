@@ -20,6 +20,9 @@
   // Global registration open state for non-admins
   let globalRegistrationOpen = false;
 
+  // Global registration start time - will be calculated from events
+  let globalRegistrationStart: string | null = null;
+
   const dispatch = createEventDispatcher();
 
   // Required badge ID for registration - using supabaseId from Sanity
@@ -277,10 +280,57 @@
       const data = await client.fetch(query);
 
       // Filter only events that have schedule data
-      events = (data || []).filter(e => e.schedule && e.schedule.days && e.schedule.days.length > 0);
+      // Also filter out secret schedules for non-admins
+      events = (data || []).filter(e => {
+        // Must have schedule data
+        if (!e.schedule || !e.schedule.days || e.schedule.days.length === 0) {
+          return false;
+        }
+        // If schedule is secret and user is not admin, hide it
+        if (e.schedule.isSecret && !isAdmin) {
+          return false;
+        }
+        return true;
+      });
 
-      // If no events with schedule, show all events for debugging
-      // Events loaded
+      // Find the earliest registration start time from all sessions
+      let earliestStartTime: Date | null = null;
+      events.forEach(event => {
+        if (event.schedule?.days) {
+          event.schedule.days.forEach((day: any) => {
+            day.stages?.forEach((stage: any) => {
+              stage.schedule?.forEach((item: any) => {
+                if (item.registrationStartTime) {
+                  const startTime = new Date(item.registrationStartTime);
+                  if (!earliestStartTime || startTime < earliestStartTime) {
+                    earliestStartTime = startTime;
+                  }
+                }
+              });
+            });
+          });
+        }
+      });
+
+      // Set global registration start time
+      if (earliestStartTime) {
+        globalRegistrationStart = earliestStartTime.toISOString();
+      } else {
+        // Fallback: if no registration times found, use the first event date
+        const firstEventDate = events[0]?.date;
+        if (firstEventDate) {
+          // Set registration to open 1 week before event
+          const eventDate = new Date(firstEventDate);
+          eventDate.setDate(eventDate.getDate() - 7);
+          globalRegistrationStart = eventDate.toISOString();
+        } else {
+          // Ultimate fallback
+          globalRegistrationStart = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(); // 1 week from now
+        }
+      }
+
+      // Check if global registration is already open
+      globalRegistrationOpen = globalRegistrationStart ? new Date() >= new Date(globalRegistrationStart) : false;
 
     } catch (err) {
       console.error('Error loading events:', err);
@@ -597,11 +647,7 @@
   $: allSessions = (() => {
     // Regular schedule sessions
     const regularSessions = events.flatMap(event => {
-      // Skip secret schedules unless user is admin
-      if (event.schedule?.isSecret && !isAdmin) {
-        return [];
-      }
-
+      // Secret schedules are already filtered out at event level
       if (!event.schedule || !event.schedule.days) {
         return [];
       }
@@ -670,7 +716,7 @@
       <div class="text-center">
         <h3 class="text-xl font-heading text-yellow-400 mb-4">Registrierung öffnet bald!</h3>
         <CountdownTimer
-          targetDate={new Date(Date.now() + 5 * 60 * 1000).toISOString()}
+          targetDate={globalRegistrationStart || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()}
           label="Anmeldung möglich in"
           completedLabel="Registrierung ist jetzt geöffnet!"
           showSeconds={true}
@@ -932,7 +978,7 @@
                       {:else if !isAdmin && !globalRegistrationOpen}
                         <div class="inline-block">
                           <CountdownTimer
-                            targetDate={new Date(Date.now() + 5 * 60 * 1000).toISOString()}
+                            targetDate={globalRegistrationStart || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()}
                             compact={true}
                             showSeconds={false}
                             label="Öffnet in"
