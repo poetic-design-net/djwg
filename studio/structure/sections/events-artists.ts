@@ -33,7 +33,7 @@ export const eventsArtistsSection: Section = (S) =>
                         .title('All Schedules (Filter by Registration)')
                         .filter('_type == "eventSchedule"')
                         .defaultOrdering([
-                          {field: 'event->title', direction: 'asc'}
+                          {field: '_createdAt', direction: 'desc'}
                         ])
                     ),
 
@@ -68,7 +68,7 @@ export const eventsArtistsSection: Section = (S) =>
                                 .title('Schedules with Registration Enabled')
                                 .filter('_type == "eventSchedule"')
                                 .defaultOrdering([
-                                  {field: 'event->title', direction: 'asc'}
+                                  {field: '_createdAt', direction: 'desc'}
                                 ])
                                 .child(scheduleId =>
                                   S.document()
