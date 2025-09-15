@@ -7,31 +7,37 @@
 
   export let userId: string;
   export let userProfile: any = null;
+  export let user: any = null; // User object from Supabase with badges
 
   const dispatch = createEventDispatcher();
 
-  // Required badge ID for registration (same as in TimeTableOverview)
-  const REQUIRED_BADGE_ID = '3eade88a-8d15-4dc6-b0b8-df334105a1b2'; // Sanity _id of Workshop/Partner badge
+  // Required badge ID for registration - using supabaseId from Sanity
+  const REQUIRED_BADGE_ID = '319b8937-cc53-4b1c-a2ef-b9f97aa81f51'; // supabaseId of Workshop/Partner badge
 
   // Check if user has the required badge
   $: hasRequiredBadge = (() => {
-    // WorkshopSchedule gets 'profile' which has different structure than TimeTable's 'userProfile'
-    // In dashboard, badges are stored in profile.awardedBadges not profile.badges
-    const badges = userProfile?.awardedBadges || userProfile?.badges || [];
-
-    if (badges.length === 0) {
-      return false;
+    // First check in user.badges (from Supabase) - these have badge_id field
+    if (user?.badges && Array.isArray(user.badges)) {
+      const hasBadge = user.badges.some((badge: any) => {
+        return badge.badge_id === REQUIRED_BADGE_ID;
+      });
+      if (hasBadge) return true;
     }
 
-    // Check if any badge matches the required ID
-    const hasBadge = badges.some((badge: any) => {
-      // Handle different badge structures
-      const badgeId = typeof badge === 'string' ? badge :
-                      badge._id || badge._ref || badge.id || badge;
-      return badgeId === REQUIRED_BADGE_ID;
-    });
+    // Fallback to profile badges if available
+    const badges = userProfile?.awardedBadges || userProfile?.badges || [];
+    if (badges.length > 0) {
+      const hasBadge = badges.some((badge: any) => {
+        // Handle different badge structures
+        const badgeId = typeof badge === 'string' ? badge :
+                        badge._id || badge._ref || badge.supabaseId || badge.id || badge;
+        // Check both IDs (supabaseId and Sanity _id)
+        return badgeId === REQUIRED_BADGE_ID || badgeId === '3eade88a-8d15-4dc6-b0b8-df334105a1b2';
+      });
+      if (hasBadge) return true;
+    }
 
-    return hasBadge;
+    return false;
   })();
 
   interface Artist {

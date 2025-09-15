@@ -507,7 +507,7 @@
 							{#if eventSubTab === 'my-registrations'}
 								<EventRegistrations userId={user?.id} />
 							{:else if eventSubTab === 'all-events'}
-								<WorkshopSchedule userId={user?.id} userProfile={profile} />
+								<WorkshopSchedule userId={user?.id} userProfile={profile} {user} />
 							{/if}
 						</div>
 					{:else if activeTab === 'badges'}
