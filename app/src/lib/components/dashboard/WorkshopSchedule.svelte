@@ -298,8 +298,14 @@
         return true;
       });
 
-      // Find the earliest registration start time from all sessions
-      let earliestStartTime: Date | null = null;
+      // Find the most relevant future registration start time
+      // For a global banner, we want a registration time that's at least a day away
+      const now = new Date();
+      const oneDayFromNow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+
+      let relevantStartTimes: Date[] = [];
+      let allStartTimes: Date[] = [];
+
       events.forEach(event => {
         if (event.schedule?.days) {
           event.schedule.days.forEach((day: any) => {
@@ -307,8 +313,12 @@
               stage.schedule?.forEach((item: any) => {
                 if (item.registrationStartTime) {
                   const startTime = new Date(item.registrationStartTime);
-                  if (!earliestStartTime || startTime < earliestStartTime) {
-                    earliestStartTime = startTime;
+                  allStartTimes.push(startTime);
+
+                  // Only consider times that are in the future and at least 1 day away
+                  // This avoids showing a global countdown for sessions starting very soon
+                  if (startTime > oneDayFromNow) {
+                    relevantStartTimes.push(startTime);
                   }
                 }
               });
@@ -317,17 +327,19 @@
         }
       });
 
-      // For now, always set registration to open in the future for testing
-      // This ensures the countdown is always visible
-      const daysUntilRegistration = 5; // Set to open in 5 days
-      globalRegistrationStart = new Date(Date.now() + daysUntilRegistration * 24 * 60 * 60 * 1000).toISOString();
-      console.log('Registration will open on:', globalRegistrationStart);
+      // Sort to get the earliest relevant time
+      relevantStartTimes.sort((a, b) => a.getTime() - b.getTime());
+      allStartTimes.sort((a, b) => a.getTime() - b.getTime());
 
-      // Original logic (commented out for testing)
-      /*
-      if (earliestStartTime) {
-        globalRegistrationStart = earliestStartTime.toISOString();
-        console.log('Found earliest registration time:', globalRegistrationStart);
+      // Use the earliest registration time that's at least a day away
+      if (relevantStartTimes.length > 0) {
+        globalRegistrationStart = relevantStartTimes[0].toISOString();
+        console.log('Found registration time for global banner:', globalRegistrationStart);
+      } else if (allStartTimes.length > 0 && allStartTimes[0] > now) {
+        // If all registration times are within the next day, don't show global banner
+        // Set this to null or past time to hide the banner
+        globalRegistrationStart = null;
+        console.log('All registrations are within 24 hours, hiding global banner');
       } else {
         // Fallback: if no registration times found, use the first event date
         const firstEventDate = events[0]?.date;
@@ -343,7 +355,6 @@
           console.log('Using fallback (7 days from now):', globalRegistrationStart);
         }
       }
-      */
 
       // Check if global registration is already open
       globalRegistrationOpen = globalRegistrationStart ? new Date() >= new Date(globalRegistrationStart) : false;
@@ -787,12 +798,6 @@
     <div class="bg-yellow-500/10 border border-yellow-500/30 rounded-2xl p-6 mb-6">
       <div class="text-center">
         <h3 class="text-xl font-heading text-yellow-400 mb-4">Registrierung öffnet bald!</h3>
-        <!-- Debug info -->
-        {#if false}
-          <div class="text-xs text-gray-500 mb-2">
-            Debug: Target={globalRegistrationStart}, Now={new Date().toISOString()}
-          </div>
-        {/if}
         <CountdownTimer
           targetDate={globalRegistrationStart || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()}
           label="Anmeldung möglich in"
