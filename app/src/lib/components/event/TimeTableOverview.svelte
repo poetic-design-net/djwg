@@ -71,26 +71,21 @@
   // Required badge ID for registration
   const REQUIRED_BADGE_ID = '319b8937-cc53-4b1c-a2ef-b9f97aa81f51';
 
-  // Check if user has the required badge
+  // Check if user has the required badge - check both awardedBadges and badges arrays
   $: hasRequiredBadge = (() => {
-    console.log('Badge check - userProfile:', userProfile);
-    console.log('Badge check - userProfile.badges:', userProfile?.badges);
-    console.log('Required badge ID:', REQUIRED_BADGE_ID);
+    // Check both possible arrays where badges might be stored
+    const badges = userProfile?.awardedBadges || userProfile?.badges || [];
 
-    if (!userProfile?.badges) {
-      console.log('No badges found on userProfile');
+    if (!badges || badges.length === 0) {
       return false;
     }
 
-    const hasBadge = userProfile.badges.some((badge: any) => {
-      console.log('Checking badge:', badge);
+    const hasBadge = badges.some((badge: any) => {
       // Check both possible badge structures
       const badgeId = badge._id || badge._ref || badge.id || badge;
-      console.log('Badge ID to check:', badgeId);
       return badgeId === REQUIRED_BADGE_ID;
     });
 
-    console.log('Has required badge:', hasBadge);
     return hasBadge;
   })();
 

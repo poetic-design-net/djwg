@@ -546,8 +546,8 @@
   // Required badge ID for registration
   const REQUIRED_BADGE_ID = '319b8937-cc53-4b1c-a2ef-b9f97aa81f51';
   
-  // Check if user has the required badge
-  $: hasRequiredBadge = userProfile?.badges?.some((badge: any) => 
+  // Check if user has the required badge - check both awardedBadges and badges arrays
+  $: hasRequiredBadge = (userProfile?.awardedBadges || userProfile?.badges || []).some((badge: any) =>
     badge._id === REQUIRED_BADGE_ID || badge._ref === REQUIRED_BADGE_ID
   ) || false;
   
