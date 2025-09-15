@@ -543,8 +543,8 @@
   import { createEventDispatcher } from 'svelte';
   const dispatch = createEventDispatcher();
   
-  // Required badge ID for registration
-  const REQUIRED_BADGE_ID = '319b8937-cc53-4b1c-a2ef-b9f97aa81f51';
+  // Required badge ID for registration (Sanity _id of Workshop/Partner badge)
+  const REQUIRED_BADGE_ID = '3eade88a-8d15-4dc6-b0b8-df334105a1b2';
   
   // Check if user has the required badge - check both awardedBadges and badges arrays
   $: hasRequiredBadge = (userProfile?.awardedBadges || userProfile?.badges || []).some((badge: any) =>
