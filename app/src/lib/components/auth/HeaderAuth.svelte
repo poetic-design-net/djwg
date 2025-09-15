@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { getContext } from 'svelte';
+  import { getContext, onDestroy } from 'svelte';
   import { clickOutside } from '$lib/utils/clickOutside';
   import { fade, slide } from 'svelte/transition';
   import { goto } from '$app/navigation';
@@ -16,8 +16,15 @@
 
   let showDropdown = false;
   let loading = false;
+  let mounted = true;
 
   const supabase = getContext<SupabaseClient>('supabase');
+
+  // Clean up on component destroy
+  onDestroy(() => {
+    mounted = false;
+    showDropdown = false;
+  });
 
   // Profil beim Initialisieren laden
   async function initializeProfile() {
@@ -50,10 +57,12 @@
   };
 
   const toggleDropdown = () => {
+    if (!mounted) return;
     showDropdown = !showDropdown;
   };
 
   const closeDropdown = () => {
+    if (!mounted) return;
     showDropdown = false;
   };
 </script>

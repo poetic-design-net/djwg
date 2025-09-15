@@ -40,7 +40,7 @@
     />
   {/if}
 
-  {#if award.introText}
+  {#if award?.introText && introText}
     <div class="bg-black">
       <div class="container mx-auto px-4 py-24">
         <div class="max-w-4xl mx-auto">
@@ -67,7 +67,7 @@
     </div>
   {/if}
 
-  {#if award.ticket}
+  {#if award?.ticket}
     <div id="ticket" class="bg-black max-w-2xl mx-auto">
       <Pricing
         selectedTicket={award.ticket}
@@ -77,7 +77,7 @@
     </div>
   {/if}
 
-  {#if award.preselectionCriteria && award.evaluationCriteria}
+  {#if award?.preselectionCriteria && award?.evaluationCriteria && evaluationCriteria}
     <div id="criteria" class="bg-black">
       <EvaluationCriteria
         evaluationCriteriaTitle={award.evaluationCriteriaTitle}
@@ -90,7 +90,7 @@
     </div>
   {/if}
 
-  {#if award.artistsSection?.artists && award.artistsSection.artists.length > 0}
+  {#if award?.artistsSection?.artists && award.artistsSection.artists.length > 0 && artists}
     <div class="bg-black py-24">
       <ArtistsSlider
         artists={artists}

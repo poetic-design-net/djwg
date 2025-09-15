@@ -298,14 +298,12 @@
         return true;
       });
 
-      // Find the most relevant future registration start time
-      // For a global banner, we want a registration time that's at least a day away
+      // Find registration times that make sense for a global banner
       const now = new Date();
-      const oneDayFromNow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+      let futureStartTimes: Date[] = [];
+      let debugInfo: any[] = [];
 
-      let relevantStartTimes: Date[] = [];
-      let allStartTimes: Date[] = [];
-
+      // Collect ALL registration times from Sanity for debugging
       events.forEach(event => {
         if (event.schedule?.days) {
           event.schedule.days.forEach((day: any) => {
@@ -313,12 +311,18 @@
               stage.schedule?.forEach((item: any) => {
                 if (item.registrationStartTime) {
                   const startTime = new Date(item.registrationStartTime);
-                  allStartTimes.push(startTime);
+                  debugInfo.push({
+                    event: event.title,
+                    session: item.title,
+                    time: item.registrationStartTime,
+                    parsed: startTime.toISOString(),
+                    isFuture: startTime > now
+                  });
 
-                  // Only consider times that are in the future and at least 1 day away
-                  // This avoids showing a global countdown for sessions starting very soon
+                  // Only add future times that are more than 1 day away for global banner
+                  const oneDayFromNow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
                   if (startTime > oneDayFromNow) {
-                    relevantStartTimes.push(startTime);
+                    futureStartTimes.push(startTime);
                   }
                 }
               });
@@ -327,38 +331,23 @@
         }
       });
 
-      // Sort to get the earliest relevant time
-      relevantStartTimes.sort((a, b) => a.getTime() - b.getTime());
-      allStartTimes.sort((a, b) => a.getTime() - b.getTime());
+      console.log('DEBUG: All registration times found:', debugInfo);
 
-      // Use the earliest registration time that's at least a day away
-      if (relevantStartTimes.length > 0) {
-        globalRegistrationStart = relevantStartTimes[0].toISOString();
-        console.log('Found registration time for global banner:', globalRegistrationStart);
-      } else if (allStartTimes.length > 0 && allStartTimes[0] > now) {
-        // If all registration times are within the next day, don't show global banner
-        // Set this to null or past time to hide the banner
-        globalRegistrationStart = null;
-        console.log('All registrations are within 24 hours, hiding global banner');
+      // Sort to get the earliest meaningful time for global banner
+      futureStartTimes.sort((a, b) => a.getTime() - b.getTime());
+
+      // For global banner, only show if there's a registration > 24 hours away
+      if (futureStartTimes.length > 0) {
+        globalRegistrationStart = futureStartTimes[0].toISOString();
+        console.log('Using registration time for global banner (>24h away):', globalRegistrationStart);
       } else {
-        // Fallback: if no registration times found, use the first event date
-        const firstEventDate = events[0]?.date;
-        if (firstEventDate) {
-          // Set registration to open 1 week before event
-          const eventDate = new Date(firstEventDate);
-          eventDate.setDate(eventDate.getDate() - 7);
-          globalRegistrationStart = eventDate.toISOString();
-          console.log('Using event date minus 1 week:', globalRegistrationStart);
-        } else {
-          // Ultimate fallback - set to 7 days from now for testing
-          globalRegistrationStart = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(); // 1 week from now
-          console.log('Using fallback (7 days from now):', globalRegistrationStart);
-        }
+        // No registrations far enough in future for global banner
+        globalRegistrationStart = null;
+        console.log('No registrations >24h in future - hiding global banner. Sessions will show individual countdowns.');
       }
 
       // Check if global registration is already open
       globalRegistrationOpen = globalRegistrationStart ? new Date() >= new Date(globalRegistrationStart) : false;
-      console.log('Registration open?', globalRegistrationOpen, 'Current time:', new Date().toISOString());
 
     } catch (err) {
       console.error('Error loading events:', err);
