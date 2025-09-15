@@ -519,10 +519,6 @@
 								<h2 class="text-2xl font-medium text-white mb-4">Deine Badges</h2>
 								<BadgeDisplay {user} on:openVideos={handleOpenVideos} />
 							</div>
-
-							<div class="mb-8">
-								<EventRegistrations userId={user?.id} />
-							</div>
 						</div>
 					{:else if activeTab === 'videos'}
 						<div class="bg-black rounded-xl border border-gray-800 p-6">

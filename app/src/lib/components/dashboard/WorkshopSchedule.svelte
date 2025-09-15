@@ -14,9 +14,25 @@
   const REQUIRED_BADGE_ID = '319b8937-cc53-4b1c-a2ef-b9f97aa81f51';
 
   // Check if user has the required badge
-  $: hasRequiredBadge = userProfile?.badges?.some((badge: any) =>
-    badge._id === REQUIRED_BADGE_ID || badge._ref === REQUIRED_BADGE_ID
-  ) || false;
+  $: hasRequiredBadge = (() => {
+    // WorkshopSchedule gets 'profile' which has different structure than TimeTable's 'userProfile'
+    // In dashboard, badges are stored in profile.awardedBadges not profile.badges
+    const badges = userProfile?.awardedBadges || userProfile?.badges || [];
+
+    if (badges.length === 0) {
+      return false;
+    }
+
+    // Check if any badge matches the required ID
+    const hasBadge = badges.some((badge: any) => {
+      // Handle different badge structures
+      const badgeId = typeof badge === 'string' ? badge :
+                      badge._id || badge._ref || badge.id || badge;
+      return badgeId === REQUIRED_BADGE_ID;
+    });
+
+    return hasBadge;
+  })();
 
   interface Artist {
     _id?: string;

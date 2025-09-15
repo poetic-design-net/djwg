@@ -72,9 +72,27 @@
   const REQUIRED_BADGE_ID = '319b8937-cc53-4b1c-a2ef-b9f97aa81f51';
 
   // Check if user has the required badge
-  $: hasRequiredBadge = userProfile?.badges?.some((badge: any) =>
-    badge._id === REQUIRED_BADGE_ID || badge._ref === REQUIRED_BADGE_ID
-  ) || false;
+  $: hasRequiredBadge = (() => {
+    console.log('Badge check - userProfile:', userProfile);
+    console.log('Badge check - userProfile.badges:', userProfile?.badges);
+    console.log('Required badge ID:', REQUIRED_BADGE_ID);
+
+    if (!userProfile?.badges) {
+      console.log('No badges found on userProfile');
+      return false;
+    }
+
+    const hasBadge = userProfile.badges.some((badge: any) => {
+      console.log('Checking badge:', badge);
+      // Check both possible badge structures
+      const badgeId = badge._id || badge._ref || badge.id || badge;
+      console.log('Badge ID to check:', badgeId);
+      return badgeId === REQUIRED_BADGE_ID;
+    });
+
+    console.log('Has required badge:', hasBadge);
+    return hasBadge;
+  })();
 
   // Stage filtering
   let selectedStages: Set<string> = new Set();
