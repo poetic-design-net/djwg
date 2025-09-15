@@ -139,14 +139,20 @@ export const load: PageServerLoad = async ({ params, locals, setHeaders }) => {
 
 		const event = eventResult.value as { data: SanityEvent };
 
-		// Parallel fetch for profile and time slots
-		const [profileResult, timeSlotsResult] = await Promise.allSettled([
+		// Parallel fetch for profile, badges and time slots
+		const [profileResult, badgesResult, timeSlotsResult] = await Promise.allSettled([
 			// Get user profile if logged in
 			user ? supabase
 				.from('profiles')
 				.select('*')
 				.eq('id', user.id)
 				.single() : Promise.resolve(null),
+
+			// Get user badges if logged in
+			user ? supabase
+				.from('user_badges')
+				.select('*')
+				.eq('user_id', user.id) : Promise.resolve(null),
 
 			// Load time slots for OpenStage if enabled
 			event.data.hasOpenStage ? loadQuery(groq`*[_type == "timeSlot" && event._ref == $eventId] | order(startTime asc) {
@@ -162,6 +168,7 @@ export const load: PageServerLoad = async ({ params, locals, setHeaders }) => {
 		]);
 
 		const userProfile = profileResult.status === 'fulfilled' ? profileResult.value?.data : null;
+		const userBadges = badgesResult.status === 'fulfilled' ? badgesResult.value?.data || [] : [];
 		const timeSlots = timeSlotsResult.status === 'fulfilled' ? timeSlotsResult.value?.data || [] : [];
 
 		// Transform event data with optimized structure
@@ -232,7 +239,11 @@ export const load: PageServerLoad = async ({ params, locals, setHeaders }) => {
 			event: transformedEvent,
 			timeSlots,
 			isAdmin: isUserAdmin,
-			user: user ? { id: user.id, email: user.email } : null,
+			user: user ? {
+				id: user.id,
+				email: user.email,
+				badges: userBadges
+			} : null,
 			userProfile
 		};
 	} catch (err) {

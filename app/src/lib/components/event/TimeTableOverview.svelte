@@ -61,32 +61,40 @@
   export let isAdmin: boolean = false;
   export let scheduleView: string = 'overview';
   export let enableAnimations: boolean = true; // Can be controlled from parent
-  export let user: { id: string; email: string } | null = null;
+  export let user: any = null; // User object from Supabase with badges
   export let userProfile: any = null;
   export let eventId: string = '';
   export let eventScheduleId: string = '';
 
   const dispatch = createEventDispatcher();
 
-  // Required badge ID for registration (Sanity _id of Workshop/Partner badge)
-  const REQUIRED_BADGE_ID = '3eade88a-8d15-4dc6-b0b8-df334105a1b2';
+  // Required badge ID for registration - using supabaseId from Sanity
+  const REQUIRED_BADGE_ID = '319b8937-cc53-4b1c-a2ef-b9f97aa81f51'; // supabaseId of Workshop/Partner badge
 
-  // Check if user has the required badge - check both awardedBadges and badges arrays
+  // Check if user has the required badge
   $: hasRequiredBadge = (() => {
-    // Check both possible arrays where badges might be stored
-    const badges = userProfile?.awardedBadges || userProfile?.badges || [];
-
-    if (!badges || badges.length === 0) {
-      return false;
+    // First check in user.badges (from Supabase) - these have badge_id field
+    if (user?.badges && Array.isArray(user.badges)) {
+      const hasBadge = user.badges.some((badge: any) => {
+        return badge.badge_id === REQUIRED_BADGE_ID;
+      });
+      if (hasBadge) return true;
     }
 
-    const hasBadge = badges.some((badge: any) => {
-      // Check both possible badge structures
-      const badgeId = badge._id || badge._ref || badge.id || badge;
-      return badgeId === REQUIRED_BADGE_ID;
-    });
+    // Fallback to profile badges if available
+    const badges = userProfile?.awardedBadges || userProfile?.badges || [];
+    if (badges.length > 0) {
+      const hasBadge = badges.some((badge: any) => {
+        // Handle different badge structures
+        const badgeId = typeof badge === 'string' ? badge :
+                        badge._id || badge._ref || badge.supabaseId || badge.id || badge;
+        // Check both IDs (supabaseId and Sanity _id)
+        return badgeId === REQUIRED_BADGE_ID || badgeId === '3eade88a-8d15-4dc6-b0b8-df334105a1b2';
+      });
+      if (hasBadge) return true;
+    }
 
-    return hasBadge;
+    return false;
   })();
 
   // Stage filtering
@@ -1120,7 +1128,9 @@
   {#if hoveredEvent}
     {@const hoverIsRegistered = isUserRegistered(hoveredEvent.dayIndex, hoveredEvent.stageIndex, hoveredEvent.itemIndex)}
     {@const hoverRegCount = getRegistrationCount(hoveredEvent.dayIndex, hoveredEvent.stageIndex, hoveredEvent.itemIndex)}
-    {@const cardWidth = 380}
+    {@const hoveredArtists = getAllArtists(hoveredEvent.event)}
+    {@const hasArtists = hoveredArtists.length > 0}
+    {@const cardWidth = hasArtists ? 450 : 380}
     {@const spaceOnRight = window.innerWidth - (hoveredEvent.position.left + hoveredEvent.position.width)}
     {@const showOnRight = spaceOnRight > cardWidth + 20}
     {@const leftPosition = showOnRight
@@ -1155,20 +1165,21 @@
       }}
     >
       <div class="hover-overlay-card {hoveredEvent.event.allowRegistration ? 'interactive' : ''}">
-        <div class="flex items-start justify-between mb-2">
-          <h3 class="text-white font-bold text-base">{hoveredEvent.event.title}</h3>
-          <span class="text-[#33cc99] text-xs font-medium">{hoveredEvent.event.time}</span>
-        </div>
-        
-        {#if hoveredEvent.event.description}
-          <p class="text-gray-300 text-sm mb-2">{hoveredEvent.event.description}</p>
-        {/if}
+        <div class="flex gap-4">
+          <!-- Left Column: Main Content -->
+          <div class="flex-1">
+            <div class="flex items-start justify-between mb-2">
+              <h3 class="text-white font-bold text-base">{hoveredEvent.event.title}</h3>
+              <span class="text-[#33cc99] text-xs font-medium whitespace-nowrap ml-2">{hoveredEvent.event.time}</span>
+            </div>
 
-        {#if hoveredEvent.event.allowRegistration}
-          <div class="pt-2 border-t border-gray-700">
-            <!-- Registration Status -->
-            <div class="flex items-center justify-between mb-3">
-              <div class="flex items-center gap-2">
+            {#if hoveredEvent.event.description}
+              <p class="text-gray-300 text-sm mb-3">{hoveredEvent.event.description}</p>
+            {/if}
+
+            {#if hoveredEvent.event.allowRegistration}
+              <!-- Registration Status -->
+              <div class="flex items-center gap-2 mb-3">
                 <svg class="w-4 h-4 text-[#33cc99]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
                 </svg>
@@ -1181,28 +1192,35 @@
                 {:else}
                   <span class="text-xs text-gray-400">Workshop</span>
                 {/if}
-              </div>
-            </div>
 
-            <!-- Registration Buttons -->
-            <div class="flex justify-center">
+                {#if hoveredEvent.event.maxRegistrations && hoverRegCount >= hoveredEvent.event.maxRegistrations}
+                  <span class="text-xs text-red-400 font-medium ml-auto">Ausgebucht</span>
+                {/if}
+              </div>
+
+              <!-- Registration Buttons -->
+              <div class="flex items-center justify-start w-full">
               {#if !isRegistrationOpen(hoveredEvent.event, hoveredEvent.dayIndex, hoveredEvent.stageIndex, hoveredEvent.itemIndex) && hoveredEvent.event.registrationStartTime}
-                <div class="px-3 py-1.5 bg-yellow-500/20 border border-yellow-500/50 rounded-full text-yellow-400 text-xs font-medium">
-                  <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="inline-flex items-center gap-1.5 px-4 py-2 bg-yellow-500/10 border border-yellow-500/30 rounded-full">
+                  <svg class="w-3.5 h-3.5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                   </svg>
-                  Öffnet bald
+                  <span class="text-xs text-yellow-400 font-medium">Öffnet bald</span>
                 </div>
               {:else if !user}
                 <button
                   on:click={() => showLoginPrompt = true}
-                  class="px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white text-xs font-medium rounded-full transition-colors"
+                  class="inline-flex items-center gap-1.5 px-4 py-2 bg-gray-600/80 hover:bg-gray-600 text-white text-xs font-medium rounded-full transition-all duration-200 hover:scale-105"
                 >
-                  Anmelden zum Registrieren
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                  </svg>
+                  <span>Anmelden zum Registrieren</span>
                 </button>
               {:else if !hasRequiredBadge}
-                <div class="px-3 py-1.5 bg-orange-500/20 border border-orange-500/50 rounded-full text-orange-400 text-xs font-medium">
-                  🔒 Badge erforderlich
+                <div class="inline-flex items-center gap-1.5 px-4 py-2 bg-orange-500/10 border border-orange-500/30 rounded-full">
+                  <span class="text-orange-400">🔒</span>
+                  <span class="text-xs text-orange-400 font-medium">Badge erforderlich</span>
                 </div>
               {:else if hoverIsRegistered}
                 <button
@@ -1211,14 +1229,23 @@
                     cancelRegistration(hoveredEvent.dayIndex, hoveredEvent.stageIndex, hoveredEvent.itemIndex);
                     hoveredEvent = null;
                   }}
-                  class="px-3 py-1.5 bg-green-500 hover:bg-red-500 text-black text-xs font-medium rounded-full transition-all group/cancel"
+                  class="inline-flex items-center gap-1.5 px-4 py-2 bg-green-500 hover:bg-red-500 text-black text-xs font-medium rounded-full transition-all duration-200 hover:scale-105 group/cancel"
                 >
-                  <span class="group-hover/cancel:hidden">✓ Angemeldet</span>
+                  <svg class="w-3.5 h-3.5 group-hover/cancel:hidden" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                  </svg>
+                  <svg class="w-3.5 h-3.5 hidden group-hover/cancel:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                  <span class="group-hover/cancel:hidden">Angemeldet</span>
                   <span class="hidden group-hover/cancel:inline">Abmelden</span>
                 </button>
               {:else if hoveredEvent.event.maxRegistrations && hoverRegCount >= hoveredEvent.event.maxRegistrations}
-                <div class="px-3 py-1.5 bg-red-500/20 border border-red-500/50 rounded-full text-red-400 text-xs font-medium">
-                  Ausgebucht
+                <div class="inline-flex items-center gap-1.5 px-4 py-2 bg-red-500/10 border border-red-500/30 rounded-full">
+                  <svg class="w-3.5 h-3.5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                  <span class="text-xs text-red-400 font-medium">Ausgebucht</span>
                 </div>
               {:else}
                 <button
@@ -1232,38 +1259,43 @@
                     };
                     hoveredEvent = null;
                   }}
-                  class="px-3 py-1.5 bg-green-400 hover:bg-green-500 text-black text-xs font-medium rounded-full transition-colors"
+                  class="inline-flex items-center gap-1.5 px-4 py-2 bg-green-400 hover:bg-green-500 text-black text-xs font-medium rounded-full transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-green-400/20"
                 >
-                  {hoveredEvent.event.isOpenTable ? 'Platz reservieren' : 'Jetzt anmelden'}
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  <span>{hoveredEvent.event.isOpenTable ? 'Platz reservieren' : 'Jetzt anmelden'}</span>
                 </button>
               {/if}
             </div>
+            {/if}
           </div>
-        {/if}
 
-        {#if getAllArtists(hoveredEvent.event).length > 0}
-          {@const hoveredArtists = getAllArtists(hoveredEvent.event)}
-          <div class="border-t border-gray-700 pt-2">
-            {#each hoveredArtists as artist}
-              <div class="flex items-center gap-3 mb-2">
-                {#if artist.image}
-                  <img
-                    src={artist.image}
-                    alt={artist.name}
-                    class="w-10 h-10 rounded-full object-cover"
-                  />
-                {/if}
-                <div>
-                  <p class="text-[#33cc99] font-medium text-sm">{artist.name}</p>
-                  {#if artist.role}
-                    <p class="text-gray-400 text-xs">{artist.role}</p>
-                  {/if}
+          <!-- Right Column: Artist (if exists) -->
+          {#if hasArtists}
+            {@const primaryArtist = hoveredArtists[0]}
+            <div class="flex flex-col items-center justify-center border-l border-gray-700/30 pl-4 min-w-[120px]">
+              {#if primaryArtist.image}
+                <img
+                  src={primaryArtist.image}
+                  alt={primaryArtist.name}
+                  class="w-20 h-20 rounded-full object-cover mb-2 ring-2 ring-[#33cc99]/20"
+                />
+              {:else}
+                <div class="w-20 h-20 rounded-full bg-gray-800 flex items-center justify-center mb-2">
+                  <svg class="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                  </svg>
                 </div>
-              </div>
-            {/each}
+              {/if}
+              <p class="text-[#33cc99] font-medium text-sm text-center">{primaryArtist.name}</p>
+              {#if primaryArtist.role}
+                <p class="text-gray-400 text-xs text-center">{primaryArtist.role}</p>
+              {/if}
 
-            <div class="flex gap-2 mt-2">
-              {#each hoveredArtists as artist}
+              <!-- Social Links -->
+              <div class="flex gap-2 mt-3">
+                {#each hoveredArtists as artist}
                 {#if artist.soundcloud}
                   <a
                     href={artist.soundcloud}
@@ -1289,9 +1321,10 @@
                   </a>
                 {/if}
               {/each}
+              </div>
             </div>
-          </div>
-        {/if}
+          {/if}
+        </div>
       </div>
     </div>
   {/if}
@@ -1749,15 +1782,15 @@
     background: linear-gradient(135deg, rgba(0, 0, 0, 0.98), rgba(17, 17, 17, 0.95));
     backdrop-filter: blur(20px) saturate(180%);
     border: 1px solid rgba(51, 204, 153, 0.4);
-    border-radius: 0.75rem;
-    padding: 0.875rem;
+    border-radius: 0.875rem;
+    padding: 1rem;
     box-shadow:
       0 25px 50px rgba(0, 0, 0, 0.9),
       0 0 100px rgba(51, 204, 153, 0.1),
       inset 0 0 30px rgba(51, 204, 153, 0.05);
     animation: fadeInUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    min-width: 320px;
-    max-width: 400px;
+    min-width: 380px;
+    max-width: 480px;
     pointer-events: auto;
   }
 

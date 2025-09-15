@@ -11,7 +11,7 @@
 		event: TransformedEvent;
 		timeSlots: TimeSlot[];
 		isAdmin: boolean;
-		user: { id: string; email: string } | null;
+		user: any | null;
 		userProfile: any;
 		streaming?: boolean;
 	};

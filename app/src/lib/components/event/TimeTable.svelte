@@ -534,7 +534,7 @@
   export let schedule: Day[] = [];
   export let isSecret: boolean = false;
   export let isAdmin: boolean = false;
-  export let user: { id: string; email: string } | null = null;
+  export let user: any = null; // User object from Supabase with badges
   export let userProfile: any = null;
   export let eventId: string = '';
   export let eventScheduleId: string = '';
@@ -543,13 +543,34 @@
   import { createEventDispatcher } from 'svelte';
   const dispatch = createEventDispatcher();
   
-  // Required badge ID for registration (Sanity _id of Workshop/Partner badge)
-  const REQUIRED_BADGE_ID = '3eade88a-8d15-4dc6-b0b8-df334105a1b2';
-  
-  // Check if user has the required badge - check both awardedBadges and badges arrays
-  $: hasRequiredBadge = (userProfile?.awardedBadges || userProfile?.badges || []).some((badge: any) =>
-    badge._id === REQUIRED_BADGE_ID || badge._ref === REQUIRED_BADGE_ID
-  ) || false;
+  // Required badge ID for registration - using supabaseId from Sanity
+  const REQUIRED_BADGE_ID = '319b8937-cc53-4b1c-a2ef-b9f97aa81f51'; // supabaseId of Workshop/Partner badge
+
+  // Check if user has the required badge
+  $: hasRequiredBadge = (() => {
+    // First check in user.badges (from Supabase) - these have badge_id field
+    if (user?.badges && Array.isArray(user.badges)) {
+      const hasBadge = user.badges.some((badge: any) => {
+        return badge.badge_id === REQUIRED_BADGE_ID;
+      });
+      if (hasBadge) return true;
+    }
+
+    // Fallback to profile badges if available
+    const badges = userProfile?.awardedBadges || userProfile?.badges || [];
+    if (badges.length > 0) {
+      const hasBadge = badges.some((badge: any) => {
+        // Handle different badge structures
+        const badgeId = typeof badge === 'string' ? badge :
+                        badge._id || badge._ref || badge.supabaseId || badge.id || badge;
+        // Check both IDs (supabaseId and Sanity _id)
+        return badgeId === REQUIRED_BADGE_ID || badgeId === '3eade88a-8d15-4dc6-b0b8-df334105a1b2';
+      });
+      if (hasBadge) return true;
+    }
+
+    return false;
+  })();
   
   
   let selectedDayIndex = 0;
