@@ -798,52 +798,37 @@
 </script>
 
 {#if schedule?.length > 0 && selectedDay}
-  <div class="py-20 bg-black/40">
-    <div class="container px-4 mx-auto">
-      <div class="mb-12 text-center">
-        <span class="inline-block mb-4 text-sm text-green-400 font-medium tracking-tighter">Tagesablauf</span>
-        <h2 class="font-heading text-5xl md:text-6xl text-white tracking-tighter mb-8">Timeline</h2>
-        
-        <!-- View Switcher -->
-        <div class="relative inline-flex items-center gap-1 bg-black/40 backdrop-blur-sm rounded-full p-1 border border-gray-800">
-            <button
-              class="group px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 flex items-center gap-2 {scheduleView === 'timeline' ? 'bg-green-400 text-black shadow-lg shadow-green-400/20' : 'text-gray-400 hover:text-white'}"
-              disabled
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-              </svg>
-              Timeline
-            </button>
-            <button
-              class="group px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 flex items-center gap-2 text-gray-400 hover:text-green-400 hover:bg-white/5"
-              on:click={() => dispatch('switchView')}
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
-              </svg>
-              Übersicht
-            </button>
-        </div>
-      </div>
+  {#if isSecret && !isAdmin}
+    <!-- Don't show anything if schedule is secret and user is not admin -->
+  {:else}
+    <div class="py-20 bg-black/40">
+      <div class="container px-4 mx-auto">
+        <div class="mb-12 text-center">
+          <span class="inline-block mb-4 text-sm text-green-400 font-medium tracking-tighter">Tagesablauf</span>
+          <h2 class="font-heading text-5xl md:text-6xl text-white tracking-tighter mb-8">Timeline</h2>
 
-      {#if isSecret && !isAdmin}
-        <div class="relative">
-          <div class="absolute inset-0 backdrop-blur-xl bg-black/60 z-10 flex items-center justify-center rounded-3xl">
-            <div class="text-center p-8">
-              <svg class="w-16 h-16 mx-auto mb-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-              </svg>
-              <h3 class="text-2xl text-white mb-2">Noch geheim!</h3>
-              <p class="text-gray-400">Der Zeitplan wird bald veröffentlicht.</p>
-            </div>
-          </div>
-          <div class="opacity-20 pointer-events-none">
-            <!-- Placeholder content to show blurred background -->
-            <div class="h-96"></div>
+          <!-- View Switcher -->
+          <div class="relative inline-flex items-center gap-1 bg-black/40 backdrop-blur-sm rounded-full p-1 border border-gray-800">
+              <button
+                class="group px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 flex items-center gap-2 {scheduleView === 'timeline' ? 'bg-green-400 text-black shadow-lg shadow-green-400/20' : 'text-gray-400 hover:text-white'}"
+                disabled
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                Timeline
+              </button>
+              <button
+                class="group px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 flex items-center gap-2 text-gray-400 hover:text-green-400 hover:bg-white/5"
+                on:click={() => dispatch('switchView')}
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+                </svg>
+                Übersicht
+              </button>
           </div>
         </div>
-      {:else}
 
       <!-- Day Tabs -->
       {#if schedule.length > 1}
@@ -1162,6 +1147,7 @@
       {/if}
     </div>
   </div>
+  {/if}
 {:else}
   <div class="py-20 bg-black/40">
     <div class="container px-4 mx-auto text-center">
