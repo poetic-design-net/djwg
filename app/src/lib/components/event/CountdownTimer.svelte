@@ -26,15 +26,17 @@
       hours = 0;
       minutes = 0;
       seconds = 0;
+
+      // Call onComplete before setting isComplete to true
+      if (!isComplete && onComplete) {
+        onComplete();
+      }
+
       isComplete = true;
 
       if (interval) {
         clearInterval(interval);
         interval = null;
-      }
-
-      if (onComplete && !isComplete) {
-        onComplete();
       }
 
       return;

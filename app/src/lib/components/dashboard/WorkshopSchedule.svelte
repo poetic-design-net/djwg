@@ -930,9 +930,18 @@
                           Ausgebucht
                         </span>
                       {:else if !isAdmin && !globalRegistrationOpen}
-                        <span class="px-4 py-2 bg-yellow-500/20 border border-yellow-500/50 text-yellow-400 text-sm rounded-lg cursor-not-allowed inline-block" title="Registrierung öffnet am 1. Februar">
-                          ⏰ Noch nicht geöffnet
-                        </span>
+                        <div class="inline-block">
+                          <CountdownTimer
+                            targetDate="2025-02-01T12:00:00"
+                            compact={true}
+                            showSeconds={false}
+                            label="Öffnet in"
+                            completedLabel="Jetzt verfügbar!"
+                            onComplete={() => {
+                              globalRegistrationOpen = true;
+                            }}
+                          />
+                        </div>
                       {:else if !hasRequiredBadge}
                         <span class="px-4 py-2 bg-orange-500/20 border border-orange-500/50 text-orange-400 text-sm rounded-lg cursor-not-allowed inline-block" title="Event-Teilnehmer Badge erforderlich">
                           🔒 Badge fehlt
