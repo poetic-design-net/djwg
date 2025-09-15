@@ -670,7 +670,7 @@
       <div class="text-center">
         <h3 class="text-xl font-heading text-yellow-400 mb-4">Registrierung öffnet bald!</h3>
         <CountdownTimer
-          targetDate="2025-02-01T12:00:00"
+          targetDate={new Date(Date.now() + 5 * 60 * 1000).toISOString()}
           label="Anmeldung möglich in"
           completedLabel="Registrierung ist jetzt geöffnet!"
           showSeconds={true}
@@ -932,7 +932,7 @@
                       {:else if !isAdmin && !globalRegistrationOpen}
                         <div class="inline-block">
                           <CountdownTimer
-                            targetDate="2025-02-01T12:00:00"
+                            targetDate={new Date(Date.now() + 5 * 60 * 1000).toISOString()}
                             compact={true}
                             showSeconds={false}
                             label="Öffnet in"
