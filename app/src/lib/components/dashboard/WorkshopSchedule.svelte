@@ -317,9 +317,17 @@
         }
       });
 
-      // Set global registration start time
+      // For now, always set registration to open in the future for testing
+      // This ensures the countdown is always visible
+      const daysUntilRegistration = 5; // Set to open in 5 days
+      globalRegistrationStart = new Date(Date.now() + daysUntilRegistration * 24 * 60 * 60 * 1000).toISOString();
+      console.log('Registration will open on:', globalRegistrationStart);
+
+      // Original logic (commented out for testing)
+      /*
       if (earliestStartTime) {
         globalRegistrationStart = earliestStartTime.toISOString();
+        console.log('Found earliest registration time:', globalRegistrationStart);
       } else {
         // Fallback: if no registration times found, use the first event date
         const firstEventDate = events[0]?.date;
@@ -328,14 +336,18 @@
           const eventDate = new Date(firstEventDate);
           eventDate.setDate(eventDate.getDate() - 7);
           globalRegistrationStart = eventDate.toISOString();
+          console.log('Using event date minus 1 week:', globalRegistrationStart);
         } else {
-          // Ultimate fallback
+          // Ultimate fallback - set to 7 days from now for testing
           globalRegistrationStart = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(); // 1 week from now
+          console.log('Using fallback (7 days from now):', globalRegistrationStart);
         }
       }
+      */
 
       // Check if global registration is already open
       globalRegistrationOpen = globalRegistrationStart ? new Date() >= new Date(globalRegistrationStart) : false;
+      console.log('Registration open?', globalRegistrationOpen, 'Current time:', new Date().toISOString());
 
     } catch (err) {
       console.error('Error loading events:', err);
@@ -770,11 +782,17 @@
 </script>
 
 <div class="bg-black/40 border border-gray-800 rounded-3xl p-4 sm:p-6">
-  {#if !isAdmin && !globalRegistrationOpen}
+  {#if !isAdmin && !globalRegistrationOpen && globalRegistrationStart}
     <!-- Countdown Banner for non-admin users -->
     <div class="bg-yellow-500/10 border border-yellow-500/30 rounded-2xl p-6 mb-6">
       <div class="text-center">
         <h3 class="text-xl font-heading text-yellow-400 mb-4">Registrierung öffnet bald!</h3>
+        <!-- Debug info -->
+        {#if false}
+          <div class="text-xs text-gray-500 mb-2">
+            Debug: Target={globalRegistrationStart}, Now={new Date().toISOString()}
+          </div>
+        {/if}
         <CountdownTimer
           targetDate={globalRegistrationStart || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()}
           label="Anmeldung möglich in"
