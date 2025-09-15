@@ -5,6 +5,7 @@
   import { createEventDispatcher } from 'svelte';
   import { getImageUrl } from '$lib/sanity/image';
   import CountdownTimer from '$lib/components/event/CountdownTimer.svelte';
+  import { toasts } from '$lib/stores/toast';
 
   export let userId: string;
   export let userProfile: any = null;
@@ -16,6 +17,10 @@
 
   // Track countdown completion
   let countdownCompleted: Set<string> = new Set();
+
+  // Track loading states for each registration
+  let registrationLoading: Map<string, boolean> = new Map();
+  let cancellationLoading: Map<string, boolean> = new Map();
 
   // Global registration open state for non-admins
   let globalRegistrationOpen = false;
@@ -419,10 +424,12 @@
   }
 
   async function registerForSession(event: Event, session: ScheduleItem, dayIndex: number, stageIndex: number, itemIndex: number, slotId?: string) {
+    const loadingKey = `${event._id}-${dayIndex}-${stageIndex}-${itemIndex}`;
+
     try {
       // Check if user has required badge
       if (!hasRequiredBadge) {
-        alert('Du benötigst den "Event-Teilnehmer" Badge um dich anzumelden. Bitte schließe zuerst dein Profil ab.');
+        toasts.error('Du benötigst den "Event-Teilnehmer" Badge um dich anzumelden. Bitte schließe zuerst dein Profil ab.');
         return;
       }
 
@@ -430,9 +437,13 @@
       if (slotId && dayIndex === -1) {
         // For Open Stage, we need to register differently
         // This would need to use the booking API endpoint
-        alert('Open Stage Anmeldung ist in Entwicklung. Bitte nutze die Event-Detail-Seite.');
+        toasts.info('Open Stage Anmeldung ist in Entwicklung. Bitte nutze die Event-Detail-Seite.');
         return;
       }
+
+      // Set loading state
+      registrationLoading.set(loadingKey, true);
+      registrationLoading = new Map(registrationLoading);
 
       const registration = {
         userId,
@@ -453,19 +464,36 @@
       });
 
       if (!response.ok) {
-        throw new Error('Registration failed');
+        const errorData = await response.json();
+        if (errorData.error && errorData.error.includes('bereits angemeldet')) {
+          toasts.warning('Du bist bereits für diese Session angemeldet.');
+        } else {
+          throw new Error(errorData.error || 'Registration failed');
+        }
+        return;
       }
 
+      // Update registrations immediately
       await loadUserRegistrations();
+
+      // Show success toast
+      toasts.success(`Erfolgreich für "${session.title}" angemeldet!`);
+
       dispatch('registered', { event, session });
 
     } catch (err) {
       console.error('Error registering:', err);
-      alert('Fehler bei der Anmeldung. Bitte versuche es erneut.');
+      toasts.error('Fehler bei der Anmeldung. Bitte versuche es erneut.');
+    } finally {
+      // Remove loading state
+      registrationLoading.delete(loadingKey);
+      registrationLoading = new Map(registrationLoading);
     }
   }
 
   async function cancelRegistration(eventId: string, dayIndex: number, stageIndex: number, itemIndex: number) {
+    const loadingKey = `${eventId}-${dayIndex}-${stageIndex}-${itemIndex}`;
+
     try {
       const registration = userRegistrations.find(reg =>
         reg.eventId === eventId &&
@@ -476,11 +504,23 @@
 
       if (!registration) return;
 
+      // Set loading state
+      cancellationLoading.set(loadingKey, true);
+      cancellationLoading = new Map(cancellationLoading);
+
       // TODO: Find the registration ID and call DELETE endpoint
       await loadUserRegistrations();
 
+      // Show success toast
+      toasts.success('Erfolgreich abgemeldet!');
+
     } catch (err) {
       console.error('Error cancelling registration:', err);
+      toasts.error('Fehler beim Abmelden. Bitte versuche es erneut.');
+    } finally {
+      // Remove loading state
+      cancellationLoading.delete(loadingKey);
+      cancellationLoading = new Map(cancellationLoading);
     }
   }
 
@@ -905,6 +945,9 @@
                 {@const availableSpots = getAvailableSpots(session.item)}
                 {@const isFull = availableSpots === 'Ausgebucht'}
                 {@const artists = getAllArtists(session.item)}
+                {@const loadingKey = `${session.event._id}-${session.dayIndex}-${session.stageIndex}-${session.itemIndex}`}
+                {@const isRegistering = registrationLoading.get(loadingKey) || false}
+                {@const isCancelling = cancellationLoading.get(loadingKey) || false}
 
                 <div class="bg-gray-900/50 rounded-lg p-4 hover:bg-gray-900/70 transition-colors duration-200">
                   <div class="flex items-start justify-between gap-4">
@@ -967,9 +1010,18 @@
                       {#if registered}
                         <button
                           on:click={() => cancelRegistration(session.event._id, session.dayIndex, session.stageIndex, session.itemIndex)}
-                          class="px-4 py-2 bg-gray-700 text-gray-300 text-sm rounded-lg hover:bg-red-600 hover:text-white transition-colors duration-200"
+                          class="px-4 py-2 bg-gray-700 text-gray-300 text-sm rounded-lg hover:bg-red-600 hover:text-white transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                          disabled={isCancelling}
                         >
-                          Abmelden
+                          {#if isCancelling}
+                            <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Wird abgemeldet...
+                          {:else}
+                            Abmelden
+                          {/if}
                         </button>
                       {:else if isFull}
                         <span class="px-4 py-2 bg-gray-800 text-gray-500 text-sm rounded-lg cursor-not-allowed inline-block">
@@ -1005,9 +1057,18 @@
                       {:else}
                         <button
                           on:click={() => registerForSession(session.event, session.item, session.dayIndex, session.stageIndex, session.itemIndex, session?.slotId)}
-                          class="px-4 py-2 bg-green-500 hover:bg-green-600 text-black text-sm rounded-lg transition-colors duration-200"
+                          class="px-4 py-2 bg-green-500 hover:bg-green-600 text-black text-sm rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                          disabled={isRegistering}
                         >
-                          Anmelden
+                          {#if isRegistering}
+                            <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Wird angemeldet...
+                          {:else}
+                            Anmelden
+                          {/if}
                         </button>
                       {/if}
                     </div>

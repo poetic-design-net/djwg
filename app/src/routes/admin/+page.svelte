@@ -7,6 +7,11 @@
 
   const adminLinks: AdminLink[] = [
     {
+      title: 'Event Registrierungen',
+      href: '/admin/registrations',
+      description: 'Alle Anmeldungen für Events und Sessions verwalten'
+    },
+    {
       title: 'Database Management',
       href: '/admin/database',
       description: 'Supabase-Datenbank überwachen und verwalten'
