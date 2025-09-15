@@ -5,6 +5,7 @@
     import { enhance } from '$app/forms';
     import { invalidateAll } from '$app/navigation';
     import SyncNewsletterBadges from '$lib/components/badges/SyncNewsletterBadges.svelte';
+    import WeeztixBadgeManager from '$lib/components/badges/WeeztixBadgeManager.svelte';
   
     export let data: {
       users: EnrichedProfile[], // Zurück zu EnrichedProfile
@@ -325,6 +326,11 @@
            <div>
             <SyncNewsletterBadges />
           </div>
+  </div>
+
+  <!-- Weeztix Badge Manager -->
+  <div class="my-4">
+    <WeeztixBadgeManager />
   </div>
 
   <div class="overflow-x-auto bg-white rounded-lg shadow">
