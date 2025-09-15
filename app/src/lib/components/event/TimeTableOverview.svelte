@@ -1201,11 +1201,13 @@
               <!-- Registration Buttons -->
               <div class="flex items-center justify-start w-full">
               {#if !isRegistrationOpen(hoveredEvent.event, hoveredEvent.dayIndex, hoveredEvent.stageIndex, hoveredEvent.itemIndex) && hoveredEvent.event.registrationStartTime}
-                <div class="inline-flex items-center gap-1.5 px-4 py-2 bg-yellow-500/10 border border-yellow-500/30 rounded-full">
-                  <svg class="w-3.5 h-3.5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                  </svg>
-                  <span class="text-xs text-yellow-400 font-medium">Öffnet bald</span>
+                <div class="bg-black/20 border border-gray-800 rounded-xl p-3">
+                  <CountdownTimer
+                    targetDate={hoveredEvent.event.registrationStartTime}
+                    onComplete={() => handleCountdownComplete(hoveredEvent.dayIndex, hoveredEvent.stageIndex, hoveredEvent.itemIndex)}
+                    compact={true}
+                    showSeconds={false}
+                  />
                 </div>
               {:else if !user}
                 <button

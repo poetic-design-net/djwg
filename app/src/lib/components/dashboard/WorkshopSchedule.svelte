@@ -8,6 +8,10 @@
   export let userId: string;
   export let userProfile: any = null;
   export let user: any = null; // User object from Supabase with badges
+  export let isAdmin: boolean = false;
+
+  // Mobile detection
+  let showFilterDropdown = false;
 
   const dispatch = createEventDispatcher();
 
@@ -556,6 +560,11 @@
   $: allSessions = (() => {
     // Regular schedule sessions
     const regularSessions = events.flatMap(event => {
+      // Skip secret schedules unless user is admin
+      if (event.schedule?.isSecret && !isAdmin) {
+        return [];
+      }
+
       if (!event.schedule || !event.schedule.days) {
         return [];
       }
@@ -615,48 +624,100 @@
     new Date(a).getTime() - new Date(b).getTime()
   );
 
-  $: console.log('Sessions by date:', sessionsByDate);
-  $: console.log('Sorted dates:', sortedDates);
 </script>
 
-<div class="bg-black/40 border border-gray-800 rounded-3xl p-6">
-  <!-- Header -->
-  <div class="flex items-center justify-between mb-6">
-    <div>
-      <h2 class="text-2xl font-heading text-white mb-2">Event Schedule</h2>
-      <p class="text-gray-400">Melde dich für Sessions an</p>
-      {#if events.length > 0}
-        <p class="text-xs text-gray-500 mt-1">
-          {events.length} Events geladen, {allSessions.length} Sessions gefunden
-        </p>
-      {/if}
+<div class="bg-black/40 border border-gray-800 rounded-3xl p-4 sm:p-6">
+  {#if !isAdmin}
+    <!-- Coming Soon for non-admin users -->
+    <div class="text-center py-12">
+      <svg class="w-16 h-16 mx-auto mb-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+      </svg>
+      <h2 class="text-2xl font-heading text-white mb-2">Coming Soon</h2>
+      <p class="text-gray-400">Event Schedule wird bald verfügbar sein</p>
     </div>
+  {:else}
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+      <div>
+        <h2 class="text-xl sm:text-2xl font-heading text-white mb-2">Event Schedule</h2>
+        <p class="text-sm sm:text-base text-gray-400">Melde dich für Sessions an</p>
+        {#if events.length > 0}
+          <p class="text-xs text-gray-500 mt-1">
+            {events.length} Events geladen, {allSessions.length} Sessions gefunden
+          </p>
+        {/if}
+      </div>
 
-    <!-- Filter Buttons -->
-    <div class="flex gap-2">
-      <button
-        on:click={() => filter = 'all'}
-        class="px-4 py-2 rounded-full text-sm font-medium transition-all duration-200
-          {filter === 'all' ? 'bg-green-500 text-black' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}"
-      >
-        Alle Sessions
-      </button>
-      <button
-        on:click={() => filter = 'workshop'}
-        class="px-4 py-2 rounded-full text-sm font-medium transition-all duration-200
-          {filter === 'workshop' ? 'bg-blue-500 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}"
-      >
-        Workshops
-      </button>
-      <button
-        on:click={() => filter = 'openspace'}
-        class="px-4 py-2 rounded-full text-sm font-medium transition-all duration-200
-          {filter === 'openspace' ? 'bg-purple-500 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}"
-      >
-        Open Space
-      </button>
+      <!-- Filter Dropdown for Mobile -->
+      <div class="relative">
+        <!-- Mobile Dropdown Button -->
+        <button
+          on:click={() => showFilterDropdown = !showFilterDropdown}
+          class="sm:hidden w-full px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 flex items-center justify-between
+            {filter === 'all' ? 'bg-green-500 text-black' : filter === 'workshop' ? 'bg-blue-500 text-white' : filter === 'openspace' ? 'bg-purple-500 text-white' : 'bg-gray-800 text-gray-400'}"
+        >
+          <span>
+            {filter === 'all' ? 'Alle Sessions' : filter === 'workshop' ? 'Workshops' : 'Open Space'}
+          </span>
+          <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </button>
+
+        <!-- Mobile Dropdown Menu -->
+        {#if showFilterDropdown}
+          <div class="sm:hidden absolute top-full mt-2 w-full bg-gray-900 border border-gray-700 rounded-lg shadow-lg overflow-hidden z-10">
+            <button
+              on:click={() => { filter = 'all'; showFilterDropdown = false; }}
+              class="w-full px-4 py-2 text-left text-sm hover:bg-gray-800 transition-colors
+                {filter === 'all' ? 'bg-gray-800 text-green-400' : 'text-gray-400'}"
+            >
+              Alle Sessions
+            </button>
+            <button
+              on:click={() => { filter = 'workshop'; showFilterDropdown = false; }}
+              class="w-full px-4 py-2 text-left text-sm hover:bg-gray-800 transition-colors
+                {filter === 'workshop' ? 'bg-gray-800 text-blue-400' : 'text-gray-400'}"
+            >
+              Workshops
+            </button>
+            <button
+              on:click={() => { filter = 'openspace'; showFilterDropdown = false; }}
+              class="w-full px-4 py-2 text-left text-sm hover:bg-gray-800 transition-colors
+                {filter === 'openspace' ? 'bg-gray-800 text-purple-400' : 'text-gray-400'}"
+            >
+              Open Space
+            </button>
+          </div>
+        {/if}
+
+        <!-- Desktop Filter Buttons -->
+        <div class="hidden sm:flex gap-2">
+          <button
+            on:click={() => filter = 'all'}
+            class="px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap
+              {filter === 'all' ? 'bg-green-500 text-black' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}"
+          >
+            Alle Sessions
+          </button>
+          <button
+            on:click={() => filter = 'workshop'}
+            class="px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap
+              {filter === 'workshop' ? 'bg-blue-500 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}"
+          >
+            Workshops
+          </button>
+          <button
+            on:click={() => filter = 'openspace'}
+            class="px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 whitespace-nowrap
+              {filter === 'openspace' ? 'bg-purple-500 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}"
+          >
+            Open Space
+          </button>
+        </div>
+      </div>
     </div>
-  </div>
 
   <!-- Content -->
   {#if isLoading}
@@ -699,13 +760,14 @@
       {/if}
     </div>
   {:else}
-    <div class="space-y-6">
+    <!-- Sessions List -->
+    <div class="space-y-4 sm:space-y-6">
       {#each sortedDates as date}
         {@const sessions = sessionsByDate[date]}
         {@const dayKey = date}
         {@const isExpanded = expandedDays.has(dayKey)}
 
-        <div class="bg-black/20 border border-gray-800 rounded-2xl overflow-hidden">
+        <div class="bg-black/20 border border-gray-800 rounded-xl sm:rounded-2xl overflow-hidden">
           <!-- Day Header -->
           <div
             class="p-4 cursor-pointer hover:bg-gray-900/50 transition-colors duration-200"
@@ -841,5 +903,6 @@
         </div>
       {/each}
     </div>
+  {/if}
   {/if}
 </div>

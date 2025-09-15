@@ -4,6 +4,7 @@ import { apiVersion, projectId, dataset } from '$lib/sanity/api';
 import { env } from '$env/dynamic/private';
 import type { RequestHandler } from './$types';
 import groq from 'groq';
+import { isAdmin } from '$lib/config/admin.server';
 
 // Check if write token is available
 if (!env.VITE_SANITY_API_WRITE_TOKEN) {
@@ -118,16 +119,34 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       console.error('Profile error:', profileError);
       return json({ error: 'Profile not found' }, { status: 404 });
     }
-    
+
+    // Check if the event schedule is secret and user is not admin
+    if (eventScheduleId) {
+      const scheduleQuery = groq`*[_type == "eventSchedule" && _id == $scheduleId][0] {
+        isSecret
+      }`;
+
+      const schedule = await writeClient.fetch(scheduleQuery, { scheduleId: eventScheduleId });
+
+      if (schedule?.isSecret && !isAdmin(user.email)) {
+        return json({
+          error: 'This workshop requires special permission to register'
+        }, { status: 403 });
+      }
+    }
+
+    // Create a unique registration key to prevent duplicates
+    const registrationKey = `${eventId}-${dayIndex}-${stageIndex}-${itemIndex}-${user.id}`;
+
     // Check if user is already registered for this session
-    const existingQuery = groq`*[_type == "scheduleRegistration" && 
-      event._ref == $eventId && 
-      dayIndex == $dayIndex && 
-      stageIndex == $stageIndex && 
-      itemIndex == $itemIndex && 
-      userId == $userId && 
+    const existingQuery = groq`*[_type == "scheduleRegistration" &&
+      event._ref == $eventId &&
+      dayIndex == $dayIndex &&
+      stageIndex == $stageIndex &&
+      itemIndex == $itemIndex &&
+      userId == $userId &&
       status != "cancelled"][0]`;
-      
+
     const existing = await writeClient.fetch(existingQuery, {
       eventId,
       dayIndex,
@@ -135,7 +154,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       itemIndex,
       userId: user.id
     });
-    
+
     if (existing) {
       return json({ error: 'Already registered for this session' }, { status: 400 });
     }
@@ -167,6 +186,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
         // Add to waitlist
         const registration: any = {
           _type: 'scheduleRegistration',
+          registrationKey, // Add unique key to prevent duplicates
           event: { _type: 'reference', _ref: eventId },
           dayIndex,
           stageIndex,
@@ -195,9 +215,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       }
     }
     
-    // Create registration
+    // Create registration with unique key
     const registration: any = {
       _type: 'scheduleRegistration',
+      registrationKey, // Add unique key to prevent duplicates
       event: { _type: 'reference', _ref: eventId },
       dayIndex,
       stageIndex,
@@ -217,8 +238,18 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       registration.eventSchedule = { _type: 'reference', _ref: eventScheduleId };
     }
     
-    const result = await writeClient.create(registration);
-    
+    // Try to create registration, handle duplicate key error
+    let result;
+    try {
+      result = await writeClient.create(registration);
+    } catch (error: any) {
+      // Check if it's a duplicate key error
+      if (error.message?.includes('registrationKey') || error.message?.includes('duplicate')) {
+        return json({ error: 'Already registered for this session' }, { status: 400 });
+      }
+      throw error;
+    }
+
     // Fetch all user registrations for this event
     const userRegistrations = await writeClient.fetch(
       groq`*[_type == "scheduleRegistration" && event._ref == $eventId && userId == $userId && status != "cancelled"] {

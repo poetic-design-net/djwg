@@ -73,6 +73,14 @@ export default defineType({
       validation: Rule => Rule.required()
     }),
     defineField({
+      name: 'registrationKey',
+      title: 'Registration Key',
+      type: 'string',
+      description: 'Unique key to prevent duplicate registrations',
+      validation: Rule => Rule.required(),
+      hidden: true // Hide from UI as it's system-generated
+    }),
+    defineField({
       name: 'status',
       title: 'Status',
       type: 'string',
