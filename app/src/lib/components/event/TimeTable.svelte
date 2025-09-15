@@ -1144,7 +1144,6 @@
           <p class="text-gray-400">Keine Bühnen für diesen Tag verfügbar.</p>
         </div>
       {/if}
-      {/if}
     </div>
   </div>
   {/if}
