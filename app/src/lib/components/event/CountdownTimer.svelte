@@ -48,9 +48,26 @@
     seconds = Math.floor((difference % (1000 * 60)) / 1000);
   }
 
+  // Recalculate when targetDate changes
+  $: if (targetDate) {
+    // Clear existing interval
+    if (interval) {
+      clearInterval(interval);
+      interval = null;
+    }
+    // Reset completion state
+    isComplete = false;
+    // Calculate immediately
+    calculateTimeRemaining();
+    // Set up new interval
+    interval = setInterval(calculateTimeRemaining, 1000);
+  }
+
   onMount(() => {
     calculateTimeRemaining();
-    interval = setInterval(calculateTimeRemaining, 1000);
+    if (!interval) {
+      interval = setInterval(calculateTimeRemaining, 1000);
+    }
   });
 
   onDestroy(() => {

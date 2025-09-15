@@ -1201,13 +1201,16 @@
               <!-- Registration Buttons -->
               <div class="flex items-center justify-start w-full">
               {#if !isRegistrationOpen(hoveredEvent.event, hoveredEvent.dayIndex, hoveredEvent.stageIndex, hoveredEvent.itemIndex) && hoveredEvent.event.registrationStartTime}
+                {@const countdownKey = `${hoveredEvent.dayIndex}-${hoveredEvent.stageIndex}-${hoveredEvent.itemIndex}`}
                 <div class="bg-black/20 border border-gray-800 rounded-xl p-3">
-                  <CountdownTimer
-                    targetDate={hoveredEvent.event.registrationStartTime}
-                    onComplete={() => handleCountdownComplete(hoveredEvent.dayIndex, hoveredEvent.stageIndex, hoveredEvent.itemIndex)}
-                    compact={true}
-                    showSeconds={false}
-                  />
+                  {#key countdownKey}
+                    <CountdownTimer
+                      targetDate={hoveredEvent.event.registrationStartTime}
+                      onComplete={() => handleCountdownComplete(hoveredEvent.dayIndex, hoveredEvent.stageIndex, hoveredEvent.itemIndex)}
+                      compact={true}
+                      showSeconds={false}
+                    />
+                  {/key}
                 </div>
               {:else if !user}
                 <button
