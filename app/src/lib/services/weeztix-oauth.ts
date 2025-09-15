@@ -14,8 +14,18 @@ interface WeeztixTokenResponse {
  * NOT required for webhook-only integration
  */
 export class WeeztixOAuthService {
-  private authorizationUrl = 'https://auth.weeztix.com/oauth/authorize'; // Adjust URL
-  private tokenUrl = 'https://auth.weeztix.com/oauth/token'; // Adjust URL
+  // Try different possible OAuth endpoints
+  // Option 1: Main API domain
+  private authorizationUrl = 'https://api.weeztix.com/oauth/authorize';
+  private tokenUrl = 'https://api.weeztix.com/oauth/token';
+
+  // Option 2: Auth subdomain (current - returns 404)
+  // private authorizationUrl = 'https://auth.weeztix.com/oauth/authorize';
+  // private tokenUrl = 'https://auth.weeztix.com/oauth/token';
+
+  // Option 3: OAuth2 subdomain
+  // private authorizationUrl = 'https://oauth.weeztix.com/authorize';
+  // private tokenUrl = 'https://oauth.weeztix.com/token';
   private clientId: string;
   private clientSecret: string;
   private redirectUri: string;
