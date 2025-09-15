@@ -288,15 +288,15 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       sessionKey: `${dayIndex}-${stageIndex}-${itemIndex}`,
       message: 'Successfully registered'
     });
-    
+
   } catch (error: any) {
     console.error('Registration error:', error);
     const errorMessage = error.message || 'Unknown error';
-    
+
     // Provide more specific error messages
     if (errorMessage.includes('MAX_WRITE_OPERATIONS_PER_HOUR')) {
       return json(
-        { 
+        {
           success: false, 
           error: 'Das System ist derzeit ausgelastet. Bitte versuche es in einer Stunde erneut.'
         },
@@ -315,9 +315,109 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     }
     
     return json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: `Registrierung fehlgeschlagen: ${errorMessage}`
+      },
+      { status: 500 }
+    );
+  }
+};
+
+// DELETE: Cancel a registration
+export const DELETE: RequestHandler = async ({ request, locals }) => {
+  try {
+    const supabase = locals.supabase;
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { eventId, dayIndex, stageIndex, itemIndex } = body;
+
+    if (!eventId || dayIndex === undefined || stageIndex === undefined || itemIndex === undefined) {
+      return json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    // Find the registration to cancel
+    const query = groq`*[_type == "scheduleRegistration" &&
+      event._ref == $eventId &&
+      userId == $userId &&
+      dayIndex == $dayIndex &&
+      stageIndex == $stageIndex &&
+      itemIndex == $itemIndex &&
+      status != "cancelled"][0] {
+        _id,
+        sessionTitle
+      }`;
+
+    const registration = await writeClient.fetch(query, {
+      eventId,
+      userId: user.id,
+      dayIndex,
+      stageIndex,
+      itemIndex
+    });
+
+    if (!registration) {
+      return json({ error: 'Registration not found' }, { status: 404 });
+    }
+
+    // Update the registration status to cancelled
+    await writeClient.patch(registration._id)
+      .set({
+        status: 'cancelled',
+        cancelledAt: new Date().toISOString()
+      })
+      .commit();
+
+    // Check if there's a waitlist for this session
+    const waitlistQuery = groq`*[_type == "scheduleRegistration" &&
+      event._ref == $eventId &&
+      dayIndex == $dayIndex &&
+      stageIndex == $stageIndex &&
+      itemIndex == $itemIndex &&
+      status == "waitlist"] | order(createdAt asc)[0] {
+        _id,
+        userId,
+        userName,
+        userEmail
+      }`;
+
+    const nextInWaitlist = await writeClient.fetch(waitlistQuery, {
+      eventId,
+      dayIndex,
+      stageIndex,
+      itemIndex
+    });
+
+    // If someone is on waitlist, promote them
+    if (nextInWaitlist) {
+      await writeClient.patch(nextInWaitlist._id)
+        .set({
+          status: 'confirmed',
+          confirmedAt: new Date().toISOString()
+        })
+        .commit();
+
+      // TODO: Send notification to user about their promotion from waitlist
+      console.log(`User ${nextInWaitlist.userName} promoted from waitlist for session`);
+    }
+
+    return json({
+      success: true,
+      message: 'Successfully cancelled registration',
+      promotedUser: nextInWaitlist ? nextInWaitlist.userId : null
+    });
+
+  } catch (error: any) {
+    console.error('Cancellation error:', error);
+    return json(
+      {
+        success: false,
+        error: `Cancellation failed: ${error.message || 'Unknown error'}`
       },
       { status: 500 }
     );

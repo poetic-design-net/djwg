@@ -502,13 +502,33 @@
         reg.itemIndex === itemIndex
       );
 
-      if (!registration) return;
+      if (!registration) {
+        toasts.error('Registrierung nicht gefunden.');
+        return;
+      }
 
       // Set loading state
       cancellationLoading.set(loadingKey, true);
       cancellationLoading = new Map(cancellationLoading);
 
-      // TODO: Find the registration ID and call DELETE endpoint
+      // Call DELETE endpoint to cancel registration
+      const response = await fetch('/api/schedule-registrations', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          eventId,
+          dayIndex,
+          stageIndex,
+          itemIndex
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Cancellation failed');
+      }
+
+      // Update registrations immediately
       await loadUserRegistrations();
 
       // Show success toast
