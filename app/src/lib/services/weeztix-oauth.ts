@@ -38,7 +38,9 @@ export class WeeztixOAuthService {
       response_type: 'code',
       client_id: this.clientId,
       redirect_uri: this.redirectUri || `${this.baseUrl}/api/weeztix/callback`,
-      scope: 'read:orders write:webhooks', // Adjust scopes as needed
+      // Weeztix might not use scopes or has different scope format
+      // Try without scope first, or use basic scope
+      // scope: 'basic',  // Uncomment if needed
       state: state || crypto.randomUUID()
     });
 
