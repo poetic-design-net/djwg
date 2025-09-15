@@ -44,10 +44,19 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 
     // Exchange code for token
     console.log('Exchanging authorization code for access token...');
+    console.log('Code:', code.substring(0, 20) + '...');
+    console.log('Redirect URI:', env.WEEZTIX_REDIRECT_URI || `${url.origin}/api/weeztix/callback`);
+
     const tokenResponse = await oauth.exchangeCodeForToken(code);
 
     if (!tokenResponse) {
       console.error('Failed to exchange code for token');
+      // Log more details for debugging
+      console.error('OAuth Config:', {
+        clientId: env.WEEZTIX_CLIENT_ID ? 'SET' : 'NOT SET',
+        clientSecret: env.WEEZTIX_CLIENT_SECRET ? 'SET' : 'NOT SET',
+        redirectUri: env.WEEZTIX_REDIRECT_URI || `${url.origin}/api/weeztix/callback`
+      });
       return error(500, 'Failed to obtain access token');
     }
 

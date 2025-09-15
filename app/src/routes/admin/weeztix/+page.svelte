@@ -71,6 +71,27 @@
     window.location.href = '/api/weeztix/authorize';
   }
 
+  async function registerWebhook() {
+    try {
+      const response = await fetch('/api/weeztix/register-webhook', {
+        method: 'POST'
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        alert('Webhook registered successfully!');
+        await loadStatus(); // Reload to show new webhook
+      } else {
+        alert('Failed to register webhook: ' + (result.error || result.details));
+        console.error('Webhook registration failed:', result);
+      }
+    } catch (err) {
+      alert('Error registering webhook: ' + err);
+      console.error('Webhook registration error:', err);
+    }
+  }
+
   async function testWebhook() {
     try {
       const response = await fetch('/api/weeztix/test-webhook', {
@@ -231,7 +252,20 @@
           {/each}
         </div>
       {:else}
-        <p class="text-gray-600">No webhooks registered yet</p>
+        <div class="space-y-4">
+          <p class="text-gray-600">No webhooks registered yet</p>
+          {#if status.status.authenticated}
+            <button
+              on:click={registerWebhook}
+              class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 transition-colors"
+            >
+              📮 Register Webhook
+            </button>
+            <p class="text-xs text-gray-500">
+              This will register the webhook URL with Weeztix to receive order notifications
+            </p>
+          {/if}
+        </div>
       {/if}
     </div>
 

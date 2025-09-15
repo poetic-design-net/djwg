@@ -73,7 +73,16 @@ export class WeeztixOAuthService {
       });
 
       if (!response.ok) {
+        const errorText = await response.text();
         console.error('Failed to exchange code for token:', response.status);
+        console.error('Error response:', errorText);
+        console.error('Request body was:', {
+          grant_type: 'authorization_code',
+          client_id: this.clientId ? this.clientId.substring(0, 10) + '...' : 'NOT SET',
+          client_secret: this.clientSecret ? 'SET' : 'NOT SET',
+          redirect_uri: this.redirectUri,
+          code: code.substring(0, 20) + '...'
+        });
         return null;
       }
 
