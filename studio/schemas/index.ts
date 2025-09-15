@@ -13,6 +13,7 @@ import event from './event'
 import eventSchedule from './eventSchedule'
 import timeSlot from './timeSlot'
 import scheduleRegistration from './scheduleRegistration'
+import registrationOverview from './registrationOverview'
 import faq from './faq'
 import founder from './founder'
 import navigation from './navigation'
@@ -89,6 +90,7 @@ export const schemaTypes = [
   eventSchedule,
   timeSlot,
   scheduleRegistration,
+  registrationOverview,
   faq,
   founder,
   navigation,

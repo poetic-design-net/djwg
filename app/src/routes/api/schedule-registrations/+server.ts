@@ -19,6 +19,15 @@ const writeClient = createClient({
   useCdn: false
 });
 
+// Log write client configuration (without exposing token)
+console.log('Sanity write client configured:', {
+  projectId,
+  dataset,
+  apiVersion,
+  hasToken: !!env.VITE_SANITY_API_WRITE_TOKEN,
+  tokenLength: env.VITE_SANITY_API_WRITE_TOKEN?.length
+});
+
 // GET: Fetch user registrations or all registrations for an event
 export const GET: RequestHandler = async ({ url, locals }) => {
   try {
@@ -290,7 +299,17 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     });
 
   } catch (error: any) {
-    console.error('Registration error:', error);
+    // Enhanced error logging
+    console.error('Registration error:', {
+      error: error.message,
+      stack: error.stack,
+      details: error.details,
+      statusCode: error.statusCode,
+      userId: user?.id,
+      eventId,
+      sessionTitle
+    });
+
     const errorMessage = error.message || 'Unknown error';
 
     // Provide more specific error messages
