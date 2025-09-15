@@ -17,6 +17,9 @@
   // Track countdown completion
   let countdownCompleted: Set<string> = new Set();
 
+  // Global registration open state for non-admins
+  let globalRegistrationOpen = false;
+
   const dispatch = createEventDispatcher();
 
   // Required badge ID for registration - using supabaseId from Sanity
@@ -661,36 +664,37 @@
 </script>
 
 <div class="bg-black/40 border border-gray-800 rounded-3xl p-4 sm:p-6">
-  {#if !isAdmin}
-    <!-- Coming Soon for non-admin users -->
-    <div class="text-center py-12">
-      <svg class="w-16 h-16 mx-auto mb-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-      </svg>
-      <h2 class="text-2xl font-heading text-white mb-4">Coming Soon</h2>
-      <p class="text-gray-400 mb-6">Event Schedule wird bald verfügbar sein</p>
-
-      <!-- Countdown Timer -->
-      <div class="flex justify-center">
+  {#if !isAdmin && !globalRegistrationOpen}
+    <!-- Countdown Banner for non-admin users -->
+    <div class="bg-yellow-500/10 border border-yellow-500/30 rounded-2xl p-6 mb-6">
+      <div class="text-center">
+        <h3 class="text-xl font-heading text-yellow-400 mb-4">Registrierung öffnet bald!</h3>
         <CountdownTimer
           targetDate="2025-02-01T12:00:00"
-          label="Event Schedule öffnet in"
-          completedLabel="Event Schedule ist jetzt verfügbar!"
+          label="Anmeldung möglich in"
+          completedLabel="Registrierung ist jetzt geöffnet!"
           showSeconds={true}
           compact={false}
           onComplete={() => {
-            // Reload the page when countdown completes to show the schedule
-            setTimeout(() => window.location.reload(), 2000);
+            globalRegistrationOpen = true;
           }}
         />
+        <p class="text-sm text-gray-400 mt-4">Du kannst dir bereits alle verfügbaren Sessions ansehen</p>
       </div>
     </div>
-  {:else}
+  {/if}
+
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
       <div>
         <h2 class="text-xl sm:text-2xl font-heading text-white mb-2">Event Schedule</h2>
-        <p class="text-sm sm:text-base text-gray-400">Melde dich für Sessions an</p>
+        <p class="text-sm sm:text-base text-gray-400">
+          {#if !isAdmin && !globalRegistrationOpen}
+            Durchstöbere die Sessions
+          {:else}
+            Melde dich für Sessions an
+          {/if}
+        </p>
         {#if events.length > 0}
           <p class="text-xs text-gray-500 mt-1">
             {events.length} Events geladen, {allSessions.length} Sessions gefunden
@@ -925,6 +929,10 @@
                         <span class="px-4 py-2 bg-gray-800 text-gray-500 text-sm rounded-lg cursor-not-allowed inline-block">
                           Ausgebucht
                         </span>
+                      {:else if !isAdmin && !globalRegistrationOpen}
+                        <span class="px-4 py-2 bg-yellow-500/20 border border-yellow-500/50 text-yellow-400 text-sm rounded-lg cursor-not-allowed inline-block" title="Registrierung öffnet am 1. Februar">
+                          ⏰ Noch nicht geöffnet
+                        </span>
                       {:else if !hasRequiredBadge}
                         <span class="px-4 py-2 bg-orange-500/20 border border-orange-500/50 text-orange-400 text-sm rounded-lg cursor-not-allowed inline-block" title="Event-Teilnehmer Badge erforderlich">
                           🔒 Badge fehlt
@@ -971,6 +979,5 @@
         </div>
       {/each}
     </div>
-  {/if}
   {/if}
 </div>
