@@ -38,8 +38,8 @@ export const GET: RequestHandler = async ({ url, locals }) => {
     let params: Record<string, string> = {};
     
     if (userId && eventId) {
-      // Get specific user's registrations for an event
-      query = groq`*[_type == "scheduleRegistration" && event._ref == $eventId && userId == $userId && status != "cancelled"] {
+      // Get specific user's registrations for an event - include all statuses
+      query = groq`*[_type == "scheduleRegistration" && event._ref == $eventId && userId == $userId] {
         _id,
         dayIndex,
         stageIndex,
@@ -51,15 +51,16 @@ export const GET: RequestHandler = async ({ url, locals }) => {
       }`;
       params = { eventId, userId };
     } else if (eventId) {
-      // Get all registrations for an event (grouped by session)
-      // Include status field to allow frontend to filter confirmed vs waitlist
-      query = groq`*[_type == "scheduleRegistration" && event._ref == $eventId && status != "cancelled"] {
+      // Get all registrations for an event - include cancelled for admin view
+      query = groq`*[_type == "scheduleRegistration" && event._ref == $eventId] {
         _id,
         dayIndex,
         stageIndex,
         itemIndex,
         userName,
         userEmail,
+        profileId,
+        userId,
         status,
         createdAt
       } | order(dayIndex asc, stageIndex asc, itemIndex asc)`;
