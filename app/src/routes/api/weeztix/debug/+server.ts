@@ -18,16 +18,12 @@ export const GET: RequestHandler = async ({ url }) => {
     state: 'test-state-123'
   });
 
-  // Test different possible OAuth URLs
+  // Test the CORRECT OAuth URL from documentation
   const possibleUrls = [
-    'https://api.weeztix.com/oauth/authorize',
-    'https://auth.weeztix.com/oauth/authorize',
-    'https://oauth.weeztix.com/authorize',
-    'https://oauth.weeztix.com/oauth/authorize',
-    'https://www.weeztix.com/oauth/authorize',
-    'https://weeztix.com/oauth/authorize',
-    'https://api.weeztix.com/v1/oauth/authorize',
-    'https://api.weeztix.com/v2/oauth/authorize'
+    'https://auth.openticket.tech/tokens/authorize',  // CORRECT URL!
+    'https://auth.openticket.tech/tokens',  // Token endpoint
+    'https://api.weeztix.com/oauth/authorize',  // Old attempts
+    'https://auth.weeztix.com/oauth/authorize'
   ];
 
   const authUrl = `${possibleUrls[0]}?${authParams.toString()}`;

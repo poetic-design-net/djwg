@@ -14,18 +14,10 @@ interface WeeztixTokenResponse {
  * NOT required for webhook-only integration
  */
 export class WeeztixOAuthService {
-  // Try different possible OAuth endpoints
-  // Option 1: Main API domain
-  private authorizationUrl = 'https://api.weeztix.com/oauth/authorize';
-  private tokenUrl = 'https://api.weeztix.com/oauth/token';
-
-  // Option 2: Auth subdomain (current - returns 404)
-  // private authorizationUrl = 'https://auth.weeztix.com/oauth/authorize';
-  // private tokenUrl = 'https://auth.weeztix.com/oauth/token';
-
-  // Option 3: OAuth2 subdomain
-  // private authorizationUrl = 'https://oauth.weeztix.com/authorize';
-  // private tokenUrl = 'https://oauth.weeztix.com/token';
+  // Correct OAuth endpoints from Weeztix documentation
+  // Weeztix uses openticket.tech domain for OAuth!
+  private authorizationUrl = 'https://auth.openticket.tech/tokens/authorize';
+  private tokenUrl = 'https://auth.openticket.tech/tokens';
   private clientId: string;
   private clientSecret: string;
   private redirectUri: string;
@@ -63,16 +55,18 @@ export class WeeztixOAuthService {
     }
 
     try {
+      // According to Weeztix docs, send as JSON body
       const response = await fetch(this.tokenUrl, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Authorization': `Basic ${Buffer.from(`${this.clientId}:${this.clientSecret}`).toString('base64')}`
+          'Content-Type': 'application/json'
         },
-        body: new URLSearchParams({
+        body: JSON.stringify({
           grant_type: 'authorization_code',
-          code,
-          redirect_uri: this.redirectUri || `${this.baseUrl}/api/weeztix/callback`
+          client_id: this.clientId,
+          client_secret: this.clientSecret,
+          redirect_uri: this.redirectUri || `${this.baseUrl}/api/weeztix/callback`,
+          code
         })
       });
 
@@ -98,14 +92,16 @@ export class WeeztixOAuthService {
     }
 
     try {
+      // Use JSON body as per Weeztix documentation
       const response = await fetch(this.tokenUrl, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Authorization': `Basic ${Buffer.from(`${this.clientId}:${this.clientSecret}`).toString('base64')}`
+          'Content-Type': 'application/json'
         },
-        body: new URLSearchParams({
+        body: JSON.stringify({
           grant_type: 'refresh_token',
+          client_id: this.clientId,
+          client_secret: this.clientSecret,
           refresh_token: refreshToken
         })
       });
