@@ -4,6 +4,7 @@
   import { client } from '$lib/sanity/client';
   import { createEventDispatcher } from 'svelte';
   import { getImageUrl } from '$lib/sanity/image';
+  import CountdownTimer from '$lib/components/event/CountdownTimer.svelte';
 
   export let userId: string;
   export let userProfile: any = null;
@@ -12,6 +13,9 @@
 
   // Mobile detection
   let showFilterDropdown = false;
+
+  // Track countdown completion
+  let countdownCompleted: Set<string> = new Set();
 
   const dispatch = createEventDispatcher();
 
@@ -331,6 +335,36 @@
     );
   }
 
+  // Check if registration is open for a session
+  function isRegistrationOpen(item: ScheduleItem, dayIndex: number, stageIndex: number, itemIndex: number): boolean {
+    if (!item.registrationStartTime) {
+      return true;
+    }
+
+    const key = `${dayIndex}-${stageIndex}-${itemIndex}`;
+    if (countdownCompleted.has(key)) {
+      return true;
+    }
+
+    const now = new Date().getTime();
+    const startTime = new Date(item.registrationStartTime).getTime();
+
+    if (now >= startTime) {
+      countdownCompleted.add(key);
+      countdownCompleted = new Set(countdownCompleted);
+      return true;
+    }
+
+    return false;
+  }
+
+  // Handle countdown completion
+  function handleCountdownComplete(dayIndex: number, stageIndex: number, itemIndex: number) {
+    const key = `${dayIndex}-${stageIndex}-${itemIndex}`;
+    countdownCompleted.add(key);
+    countdownCompleted = new Set(countdownCompleted);
+  }
+
   async function registerForSession(event: Event, session: ScheduleItem, dayIndex: number, stageIndex: number, itemIndex: number, slotId?: string) {
     try {
       // Check if user has required badge
@@ -633,8 +667,23 @@
       <svg class="w-16 h-16 mx-auto mb-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
       </svg>
-      <h2 class="text-2xl font-heading text-white mb-2">Coming Soon</h2>
-      <p class="text-gray-400">Event Schedule wird bald verfügbar sein</p>
+      <h2 class="text-2xl font-heading text-white mb-4">Coming Soon</h2>
+      <p class="text-gray-400 mb-6">Event Schedule wird bald verfügbar sein</p>
+
+      <!-- Countdown Timer -->
+      <div class="flex justify-center">
+        <CountdownTimer
+          targetDate="2025-02-01T12:00:00"
+          label="Event Schedule öffnet in"
+          completedLabel="Event Schedule ist jetzt verfügbar!"
+          showSeconds={true}
+          compact={false}
+          onComplete={() => {
+            // Reload the page when countdown completes to show the schedule
+            setTimeout(() => window.location.reload(), 2000);
+          }}
+        />
+      </div>
     </div>
   {:else}
     <!-- Header -->
@@ -816,7 +865,16 @@
                           {getSessionTypeLabel(session.type)}
                         </span>
                         <div class="flex-1">
-                          <h4 class="text-lg font-medium text-white">{session.item.title}</h4>
+                          <div class="flex items-center gap-2">
+                            <h4 class="text-lg font-medium text-white">{session.item.title}</h4>
+                            {#if !isRegistrationOpen(session.item, session.dayIndex, session.stageIndex, session.itemIndex) && session.item.registrationStartTime}
+                              <span class="text-yellow-400" title="Registrierung öffnet bald">
+                                <svg class="w-4 h-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                              </span>
+                            {/if}
+                          </div>
                           {#if session.item.description}
                             <p class="text-sm text-gray-400 mt-1">{session.item.description}</p>
                           {/if}
@@ -871,6 +929,16 @@
                         <span class="px-4 py-2 bg-orange-500/20 border border-orange-500/50 text-orange-400 text-sm rounded-lg cursor-not-allowed inline-block" title="Event-Teilnehmer Badge erforderlich">
                           🔒 Badge fehlt
                         </span>
+                      {:else if !isRegistrationOpen(session.item, session.dayIndex, session.stageIndex, session.itemIndex) && session.item.registrationStartTime}
+                        <div class="inline-block">
+                          <CountdownTimer
+                            targetDate={session.item.registrationStartTime}
+                            onComplete={() => handleCountdownComplete(session.dayIndex, session.stageIndex, session.itemIndex)}
+                            compact={true}
+                            showSeconds={false}
+                            label="Öffnet in"
+                          />
+                        </div>
                       {:else}
                         <button
                           on:click={() => registerForSession(session.event, session.item, session.dayIndex, session.stageIndex, session.itemIndex, session?.slotId)}
