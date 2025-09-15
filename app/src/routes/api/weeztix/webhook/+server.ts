@@ -107,29 +107,55 @@ export const POST: RequestHandler = async ({ request }) => {
       time: payload.time
     });
 
-    // Check if this is an order paid event
-    if (payload.model?.type !== 'order' || payload.type !== 'paid') {
-      console.log('Not an order paid event:', payload.model?.type, payload.type);
+    // Check if this is the actual order format (flat structure)
+    // The real Weeztix webhook sends a flat order object, not the documented structure
+    let orderGuid: string;
+    let email: string | null;
+    let firstname: string | null;
+    let lastname: string | null;
+
+    // Check if it's the flat order format (actual Weeztix format)
+    if ('guid' in payload && 'email' in payload && 'status' in payload) {
+      // This is the actual format Weeztix sends
+      const orderPayload = payload as any;
+
+      if (orderPayload.status !== 'paid') {
+        console.log('Order not paid, status:', orderPayload.status);
+        return json({
+          received: true,
+          processed: false,
+          reason: 'Order not paid'
+        });
+      }
+
+      orderGuid = orderPayload.guid;
+      email = orderPayload.email;
+      firstname = orderPayload.firstname;
+      lastname = orderPayload.lastname;
+
+      console.log('Processing flat order format:', { orderGuid, email, status: orderPayload.status });
+    }
+    // Check if it's the documented format (meta/model/change)
+    else if (payload.model?.type === 'order' && payload.type === 'paid') {
+      orderGuid = payload.model.guid;
+      const orderProps = payload.change?.props || {};
+      email = orderProps.email || orderProps.customer_email || orderProps.buyer_email || null;
+      firstname = orderProps.firstname || orderProps.customer_firstname || null;
+      lastname = orderProps.lastname || orderProps.customer_lastname || null;
+
+      console.log('Processing documented format:', { orderGuid, email });
+    }
+    else {
+      console.log('Unknown payload format or not a paid order');
       return json({
         received: true,
         processed: false,
-        reason: 'Not an order paid event'
+        reason: 'Not an order paid event or unknown format'
       });
     }
 
-    // Extract order information from the Weeztix payload
-    const orderGuid = payload.model.guid;
-    const orderProps = payload.change?.props || {};
-
-    // Try to find email in various possible fields
-    const email = orderProps.email ||
-                  orderProps.customer_email ||
-                  orderProps.buyer_email ||
-                  null;
-
     if (!email) {
       console.warn('No email found in order payload');
-      console.log('Available props:', Object.keys(orderProps));
     }
 
     // Store order in database
@@ -146,7 +172,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
     // If order already exists and badge is assigned, skip processing
     if (existingOrder?.badge_assigned) {
-      console.log('Order already processed with badge assigned:', payload.orderGuid);
+      console.log('Order already processed with badge assigned:', orderGuid);
       return json({ received: true, processed: false, reason: 'already_processed' });
     }
 
@@ -175,14 +201,14 @@ export const POST: RequestHandler = async ({ request }) => {
       order_guid: orderGuid,
       user_id: userId,
       user_email: email ? email.toLowerCase() : null,
-      customer_firstname: orderProps.firstname || orderProps.customer_firstname || null,
-      customer_lastname: orderProps.lastname || orderProps.customer_lastname || null,
-      ticket_guid: orderProps.ticket_guid || orderProps.ticket_id || null,
-      reservation_guid: orderProps.reservation_guid || null,
-      event_date_guid: orderProps.event_date_guid || null,
-      product_guid: orderProps.product_guid || orderProps.product_id || null,
+      customer_firstname: firstname,
+      customer_lastname: lastname,
+      ticket_guid: (payload as any).ticket_guid || (payload as any).ticket_id || null,
+      reservation_guid: (payload as any).reservation_guid || null,
+      event_date_guid: (payload as any).event_date_guid || null,
+      product_guid: (payload as any).product_guid || (payload as any).product_id || null,
       webhook_data: payload,
-      purchase_date: payload.time ? new Date(payload.time).toISOString() : new Date().toISOString(),
+      purchase_date: (payload as any).created_at ? new Date((payload as any).created_at).toISOString() : new Date().toISOString(),
       claim_code: claimCode
     };
 
@@ -210,7 +236,7 @@ export const POST: RequestHandler = async ({ request }) => {
             user_id: userId,
             badge_id: WEEZTIX_TICKET_BADGE_ID,
             assigned_at: new Date().toISOString(),
-            assigned_reason: `Weeztix Ticket Purchase - Order: ${payload.orderGuid}`
+            assigned_reason: `Weeztix Ticket Purchase - Order: ${orderGuid}`
           }, {
             onConflict: 'user_id,badge_id',
             ignoreDuplicates: true
