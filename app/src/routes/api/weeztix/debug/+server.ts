@@ -23,7 +23,11 @@ export const GET: RequestHandler = async ({ url }) => {
     'https://api.weeztix.com/oauth/authorize',
     'https://auth.weeztix.com/oauth/authorize',
     'https://oauth.weeztix.com/authorize',
-    'https://www.weeztix.com/oauth/authorize'
+    'https://oauth.weeztix.com/oauth/authorize',
+    'https://www.weeztix.com/oauth/authorize',
+    'https://weeztix.com/oauth/authorize',
+    'https://api.weeztix.com/v1/oauth/authorize',
+    'https://api.weeztix.com/v2/oauth/authorize'
   ];
 
   const authUrl = `${possibleUrls[0]}?${authParams.toString()}`;
@@ -36,12 +40,30 @@ export const GET: RequestHandler = async ({ url }) => {
         method: 'HEAD',
         headers: {
           'User-Agent': 'DJ Workshop Germany OAuth Client'
-        }
+        },
+        signal: AbortSignal.timeout(5000) // 5 second timeout
       });
       endpointTests[url] = `${response.status} ${response.statusText}`;
     } catch (err: any) {
-      endpointTests[url] = `Error: ${err.message}`;
+      // More detailed error info
+      if (err.cause) {
+        endpointTests[url] = `Error: ${err.message} - ${err.cause}`;
+      } else {
+        endpointTests[url] = `Error: ${err.message}`;
+      }
     }
+  }
+
+  // Also test if oauth.weeztix.com resolves at all
+  let oauthDomainCheck = 'unknown';
+  try {
+    const dnsResponse = await fetch('https://oauth.weeztix.com', {
+      method: 'HEAD',
+      signal: AbortSignal.timeout(3000)
+    });
+    oauthDomainCheck = `Domain exists: ${dnsResponse.status}`;
+  } catch (err: any) {
+    oauthDomainCheck = `Domain issue: ${err.message}`;
   }
 
   return json({
@@ -56,6 +78,7 @@ export const GET: RequestHandler = async ({ url }) => {
     oauth: {
       authorization_url: authUrl,
       endpoint_tests: endpointTests,
+      oauth_domain_check: oauthDomainCheck,
       expected_redirect: redirectUri
     },
     troubleshooting: {
