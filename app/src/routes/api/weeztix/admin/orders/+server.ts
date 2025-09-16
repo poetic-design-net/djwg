@@ -1,6 +1,7 @@
 import { json, error } from '@sveltejs/kit';
 import { supabaseAdmin } from '$lib/supabase/admin';
 import type { RequestHandler } from './$types';
+import { env } from '$env/dynamic/private';
 
 /**
  * Get all Weeztix orders with user and badge status
@@ -33,24 +34,35 @@ export const GET: RequestHandler = async ({ locals }) => {
   }
 
   try {
-    // Get all orders with user information
+    // Get all orders
     const { data: orders, error: ordersError } = await supabaseAdmin
       .from('weeztix_orders')
-      .select(`
-        *,
-        profiles:user_id (
-          id,
-          email,
-          full_name,
-          username
-        )
-      `)
+      .select('*')
       .order('created_at', { ascending: false });
 
     if (ordersError) {
       console.error('Error fetching orders:', ordersError);
       return error(500, 'Failed to fetch orders');
     }
+
+    // Get user profiles for orders with user_id
+    const userIds = [...new Set((orders || []).filter(o => o.user_id).map(o => o.user_id))];
+    let profiles: any[] = [];
+
+    if (userIds.length > 0) {
+      const { data: profileData } = await supabaseAdmin
+        .from('profiles')
+        .select('id, email, full_name, username')
+        .in('id', userIds);
+
+      profiles = profileData || [];
+    }
+
+    // Create a map for easy profile lookup
+    const profileMap = profiles.reduce((acc, profile) => {
+      acc[profile.id] = profile;
+      return acc;
+    }, {} as Record<string, any>);
 
     // Get badge assignment status for each order
     const ordersWithBadgeStatus = await Promise.all(
@@ -63,7 +75,7 @@ export const GET: RequestHandler = async ({ locals }) => {
             .from('user_badges')
             .select('id')
             .eq('user_id', order.user_id)
-            .eq('badge_id', process.env.WEEZTIX_TICKET_BADGE_ID || '')
+            .eq('badge_id', env.WEEZTIX_TICKET_BADGE_ID || '')
             .single();
 
           badgeAssigned = !!userBadge;
@@ -82,6 +94,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 
         return {
           ...order,
+          profiles: order.user_id ? profileMap[order.user_id] : null,
           badge_assigned: badgeAssigned,
           status: order.user_id
             ? (badgeAssigned ? 'completed' : 'pending_badge')
