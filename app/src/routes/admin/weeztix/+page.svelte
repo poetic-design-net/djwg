@@ -352,7 +352,13 @@
                     {order.badge_assigned ? '✅ Assigned' : '⏳ Pending'}
                   </td>
                   <td class="py-2 text-xs">
-                    {new Date(order.created_at).toLocaleString()}
+                    {new Date(order.created_at).toLocaleString('de-DE', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
                   </td>
                 </tr>
               {/each}
